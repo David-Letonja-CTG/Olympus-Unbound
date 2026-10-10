@@ -1,0 +1,169 @@
+/* OLYMPUS UNBOUND — dark mythological theme: night stone, marble and divine gold. */
+:root {
+  --bg: #0f0e15;
+  --bg-2: #17151f;
+  --panel: rgba(28, 25, 38, 0.92);
+  --panel-2: #262233;
+  --line: rgba(232, 211, 138, 0.22);
+  --text: #f1ece0;
+  --muted: #a49d8f;
+  --gold: #e8c25a;
+  --gold-2: #ffde7a;
+  --danger: #ff5a46;
+  --xp: #4fc3f7;
+  --health: #e5484d;
+  --ok: #7ee0a1;
+  --serif: 'Palatino Linotype', 'Book Antiqua', Palatino, Georgia, serif;
+  --sans: system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+  --radius: 12px;
+  color-scheme: dark;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  margin: 0;
+  height: 100%;
+  background:
+    radial-gradient(ellipse at 50% -10%, rgba(232, 194, 90, 0.12), transparent 55%),
+    radial-gradient(ellipse at 50% 120%, rgba(90, 60, 140, 0.18), transparent 60%), var(--bg);
+  color: var(--text);
+  font-family: var(--sans);
+  -webkit-font-smoothing: antialiased;
+}
+
+h1,
+h2,
+h3 {
+  font-family: var(--serif);
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  margin: 0;
+}
+
+button {
+  font: inherit;
+}
+
+:focus-visible {
+  outline: 3px solid var(--gold-2);
+  outline-offset: 3px;
+}
+
+/* Screens */
+.screen {
+  min-height: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 40px 16px 48px;
+  gap: 24px;
+}
+
+.screen-title {
+  font-size: clamp(1.8rem, 4vw, 2.6rem);
+  color: var(--gold);
+  text-align: center;
+  text-shadow: 0 2px 18px rgba(232, 194, 90, 0.25);
+}
+
+.screen-subtitle {
+  color: var(--muted);
+  text-align: center;
+  margin: -12px 0 0;
+}
+
+.panel {
+  background: var(--panel);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  box-shadow: 0 18px 50px rgba(0, 0, 0, 0.45);
+}
+
+.actions {
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
+  justify-content: center;
+}
+
+/* Buttons */
+.btn {
+  appearance: none;
+  border: 1px solid var(--line);
+  background: var(--panel-2);
+  color: var(--text);
+  padding: 12px 22px;
+  border-radius: 10px;
+  cursor: pointer;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  transition:
+    transform 0.08s ease,
+    background 0.15s ease,
+    border-color 0.15s ease;
+}
+
+.btn:hover:not(:disabled) {
+  border-color: var(--gold);
+  background: #2f2a3e;
+}
+
+.btn:active:not(:disabled) {
+  transform: translateY(1px);
+}
+
+.btn:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+.btn-primary {
+  background: linear-gradient(180deg, #f2cf6b, #c99a2e);
+  color: #1d1606;
+  border-color: #f7dc8a;
+  box-shadow: 0 6px 24px rgba(232, 194, 90, 0.25);
+}
+
+.btn-primary:hover:not(:disabled) {
+  background: linear-gradient(180deg, #ffe08a, #d8a838);
+}
+
+.btn-danger {
+  border-color: rgba(255, 90, 70, 0.5);
+  color: #ffb4a8;
+}
+
+.gold-amount {
+  color: var(--gold-2);
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+}
+
+.tag {
+  display: inline-block;
+  padding: 2px 8px;
+  border-radius: 999px;
+  font-size: 0.75rem;
+  border: 1px solid var(--line);
+  color: var(--muted);
+}
+
+.visually-hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  * {
+    animation: none !important;
+    transition: none !important;
+  }
+}
