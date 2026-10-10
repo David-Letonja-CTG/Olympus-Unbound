@@ -1,0 +1,25 @@
+schema: spec-driven
+
+context: |
+  OLYMPUS UNBOUND: original mythological horde-survival roguelite (Vampire Survivors-like loop, mythological gods and realms).
+  Product vision: docs/product-vision.md. Binding decisions: docs/decisions.md - artifacts must not contradict them without proposing a decision change.
+  Frontend-only and static-deployable: Angular (application UI) + Phaser 4 (gameplay rendering, input, loop) + a Phaser-free TypeScript simulation core. No backend, REST, database, accounts, networking or online multiplayer.
+  Gameplay rules (damage, spawning, leveling, map generation, boss logic) must be testable without Phaser or a browser. Randomness only through the seeded Rng; never Math.random() in gameplay code.
+  Content (gods, weapons, armour, relics, skills, enemies, bosses, realms, synergies) is typed data; new content should not require changes to core systems.
+  Original IP only: no assets, names, UI or code copied from other games. Placeholder art is acceptable.
+  Write OpenSpec artifacts in English.
+
+rules:
+  proposal:
+    - State non-goals explicitly.
+    - Name the playable outcome the change makes possible.
+  specs:
+    - Describe player-visible behavior and rules, not class names or methods.
+    - Use content IDs (e.g. thunder_spear, mount_olympus) in scenarios, never display names as identity.
+    - Include edge cases (duplicate transitions, empty pools, invalid saves) as scenarios.
+  design:
+    - Record which decisions from docs/decisions.md the design relies on.
+    - State ownership of every piece of state (Angular, Phaser layer or simulation).
+  tasks:
+    - Every task group lands its own tests (simulation unit tests, Angular component tests or Playwright) as applicable.
+    - Include a final validation group - format, lint, test, build, e2e, playtest in the browser, compare against specs.

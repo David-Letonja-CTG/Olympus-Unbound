@@ -1,0 +1,87 @@
+# Content
+
+All game content is typed TypeScript in `client/src/content/` (decision D4). The schema is `client/src/engine/data/types.ts`; `validateContent` (run by `run-simulation.spec.ts`) checks IDs and cross-references.
+
+| File | Holds |
+|---|---|
+| `gods.ts` | gods with base stats, starting weapon, ability, passive, affinities |
+| `weapons.ts` | weapons (behavior, element, base stats, per-level deltas, effects) |
+| `items.ts` | armour, relics, skills, synergies |
+| `enemies.ts` | enemies and bosses |
+| `realms.ts` | realms: map generation, spawn timeline, events, scaling, elites, boss, rewards |
+| `index.ts` | balance, permanent upgrades, and the assembled `CONTENT` |
+
+## Conventions
+
+- **IDs** are stable `snake_case` (`thunder_spear`). Saves, specs and tests use IDs, never display names. Never rename an ID that has shipped; add a save migration if one must go.
+- **Display text** (`name`, `description`, level `text`) is English for now (D10).
+- **Visuals** reference a sprite key; `engine/art/sprites.ts` draws it. A key without a painter falls back to a disc in `visual.color`. Icons for items are in the `ICONS` table there.
+- **Balance numbers** live only here. Engine code holds no content-specific numbers.
+
+## Checklists
+
+**New weapon:** choose a behavior (`projectile`, `chain`, `orbit`, `nova`, `sweep`, `strike`) → add the definition with 5 level deltas, each with a `text` → add an icon (and a projectile sprite if it fires one) in `sprites.ts` → optionally an attack sound in `engine/phaser/arena-scene.ts` (`ATTACK_SOUNDS`) → run the tests. A genuinely new way of attacking is a new behavior in `engine/weapons/behaviors.ts` with its own tests and an OpenSpec change.
+
+**New enemy:** pick a behavior (`chaser` with optional `jitter`, `ranged`, `charger`, `summoner`) → add it to `enemies.ts` → add a painter in `sprites.ts` → add it to a realm's timeline or events.
+
+**New relic / armour / skill / synergy:** modifiers only (see the stat list in [systems.md](systems.md)); skills may require an element or behavior; synergies list requirements (`weapon`/`armour`/`skill` with optional `minLevel`, `relic`, or `element` with `count`).
+
+**New realm:** a `RealmDefinition` with terrain types and bands, obstacle kinds, points of interest, scatter and decoration rules, a timeline, events, scaling, elite multipliers, a boss and rewards → painters for its sprites → it appears in realm selection automatically.
+
+**New god:** a `GodDefinition` (base stats, starting weapon, ability as a weapon-like definition, passive modifiers, affinities, sprite) → it appears in god selection automatically.
+
+## The vertical slice's content
+
+### Weapons
+
+| ID | Behavior | Element | Notes |
+|---|---|---|---|
+| `thunder_spear` | projectile | lightning | Zeus's start; pierces, may shock |
+| `divine_bow` | projectile | physical | volleys, homing, high crit |
+| `trident` | projectile | physical | 3-prong fan, pierce, heavy knockback |
+| `lightning_orb` | orbit | lightning | circling orbs, shock |
+| `war_hammer` | nova | physical | shockwave when enemies are close, stun |
+| `flaming_sword` | sweep | fire | arc toward the nearest foe, burn |
+| `thunderbolt` | chain | lightning | jumps between enemies, shock |
+| `soul_scythe` | sweep (360°) | shadow | slow, 3% lifesteal |
+
+### Synergies
+
+| ID | Requires | Grants |
+|---|---|---|
+| `storm` | 2 lightning weapons + `zeus_eye` | +25% lightning damage, +1 chain |
+| `tempest` | `thunder_spear` + `trident` | +25% projectile speed, +1 pierce |
+| `inferno` | `flaming_sword` lv 3 + `fury_of_flames` lv 2 | +30% fire damage, +10% area |
+| `soul_reaper` | `soul_scythe` + `soul_lantern` | +4% lifesteal, +25% shadow damage |
+| `divine_bulwark` | `aegis_of_olympus` lv 3 + `bulwark` | +3 armour, +40 max health |
+| `wrath_of_the_sky` | `thunderbolt` lv 3 + `lightning_orb` lv 3 | attacks 10% faster, +40% crit damage |
+| `earthshaker` | `war_hammer` lv 3 + `titans_strength` lv 2 | +20% area, +50% knockback |
+
+### Enemies of Mount Olympus
+
+| ID | Role (behavior) |
+|---|---|
+| `satyr` | basic chaser |
+| `harpy` | fast, weaving chaser |
+| `stymphalian_bird` | swarm unit (flocks; summoned by oracles) |
+| `corrupted_hoplite` | tank chaser |
+| `centaur_archer` | ranged |
+| `bronze_bull` | charger |
+| `fallen_oracle` | summoner |
+| `marble_sentinel` | heavy tank |
+
+Boss: `cyclops` (two phases; `ground_slam`, `boulder_throw`, `rampage_charge`, `call_the_legion`).
+
+## Assets and licences
+
+| Asset | Source | Licence |
+|---|---|---|
+| All sprites, tiles, icons | Drawn in code (`engine/art/sprites.ts`, `engine/phaser/textures.ts`) | Original, project-owned |
+| All sound effects | Synthesized in code (`engine/audio/sound-player.ts`) | Original, project-owned |
+| `client/public/favicon.svg` | Drawn by hand (SVG) | Original, project-owned |
+
+Add a row for every external asset before it is committed. Never copy sprites, sounds, music or UI from other games.
+
+## Balance notes (2026-10-10)
+
+Tuned with headless autopilot runs (a kiting bot, no permanent upgrades, 6 seeds): the bot reaches level ~16 at 04:00 and wins about half its runs; deaths cluster around 04:00–05:00 when bulls, centaurs and hoplite hordes overlap; boss fights take 1.5–2.5 minutes including the Cyclops's walk from its arena. Victory runs earn ~1,200–1,450 gold, defeats ~150–200. Changes made: satyr/harpy damage 7/6 → 5/5, contact interval 0.8 → 1 s, XP curve per-level 5 → 4 and growth 0.35 → 0.3, bull damage 16 → 14, damage scaling 0.06 → 0.05/min, Cyclops health 20,000 → 12,000.

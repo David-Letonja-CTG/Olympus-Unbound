@@ -1,0 +1,67 @@
+import { disarm, quietSim, spawnNear } from '../testing/fixtures';
+import { RunSimulation, STEP } from '../sim/run-simulation';
+import { NO_INPUT } from '../sim/types';
+
+const run = (sim: RunSimulation, seconds: number) => {
+  for (let i = 0; i < Math.round(seconds / STEP); i++) sim.step(STEP, [NO_INPUT]);
+};
+
+describe('enemy behaviors', () => {
+  it('chasers walk toward the player', () => {
+    const sim = quietSim();
+    disarm(sim);
+    const satyr = spawnNear(sim, 'satyr', 400, 0);
+    run(sim, 1);
+    expect(satyr.x - sim.state.players[0].x).toBeLessThan(340);
+  });
+
+  it('a ranged attacker backs off when too close and shoots on its cooldown', () => {
+    const sim = quietSim();
+    disarm(sim);
+    const archer = spawnNear(sim, 'centaur_archer', 120, 0);
+    archer.actionTimer = 0;
+    sim.step(STEP, [NO_INPUT]);
+    expect(sim.state.hostileProjectiles).toHaveLength(1);
+    run(sim, 1);
+    expect(archer.x - sim.state.players[0].x).toBeGreaterThan(150);
+  });
+
+  it('a charger stops and telegraphs, then dashes in a straight line', () => {
+    const sim = quietSim();
+    disarm(sim);
+    const bull = spawnNear(sim, 'bronze_bull', 300, 0);
+    bull.actionTimer = 0;
+    sim.step(STEP, [NO_INPUT]);
+    expect(bull.mode).toBe('windup');
+    const windupX = bull.x;
+    run(sim, 0.5);
+    expect(bull.x).toBeCloseTo(windupX, 0);
+    run(sim, 0.5);
+    expect(bull.mode).toBe('dash');
+    expect(windupX - bull.x).toBeGreaterThan(40);
+  });
+
+  it('a summoner calls its minions', () => {
+    const sim = quietSim();
+    disarm(sim);
+    const oracle = spawnNear(sim, 'fallen_oracle', 300, 0);
+    oracle.actionTimer = 0;
+    sim.step(STEP, [NO_INPUT]);
+    expect(sim.state.enemies.filter((e) => e.def.id === 'stymphalian_bird')).toHaveLength(4);
+  });
+
+  it('contact damage repeats only after the attack interval', () => {
+    const sim = quietSim();
+    disarm(sim);
+    const player = sim.state.players[0];
+    player.invulnerable = 0;
+    const satyr = spawnNear(sim, 'satyr', 10, 0);
+    satyr.attackTimer = 0;
+    satyr.speed = 0;
+    sim.step(STEP, [NO_INPUT]);
+    const afterFirst = player.health;
+    expect(afterFirst).toBeLessThan(player.stats.maxHealth);
+    run(sim, 0.5);
+    expect(player.health).toBe(afterFirst);
+  });
+});

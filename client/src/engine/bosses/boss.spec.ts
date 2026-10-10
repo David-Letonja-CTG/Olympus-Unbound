@@ -1,0 +1,130 @@
+import { CONTENT } from '../testing/content';
+import { disarm, quietContent, quietSim } from '../testing/fixtures';
+import { RunSimulation, STEP } from '../sim/run-simulation';
+import { NO_INPUT } from '../sim/types';
+import { spawnBoss } from './boss';
+
+const run = (sim: RunSimulation, seconds: number) => {
+  for (let i = 0; i < Math.round(seconds / STEP); i++) sim.step(STEP, [NO_INPUT]);
+};
+
+function bossSim(): RunSimulation {
+  const sim = quietSim();
+  disarm(sim);
+  return sim;
+}
+
+describe('boss encounter', () => {
+  it('arrives at the realm’s boss time in the boss arena, once, and is announced', () => {
+    const sim = new RunSimulation(
+      { runId: 'b', godId: 'zeus', realmId: 'mount_olympus', seed: 1, modifiers: [] },
+      CONTENT,
+    );
+    sim.state.godMode = true;
+    disarm(sim);
+    sim.debug({ type: 'skipTo', seconds: 419.5 });
+    run(sim, 1);
+    const bosses = sim.state.enemies.filter((e) => e.boss);
+    expect(bosses).toHaveLength(1);
+    expect(bosses[0].def.id).toBe('cyclops');
+    const events = sim.events();
+    expect(events.filter((e) => e.type === 'bossSpawned')).toHaveLength(1);
+    expect(sim.hud().boss?.name).toBe('The Cyclops');
+    sim.debug({ type: 'skipTo', seconds: 500 });
+    run(sim, 1);
+    expect(sim.state.enemies.filter((e) => e.boss)).toHaveLength(1);
+  });
+
+  it('ground slam only hurts a player still inside the marked circle when the wind-up ends', () => {
+    const sim = bossSim();
+    const player = sim.state.players[0];
+    const boss = spawnBoss(sim.state);
+    if (!boss?.boss) throw new Error('no boss');
+    boss.x = boss.px = player.x + 120;
+    boss.y = boss.py = player.y;
+    boss.boss.attackTimer = 0;
+    player.invulnerable = 0;
+    boss.attackTimer = 99;
+    sim.step(STEP, [NO_INPUT]);
+    expect(sim.state.hazards).toHaveLength(1);
+    const slam = sim.state.hazards[0];
+    expect(slam.kind).toBe('ground_slam');
+    expect(player.health).toBe(player.stats.maxHealth);
+    run(sim, slam.warn);
+    expect(player.health).toBeLessThan(player.stats.maxHealth);
+  });
+
+  it('a player who leaves a boulder’s circle before impact takes no damage', () => {
+    // One boulder, aimed where the player stands.
+    const content = quietContent();
+    const bosses = content.bosses.map((b) => ({
+      ...b,
+      phases: [
+        {
+          ...b.phases[0],
+          attacks: [
+            {
+              type: 'boulder' as const,
+              id: 'boulder_throw',
+              windup: 1.3,
+              radius: 75,
+              damage: 26,
+              count: 1,
+              spread: 0,
+            },
+          ],
+        },
+      ],
+    }));
+    const sim = quietSim({ content: { ...content, bosses } });
+    disarm(sim);
+    const player = sim.state.players[0];
+    const boss = spawnBoss(sim.state);
+    if (!boss?.boss) throw new Error('no boss');
+    boss.x = boss.px = player.x + 600;
+    boss.attackTimer = 99;
+    boss.boss.attackTimer = 0;
+    player.invulnerable = 0;
+    sim.step(STEP, [NO_INPUT]);
+    expect(sim.state.hazards.some((h) => h.kind === 'boulder_throw')).toBe(true);
+    // Run out of the circle (radius 75) before the wind-up ends.
+    for (let i = 0; i < 0.8 / STEP; i++) sim.step(STEP, [{ moveX: 0, moveY: -1, ability: false }]);
+    for (let i = 0; i < 1 / STEP; i++) sim.step(STEP, [NO_INPUT]);
+    expect(player.health).toBe(player.stats.maxHealth);
+  });
+
+  it('enters its second phase below half health and announces it once', () => {
+    const sim = bossSim();
+    const boss = spawnBoss(sim.state);
+    if (!boss?.boss) throw new Error('no boss');
+    sim.events();
+    boss.health = boss.maxHealth * 0.45;
+    run(sim, 0.5);
+    boss.health = boss.maxHealth * 0.4;
+    run(sim, 0.5);
+    expect(boss.boss.phase).toBe(1);
+    const enraged = sim
+      .events()
+      .filter((e) => e.type === 'announcement' && e.text.includes('enraged'));
+    expect(enraged).toHaveLength(1);
+  });
+
+  it('defeating the boss ends the run in victory', () => {
+    const sim = bossSim();
+    spawnBoss(sim.state);
+    sim.debug({ type: 'damageBoss', fraction: 1 });
+    sim.step(STEP, [NO_INPUT]);
+    expect(sim.phase).toBe('ended');
+    expect(sim.result?.outcome).toBe('victory');
+    expect(sim.result?.bossDefeated).toBe(true);
+  });
+
+  it('summons and charges only in the second phase', () => {
+    const content = quietContent();
+    const cyclops = content.bosses.find((b) => b.id === 'cyclops');
+    expect(cyclops?.phases[0].attacks.map((a) => a.type)).not.toContain('charge');
+    expect(cyclops?.phases[1].attacks.map((a) => a.type)).toEqual(
+      expect.arrayContaining(['charge', 'summon']),
+    );
+  });
+});

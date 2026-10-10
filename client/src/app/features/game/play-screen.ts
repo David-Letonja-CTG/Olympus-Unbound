@@ -1,0 +1,279 @@
+import {
+  ChangeDetectionStrategy,
+  Component,
+  DestroyRef,
+  ElementRef,
+  afterNextRender,
+  effect,
+  inject,
+  signal,
+  viewChild,
+} from '@angular/core';
+import { Router } from '@angular/router';
+import {
+  DebugAction,
+  DebugSnapshot,
+  GameEvent,
+  GameSession,
+  HudSnapshot,
+  UiInput,
+  UpgradeChoice,
+} from '../../../engine';
+import { debugEnabled } from '../../core/debug-mode';
+import { GAME_CONTENT, GAME_SESSION_FACTORY } from '../../core/game-content';
+import { Progression } from '../../core/progression';
+import { RunSetup } from '../../core/run-setup';
+import { Announcement, Hud } from './hud';
+import { LevelUpDialog } from './level-up-dialog';
+import { PauseMenu } from './pause-menu';
+
+/** How long the final moment of a run stays on screen before the summary. */
+const END_DELAY_MS = 1600;
+const ANNOUNCEMENT_MS = 3200;
+
+declare global {
+  interface Window {
+    /** Development-only hooks for end-to-end tests (`?debug`). */
+    olympusDebug?: {
+      send(action: DebugAction): void;
+      hud(): HudSnapshot | undefined;
+      inspect(): DebugSnapshot | undefined;
+    };
+  }
+}
+
+/**
+ * Owns the game session for one run (D3): starts it, turns its events into signals for the overlays, sends the
+ * player's choices back, records the result and moves on to the summary. Nothing else in Angular sees the session.
+ */
+@Component({
+  selector: 'app-play-screen',
+  imports: [Hud, LevelUpDialog, PauseMenu],
+  changeDetection: ChangeDetectionStrategy.OnPush,
+  template: `
+    <div class="game-host" #host data-testid="game-host"></div>
+    @if (hud(); as h) {
+      <app-hud [hud]="h" [announcements]="announcements()" />
+    }
+    @if (choice(); as c) {
+      <app-level-up-dialog [choice]="c" (chosen)="choose(c, $event)" />
+    }
+    @if (paused() && !ended()) {
+      <app-pause-menu
+        (resumeRequested)="send({ type: 'resume' })"
+        (abandonRequested)="send({ type: 'abandon' })"
+      />
+    }
+    @if (ended(); as outcome) {
+      <div class="ending" [class.victory]="outcome === 'victory'" role="status">
+        {{
+          outcome === 'victory'
+            ? 'Victory'
+            : outcome === 'abandoned'
+              ? 'Run abandoned'
+              : 'You have fallen'
+        }}
+      </div>
+    }
+    @if (error()) {
+      <div class="error" role="alert">
+        <p>The game could not start: {{ error() }}</p>
+        <button class="btn" (click)="leave()">Back to menu</button>
+      </div>
+    }
+  `,
+  styles: `
+    :host {
+      position: fixed;
+      inset: 0;
+      overflow: hidden;
+      background: #000;
+      user-select: none;
+    }
+    .game-host {
+      position: absolute;
+      inset: 0;
+    }
+    .ending {
+      position: absolute;
+      inset: 0;
+      display: grid;
+      place-items: center;
+      font-family: var(--serif);
+      font-size: clamp(2.2rem, 7vw, 4.5rem);
+      font-weight: 700;
+      color: #ff8a70;
+      background: radial-gradient(ellipse at center, rgba(40, 0, 0, 0.35), rgba(0, 0, 0, 0.75));
+      text-shadow: 0 4px 30px rgba(0, 0, 0, 0.9);
+      animation: fade 0.6s ease;
+    }
+    .ending.victory {
+      color: var(--gold-2);
+      background: radial-gradient(ellipse at center, rgba(80, 60, 0, 0.3), rgba(0, 0, 0, 0.7));
+    }
+    .error {
+      position: absolute;
+      inset: 0;
+      display: grid;
+      place-content: center;
+      gap: 12px;
+      text-align: center;
+      background: var(--bg);
+    }
+    @keyframes fade {
+      from {
+        opacity: 0;
+      }
+    }
+  `,
+})
+export class PlayScreen {
+  private readonly content = inject(GAME_CONTENT);
+  private readonly createSession = inject(GAME_SESSION_FACTORY);
+  private readonly progression = inject(Progression);
+  private readonly setup = inject(RunSetup);
+  private readonly router = inject(Router);
+  private readonly host = viewChild.required<ElementRef<HTMLElement>>('host');
+  private readonly levelUp = viewChild(LevelUpDialog);
+  private readonly pauseMenu = viewChild(PauseMenu);
+
+  protected readonly hud = signal<HudSnapshot | undefined>(undefined);
+  protected readonly choice = signal<UpgradeChoice | undefined>(undefined);
+  protected readonly paused = signal(false);
+  protected readonly ended = signal<'victory' | 'defeat' | 'abandoned' | undefined>(undefined);
+  protected readonly announcements = signal<readonly Announcement[]>([]);
+  protected readonly error = signal<string | undefined>(undefined);
+
+  private session: GameSession | undefined;
+  private destroyed = false;
+  private announcementId = 0;
+  private readonly timers = new Set<ReturnType<typeof setTimeout>>();
+
+  constructor() {
+    const destroyRef = inject(DestroyRef);
+    afterNextRender(() => void this.start());
+    // Settings changed in the pause menu apply to the running game immediately.
+    effect(() => {
+      const settings = this.progression.settings();
+      this.session?.send({ type: 'updateSettings', settings });
+    });
+    destroyRef.onDestroy(() => {
+      this.destroyed = true;
+      for (const t of this.timers) clearTimeout(t);
+      this.session?.destroy();
+      if (window.olympusDebug) delete window.olympusDebug;
+    });
+  }
+
+  protected send(command: Parameters<GameSession['send']>[0]): void {
+    this.session?.send(command);
+  }
+
+  protected choose(choice: UpgradeChoice, index: number): void {
+    this.send({ type: 'chooseUpgrade', choiceId: choice.id, index });
+  }
+
+  protected leave(): void {
+    void this.router.navigate(['/']);
+  }
+
+  private async start(): Promise<void> {
+    const godId = this.setup.godId();
+    const realmId = this.setup.realmId();
+    if (!godId || !realmId) {
+      void this.router.navigate(['/gods']);
+      return;
+    }
+    const debug = debugEnabled();
+    try {
+      const session = await this.createSession({
+        parent: this.host().nativeElement,
+        content: this.content,
+        run: {
+          runId: this.setup.newRunId(),
+          godId,
+          realmId,
+          seed: this.setup.seed(),
+          modifiers: this.progression.runModifiers(),
+        },
+        settings: this.progression.settings(),
+        debug,
+      });
+      if (this.destroyed) {
+        session.destroy();
+        return;
+      }
+      this.session = session;
+      session.subscribe((event) => this.onEvent(event));
+      if (debug) {
+        window.olympusDebug = {
+          send: (action) => session.send({ type: 'debug', action }),
+          hud: () => this.hud(),
+          inspect: () => session.inspect(),
+        };
+      }
+    } catch (e) {
+      this.error.set(e instanceof Error ? e.message : String(e));
+    }
+  }
+
+  private onEvent(event: GameEvent): void {
+    switch (event.type) {
+      case 'hud':
+        this.hud.set(event.hud);
+        return;
+      case 'choice':
+        this.choice.set(event.choice);
+        return;
+      case 'choiceResolved':
+        this.choice.set(undefined);
+        return;
+      case 'paused':
+        this.paused.set(true);
+        return;
+      case 'resumed':
+        this.paused.set(false);
+        return;
+      case 'announcement':
+        this.announce(event.text, event.kind);
+        return;
+      case 'uiInput':
+        this.onUiInput(event.input);
+        return;
+      case 'runEnded': {
+        // A run ends once; a repeated report must not replace the rewards shown on the summary.
+        if (this.ended()) return;
+        this.choice.set(undefined);
+        this.ended.set(event.result.outcome);
+        const rewards = this.progression.recordRun(event.result);
+        this.setup.lastRun.set({ result: event.result, rewards });
+        this.later(() => void this.router.navigate(['/summary']), END_DELAY_MS);
+        return;
+      }
+      case 'ready':
+        return;
+    }
+  }
+
+  private onUiInput(input: UiInput): void {
+    if (this.paused()) this.pauseMenu()?.handle(input);
+    else if (this.choice()) this.levelUp()?.handle(input);
+  }
+
+  private announce(text: string, kind: Announcement['kind']): void {
+    const item: Announcement = { id: ++this.announcementId, text, kind };
+    this.announcements.update((list) => [...list.slice(-2), item]);
+    this.later(
+      () => this.announcements.update((list) => list.filter((a) => a !== item)),
+      ANNOUNCEMENT_MS,
+    );
+  }
+
+  private later(fn: () => void, ms: number): void {
+    const t = setTimeout(() => {
+      this.timers.delete(t);
+      fn();
+    }, ms);
+    this.timers.add(t);
+  }
+}

@@ -1,0 +1,61 @@
+# Decision Log
+
+Cross-cutting product and architecture decisions. OpenSpec changes may refine them in their `design.md`; when a decision changes, update the entry here and note the date.
+
+Status values: **Accepted**, **Superseded**, **Deferred**.
+
+---
+
+## D1 — Frontend-only, static game (Accepted, 2026-10-10)
+
+The game runs entirely in the browser and deploys as static files. No backend, REST API, database, accounts, cloud saves, networking or online multiplayer. Persistent data lives in browser storage (D8).
+
+## D2 — Three layers: Angular, Phaser, simulation (Accepted, 2026-10-10)
+
+| Layer | Owns | May import |
+|---|---|---|
+| **Angular** (`client/src/app`) | Menus, god/realm selection, HUD overlay, level-up and pause dialogs, run summary, progression, settings, saves | Engine public surface (`engine/index.ts`), content |
+| **Phaser layer** (`client/src/engine/phaser`) | Frame loop, input devices, camera, drawing, particles, sound triggering | Phaser, the simulation |
+| **Simulation** (`client/src/engine/*` except `phaser/`, `audio/`) | All gameplay rules and run state: movement, collision, spawning, combat, leveling, bosses, run phases | Nothing framework-specific |
+
+Gameplay truth lives in the simulation; Phaser objects only mirror it. The simulation runs in Node tests without a browser. Enforced by ESLint `no-restricted-imports`.
+
+*Alternative considered:* Phaser Arcade Physics bodies as gameplay state — rejected: not deterministic across frame rates, not testable without Phaser, and it would spread rules over scene code.
+
+## D3 — Narrow Angular ↔ engine boundary (Accepted, 2026-10-10)
+
+Angular talks to a running game only through `GameSession` (`send(command)`, `subscribe(event)`, `destroy()`), created by `createGameSession`. Only `PlayScreen` holds a session. Frequent state reaches Angular only as HUD snapshots at ≤ 10 Hz. Angular never touches Phaser objects; Phaser never touches Angular.
+
+## D4 — Content as typed TypeScript data (Accepted, 2026-10-10)
+
+Gods, weapons, armour, relics, skills, synergies, enemies, bosses, realms, permanent upgrades and balance live in `client/src/content/` as typed TypeScript (`engine/data/types.ts`), checked by the compiler and by `validateContent` in a unit test. The engine never imports content; it receives it through `createGameSession`. New content reuses behaviors (weapon: projectile/chain/orbit/nova/sweep/strike; enemy: chaser/ranged/charger/summoner; boss attacks: slam/boulder/charge/summon).
+
+*Alternatives considered:* JSON files (no types, a loader, a schema validator to maintain); a root-level `content/` folder (a second TypeScript project for no gain).
+
+## D5 — Determinism (Accepted, 2026-10-10)
+
+All gameplay randomness comes from the seeded `Rng` (mulberry32) with forked streams per purpose (`arena`, `spawn`, `combat`, `loot`, `offers`). The simulation advances only through `step(1/60 s)`; it never reads clocks or `Math.random()` (lint-enforced). Same seed + content + inputs ⇒ same run. Cosmetic effects in the Phaser layer may use non-deterministic randomness.
+
+## D6 — Lightweight circle collision (Accepted, 2026-10-10)
+
+Players, enemies, projectiles and obstacles are circles. Static obstacles sit in a spatial grid; enemies are re-bucketed into a spatial hash each step for hits, separation and area queries. Revisit only with a concrete need (e.g. long walls).
+
+## D7 — HUD split (Accepted, 2026-10-10)
+
+Angular renders HUD bars, counters, loadout, synergies, boss bar, announcements and dialogs from throttled snapshots. Phaser renders everything tied to the world: damage numbers, elite health bars, telegraphs, the off-screen boss pointer, particles, hit flashes and camera shake.
+
+## D8 — Versioned browser save, idempotent rewards (Accepted, 2026-10-10)
+
+One `localStorage` key (`olympus-unbound/save`) holds a versioned `SaveData` record. Loading never throws: field-by-field validation, unknown IDs dropped, older versions migrated, unreadable data replaced by a fresh save, in-memory fallback when storage is blocked. Run rewards are applied by a pure function keyed by a unique run ID (the last 20 IDs are remembered), so a run is never rewarded twice. IndexedDB is deferred until saves outgrow `localStorage`.
+
+## D9 — Original placeholder art and sound (Accepted, 2026-10-10)
+
+All sprites, tiles and icons are drawn with Canvas 2D at startup (`engine/art/sprites.ts`); all sound effects are synthesized with Web Audio (`engine/audio/sound-player.ts`). No third-party assets, so there are no licences to track yet. Real art or audio replaces these modules without touching gameplay. Any future asset must be original or properly licensed and recorded in `docs/content.md`.
+
+## D10 — English-only UI for the vertical slice (Accepted, 2026-10-10)
+
+UI text lives in Angular templates and display names in content. A localization framework is deferred until a second language is planned; content keeps stable IDs so that adding one later does not change saves.
+
+## D11 — Multiplayer-ready, single-player first (Accepted, 2026-10-10)
+
+The simulation keeps a list of players, per-player input (`PlayerInput[]` by slot) and targets the nearest living player; the camera follows the players' centre. Only one player is created and mapped in the slice. Local co-op (shared camera, second gamepad) is a later change; online play is out of scope (D1).
