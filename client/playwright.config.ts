@@ -3,6 +3,10 @@ import { defineConfig, devices } from '@playwright/test';
 const ci = !!process.env['CI'];
 // Configurable so the tests can run next to a developer's own dev server.
 const port = process.env['E2E_PORT'] ?? '4321';
+// CI runners have no GPU, so WebGL is software-rendered there; E2E_NO_GPU=1 reproduces that locally.
+const launchOptions = process.env['E2E_NO_GPU'] ? { args: ['--disable-gpu'] } : {};
+// Software rendering is bound by pixels: a smaller window keeps the game responsive without a GPU.
+const viewport = { width: 960, height: 540 };
 
 /** Plays the vertical slice in Chromium against the development server (debug hooks need a dev build). */
 export default defineConfig({
@@ -12,13 +16,13 @@ export default defineConfig({
   reporter: ci ? [['list'], ['html', { open: 'never' }]] : 'list',
   use: {
     baseURL: `http://localhost:${port}`,
-    viewport: { width: 1280, height: 720 },
+    viewport,
     trace: 'retain-on-failure',
   },
   projects: [
     {
       name: 'chromium',
-      use: { ...devices['Desktop Chrome'], viewport: { width: 1280, height: 720 } },
+      use: { ...devices['Desktop Chrome'], viewport, launchOptions },
     },
   ],
   webServer: {

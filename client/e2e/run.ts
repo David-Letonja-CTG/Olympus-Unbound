@@ -29,7 +29,10 @@ export async function startRun(page: Page, seed = '847291'): Promise<void> {
   await page.getByTestId('seed-input').fill(seed);
   await page.getByTestId('begin').click();
   await expect(page.locator('[data-testid=game-host] canvas')).toBeVisible();
-  await expect.poll(() => inspect(page).then((s) => s?.time ?? 0)).toBeGreaterThan(0.5);
+  // Without a GPU (CI) the first frames are slow; wait for the simulation to be running.
+  await expect
+    .poll(() => inspect(page).then((s) => s?.time ?? 0), { timeout: 30_000 })
+    .toBeGreaterThan(0.5);
 }
 
 export function debug(page: Page, action: DebugAction): Promise<void> {

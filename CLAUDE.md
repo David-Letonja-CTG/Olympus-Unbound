@@ -38,6 +38,7 @@ npm test                  # unit tests only (engine + Angular)
 npm run lint
 npm run format            # prettier --write
 npm run e2e               # Playwright: plays the vertical slice in Chromium (starts its own dev server on :4321)
+E2E_NO_GPU=1 npm run e2e  # the same with software WebGL, as on the GPU-less CI runners
 npx playwright install chromium   # once per machine
 ```
 

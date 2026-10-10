@@ -86,9 +86,12 @@ export class ArenaScene extends Phaser.Scene {
     this.effects.damageNumbers = settings.damageNumbers;
   }
 
-  override update(_time: number, deltaMs: number): void {
+  override update(): void {
     const { sim } = this.host;
-    const dt = Math.min(deltaMs / 1000, MAX_FRAME_SECONDS);
+    // Real elapsed time, not Phaser's smoothed delta: Phaser clamps the delta to one 60 fps frame while the page
+    // lacks focus and for its first frames, which would run the game in slow motion below 60 fps (D5: the
+    // simulation must follow real time through fixed steps).
+    const dt = Math.min(this.game.loop.rawDelta / 1000, MAX_FRAME_SECONDS);
 
     if (this.input$.takePauseRequest()) {
       if (sim.phase === 'playing' || sim.phase === 'choosing') {
@@ -121,7 +124,7 @@ export class ArenaScene extends Phaser.Scene {
     );
     this.effects.update(sim.state, sim.phase === 'playing' ? dt : 0, this.cameras.main);
 
-    this.hudTimer += deltaMs;
+    this.hudTimer += this.game.loop.rawDelta;
     if (this.hudTimer >= HUD_INTERVAL_MS) {
       this.hudTimer = 0;
       this.host.emit({ type: 'hud', hud: sim.hud() });
