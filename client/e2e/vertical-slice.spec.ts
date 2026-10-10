@@ -10,16 +10,25 @@ test('the vertical slice: menu → Zeus → Olympus → level-up → elite → b
   await startRun(page);
   await debug(page, { type: 'godMode', enabled: true });
 
-  // Moving: holding D moves Zeus right at his speed (210 per simulated second; headless browsers render
-  // slowly, so compare against simulated time, not wall time).
-  const before = await inspect(page);
+  // Moving: holding D moves Zeus right at his speed (210 per simulated second). Measured between two samples
+  // taken while he is already moving, against simulated time: without a GPU (CI) frames are slow, and the
+  // frame that registers the key press would otherwise count as time spent standing still.
+  const start = await inspect(page);
   await page.keyboard.down('d');
-  await page.waitForTimeout(1000);
-  const after = await inspect(page);
+  await expect
+    .poll(async () => ((await inspect(page))?.player.x ?? 0) - (start?.player.x ?? 0), {
+      timeout: 20_000,
+    })
+    .toBeGreaterThan(1);
+  const a = await inspect(page);
+  await expect
+    .poll(async () => ((await inspect(page))?.time ?? 0) - (a?.time ?? 0), { timeout: 20_000 })
+    .toBeGreaterThan(0.5);
+  const b = await inspect(page);
   await page.keyboard.up('d');
-  const dt = (after?.time ?? 0) - (before?.time ?? 0);
-  expect(dt).toBeGreaterThan(0.1);
-  expect(((after?.player.x ?? 0) - (before?.player.x ?? 0)) / dt).toBeGreaterThan(170);
+  const speed = ((b?.player.x ?? 0) - (a?.player.x ?? 0)) / ((b?.time ?? 0) - (a?.time ?? 1));
+  expect(speed).toBeGreaterThan(190);
+  expect(speed).toBeLessThan(215);
 
   // Enemies spawn and are fought.
   await expect.poll(async () => (await inspect(page))?.enemies ?? 0).toBeGreaterThan(0);
