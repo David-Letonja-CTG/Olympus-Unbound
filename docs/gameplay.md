@@ -11,9 +11,10 @@ The game as the player experiences it in the vertical slice. Numbers live in `cl
 4. **Survive.** Weapons fire on their own; the player moves, positions, collects XP and uses the divine ability.
 5. **Level up** — the run pauses; pick one of three upgrades.
 6. **Pressure rises** — new enemy types, packs, hordes and elites.
-7. **The boss** — at 07:00 the Cyclops wakes in its arena. Defeat it to win.
-8. **Run summary** — outcome, time, level, kills, gold, rewards, build, discoveries → main menu or play again.
-9. **Progression** — spend gold on permanent upgrades; browse the codex.
+7. **The boss** — after 7 minutes in a realm its boss wakes in its arena (the Cyclops on Mount Olympus). Defeating it adds its gold and opens a **gate** to the next realm.
+8. **Deeper** — step into the gate (or wait a minute) and the party enters the next realm: a new arena, the realm's own monsters from the start of its timeline, everything a little stronger than before. The run goes on realm after realm until every god has fallen.
+9. **Run summary** — time, realms cleared, the realm reached, level, kills, gold, rewards, build, discoveries → main menu or play again.
+10. **Progression** — spend gold on permanent upgrades; browse the codex.
 
 ## Controls
 
@@ -33,6 +34,7 @@ Up to four gods fight one horde, each player in their own browser.
 - **Create a room** (*Co-op → Create room*): you get a five-character code, like `K7QXP`, to share with friends. **Join a room** with a friend's code.
 - **Lobby:** everyone picks a name and a god (several players may pick the same god), and guests mark themselves *Ready*. The host picks the realm and starts once everyone is ready. The loading screen lists the party and the room code, and the run starts when everyone has loaded.
 - **Together:** each camera follows its own god, or an ally after you fall. Experience and level are shared, but each player gets their own three offers and picks their own upgrade. The run waits until everyone has chosen (*Waiting for Bo to choose…*).
+- **Reviving:** a fallen god's spirit floats where they fell. Stand beside it for 3 seconds (a ring fills) and they rise with half their health. Stepping away drains the ring. Passing a gate also brings every fallen god along. If every god is down at once, the run ends.
 - **Difficulty per player:** every god beyond the first adds 65% enemy health, 50% more spawns and enemies alive at once, and 90% boss health.
 - **Pause:** in a room, the menu does not stop the fight, and leaving the window does not pause. The host's menu offers *End run for everyone*, a guest's *Leave room*.
 - **Leaving:** a guest who leaves (or loses the connection) leaves the battle, and the run goes on. If the host leaves, everyone's run ends as abandoned. Everyone keeps their own rewards in their own save. A room lasts one run; the summary offers *Co-op* to start another.
@@ -104,7 +106,7 @@ Enemy health and damage grow a little each minute (capped). Elites are larger an
 
 ## Rewards and progression
 
-- Gold collected in the run is kept on victory and defeat; **+250** for a Mount Olympus victory; **half** (rounded down) when abandoned.
+- Gold collected in the run is kept when you fall, including each boss's gold (**+250** for the Cyclops); **half** (rounded down) when abandoned.
 - Weapons, armour and relics held at the end become **discovered** in the codex.
 - **Permanent upgrades**: Vitality, Might, Swiftness, Greed, Attraction, Resilience.
 - Statistics: runs, victories, total kills, best survival time.

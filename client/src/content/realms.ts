@@ -234,7 +234,7 @@ export const MOUNT_OLYMPUS: RealmDefinition = {
   scaling: { healthPerMinute: 0.12, damagePerMinute: 0.05, max: 2.2 },
   elite: { health: 12, damage: 1.6, size: 1.5, gold: 15, xp: 10 },
   boss: { id: 'cyclops', at: 420, spawnRateMultiplier: 0.45 },
-  rewards: { victoryGold: 250 },
+  rewards: { bossGold: 250 },
 };
 
 export const REALMS: readonly RealmDefinition[] = [MOUNT_OLYMPUS];

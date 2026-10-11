@@ -14,6 +14,7 @@ export const REMEMBERED_RUNS = 20;
 
 export interface SaveStats {
   readonly runs: number;
+  /** Realms cleared over all runs (named for the 7-minute runs, whose victory cleared one realm). */
   readonly victories: number;
   readonly kills: number;
   readonly bestTimeSeconds: number;

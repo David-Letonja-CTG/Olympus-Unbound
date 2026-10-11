@@ -30,6 +30,7 @@ export function createPlayer(state: RunState, slot: number, x: number, y: number
     invulnerable: 1,
     hurtFlash: 0,
     alive: true,
+    revive: 0,
     revivalsUsed: 0,
     abilityTimer: 0,
     ability: createWeapon(god.ability, stats),

@@ -33,6 +33,16 @@ export const BALANCE: BalanceConfig = {
     maxAlivePerPlayer: 0.5,
     bossHealthPerPlayer: 0.9,
   },
+  // Every realm cleared (spec: endless-run / difficulty by depth); tuned with autopilot runs (docs/content.md).
+  endless: {
+    enemyHealthPerRealm: 0.6,
+    enemyDamagePerRealm: 0.25,
+    spawnRatePerRealm: 0.12,
+    maxAlivePerRealm: 0.12,
+    bossHealthPerRealm: 0.7,
+    bossDamagePerRealm: 0.25,
+  },
+  revive: { radius: 70, seconds: 3, health: 0.5, invulnerable: 2 },
 };
 
 export const PERMANENT_UPGRADES: readonly PermanentUpgradeDefinition[] = [

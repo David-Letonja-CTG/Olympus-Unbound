@@ -449,7 +449,8 @@ export interface RealmDefinition {
     readonly xp: number;
   };
   readonly boss: { readonly id: string; readonly at: number; readonly spawnRateMultiplier: number };
-  readonly rewards: { readonly victoryGold: number };
+  /** Gold added to the run's gold when the realm's boss falls (spec: boss-encounter / defeating the boss). */
+  readonly rewards: { readonly bossGold: number };
 }
 
 // ---------------------------------------------------------------------------------------------------------------
@@ -490,6 +491,25 @@ export interface BalanceConfig {
     readonly spawnRatePerPlayer: number;
     readonly maxAlivePerPlayer: number;
     readonly bossHealthPerPlayer: number;
+  };
+  /** Each realm cleared adds these fractions (spec: endless-run / difficulty by depth). */
+  readonly endless: {
+    readonly enemyHealthPerRealm: number;
+    readonly enemyDamagePerRealm: number;
+    readonly spawnRatePerRealm: number;
+    readonly maxAlivePerRealm: number;
+    readonly bossHealthPerRealm: number;
+    readonly bossDamagePerRealm: number;
+  };
+  /** Reviving a fallen ally (spec: co-op / reviving allies). */
+  readonly revive: {
+    /** How close a living ally must stand to the spirit. */
+    readonly radius: number;
+    /** Seconds of standing by it to revive. */
+    readonly seconds: number;
+    /** Fraction of maximum health the god returns with. */
+    readonly health: number;
+    readonly invulnerable: number;
   };
 }
 

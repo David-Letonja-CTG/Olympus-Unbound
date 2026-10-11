@@ -189,4 +189,29 @@ describe('rooms (spec: rooms)', () => {
     expect(r.host.paused).toBe(true);
     expect(r.sim.phase).toBe('playing');
   });
+
+  it('follows the host through a gate: same realm and arena, and the run waits for the guest (spec: endless-run)', () => {
+    const r = room();
+    r.host.markLoaded();
+    r.guest.markLoaded();
+    r.play(30);
+    r.sim.debug({ type: 'travel' });
+    r.play(3);
+    // The host's scene rebuilds; until it has, nothing moves.
+    expect(r.host.started).toBe(false);
+    r.host.markLoaded();
+    r.play(5);
+    expect(r.guestEvents.filter((e) => e.type === 'realmEntered')).toHaveLength(1);
+    expect(r.guest.arena).toEqual(r.sim.arena);
+    expect(r.host.started).toBe(false); // waiting for the guest's new realm
+    const t = r.sim.state.time;
+    r.play(10);
+    expect(r.sim.state.time).toBe(t);
+    r.guest.markLoaded();
+    r.play(10);
+    expect(r.host.started).toBe(true);
+    expect(r.guest.started).toBe(true);
+    expect(r.sim.state.time).toBeGreaterThan(t);
+    expect(r.guest.inspect().depth).toBe(1);
+  });
 });

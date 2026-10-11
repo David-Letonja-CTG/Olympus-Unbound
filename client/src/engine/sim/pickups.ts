@@ -29,10 +29,18 @@ export function updatePickups(state: RunState, dt: number): void {
   }
 }
 
-export function collect(state: RunState, player: Player, pickup: Pickup): void {
+/** `quiet`: gathered by a gate, without a sound per pickup (spec: endless-run / travelling). */
+export function collect(state: RunState, player: Player, pickup: Pickup, quiet = false): void {
   if (pickup.dead) return;
   pickup.dead = true;
-  state.emit({ type: 'pickup', kind: pickup.kind, x: pickup.x, y: pickup.y, value: pickup.value });
+  if (!quiet)
+    state.emit({
+      type: 'pickup',
+      kind: pickup.kind,
+      x: pickup.x,
+      y: pickup.y,
+      value: pickup.value,
+    });
   switch (pickup.kind) {
     case 'xp':
       state.addXp(pickup.value * player.stats.xpGain);

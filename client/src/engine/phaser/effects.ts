@@ -3,6 +3,7 @@ import { Element } from '../data/types';
 import { WorldFrame } from '../sim/world-frame';
 import { SimEvent } from '../sim/types';
 import { LightMap } from './atmosphere';
+import { GATE_STAND_SECONDS } from '../sim/realms';
 import { DEPTH } from './world-view';
 
 const ELEMENT_COLOR: Record<Element, number> = {
@@ -44,6 +45,9 @@ export class Effects {
   private readonly fx: Phaser.GameObjects.Graphics;
   private readonly bars: Phaser.GameObjects.Graphics;
   private readonly pointer: Phaser.GameObjects.Graphics;
+  /** The gate and fallen allies' revival rings, above the darkness (spec: endless-run, co-op). */
+  private readonly marks: Phaser.GameObjects.Graphics;
+  private clock = 0;
   private readonly sparks: Phaser.GameObjects.Particles.ParticleEmitter;
   private readonly puffs: Phaser.GameObjects.Particles.ParticleEmitter;
   private readonly transients: Transient[] = [];
@@ -59,6 +63,7 @@ export class Effects {
     this.fx = scene.add.graphics().setDepth(DEPTH.effects).setBlendMode(Phaser.BlendModes.ADD);
     this.bars = scene.add.graphics().setDepth(DEPTH.bars);
     this.pointer = scene.add.graphics().setDepth(DEPTH.pointer).setScrollFactor(0);
+    this.marks = scene.add.graphics().setDepth(DEPTH.telegraph + 1);
     this.sparks = scene.add
       .particles(0, 0, 'spark', {
         lifespan: 320,
@@ -102,6 +107,19 @@ export class Effects {
         this.attack(event);
         return;
       case 'levelUp':
+        return;
+      case 'gateOpened':
+        this.add({
+          kind: 'burst',
+          x: event.x,
+          y: event.y,
+          radius: 220,
+          angle: 0,
+          arc: 0,
+          color: 0xffd27a,
+          ttl: 0.8,
+        });
+        this.burst(this.sparks, event.x, event.y, 50, 0xffd27a);
         return;
       case 'playerRevived':
         this.add({
@@ -152,11 +170,16 @@ export class Effects {
     camera: Phaser.Cameras.Scene2D.Camera,
     lights: LightMap,
   ): void {
+    this.clock += dt;
     this.drawTransients(dt, lights);
     if (state) {
       this.drawTelegraphs(state);
       this.drawBars(state);
-      this.drawPointer(state, camera);
+      this.drawMarks(state, lights);
+      this.pointer.clear();
+      const boss = state.boss;
+      if (boss && !boss.dead) this.drawPointer(boss, 0xff3a1a, camera);
+      if (state.gate) this.drawPointer(state.gate, 0xffd27a, camera);
     }
     for (let i = this.numbers.length - 1; i >= 0; i--) {
       const n = this.numbers[i];
@@ -428,16 +451,64 @@ export class Effects {
     }
   }
 
-  private drawPointer(state: WorldFrame, camera: Phaser.Cameras.Scene2D.Camera): void {
-    const g = this.pointer;
+  /**
+   * The open gate (a turning ring of light that fills as a god stands in it) and the ring around every fallen
+   * ally's spirit that fills as they are revived.
+   */
+  private drawMarks(state: WorldFrame, lights: LightMap): void {
+    const g = this.marks;
     g.clear();
-    const boss = state.boss;
-    if (!boss || boss.dead) return;
+    const gate = state.gate;
+    if (gate) {
+      const t = this.clock;
+      const r = gate.radius;
+      g.fillStyle(0xffe6a8, 0.12);
+      g.fillCircle(gate.x, gate.y, r);
+      g.lineStyle(4, 0xffd27a, 0.9);
+      g.strokeCircle(gate.x, gate.y, r);
+      for (let i = 0; i < 3; i++) {
+        const a = t * (1.6 + i * 0.5) + (i * Math.PI * 2) / 3;
+        const ring = r * (0.45 + i * 0.17);
+        g.lineStyle(3, i === 1 ? 0xfff4d6 : 0xffc85a, 0.75);
+        g.beginPath();
+        g.arc(gate.x, gate.y, ring, a, a + Math.PI * 1.1);
+        g.strokePath();
+      }
+      const progress = Math.min(1, gate.standing / GATE_STAND_SECONDS);
+      if (progress > 0) {
+        g.lineStyle(7, 0xffffff, 0.95);
+        g.beginPath();
+        g.arc(gate.x, gate.y, r + 9, -Math.PI / 2, -Math.PI / 2 + progress * Math.PI * 2);
+        g.strokePath();
+      }
+      lights.add(gate.x, gate.y, 320 + Math.sin(t * 3) * 20, 0xffe0a0, 1, 9);
+    }
+    if (state.players.length < 2) return;
+    for (const p of state.players) {
+      if (p.alive || p.left) continue;
+      g.lineStyle(3, 0x9fdcff, 0.35);
+      g.strokeCircle(p.x, p.y, 34);
+      if (p.revive > 0) {
+        g.lineStyle(5, 0xd8f2ff, 0.95);
+        g.beginPath();
+        g.arc(p.x, p.y, 34, -Math.PI / 2, -Math.PI / 2 + p.revive * Math.PI * 2);
+        g.strokePath();
+      }
+    }
+  }
+
+  /** An arrow on the screen's edge toward something off-screen: the boss, or the open gate. */
+  private drawPointer(
+    target: { readonly x: number; readonly y: number },
+    color: number,
+    camera: Phaser.Cameras.Scene2D.Camera,
+  ): void {
+    const g = this.pointer;
     const view = camera.worldView;
-    if (view.contains(boss.x, boss.y)) return;
+    if (view.contains(target.x, target.y)) return;
     const cx = view.centerX;
     const cy = view.centerY;
-    const angle = Math.atan2(boss.y - cy, boss.x - cx);
+    const angle = Math.atan2(target.y - cy, target.x - cx);
     // Position on the screen edge (screen coordinates, the pointer ignores scrolling).
     const w = camera.width;
     const h = camera.height;
@@ -453,7 +524,7 @@ export class Effects {
     const px = w / 2 + (dx * scale) / z;
     const py = h / 2 + (dy * scale) / z;
     const size = 18 / z;
-    g.fillStyle(0xff3a1a, 0.95);
+    g.fillStyle(color, 0.95);
     g.lineStyle(2, 0xffffff, 0.9);
     const tri = [
       new Phaser.Math.Vector2(px + dx * size, py + dy * size),

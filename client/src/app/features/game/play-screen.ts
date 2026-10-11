@@ -18,6 +18,7 @@ import {
   GameSession,
   HudSnapshot,
   LoadStage,
+  RunOutcome,
   UiInput,
   UpgradeChoice,
 } from '../../../engine';
@@ -65,6 +66,7 @@ declare global {
         [party]="party()"
         [bossSprite]="bossSprite()"
         [seed]="seed()"
+        [depth]="depth()"
         [roomCode]="room?.code"
         [stage]="loadStage()"
         [stageProgress]="loadProgress()"
@@ -81,6 +83,11 @@ declare global {
         Waiting for {{ names }} to choose…
       </p>
     }
+    @if (fallen()) {
+      <p class="waiting fallen" role="status" data-testid="fallen">
+        You have fallen · an ally can revive you by standing beside your spirit
+      </p>
+    }
     @if (paused() && !ended()) {
       <app-pause-menu
         [room]="room ? (room.localSeat === 0 ? 'host' : 'guest') : undefined"
@@ -89,14 +96,8 @@ declare global {
       />
     }
     @if (ended(); as outcome) {
-      <div class="ending" [class.victory]="outcome === 'victory'" role="status">
-        {{
-          outcome === 'victory'
-            ? 'Victory'
-            : outcome === 'abandoned'
-              ? 'Run abandoned'
-              : 'You have fallen'
-        }}
+      <div class="ending" role="status">
+        {{ outcome === 'abandoned' ? 'Run abandoned' : 'You have fallen' }}
       </div>
     }
     @if (error()) {
@@ -131,10 +132,6 @@ declare global {
       text-shadow: 0 4px 30px rgba(0, 0, 0, 0.9);
       animation: fade 0.6s ease;
     }
-    .ending.victory {
-      color: var(--gold-2);
-      background: radial-gradient(ellipse at center, rgba(80, 60, 0, 0.3), rgba(0, 0, 0, 0.7));
-    }
     .waiting {
       position: absolute;
       left: 50%;
@@ -148,6 +145,11 @@ declare global {
       background: rgba(8, 6, 10, 0.78);
       border: 1px solid var(--line);
       pointer-events: none;
+    }
+    .waiting.fallen {
+      top: auto;
+      bottom: 22%;
+      color: #cfeaff;
     }
     .error {
       position: absolute;
@@ -181,7 +183,7 @@ export class PlayScreen {
   protected readonly hud = signal<HudSnapshot | undefined>(undefined);
   protected readonly choice = signal<UpgradeChoice | undefined>(undefined);
   protected readonly paused = signal(false);
-  protected readonly ended = signal<'victory' | 'defeat' | 'abandoned' | undefined>(undefined);
+  protected readonly ended = signal<RunOutcome | undefined>(undefined);
   protected readonly announcements = signal<readonly Announcement[]>([]);
   protected readonly error = signal<string | undefined>(undefined);
   /** Loading (spec: run-loading): the stage and its progress, until the arena is ready. */
@@ -190,8 +192,12 @@ export class PlayScreen {
   protected readonly loaded = signal(false);
   /** The loading screen stays while it fades out. */
   protected readonly showLoading = signal(true);
+  /** The realm the party is in: the starting realm, then each realm past a gate (spec: endless-run). */
+  private readonly realmId = signal(this.room?.config.realmId ?? this.setup.realmId());
+  /** Realms cleared so far. */
+  protected readonly depth = signal(0);
   protected readonly realm = computed(() => {
-    const id = this.room?.config.realmId ?? this.setup.realmId();
+    const id = this.realmId();
     return this.content.realms.find((r) => r.id === id) ?? this.content.realms[0];
   });
   protected readonly seed = computed(() => this.room?.config.seed ?? this.setup.seed());
@@ -217,6 +223,11 @@ export class PlayScreen {
     }
     const god = godOf(this.setup.godId() ?? '');
     return god ? [{ name: 'You', godName: god.name, sprite: god.visual.sprite }] : [];
+  });
+  /** In a room, this player's god is down but the run goes on (spec: co-op / reviving allies). */
+  protected readonly fallen = computed(() => {
+    const hud = this.hud();
+    return !!this.room && !!hud && hud.health <= 0 && !this.ended();
   });
   /** In a room, who the open round of choices still waits for once this player has chosen. */
   protected readonly waitingFor = computed(() => {
@@ -341,9 +352,24 @@ export class PlayScreen {
           this.loadProgress.set(event.progress);
         }
         return;
-      case 'ready':
+      case 'ready': {
         this.loaded.set(true);
-        this.later(() => this.showLoading.set(false), LOADING_FADE_MS);
+        const depth = this.depth();
+        // A gate passed during the fade keeps its own loading screen.
+        this.later(() => {
+          if (this.depth() === depth) this.showLoading.set(false);
+        }, LOADING_FADE_MS);
+        return;
+      }
+      case 'realmEntered':
+        // Through the gate: the loading screen shows the next realm while it is built (spec: run-loading).
+        this.realmId.set(event.realmId);
+        this.depth.set(event.depth);
+        this.choice.set(undefined);
+        this.loaded.set(false);
+        this.loadStage.set(undefined);
+        this.loadProgress.set(0);
+        this.showLoading.set(true);
         return;
     }
   }

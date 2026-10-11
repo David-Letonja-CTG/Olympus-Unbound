@@ -12,12 +12,14 @@ const result = (overrides: Partial<RunResult> = {}): RunResult => ({
   godId: 'zeus',
   realmId: 'mount_olympus',
   seed: 1,
-  outcome: 'victory',
+  outcome: 'defeat',
   timeSeconds: 450,
   level: 20,
   kills: 900,
-  gold: 180,
-  bossDefeated: true,
+  // 250 of it from the Cyclops: boss gold is part of the run's gold.
+  gold: 430,
+  realmsCleared: 1,
+  realmReached: 'mount_olympus',
   loadout: {
     weapons: [{ id: 'war_hammer', level: 3, damage: 1000 }],
     relics: ['zeus_eye'],
@@ -84,36 +86,32 @@ describe('parseSave', () => {
 });
 
 describe('applyRunResult', () => {
-  it('grants collected gold plus the victory bonus', () => {
-    const { save, rewards } = applyRunResult(freshSave(), result(), CONTENT);
+  it('grants the collected gold, boss gold included, and counts realms cleared', () => {
+    const { save, rewards } = applyRunResult(freshSave(), result());
     expect(rewards.totalGold).toBe(430);
     expect(save.gold).toBe(430);
     expect(save.stats).toEqual({ runs: 1, victories: 1, kills: 900, bestTimeSeconds: 450 });
   });
 
   it('grants half the gold, rounded down, for an abandoned run', () => {
-    const { rewards } = applyRunResult(
-      freshSave(),
-      result({ outcome: 'abandoned', gold: 75 }),
-      CONTENT,
-    );
+    const { rewards } = applyRunResult(freshSave(), result({ outcome: 'abandoned', gold: 75 }));
     expect(rewards.totalGold).toBe(37);
   });
 
   it('grants nothing for the same run twice', () => {
-    const once = applyRunResult(freshSave(), result(), CONTENT).save;
-    const twice = applyRunResult(once, result(), CONTENT);
+    const once = applyRunResult(freshSave(), result()).save;
+    const twice = applyRunResult(once, result());
     expect(twice.rewards.alreadyProcessed).toBe(true);
     expect(twice.save.gold).toBe(430);
   });
 
   it('discovers held items once', () => {
-    const { save, rewards } = applyRunResult(freshSave(), result(), CONTENT);
+    const { save, rewards } = applyRunResult(freshSave(), result());
     expect(rewards.newlyDiscovered).toEqual([
       { kind: 'weapons', id: 'war_hammer' },
       { kind: 'relics', id: 'zeus_eye' },
     ]);
-    const again = applyRunResult(save, result({ runId: 'run-2' }), CONTENT);
+    const again = applyRunResult(save, result({ runId: 'run-2' }));
     expect(again.rewards.newlyDiscovered).toEqual([]);
   });
 });

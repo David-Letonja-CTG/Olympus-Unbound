@@ -8,8 +8,9 @@ const SPAWN_MARGIN = 70;
 const LEASH = 1700;
 
 /**
- * Runs the realm's spawn timeline (spec: enemy-spawning): continuous spawning by phase, packs, timed hordes and
- * elites, and the boss. All balance numbers come from the realm definition.
+ * Runs the current realm's spawn timeline, by time in that realm (spec: enemy-spawning, endless-run): continuous
+ * spawning by phase, packs, timed hordes and elites, and the boss. All balance numbers come from the realm definition;
+ * every realm cleared adds spawn rate and room for more enemies.
  */
 export class SpawnDirector {
   private accumulator = 0;
@@ -25,7 +26,7 @@ export class SpawnDirector {
   currentPhase(): SpawnPhase {
     const timeline = this.state.realm.timeline;
     let phase = timeline[0];
-    for (const p of timeline) if (p.from <= this.state.time) phase = p;
+    for (const p of timeline) if (p.from <= this.state.realmTime) phase = p;
     return phase;
   }
 
@@ -33,11 +34,13 @@ export class SpawnDirector {
     const state = this.state;
     const phase = this.currentPhase();
     const bossActive = !!state.boss && !state.boss.dead;
+    const depth = state.depthScale();
     const rate =
       phase.rate *
       (bossActive ? state.realm.boss.spawnRateMultiplier : 1) *
-      state.partyScale.spawnRate;
-    const maxAlive = Math.round(phase.maxAlive * state.partyScale.maxAlive);
+      state.partyScale.spawnRate *
+      depth.spawnRate;
+    const maxAlive = Math.round(phase.maxAlive * state.partyScale.maxAlive * depth.maxAlive);
 
     this.accumulator += rate * dt;
     while (this.accumulator >= 1) {
@@ -64,11 +67,14 @@ export class SpawnDirector {
       }
     }
 
-    while (this.eventIndex < this.events.length && this.events[this.eventIndex].at <= state.time) {
+    while (
+      this.eventIndex < this.events.length &&
+      this.events[this.eventIndex].at <= state.realmTime
+    ) {
       this.fire(this.events[this.eventIndex++]);
     }
 
-    if (!state.boss && state.time >= state.realm.boss.at) spawnBoss(state);
+    if (!state.boss && state.realmTime >= state.realm.boss.at) spawnBoss(state);
 
     this.leashTimer += dt;
     if (this.leashTimer >= 1) {

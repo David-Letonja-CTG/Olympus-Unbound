@@ -44,7 +44,7 @@ interface CodexGroup {
               <dd>{{ s.runs }}</dd>
             </div>
             <div>
-              <dt>Victories</dt>
+              <dt>Realms cleared</dt>
               <dd>{{ s.victories }}</dd>
             </div>
             <div>

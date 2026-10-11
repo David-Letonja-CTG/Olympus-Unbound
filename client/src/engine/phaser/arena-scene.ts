@@ -75,6 +75,11 @@ export class ArenaScene extends Phaser.Scene {
 
   create(): void {
     const { driver } = this.host;
+    // Also after a gate: start loading again, without the previous realm's ground.
+    this.loading = 'realm';
+    this.hudTimer = 0;
+    for (const key of this.textures.getTextureKeys())
+      if (key.startsWith('arena-ground-')) this.textures.remove(key);
     const realm = driver.realm;
     const content = driver.index.content;
     registerTextures(this, content, [realm.map]);
@@ -272,8 +277,16 @@ export class ArenaScene extends Phaser.Scene {
           this.shake(180, 0.006);
         }
         return;
+      case 'gateOpened':
+        sound.play('victory');
+        return;
+      case 'realmEntered':
+        // A new realm: the scene builds it from scratch through the same loading stages (spec: endless-run).
+        emit({ type: 'realmEntered', realmId: event.realmId, depth: event.depth });
+        this.scene.restart();
+        return;
       case 'runEnded':
-        sound.play(event.result.outcome === 'victory' ? 'victory' : 'defeat');
+        sound.play('defeat');
         this.emitHud();
         emit({ type: 'runEnded', result: event.result });
         return;

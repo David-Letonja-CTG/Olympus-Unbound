@@ -4,7 +4,8 @@ type DebugAction =
   | { type: 'grantXp'; amount: number }
   | { type: 'skipTo'; seconds: number }
   | { type: 'damageBoss'; fraction: number }
-  | { type: 'killPlayer' }
+  | { type: 'killPlayer'; slot?: number }
+  | { type: 'travel' }
   | { type: 'godMode'; enabled: boolean };
 
 export interface Snapshot {
@@ -15,6 +16,7 @@ export interface Snapshot {
   bossAlive: boolean;
   players: number;
   party: { x: number; y: number; alive: boolean }[];
+  depth: number;
 }
 
 /** The development-only hooks the play screen installs with `?debug`. */

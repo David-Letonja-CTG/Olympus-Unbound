@@ -24,7 +24,7 @@ Desktop browsers with keyboard or gamepad first; the game is a static web build 
 ```text
 Choose a god (Zeus, Hades, …) → choose a realm (Olympus, Atlantis, Egyptian Underworld, Nordic realm)
 → procedural arena → horde combat → XP + gold → level-up choices → weapons / armour / relics → synergies
-→ elites → boss → victory or defeat → rewards → meta progression → new builds → new runs
+→ elites → boss → the gate to the next, harder realm → … until the party falls → rewards → meta progression → new builds → new runs
 ```
 
 ## Roadmap

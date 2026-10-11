@@ -6,7 +6,7 @@ import { Progression } from '../../core/progression';
 import { RunSetup } from '../../core/run-setup';
 import { formatTime, ItemIcon } from '../../shared/item-icon';
 
-const TITLES = { victory: 'Victory', defeat: 'Defeat', abandoned: 'Run abandoned' } as const;
+const TITLES = { defeat: 'You have fallen', abandoned: 'Run abandoned' } as const;
 
 /** What happened in the last run and what it earned (spec: run-outcome / run summary). */
 @Component({
@@ -18,16 +18,22 @@ const TITLES = { victory: 'Victory', defeat: 'Defeat', abandoned: 'Run abandoned
       <main class="screen">
         <h1
           class="screen-title"
-          [class.defeat]="v.result.outcome !== 'victory'"
+          [class.defeat]="v.result.outcome === 'defeat'"
           data-testid="summary-outcome"
         >
           {{ v.title }}
         </h1>
-        <p class="screen-subtitle">{{ v.god }} in {{ v.realm }} · seed {{ v.result.seed }}</p>
+        <p class="screen-subtitle">
+          {{ v.god }} from {{ v.realm }} to {{ v.reached }} · seed {{ v.result.seed }}
+        </p>
 
         <section class="panel stats">
           <div>
             <span>Time</span><strong>{{ v.time }}</strong>
+          </div>
+          <div>
+            <span>Realms cleared</span
+            ><strong data-testid="summary-realms">{{ v.result.realmsCleared }}</strong>
           </div>
           <div>
             <span>Level</span><strong>{{ v.result.level }}</strong>
@@ -48,11 +54,6 @@ const TITLES = { victory: 'Victory', defeat: 'Defeat', abandoned: 'Run abandoned
               <span class="note">(half, run abandoned)</span>
             }
           </p>
-          @if (v.rewards.victoryBonus) {
-            <p>
-              Victory bonus: <span class="gold-amount">{{ v.rewards.victoryBonus }}</span>
-            </p>
-          }
           <p class="total">
             <app-item-icon sprite="icon_gold" [size]="24" /> +<span
               class="gold-amount"
@@ -217,6 +218,7 @@ export class RunSummary {
       time: formatTime(result.timeSeconds),
       god: idx.gods.get(result.godId)?.name ?? result.godId,
       realm: idx.realms.get(result.realmId)?.name ?? result.realmId,
+      reached: idx.realms.get(result.realmReached)?.name ?? result.realmReached,
       weapons: result.loadout.weapons.map((w) => ({
         ...item('weapons', w.id),
         level: w.level,

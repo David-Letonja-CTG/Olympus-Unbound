@@ -4,6 +4,7 @@ import { RealmDefinition } from '../data/types';
 import { ArenaData, generateArena } from '../maps/generate-arena';
 import { normaliseMove } from '../sim/players';
 import { DebugAction } from '../sim/run-simulation';
+import { realmAt, realmSeed } from '../sim/realms';
 import { partyOf, RunConfig, STEP } from '../sim/run-state';
 import { HudSnapshot, NO_INPUT, PlayerInput, RunPhase, RunResult, SimEvent } from '../sim/types';
 import { FrameHazard, FramePickup, WorldFrame } from '../sim/world-frame';
@@ -57,6 +58,8 @@ interface ReplicaFrame {
   pickups: (FramePickup & { x: number; y: number })[];
   hazards: FrameHazard[];
   boss: { x: number; y: number; dead: boolean } | undefined;
+  gate: Snapshot['gate'];
+  depth: number;
   span: number;
 }
 
@@ -66,10 +69,12 @@ interface ReplicaFrame {
  * at once, and presents the guest's own choices, HUD and result. No gameplay rules run here.
  */
 export class GuestDriver implements RunDriver {
-  readonly realm: RealmDefinition;
-  readonly arena: ArenaData;
+  realm: RealmDefinition;
+  arena: ArenaData;
   readonly shared = true;
-  private readonly collision: WorldCollision;
+  private collision: WorldCollision;
+  /** Realms cleared, as far as this guest has followed the host (spec: endless-run). */
+  private depth = 0;
   private readonly inbox: unknown[] = [];
   private frames: BufferedFrame[] = [];
   private pair: [BufferedFrame, BufferedFrame] | undefined;
@@ -81,6 +86,8 @@ export class GuestDriver implements RunDriver {
     pickups: [],
     hazards: [],
     boss: undefined,
+    gate: undefined,
+    depth: 0,
     span: STEP,
   };
   /** Pickup positions in the older and newer snapshot: [ax, ay, bx, by] per pickup. */
@@ -109,7 +116,8 @@ export class GuestDriver implements RunDriver {
   private menuOpen = false;
   private ended = false;
   private hostGone = false;
-  private loadedSent = false;
+  /** The deepest realm this guest has told the host it loaded. */
+  private loadedDepth = -1;
   private player = -1;
 
   constructor(
@@ -142,11 +150,12 @@ export class GuestDriver implements RunDriver {
   get paused(): boolean {
     return this.menuOpen;
   }
+  /** The host's run is going: it has sent the world and is not waiting for anyone to load. */
   get started(): boolean {
-    return this.frames.length > 0 || this.ended;
+    return this.ended || (!!this.newest && !this.newest.snap.waiting);
   }
   get partyProgress(): number {
-    return this.started ? 1 : 0;
+    return this.started ? 1 : 0.5;
   }
 
   private get newest(): BufferedFrame | undefined {
@@ -154,9 +163,9 @@ export class GuestDriver implements RunDriver {
   }
 
   markLoaded(): void {
-    if (this.loadedSent) return;
-    this.loadedSent = true;
-    this.send({ type: 'loaded' });
+    if (this.loadedDepth >= this.depth) return;
+    this.loadedDepth = this.depth;
+    this.send({ type: 'loaded', depth: this.depth });
   }
 
   advance(dt: number, input: PlayerInput, afterStep: () => void): void {
@@ -239,6 +248,7 @@ export class GuestDriver implements RunDriver {
       bossAlive: !!snap?.bossId,
       players: snap?.players.length ?? 0,
       party: (snap?.players ?? []).map((p) => ({ x: p.x, y: p.y, alive: p.alive })),
+      depth: this.depth,
     };
   }
 
@@ -258,15 +268,18 @@ export class GuestDriver implements RunDriver {
         case 'frame': {
           const snap = decodeSnapshot(m.snapshot, this.index);
           this.player = snap.players[this.slot]?.id ?? this.player;
+          if (snap.depth > this.depth) this.enterRealm(snap.depth);
+          // This guest announces its own new realm (above); the host's is not for this screen.
+          const events = m.events.filter((e) => e.type !== 'realmEntered');
           const last = this.newest;
           // A frozen run (choices open) sends the same moment again: keep the newest picture and every event.
           if (last && last.snap.time === snap.time) {
             last.snap = snap;
-            last.events.push(...m.events);
+            last.events.push(...events);
             last.released = false;
             if (this.pair?.[1] === last) this.pair = undefined;
           } else {
-            this.frames.push({ snap, events: [...m.events], released: false });
+            this.frames.push({ snap, events, released: false });
           }
           this.reconcile(snap, m.ack);
           break;
@@ -283,6 +296,23 @@ export class GuestDriver implements RunDriver {
           break;
       }
     }
+  }
+
+  /**
+   * The host's party passed a gate (spec: endless-run): the same next realm and arena as the host's, the old
+   * realm's pictures and prediction dropped, and the scene told to rebuild.
+   */
+  private enterRealm(depth: number): void {
+    this.depth = depth;
+    this.realm = realmAt(this.index.content.realms, this.run.realmId, depth);
+    this.arena = generateArena(this.realm.map, realmSeed(this.run.seed, depth));
+    this.collision = new WorldCollision(this.arena.bounds, this.arena.obstacles);
+    this.frames = [];
+    this.pair = undefined;
+    this.renderTime = -1;
+    this.history = [];
+    this.me.active = false;
+    this.pending.push({ type: 'realmEntered', realmId: this.realm.id, depth });
   }
 
   private finish(result: RunResult): void {
@@ -304,7 +334,8 @@ export class GuestDriver implements RunDriver {
       level: 1,
       kills: 0,
       gold: 0,
-      bossDefeated: false,
+      realmsCleared: 0,
+      realmReached: this.run.realmId,
       loadout: { weapons: [], relics: [], skills: [], synergies: [] },
     };
     return {
@@ -497,6 +528,8 @@ export class GuestDriver implements RunDriver {
       pickups,
       hazards: b.hazards,
       boss: boss && { x: boss.x, y: boss.y, dead: boss.dead },
+      gate: b.gate,
+      depth: b.depth,
       span: b.time > a.time ? b.time - a.time : STEP,
     };
   }

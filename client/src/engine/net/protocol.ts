@@ -4,12 +4,12 @@ import { HudSnapshot, RunResult, SimEvent, UpgradeChoice } from '../sim/types';
 /** Bumped whenever the messages below change; part of the room version (design: Protocol). */
 export const NET_VERSION = 1;
 /** Bumped whenever the binary snapshot layout (snapshot.ts) changes. */
-export const SNAPSHOT_FORMAT = 1;
+export const SNAPSHOT_FORMAT = 2;
 
 /** What a guest's game sends to the host during a run (D16). */
 export type GuestMessage =
   /** The guest's scene is built; the host starts the run when every guest has loaded. */
-  | { readonly type: 'loaded' }
+  | { readonly type: 'loaded'; readonly depth: number }
   /** One step of the guest's input. `ability` is true if it was held or tapped during the step. */
   | {
       readonly type: 'input';
@@ -52,6 +52,7 @@ export function isGuestMessage(m: unknown): m is GuestMessage {
       typeof v['ability'] === 'boolean'
     );
   if (m.type === 'choose') return Number.isInteger(v['choiceId']) && Number.isInteger(v['index']);
+  if (m.type === 'loaded') return Number.isInteger(v['depth']);
   return true;
 }
 

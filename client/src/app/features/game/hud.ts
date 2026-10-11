@@ -34,6 +34,7 @@ const VESSEL_BOTTOM = 130;
       }
       <div class="plaque">
         <span class="timer" data-testid="hud-time">{{ time() }}</span>
+        <span class="realm" data-testid="hud-realm">{{ h.realm.number }} · {{ h.realm.name }}</span>
       </div>
       <div class="plaque small stats">
         <span class="stat"
@@ -68,9 +69,19 @@ const VESSEL_BOTTOM = 130;
       </div>
     }
 
+    @if (h.gate; as gate) {
+      <div class="gate" data-testid="hud-gate" role="status">
+        <span class="gate-title">The gate to {{ gate.to }} is open</span>
+        <span class="gate-time"
+          >Step into it · it opens by itself in {{ ceil(gate.closesIn) }} s</span
+        >
+      </div>
+    }
+
     <div class="announcements" aria-live="polite">
       @for (a of announcements(); track a.id) {
-        <div class="announcement" [class]="'announcement ' + a.kind">{{ a.text }}</div>
+        <!-- Kinds are prefixed: a bare "boss" class would take the boss banner's styles. -->
+        <div [class]="'announcement kind-' + a.kind">{{ a.text }}</div>
       }
     </div>
 

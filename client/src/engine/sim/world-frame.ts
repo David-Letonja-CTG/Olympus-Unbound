@@ -13,6 +13,12 @@ export interface WorldFrame {
   readonly pickups: readonly FramePickup[];
   readonly hazards: readonly FrameHazard[];
   readonly boss: { readonly x: number; readonly y: number; readonly dead: boolean } | undefined;
+  /** The open gate to the next realm; `standing` is the seconds a god has stood in it (spec: endless-run). */
+  readonly gate:
+    | { readonly x: number; readonly y: number; readonly radius: number; readonly standing: number }
+    | undefined;
+  /** Realms cleared. */
+  readonly depth: number;
   /** Seconds between every entity's previous (`px`/`py`) and current position: one step, or a snapshot gap. */
   readonly span: number;
 }
@@ -31,6 +37,8 @@ export type FramePlayer = Readonly<
     | 'moving'
     | 'hurtFlash'
     | 'invulnerable'
+    | 'revive'
+    | 'left'
   >
 > & { readonly god: { readonly visual: { readonly sprite: string } } };
 

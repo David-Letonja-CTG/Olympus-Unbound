@@ -12,8 +12,10 @@ import {
   updateProjectiles,
   updateWeapons,
 } from '../weapons/weapon-system';
-import { updatePickups } from './pickups';
+import { collect, updatePickups } from './pickups';
 import { createPlayer, updatePlayers } from './players';
+import { GATE_OPEN_SECONDS, GATE_RADIUS, GATE_STAND_SECONDS, realmAt, realmSeed } from './realms';
+import { updateRevives } from './revive';
 import { RunConfig, RunState } from './run-state';
 import {
   HudSnapshot,
@@ -33,9 +35,11 @@ export type DebugAction =
   | { type: 'grantXp'; amount: number }
   | { type: 'skipTo'; seconds: number }
   | { type: 'damageBoss'; fraction: number }
-  | { type: 'killPlayer' }
+  /** Fells every player, or only the one in `slot`. */
+  | { type: 'killPlayer'; slot?: number }
   | { type: 'godMode'; enabled: boolean }
-  | { type: 'spawnStress'; count: number };
+  | { type: 'spawnStress'; count: number }
+  | { type: 'travel' };
 
 /**
  * One run of the game, independent of rendering (D2). Owns the run phase and calls the systems in a fixed order;
@@ -43,8 +47,7 @@ export type DebugAction =
  */
 export class RunSimulation {
   readonly state: RunState;
-  readonly arena: ArenaData;
-  private readonly director: SpawnDirector;
+  private director: SpawnDirector;
   private currentPhase: RunPhase = 'playing';
   private pausedFrom: RunPhase = 'playing';
   /** The open choices of the current round, one per living player (spec: co-op / own upgrades). */
@@ -56,19 +59,28 @@ export class RunSimulation {
   constructor(config: RunConfig, content: GameContent | ContentIndex, arena?: ArenaData) {
     const index = content instanceof ContentIndex ? content : new ContentIndex(content);
     const realm = index.realm(config.realmId);
-    this.arena = arena ?? generateArena(realm.map, config.seed);
-    this.state = new RunState(config, index, this.arena);
-    // Every player of the party, side by side on the spawn plaza (D11).
-    const seats = this.state.party.length;
-    for (let slot = 0; slot < seats; slot++) {
-      const a = (slot / seats) * Math.PI * 2;
-      const r = seats > 1 ? 48 : 0;
-      const { x, y } = this.arena.spawn;
-      this.state.players.push(
-        createPlayer(this.state, slot, x + Math.cos(a) * r, y + Math.sin(a) * r),
-      );
-    }
+    this.state = new RunState(config, index, arena ?? generateArena(realm.map, config.seed));
+    for (let slot = 0; slot < this.state.party.length; slot++)
+      this.state.players.push(createPlayer(this.state, slot, 0, 0));
+    this.placeParty();
     this.director = new SpawnDirector(this.state);
+  }
+
+  /** The current realm's arena; a new one after every gate (spec: endless-run). */
+  get arena(): ArenaData {
+    return this.state.arena;
+  }
+
+  /** Every player of the party, side by side on the spawn plaza (D11). */
+  private placeParty(): void {
+    const players = this.state.players;
+    const { x, y } = this.state.arena.spawn;
+    players.forEach((p, slot) => {
+      const a = (slot / players.length) * Math.PI * 2;
+      const r = players.length > 1 ? 48 : 0;
+      p.x = p.px = x + Math.cos(a) * r;
+      p.y = p.py = y + Math.sin(a) * r;
+    });
   }
 
   get phase(): RunPhase {
@@ -103,8 +115,10 @@ export class RunSimulation {
     if (this.currentPhase !== 'playing') return;
     const state = this.state;
     state.time += dt;
+    state.realmTime += dt;
 
     updatePlayers(state, inputs, dt);
+    updateRevives(state, dt);
     this.director.update(dt);
     updateEnemies(state, dt);
     updateWeapons(state, dt);
@@ -114,10 +128,82 @@ export class RunSimulation {
     updatePickups(state, dt);
     this.removeDead();
 
-    // Victory wins over a simultaneous death (spec: run-outcome / run endings).
-    if (state.bossDefeated) this.end('victory');
-    else if (state.players.every((p) => !p.alive)) this.end('defeat');
-    else this.openChoiceIfPending();
+    // The boss's gold counts even if the party falls in the same step (spec: run-outcome / run endings).
+    if (state.bossDefeated && !state.gate) this.openGate();
+    if (state.players.every((p) => !p.alive)) {
+      this.end('defeat');
+      return;
+    }
+    if (state.gate) this.updateGate(dt);
+    this.openChoiceIfPending();
+  }
+
+  /** The boss has fallen: its gold, and the gate to the next realm where it stood (spec: endless-run / the gate). */
+  private openGate(): void {
+    const state = this.state;
+    const to = realmAt(state.index.content.realms, state.config.realmId, state.depth + 1);
+    const at = state.boss ?? state.arena.bossArena;
+    const bonus = state.realm.rewards.bossGold;
+    state.gold += bonus;
+    state.gate = {
+      x: at.x,
+      y: at.y,
+      radius: GATE_RADIUS,
+      to,
+      standing: 0,
+      closesIn: GATE_OPEN_SECONDS,
+    };
+    state.emit({ type: 'gateOpened', to: to.id, x: at.x, y: at.y });
+    state.emit({
+      type: 'announcement',
+      text: `+${bonus} gold · The gate to ${to.name} is open!`,
+      kind: 'boss',
+    });
+  }
+
+  private updateGate(dt: number): void {
+    const state = this.state;
+    const gate = state.gate;
+    if (!gate) return;
+    const r2 = gate.radius * gate.radius;
+    const inside = state.players.some(
+      (p) => p.alive && (p.x - gate.x) ** 2 + (p.y - gate.y) ** 2 <= r2,
+    );
+    gate.standing = inside ? gate.standing + dt : 0;
+    gate.closesIn -= dt;
+    if (gate.standing >= GATE_STAND_SECONDS || gate.closesIn <= 0) this.travel();
+  }
+
+  /**
+   * The party passes the gate (spec: endless-run / travelling): spoils gathered, fallen gods raised, a new arena from
+   * the run's seed and depth, the party on its plaza, and the new realm's timeline from its start.
+   */
+  private travel(): void {
+    const state = this.state;
+    const gatherer = state.players.find((p) => p.alive) ?? state.players[0];
+    for (const pickup of state.pickups) collect(state, gatherer, pickup, true);
+    const depth = state.depth + 1;
+    const realm =
+      state.gate?.to ?? realmAt(state.index.content.realms, state.config.realmId, depth);
+    state.depth = depth;
+    state.enterRealm(realm, generateArena(realm.map, realmSeed(state.config.seed, depth)));
+    for (const p of state.players) {
+      if (p.left) continue;
+      if (!p.alive) {
+        p.alive = true;
+        p.health = p.stats.maxHealth / 2;
+      }
+      p.revive = 0;
+      p.invulnerable = Math.max(p.invulnerable, state.balance.revive.invulnerable);
+    }
+    this.placeParty();
+    this.director = new SpawnDirector(state);
+    state.emit({ type: 'realmEntered', realmId: realm.id, depth });
+    state.emit({
+      type: 'announcement',
+      text: `Realm ${depth + 1}: ${realm.name}`,
+      kind: 'boss',
+    });
   }
 
   pause(): boolean {
@@ -200,6 +286,8 @@ export class RunSimulation {
     const player = state.players.find((p) => p.id === playerId) ?? state.players[0];
     const loadout = player.loadout;
     const outcome = this.endedAs ?? 'abandoned';
+    // A boss that fell in this realm counts even before the party passes its gate.
+    const realmsCleared = state.depth + (state.bossDefeated ? 1 : 0);
     return {
       runId: state.config.runId,
       godId: player.god.id,
@@ -210,7 +298,8 @@ export class RunSimulation {
       level: state.level,
       kills: state.kills,
       gold: Math.floor(state.gold),
-      bossDefeated: state.bossDefeated,
+      realmsCleared,
+      realmReached: state.realm.id,
       loadout: {
         weapons: loadout.weapons.map((w) => ({
           id: w.def.id,
@@ -235,10 +324,18 @@ export class RunSimulation {
         if (this.currentPhase === 'playing') this.openChoiceIfPending();
         return;
       case 'skipTo':
-        if (action.seconds > state.time) {
-          state.time = action.seconds;
+        // Realm time: the current realm's timeline jumps; the run's clock moves by as much.
+        if (action.seconds > state.realmTime) {
+          state.time += action.seconds - state.realmTime;
+          state.realmTime = action.seconds;
           this.director.skipTo(action.seconds);
         }
+        return;
+      case 'travel':
+        // Through the gate at once (opening it if the boss still lives).
+        if (this.currentPhase !== 'playing') return;
+        if (!state.gate) this.openGate();
+        this.travel();
         return;
       case 'damageBoss': {
         const boss = state.boss;
@@ -249,10 +346,13 @@ export class RunSimulation {
       }
       case 'killPlayer':
         for (const p of state.players) {
+          if (action.slot !== undefined && p.slot !== action.slot) continue;
           p.revivalsUsed = Math.floor(p.stats.revivals);
           p.health = 0;
           p.alive = false;
         }
+        // Also while a round of choices holds the steps: the run ends now (spec: run-outcome / run endings).
+        if (state.players.every((p) => !p.alive)) this.end('defeat');
         return;
       case 'godMode':
         state.godMode = action.enabled;
@@ -339,6 +439,10 @@ export class RunSimulation {
         : undefined,
       enemies,
       waitingFor,
+      realm: { name: state.realm.name, number: state.depth + 1 },
+      gate: state.gate
+        ? { to: state.gate.to.name, closesIn: Math.max(0, state.gate.closesIn) }
+        : undefined,
     };
   }
 

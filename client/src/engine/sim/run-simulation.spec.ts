@@ -110,19 +110,24 @@ describe('run phases', () => {
     const sim = quietSim();
     expect(sim.abandon()).toBe(true);
     const result = sim.result;
-    expect(sim.end('victory')).toBe(false);
+    expect(sim.end('defeat')).toBe(false);
     expect(sim.result).toBe(result);
     expect(sim.events().filter((e) => e.type === 'runEnded')).toHaveLength(1);
     sim.step(STEP, [NO_INPUT]);
     expect(sim.state.time).toBe(0);
   });
 
-  it('prefers victory when the player and the boss die in the same step', () => {
+  it('counts the boss when the player and the boss die in the same step (spec: run-outcome)', () => {
     const sim = quietSim();
+    // Both fell during the step: the boss's kill is recorded and the god is down.
     sim.state.bossDefeated = true;
-    sim.debug({ type: 'killPlayer' });
+    const god = sim.state.players[0];
+    god.health = 0;
+    god.alive = false;
     sim.step(STEP, [NO_INPUT]);
-    expect(sim.result?.outcome).toBe('victory');
+    expect(sim.result?.outcome).toBe('defeat');
+    expect(sim.result?.realmsCleared).toBe(1);
+    expect(sim.result?.gold).toBe(sim.state.realm.rewards.bossGold);
   });
 });
 
@@ -136,23 +141,23 @@ describe('full runs (autopilot)', () => {
     expect(a.state.kills).toBeGreaterThan(20);
   });
 
-  it('a strong build reaches the boss and wins', () => {
+  it('a strong build defeats the boss and passes the gate into the next realm', () => {
     const sim = olympus(847291, [
       { stat: 'might', flat: 6 },
       { stat: 'maxHealth', flat: 3000 },
       { stat: 'armor', flat: 8 },
       { stat: 'regen', flat: 20 },
     ]);
-    playRun(sim, 15 * 60);
-    expect(sim.result?.outcome).toBe('victory');
-    expect(sim.result?.timeSeconds).toBeGreaterThanOrEqual(420);
-    expect(sim.result?.level).toBeGreaterThan(10);
+    playRun(sim, 9 * 60);
+    expect(sim.state.depth).toBeGreaterThanOrEqual(1);
+    expect(sim.state.time).toBeGreaterThan(420);
+    expect(sim.state.level).toBeGreaterThan(10);
   }, 120_000);
 
   it('an unarmed god eventually falls', () => {
     const sim = olympus(5, [{ stat: 'might', flat: -0.99 }]);
     playRun(sim, 15 * 60);
     expect(sim.result?.outcome).toBe('defeat');
-    expect(sim.result?.bossDefeated).toBe(false);
+    expect(sim.result?.realmsCleared).toBe(0);
   }, 120_000);
 });

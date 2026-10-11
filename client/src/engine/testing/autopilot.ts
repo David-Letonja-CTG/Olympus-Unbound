@@ -41,6 +41,13 @@ export function autopilot(sim: RunSimulation): PlayerInput {
     mx += ((nearest.x - p.x) / d) * 0.6;
     my += ((nearest.y - p.y) / d) * 0.6;
   }
+  // An open gate pulls hard: the bot goes on to the next realm (spec: endless-run).
+  const gate = state.gate;
+  if (gate) {
+    const d = Math.hypot(gate.x - p.x, gate.y - p.y) || 1;
+    mx += ((gate.x - p.x) / d) * 3;
+    my += ((gate.y - p.y) / d) * 3;
+  }
   // Drift back toward the middle of the map so the bot does not get pinned against the cliffs.
   const cx = (state.arena.bounds.minX + state.arena.bounds.maxX) / 2;
   const cy = (state.arena.bounds.minY + state.arena.bounds.maxY) / 2;

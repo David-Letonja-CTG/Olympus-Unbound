@@ -1,4 +1,4 @@
-import { GameContent, RunResult } from '../../../engine';
+import { RunResult } from '../../../engine';
 import { REMEMBERED_RUNS, SaveData } from './save-data';
 
 export interface DiscoveredItem {
@@ -9,7 +9,6 @@ export interface DiscoveredItem {
 export interface RunRewards {
   /** Gold kept from the run (half when abandoned). */
   readonly runGold: number;
-  readonly victoryBonus: number;
   readonly totalGold: number;
   readonly newlyDiscovered: readonly DiscoveredItem[];
   readonly newBestTime: boolean;
@@ -18,21 +17,19 @@ export interface RunRewards {
 }
 
 /**
- * Applies the reward rules to a save (spec: run-outcome): all collected gold, plus the realm's victory bonus on
- * victory, half the gold (rounded down) when abandoned; held items become discovered; statistics update.
- * Pure and idempotent per run ID.
+ * Applies the reward rules to a save (spec: run-outcome / rewards): all collected gold (bosses' gold included),
+ * half of it (rounded down) when abandoned; held items become discovered; statistics update, counting realms cleared
+ * (`victories` keeps its save key: a victory of the 7-minute runs was one realm cleared). Pure and idempotent per run ID.
  */
 export function applyRunResult(
   save: SaveData,
   result: RunResult,
-  content: GameContent,
 ): { save: SaveData; rewards: RunRewards } {
   if (save.processedRunIds.includes(result.runId)) {
     return {
       save,
       rewards: {
         runGold: 0,
-        victoryBonus: 0,
         totalGold: 0,
         newlyDiscovered: [],
         newBestTime: false,
@@ -40,9 +37,7 @@ export function applyRunResult(
       },
     };
   }
-  const realm = content.realms.find((r) => r.id === result.realmId);
   const runGold = result.outcome === 'abandoned' ? Math.floor(result.gold / 2) : result.gold;
-  const victoryBonus = result.outcome === 'victory' ? (realm?.rewards.victoryGold ?? 0) : 0;
 
   const held: DiscoveredItem[] = [
     ...result.loadout.weapons.map((w) => ({ kind: 'weapons' as const, id: w.id })),
@@ -57,11 +52,11 @@ export function applyRunResult(
   return {
     save: {
       ...save,
-      gold: save.gold + runGold + victoryBonus,
+      gold: save.gold + runGold,
       discovered,
       stats: {
         runs: save.stats.runs + 1,
-        victories: save.stats.victories + (result.outcome === 'victory' ? 1 : 0),
+        victories: save.stats.victories + result.realmsCleared,
         kills: save.stats.kills + result.kills,
         bestTimeSeconds: Math.max(save.stats.bestTimeSeconds, result.timeSeconds),
       },
@@ -69,8 +64,7 @@ export function applyRunResult(
     },
     rewards: {
       runGold,
-      victoryBonus,
-      totalGold: runGold + victoryBonus,
+      totalGold: runGold,
       newlyDiscovered,
       newBestTime,
       alreadyProcessed: false,

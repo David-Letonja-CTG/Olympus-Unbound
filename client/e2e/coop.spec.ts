@@ -72,6 +72,33 @@ test('two players create and join a room, play together, and one leaves', async 
   await expect.poll(async () => (await inspect(host))?.phase, { timeout: 15_000 }).toBe('playing');
   await expect(host.getByTestId('waiting-for')).toHaveCount(0);
 
+  // The guest falls; the host stands by the spirit and revives them (spec: co-op / reviving allies).
+  await debug(host, { type: 'killPlayer', slot: 1 });
+  await expect.poll(async () => (await inspect(host))?.party[1].alive).toBe(false);
+  // Short steps toward the spirit, so the host stops beside it rather than running past.
+  for (let i = 0; i < 60; i++) {
+    const p = (await inspect(host))?.party ?? [];
+    const dx = (p[1]?.x ?? 0) - (p[0]?.x ?? 0);
+    if (Math.abs(dx) < 40) break;
+    const key = dx < 0 ? 'a' : 'd';
+    await host.keyboard.down(key);
+    await host.waitForTimeout(80);
+    await host.keyboard.up(key);
+  }
+  await expect
+    .poll(async () => (await inspect(host))?.party[1].alive, { timeout: 15_000 })
+    .toBe(true);
+
+  // Through the gate together: both load the next realm, and the run goes on there (spec: endless-run).
+  await debug(host, { type: 'travel' });
+  // The host's loading screen waits for the guest; the guest's may already have faded when checked.
+  await expect(host.getByTestId('loading-kicker')).toContainText('Realm 2');
+  for (const p of [host, guest])
+    await expect(p.getByTestId('run-loading')).toHaveCount(0, { timeout: 150_000 });
+  await expect.poll(async () => (await inspect(guest))?.depth).toBe(1);
+  await expect.poll(async () => (await inspect(host))?.depth).toBe(1);
+  await expect(guest.getByTestId('hud-realm')).toContainText('2 ·');
+
   // The pause menu does not stop a room's run. (The clock may still stop for a new round of choices: kills keep
   // bringing experience, so this checks the run's phase, not its time.)
   await host.keyboard.press('Escape');
