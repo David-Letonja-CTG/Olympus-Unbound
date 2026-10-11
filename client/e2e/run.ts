@@ -13,6 +13,8 @@ export interface Snapshot {
   player: { x: number; y: number; health: number };
   enemies: number;
   bossAlive: boolean;
+  players: number;
+  party: { x: number; y: number; alive: boolean }[];
 }
 
 /** The development-only hooks the play screen installs with `?debug`. */

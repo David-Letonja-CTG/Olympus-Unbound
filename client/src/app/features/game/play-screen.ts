@@ -24,6 +24,7 @@ import {
 import { debugEnabled } from '../../core/debug-mode';
 import { GAME_CONTENT, GAME_SESSION_FACTORY } from '../../core/game-content';
 import { Progression } from '../../core/progression';
+import { RoomService } from '../../core/rooms/room-service';
 import { RunSetup } from '../../core/run-setup';
 import { Announcement, Hud } from './hud';
 import { LevelUpDialog } from './level-up-dialog';
@@ -63,7 +64,8 @@ declare global {
         [realm]="realm()"
         [party]="party()"
         [bossSprite]="bossSprite()"
-        [seed]="setup.seed()"
+        [seed]="seed()"
+        [roomCode]="room?.code"
         [stage]="loadStage()"
         [stageProgress]="loadProgress()"
         [done]="loaded()"
@@ -74,9 +76,14 @@ declare global {
     }
     @if (choice(); as c) {
       <app-level-up-dialog [choice]="c" (chosen)="choose(c, $event)" />
+    } @else if (waitingFor(); as names) {
+      <p class="waiting" role="status" data-testid="waiting-for">
+        Waiting for {{ names }} to choose…
+      </p>
     }
     @if (paused() && !ended()) {
       <app-pause-menu
+        [room]="room ? (room.localSeat === 0 ? 'host' : 'guest') : undefined"
         (resumeRequested)="send({ type: 'resume' })"
         (abandonRequested)="send({ type: 'abandon' })"
       />
@@ -128,6 +135,20 @@ declare global {
       color: var(--gold-2);
       background: radial-gradient(ellipse at center, rgba(80, 60, 0, 0.3), rgba(0, 0, 0, 0.7));
     }
+    .waiting {
+      position: absolute;
+      left: 50%;
+      top: 38%;
+      transform: translateX(-50%);
+      margin: 0;
+      padding: 10px 22px;
+      font-family: var(--serif);
+      font-size: 1.2rem;
+      color: var(--gold-2);
+      background: rgba(8, 6, 10, 0.78);
+      border: 1px solid var(--line);
+      pointer-events: none;
+    }
     .error {
       position: absolute;
       inset: 0;
@@ -149,7 +170,10 @@ export class PlayScreen {
   private readonly createSession = inject(GAME_SESSION_FACTORY);
   private readonly progression = inject(Progression);
   protected readonly setup = inject(RunSetup);
+  private readonly rooms = inject(RoomService);
   private readonly router = inject(Router);
+  /** A room's run (spec: rooms), fixed for this screen; absent for a solo run. */
+  protected readonly room = this.rooms.run();
   private readonly host = viewChild.required<ElementRef<HTMLElement>>('host');
   private readonly levelUp = viewChild(LevelUpDialog);
   private readonly pauseMenu = viewChild(PauseMenu);
@@ -166,17 +190,40 @@ export class PlayScreen {
   protected readonly loaded = signal(false);
   /** The loading screen stays while it fades out. */
   protected readonly showLoading = signal(true);
-  protected readonly realm = computed(
-    () => this.content.realms.find((r) => r.id === this.setup.realmId()) ?? this.content.realms[0],
-  );
+  protected readonly realm = computed(() => {
+    const id = this.room?.config.realmId ?? this.setup.realmId();
+    return this.content.realms.find((r) => r.id === id) ?? this.content.realms[0];
+  });
+  protected readonly seed = computed(() => this.room?.config.seed ?? this.setup.seed());
   protected readonly bossSprite = computed(() => {
     const id = this.realm().boss.id;
     return this.content.bosses.find((b) => b.id === id)?.visual.sprite ?? id;
   });
-  /** Everyone taking part: today the local player; rooms will add their members here. */
+  /** Everyone taking part: the local player, or a room's members in seat order (spec: run-loading / party). */
   protected readonly party = computed<readonly PartyMember[]>(() => {
-    const god = this.content.gods.find((g) => g.id === this.setup.godId());
+    const godOf = (id: string) => this.content.gods.find((g) => g.id === id);
+    if (this.room) {
+      const room = this.room;
+      return room.members.map((m, seat) => {
+        const god = godOf(m.godId);
+        return {
+          name: m.name,
+          godName: god?.name ?? m.godId,
+          sprite: god?.visual.sprite ?? m.godId,
+          you: seat === room.localSeat,
+          host: m.host,
+        };
+      });
+    }
+    const god = godOf(this.setup.godId() ?? '');
     return god ? [{ name: 'You', godName: god.name, sprite: god.visual.sprite }] : [];
+  });
+  /** In a room, who the open round of choices still waits for once this player has chosen. */
+  protected readonly waitingFor = computed(() => {
+    const hud = this.hud();
+    if (!hud || hud.phase !== 'choosing' || this.ended() || !hud.waitingFor.length)
+      return undefined;
+    return hud.waitingFor.join(', ');
   });
 
   private session: GameSession | undefined;
@@ -196,6 +243,8 @@ export class PlayScreen {
       this.destroyed = true;
       for (const t of this.timers) clearTimeout(t);
       this.session?.destroy();
+      // A room lasts one run (design: rooms close when their run ends).
+      if (this.room) this.rooms.leave();
       if (window.olympusDebug) delete window.olympusDebug;
     });
   }
@@ -215,7 +264,7 @@ export class PlayScreen {
   private async start(): Promise<void> {
     const godId = this.setup.godId();
     const realmId = this.setup.realmId();
-    if (!godId || !realmId) {
+    if (!this.room && (!godId || !realmId)) {
       void this.router.navigate(['/gods']);
       return;
     }
@@ -224,15 +273,16 @@ export class PlayScreen {
       const session = await this.createSession({
         parent: this.host().nativeElement,
         content: this.content,
-        run: {
+        run: this.room?.config ?? {
           runId: this.setup.newRunId(),
-          godId,
-          realmId,
+          godId: godId ?? '',
+          realmId: realmId ?? '',
           seed: this.setup.seed(),
           modifiers: this.progression.runModifiers(),
         },
         settings: this.progression.settings(),
         debug,
+        room: this.room?.seat,
       });
       if (this.destroyed) {
         session.destroy();
@@ -281,7 +331,7 @@ export class PlayScreen {
         this.choice.set(undefined);
         this.ended.set(event.result.outcome);
         const rewards = this.progression.recordRun(event.result);
-        this.setup.lastRun.set({ result: event.result, rewards });
+        this.setup.lastRun.set({ result: event.result, rewards, inRoom: !!this.room });
         this.later(() => void this.router.navigate(['/summary']), END_DELAY_MS);
         return;
       }

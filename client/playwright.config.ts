@@ -22,6 +22,14 @@ export default defineConfig({
   projects: [
     {
       name: 'chromium',
+      testIgnore: /coop\.spec\.ts/,
+      use: { ...devices['Desktop Chrome'], viewport, launchOptions },
+    },
+    {
+      // A room runs two games in one browser: it plays after the other tests, alone, so neither starves the other.
+      name: 'coop',
+      testMatch: /coop\.spec\.ts/,
+      dependencies: ['chromium'],
       use: { ...devices['Desktop Chrome'], viewport, launchOptions },
     },
   ],

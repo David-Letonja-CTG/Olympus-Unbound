@@ -12,7 +12,7 @@ Read the relevant doc before working on a feature.
 
 ## Hard rules
 
-1. **Frontend-only** (D1). No backend, REST, database, accounts, cloud saves, networking or online multiplayer. Static build only.
+1. **Frontend-only** (D1, D16). No backend of our own, REST, database, accounts, cloud saves or data stored online. Static build only. Co-op rooms connect browsers directly (WebRTC via PeerJS, only in `app/core/rooms/peer-network.ts`); the host's simulation is the authority.
 2. **Layer boundaries** (D2, D3) — lint-enforced:
    - Angular (`client/src/app`) imports the engine **only** via `client/src/engine/index.ts`, never Phaser.
    - Only `client/src/engine/phaser/` imports Phaser. The simulation (`engine/*` except `phaser/`, `audio/`) imports no Angular, RxJS, Phaser or app code.

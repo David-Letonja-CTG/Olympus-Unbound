@@ -15,19 +15,25 @@ export interface PartyMember {
   readonly name: string;
   readonly godName: string;
   readonly sprite: string;
+  /** In a room: this browser's player, and the room's host. */
+  readonly you?: boolean;
+  readonly host?: boolean;
 }
 
 const STAGE_LABEL: Record<LoadStage, string> = {
   art: 'Summoning the gods',
   realm: 'Shaping the realm',
   scene: 'The horde gathers',
+  party: 'Waiting for the party',
 };
 
 /** Where each stage sits on the overall bar: art first, the realm next, the scene last. */
 const STAGE_SPAN: Record<LoadStage, readonly [number, number]> = {
   art: [0, 0.6],
-  realm: [0.6, 0.95],
-  scene: [0.95, 1],
+  realm: [0.6, 0.92],
+  scene: [0.92, 0.96],
+  // Rooms only: the other members finish loading.
+  party: [0.96, 1],
 };
 
 const TIP_SECONDS = 6;
@@ -100,13 +106,26 @@ const EMBERS = Array.from({ length: 26 }, (_, i) => ({
       </header>
 
       <section class="party" aria-label="Party">
-        <h2>Party</h2>
+        <h2>
+          Party
+          @if (roomCode(); as code) {
+            <span class="room" data-testid="loading-room-code">Room {{ code }}</span>
+          }
+        </h2>
         <ul>
           @for (m of party(); track $index) {
-            <li data-testid="party-member">
+            <li data-testid="party-member" [class.you]="m.you">
               <app-item-icon [sprite]="m.sprite" [size]="84" />
               <span class="who">
-                <span class="name">{{ m.name }}</span>
+                <span class="name">
+                  {{ m.name }}
+                  @if (m.host) {
+                    <span class="tag">Host</span>
+                  }
+                  @if (m.you) {
+                    <span class="tag you-tag">You</span>
+                  }
+                </span>
                 <span class="god">{{ m.godName }}</span>
               </span>
             </li>
@@ -273,6 +292,27 @@ const EMBERS = Array.from({ length: 26 }, (_, i) => ({
       color: var(--muted);
       margin-bottom: 8px;
     }
+    .room {
+      margin-left: 10px;
+      color: var(--gold);
+      letter-spacing: 0.2em;
+    }
+    .tag {
+      margin-left: 6px;
+      padding: 1px 6px;
+      font-size: 0.62rem;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      vertical-align: middle;
+      color: #1a1208;
+      background: var(--gold);
+    }
+    .you-tag {
+      background: #8fb7e8;
+    }
+    .party li.you .name {
+      color: #fff2c8;
+    }
     .party ul {
       list-style: none;
       display: flex;
@@ -401,6 +441,8 @@ export class RunLoading {
   readonly party = input.required<readonly PartyMember[]>();
   readonly bossSprite = input.required<string>();
   readonly seed = input.required<number>();
+  /** A room's code (spec: run-loading / party); absent for a solo run. */
+  readonly roomCode = input<string | undefined>(undefined);
   readonly stage = input<LoadStage | undefined>(undefined);
   /** Progress of the current stage, 0–1. */
   readonly stageProgress = input(0);

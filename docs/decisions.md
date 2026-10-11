@@ -6,9 +6,9 @@ Status values: **Accepted**, **Superseded**, **Deferred**.
 
 ---
 
-## D1 — Frontend-only, static game (Accepted, 2026-10-10)
+## D1 — Frontend-only, static game (Accepted, 2026-10-10; revised 2026-10-11 for rooms)
 
-The game runs entirely in the browser and deploys as static files. No backend, REST API, database, accounts, cloud saves, networking or online multiplayer. Persistent data lives in browser storage (D8).
+The game runs entirely in the browser and deploys as static files. No backend of our own, REST API, database, accounts, cloud saves or data stored online. Persistent data lives in browser storage (D8). *Revised 2026-10-11:* co-op rooms may connect players' browsers directly (WebRTC data channels); a public signalling service only introduces them by room code (D16). Without rooms the game makes no network connection.
 
 ## D2 — Three layers: Angular, Phaser, simulation (Accepted, 2026-10-10)
 
@@ -56,9 +56,9 @@ All sprites, tiles and icons are drawn with Canvas 2D at startup (`engine/art/`)
 
 UI text lives in Angular templates and display names in content. A localization framework is deferred until a second language is planned; content keeps stable IDs so that adding one later does not change saves.
 
-## D11 — Multiplayer-ready, single-player first (Accepted, 2026-10-10)
+## D11 — Multiplayer-ready, single-player first (Accepted, 2026-10-10; revised 2026-10-11)
 
-The simulation keeps a list of players, per-player input (`PlayerInput[]` by slot) and targets the nearest living player; the camera follows the players' centre. Only one player is created and mapped in the slice. Local co-op (shared camera, second gamepad) is a later change; online play is out of scope (D1).
+The simulation keeps a list of players, per-player input (`PlayerInput[]` by slot) and targets the nearest living player. *Revised 2026-10-11:* a run holds a party of 1–4 players, each with their own god, upgrades, choices, HUD and result, and difficulty scales per player (spec: co-op); parties play online in rooms (D16), each camera following its own god. Local co-op (shared screen, second gamepad) is a later change.
 
 ## D12 — Pluggable external art with a licence registry (Accepted, 2026-10-11)
 
@@ -79,3 +79,9 @@ Cutscenes are data (`content/cutscenes/*.ts`): actors, hordes, camera moves, fad
 Every character (gods, enemies, bosses, cutscene actors) is drawn from sprite sheets that share one source and render setup, so the cast has one look and our own Greek designs: we render them in Blender (`art/blender/`) from the Flare collection's CC-BY 3.0 Blender sources (Clint Bellanger's hero and heroine with their equipment, VWolfdog's troll and horse), with Flare's own isometric camera and sun, recoloured and extended with simple modelled parts (beards, horns, wings, a cyclops eye). Flare sheets that already fit (Skeleton Warrior, Minotaur) are used as published. Only CC-BY and CC0 sources; no share-alike. Sheets hold the right-facing row in an 8-column grid (`client/scripts/pack-sheet.mjs`); the game mirrors it. Every character must have idle, walk and death animations (unit test), every frame must exist (`npm run assets:check`), and each sheet has a stride so the walk follows movement speed.
 
 *Alternatives considered:* existing packs (none has the Greek roster or a god in a dark pre-rendered style); mixing packs (inconsistent, rejected by the owner); recasting the roster around Flare's generic creatures (rejected: monsters must be from Greek myth); rendering CC0 low-poly 3D models (a more stylised, toy-like look).
+
+## D16 — Rooms: peer-to-peer, the host's game is the authority (Accepted, 2026-10-11)
+
+Co-op rooms connect the players' browsers directly over WebRTC data channels, using PeerJS (MIT) and its public signalling service to find the host by a five-character room code. The host's browser runs the only `RunSimulation`. Guests send their input each step, and receive the world as binary snapshots at 20 Hz together with the events, their own HUD, choices and result. They draw it 100 ms behind with interpolation, and predict their own movement. The scene runs on a `RunDriver` (local simulation, or a guest's replica), and the views read a `WorldFrame`, so nothing in the scene or the views knows which one it has. PeerJS is used only by `app/core/rooms/peer-network.ts`, loaded when a room is opened (lint), and the engine sees rooms only as `PeerLink`s. Rooms last one run, there is no joining mid-run, and a host who leaves ends the run for everyone (as abandoned).
+
+*Alternatives considered:* lockstep, with every browser simulating and exchanging only inputs (rejected: `Math.sin`/`cos` may differ between browsers, so the runs would drift apart); a relay or game server of our own (rejected by D1); host migration and reconnection (deferred).

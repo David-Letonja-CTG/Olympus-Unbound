@@ -20,11 +20,15 @@ Progress SHALL be reported in named stages, in order: loading the art (*Summonin
 - **THEN** the stage shown goes from *Summoning the gods* to *Shaping the realm* to *The horde gathers*, and the progress bar only grows
 
 ### Requirement: Party
-The loading screen SHALL list every player taking part in the run with their name and god. A run without a room SHALL show only its local player ("You") and SHALL NOT show empty seats, room codes or other multiplayer controls.
+The loading screen SHALL list every player taking part in the run with their name and god. In a room's run, it SHALL list every member in seat order, mark the local player and the host, and show the room's code. A run without a room SHALL show only its local player ("You") and SHALL NOT show empty seats, room codes or other multiplayer controls.
 
 #### Scenario: Solo run
 - **WHEN** a single player starts a run as `hades`
 - **THEN** the party shows one entry, "You — Hades", and nothing about rooms
+
+#### Scenario: A room's run
+- **WHEN** a room of a `zeus` host and a `hades` guest starts its run
+- **THEN** both loading screens list both players with their gods and show the room code
 
 ### Requirement: Lore and tips
 While loading, the screen SHALL show one line of lore or a gameplay tip from the realm's content, changing to another line every few seconds.

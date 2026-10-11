@@ -99,9 +99,13 @@ const TITLES = { victory: 'Victory', defeat: 'Defeat', abandoned: 'Run abandoned
 
         <div class="actions">
           <a class="btn" routerLink="/" data-testid="to-menu">Main menu</a>
-          <button class="btn btn-primary" data-testid="play-again" (click)="playAgain()">
-            Play again
-          </button>
+          @if (inRoom()) {
+            <a class="btn btn-primary" routerLink="/coop" data-testid="to-coop">Co-op</a>
+          } @else {
+            <button class="btn btn-primary" data-testid="play-again" (click)="playAgain()">
+              Play again
+            </button>
+          }
         </div>
       </main>
     } @else {
@@ -228,6 +232,8 @@ export class RunSummary {
       discovered: rewards.newlyDiscovered.map((d) => item(d.kind, d.id)),
     };
   });
+
+  protected readonly inRoom = computed(() => !!this.setup.lastRun()?.inRoom);
 
   protected playAgain(): void {
     this.setup.rerollSeed();

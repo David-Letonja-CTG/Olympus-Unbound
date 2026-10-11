@@ -56,9 +56,10 @@ flowchart LR
 ```text
 client/
   src/app/                 Angular
-    core/                  Progression, RunSetup, SaveStore + save model/rewards, injection tokens, debug flag
-    features/              main-menu, god-selection, realm-selection, game (play screen, HUD, dialogs),
-                           run-summary, progression, settings
+    core/                  Progression, RunSetup, SaveStore + save model/rewards, injection tokens, debug flag,
+                           rooms (RoomService lobby, RoomNetwork: PeerJS or BroadcastChannel)
+    features/              main-menu, god-selection, realm-selection, coop (lobby), game (play screen, HUD,
+                           dialogs, loading), run-summary, progression, settings
     shared/                item icons, settings controls
   src/engine/              gameplay
     index.ts               public surface — the only engine import Angular and content may use
@@ -66,7 +67,9 @@ client/
     core/                  Rng, vectors, stats/modifiers, spatial hash, collision
     data/                  content schema (types, asset manifest, cutscenes) + ContentIndex + validateContent
     maps/                  value noise + generateArena
-    sim/                   RunSimulation, RunState, players, pickups, types/events
+    sim/                   RunSimulation, RunState, players, pickups, types/events, WorldFrame
+    net/                   rooms (D16): PeerLink, protocol, binary snapshots, RunDriver (LocalDriver, GuestDriver),
+                           RoomHost
     combat/                damage pipeline, status effects
     weapons/               behaviors, stat resolution, weapon/projectile systems
     enemies/               behaviors, enemy system
@@ -91,7 +94,8 @@ docs/  openspec/  .github/workflows/  .claude/
 ## The session boundary
 
 ```ts
-createGameSession({ parent, content, run: { runId, godId, realmId, seed, modifiers }, settings, debug })
+createGameSession({ parent, content, run: { runId, godId, realmId, seed, modifiers, party? }, settings, debug,
+                    room?: { role: 'host', guests } | { role: 'guest', slot, host } })
   → Promise<GameSession>
 
 GameSession.send(command)       pause | resume | chooseUpgrade(choiceId, index) | abandon | updateSettings | debug
@@ -104,7 +108,7 @@ CutsceneSession.subscribe(listener)  loadProgress | ready | captions | uiInput |
 CutsceneSession.skip() / destroy()
 ```
 
-`createGameSession` dynamically imports the Phaser layer, so the ~1.45 MB Phaser chunk loads only when a run starts (menus: ~310 kB initial). `debug` is true only in development builds opened with `?debug` (used by Playwright).
+`createGameSession` dynamically imports the Phaser layer, so the ~1.45 MB Phaser chunk loads only when a run starts (menus: ~375 kB initial); PeerJS (~90 kB) loads only when a room is opened or joined. `debug` is true only in development builds opened with `?debug` (used by Playwright).
 
 ## A frame
 
@@ -112,14 +116,16 @@ CutsceneSession.skip() / destroy()
 sequenceDiagram
   participant P as Phaser loop
   participant S as ArenaScene
+  participant D as RunDriver
   participant R as RunSimulation
   participant A as Angular PlayScreen
   P->>S: update(time, delta)
   S->>S: read keyboard/gamepad → PlayerInput
+  S->>D: advance(dt, input)
   loop while accumulator ≥ 1/60 s (≤ 250 ms per frame)
-    S->>R: step(1/60, [input])
+    D->>R: step(1/60, inputs by slot)
   end
-  S->>R: events()
+  S->>D: events()
   S->>S: effects + sounds per event
   S->>A: choice / announcement / runEnded (via session)
   S->>S: WorldView.sync (interpolated), camera, telegraphs
@@ -146,6 +152,30 @@ ground image + grain → marble plazas → cliff shadow → decorations → shad
 
 `ArenaScene` loads in stages and emits `loadProgress` with a `stage`: `art` (Phaser's loader, the asset manifest), `realm` (`GroundBuilder` paints the arena's ground a few rows per frame within a 10 ms budget — base colours from the pure `GroundPainter` in `engine/maps/ground.ts`, then grass, roads and shading on a canvas) and `scene` (the `WorldView`, light map and atmosphere are built). Only then does it emit `ready` and start stepping the simulation, so a run starts at 00:00. `PlayScreen` shows `RunLoading` (realm, party, stage, tips) until `ready` and fades it out. The ground's resolution follows the graphics quality (`GROUND_SCALE`).
 
+## Rooms (D16)
+
+```mermaid
+flowchart LR
+  subgraph HostBrowser["Host's browser"]
+    HP["PlayScreen"] --> HS["ArenaScene"]
+    HS --> LD["LocalDriver"]
+    LD --> Sim["RunSimulation"]
+    LD --> RH["RoomHost"]
+  end
+  subgraph GuestBrowser["Guest's browser"]
+    GP["PlayScreen"] --> GS["ArenaScene"]
+    GS --> GD["GuestDriver<br/>replica · prediction"]
+  end
+  RS1["RoomService<br/>(lobby)"] -. "PeerLink" .- RS2["RoomService"]
+  RH -- "frame 20 Hz (binary snapshot + events) · hud 10 Hz · choice · ended" --> GD
+  GD -- "input 60 Hz · choose · loaded" --> RH
+```
+
+- **Lobby** (`app/core/rooms/room-service.ts`): the host opens a room through a `RoomNetwork` and keeps the member list (seat, name, god, ready). Guests send `hello` (with the room version: protocol, snapshot format and a hash of the content), then `update`s. `start` gives every member the same run ID, realm, seed and party in seat order. `RoomNetwork` is PeerJS in production (`peer-network.ts`, a lazy chunk) or a `BroadcastChannel` between tabs with `?debug&net=local` (E2E). The session receives the links as `RoomSeat` (`room` in `GameSessionOptions`).
+- **Driver:** `ArenaScene` runs on a `RunDriver` (`engine/net/driver.ts`). `LocalDriver` steps the simulation (solo, or with a `RoomHost` for a host). `GuestDriver` (`engine/net/guest.ts`) builds a `WorldFrame` between the two snapshots around *newest − 100 ms*, and releases each frame's events when the drawn time reaches it. It moves the guest's own god at once with the same movement and collision rules, and corrects it by the host's error at the acknowledged input. The views (`WorldView`, `Effects`) read only `WorldFrame`, which `RunState` satisfies as it is.
+- **Host:** `RoomHost` (`engine/net/host.ts`) applies each guest's inputs one per step, in order (none queued: the god stands still). It routes each choice to its player and sends frames, HUDs (every 10th with the result so far) and `ended`. A closed link calls `RunSimulation.leave`.
+- **Loading:** after the scene is built, a room's run waits in the `party` stage until every guest has loaded (host) or the first frame has come (guest). In rooms, pause and lost focus do not stop the run.
+
 ## Cutscenes (D14)
 
 `CutsceneTimeline` answers which cues fire between two times, the eased camera and fade at a time, and the active captions. `CutsceneScene` builds the realm's arena from the scene's seed and plays cues (spawn, move, remove, horde, strike, light, burst, shake, sound) with the same `WorldView`, `LightMap`, `Atmosphere` and `Effects` as a run; no simulation runs. `IntroScreen` (route `/intro`) shows loading, captions and the skip prompt; the root route's guard sends a player who has not seen the intro there once per page load.
@@ -163,7 +193,7 @@ ground image + grain → marble plazas → cliff shadow → decorations → shad
 | Run phase, timer, entities, loadout, stats, XP, run gold | `RunSimulation` |
 | Sprites, particles, camera, input devices, sounds | Phaser layer |
 
-Application states are routes (`/`, `/gods`, `/realms`, `/play`, `/summary`, `/progression`, `/settings`); guards keep `/play` and `/summary` unreachable without a setup or a result. Run phases: `playing ⇄ choosing`, `playing|choosing → paused → back`, `* → ended` (terminal, entered once).
+Application states are routes (`/`, `/gods`, `/realms`, `/coop`, `/play`, `/summary`, `/progression`, `/settings`); guards keep `/play` and `/summary` unreachable without a setup (or a room's started run) or a result. A room's lobby lives in `RoomService` (memory) and lasts until its run ends. Run phases: `playing ⇄ choosing`, `playing|choosing → paused → back`, `* → ended` (terminal, entered once).
 
 ## Data flow of a run's end
 
@@ -173,9 +203,9 @@ Application states are routes (`/`, `/gods`, `/realms`, `/play`, `/summary`, `/p
 
 | Level | Tool | What |
 |---|---|---|
-| Simulation | Vitest (`ng test`), Node + jsdom | RNG, stats, collision, arena generation, damage/status, every weapon and enemy behavior, spawning, offers, synergies, boss attacks, run phases, deterministic replays, headless autopilot runs to victory and defeat, content validation |
-| Angular | Vitest + TestBed, stubbed `GAME_SESSION_FACTORY` and storage | save parsing/migration, rewards, progression, screens, guards, PlayScreen ↔ session |
-| Browser | Playwright (Chromium, dev server, `?debug`; `E2E_NO_GPU=1` for software rendering) | the intro (first launch, skip, no replay, replay from the menu), the full vertical-slice path, defeat, pause/abandon, buying upgrades and persistence |
+| Simulation | Vitest (`ng test`), Node + jsdom | RNG, stats, collision, arena generation, damage/status, every weapon and enemy behavior, spawning, offers, synergies, boss attacks, run phases, co-op, deterministic replays, headless autopilot runs to victory and defeat, content validation; rooms over in-memory links (`engine/testing/memory-link.ts`): snapshots, host + guest, prediction, leaving |
+| Angular | Vitest + TestBed, stubbed `GAME_SESSION_FACTORY`, `ROOM_NETWORK` and storage | save parsing/migration, rewards, progression, screens, guards, PlayScreen ↔ session, the lobby protocol |
+| Browser | Playwright (Chromium, dev server, `?debug`; `E2E_NO_GPU=1` for software rendering) | the intro (first launch, skip, no replay, replay from the menu), the full vertical-slice path, defeat, pause/abandon, buying upgrades and persistence, a room played by two tabs (`net=local`) |
 | Assets | `npm run assets:check` | every external file has an allowed licence entry, every entry has a file |
 
 ## Performance

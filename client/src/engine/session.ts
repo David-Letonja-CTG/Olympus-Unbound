@@ -1,5 +1,6 @@
 import { CutsceneCaption } from './data/cutscene';
 import { GameContent } from './data/types';
+import { PeerLink } from './net/link';
 import { DebugAction } from './sim/run-simulation';
 import { RunConfig } from './sim/run-state';
 import { AnnouncementKind, HudSnapshot, RunResult, UpgradeChoice, UpgradeOffer } from './sim/types';
@@ -7,8 +8,11 @@ import { AnnouncementKind, HudSnapshot, RunResult, UpgradeChoice, UpgradeOffer }
 /** Graphics quality (spec: visual-atmosphere): lights, fog, bloom, shading and particle density. */
 export type GraphicsQuality = 'low' | 'medium' | 'high';
 
-/** What a run is loading (spec: run-loading / progress stages): the art, the realm (map and ground), the scene. */
-export type LoadStage = 'art' | 'realm' | 'scene';
+/**
+ * What a run is loading (spec: run-loading / progress stages): the art, the realm (map and ground), the scene, and in
+ * a room the other members (spec: rooms / lobby).
+ */
+export type LoadStage = 'art' | 'realm' | 'scene' | 'party';
 export const GRAPHICS_QUALITIES: readonly GraphicsQuality[] = ['low', 'medium', 'high'];
 
 /** Player-adjustable settings that affect a running game. */
@@ -35,7 +39,17 @@ export interface GameSessionOptions {
   readonly settings: GameSettings;
   /** Accept `debug` commands (development and end-to-end tests only). */
   readonly debug?: boolean;
+  /** A room's run (D16): the host runs it for everyone; a guest plays the host's run. Absent: a solo run. */
+  readonly room?: RoomSeat;
 }
+
+/**
+ * This browser's part in a room's run (D16). The host has a link to every guest by seat (`run.party` order, the host
+ * in seat 0); a guest has a link to the host and knows its seat.
+ */
+export type RoomSeat =
+  | { readonly role: 'host'; readonly guests: ReadonlyMap<number, PeerLink> }
+  | { readonly role: 'guest'; readonly slot: number; readonly host: PeerLink };
 
 /** What the application may ask of a running game (D3). */
 export type GameCommand =
@@ -71,6 +85,10 @@ export interface DebugSnapshot {
   readonly player: { readonly x: number; readonly y: number; readonly health: number };
   readonly enemies: number;
   readonly bossAlive: boolean;
+  /** Players still in the run (not left). */
+  readonly players: number;
+  /** Every player's position, in seat order. */
+  readonly party: readonly { readonly x: number; readonly y: number; readonly alive: boolean }[];
 }
 
 /** A running game. Created by `createGameSession`; the only handle the application has on gameplay. */

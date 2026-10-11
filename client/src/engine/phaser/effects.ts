@@ -1,6 +1,6 @@
 import Phaser from 'phaser';
 import { Element } from '../data/types';
-import { RunState } from '../sim/run-state';
+import { WorldFrame } from '../sim/world-frame';
 import { SimEvent } from '../sim/types';
 import { LightMap } from './atmosphere';
 import { DEPTH } from './world-view';
@@ -147,7 +147,7 @@ export class Effects {
   /** Redraws telegraphs, transient effects, bars, numbers and the boss pointer. `dt` in seconds (real time). */
   /** `state` is absent in cutscenes: only transient effects, particles and numbers are drawn then. */
   update(
-    state: RunState | undefined,
+    state: WorldFrame | undefined,
     dt: number,
     camera: Phaser.Cameras.Scene2D.Camera,
     lights: LightMap,
@@ -256,7 +256,7 @@ export class Effects {
     this.numbers.push({ text, vy: crit ? -95 : -70, life: crit ? 0.8 : 0.6 });
   }
 
-  private drawTelegraphs(state: RunState): void {
+  private drawTelegraphs(state: WorldFrame): void {
     const g = this.ground;
     g.clear();
     for (const h of state.hazards) {
@@ -413,7 +413,7 @@ export class Effects {
     }
   }
 
-  private drawBars(state: RunState): void {
+  private drawBars(state: WorldFrame): void {
     const g = this.bars;
     g.clear();
     for (const e of state.enemies) {
@@ -428,7 +428,7 @@ export class Effects {
     }
   }
 
-  private drawPointer(state: RunState, camera: Phaser.Cameras.Scene2D.Camera): void {
+  private drawPointer(state: WorldFrame, camera: Phaser.Cameras.Scene2D.Camera): void {
     const g = this.pointer;
     g.clear();
     const boss = state.boss;

@@ -1,3 +1,4 @@
+import { WorldFrame } from './world-frame';
 import { WorldCollision } from '../core/collision';
 import { Rng } from '../core/rng';
 import { SpatialHash } from '../core/spatial-hash';
@@ -64,7 +65,12 @@ export function emptyStatus() {
  * All mutable state of one run plus the helpers systems share: entity creation, spatial queries and the event
  * buffer. Systems are plain functions over this object; `RunSimulation` decides their order and the run phase.
  */
-export class RunState {
+/** The fixed simulation step: 60 steps per simulated second (D5). */
+export const STEP = 1 / 60;
+
+export class RunState implements WorldFrame {
+  /** Positions move one step between `px`/`py` and `x`/`y` (WorldFrame). */
+  readonly span = STEP;
   readonly balance: BalanceConfig;
   readonly realm: RealmDefinition;
   readonly god: GodDefinition;

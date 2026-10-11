@@ -1,21 +1,24 @@
 import Phaser from 'phaser';
 import { SoundPlayer } from '../audio/sound-player';
 import { ContentIndex } from '../data/content-index';
+import { LocalDriver, RunDriver } from '../net/driver';
+import { GuestDriver } from '../net/guest';
+import { RoomHost } from '../net/host';
 import { GameCommand, GameEvent, GameSession, GameSessionOptions, GameSettings } from '../session';
 import { RunSimulation } from '../sim/run-simulation';
 import { ArenaScene } from './arena-scene';
 
 /**
- * The Phaser implementation of `GameSession` (D3): owns the Phaser game, the simulation and the sound player,
- * applies commands from the application and forwards events to it.
+ * The Phaser implementation of `GameSession` (D3): owns the Phaser game, the run's driver (the simulation, or a
+ * room's host's world, D16) and the sound player, applies commands from the application and forwards events to it.
  */
 export function startPhaserSession(options: GameSessionOptions): GameSession {
   const index = new ContentIndex(options.content);
-  const sim = new RunSimulation(options.run, index);
+  const driver = createDriver(options, index);
   const listeners = new Set<(event: GameEvent) => void>();
   let settings: GameSettings = options.settings;
   const sound = new SoundPlayer(settings.sfxVolume);
-  const realm = index.realm(options.run.realmId);
+  const realm = driver.realm;
   // Events produced before anyone subscribed (e.g. `ready`) are replayed to the first subscriber.
   const backlog: GameEvent[] = [];
   const emit = (event: GameEvent) => {
@@ -24,7 +27,7 @@ export function startPhaserSession(options: GameSessionOptions): GameSession {
   };
 
   const scene = new ArenaScene({
-    sim,
+    driver,
     settings: () => settings,
     emit,
     sound,
@@ -48,16 +51,16 @@ export function startPhaserSession(options: GameSessionOptions): GameSession {
       if (destroyed) return;
       switch (command.type) {
         case 'pause':
-          if (sim.pause()) emit({ type: 'paused' });
+          if (driver.pause()) emit({ type: 'paused' });
           return;
         case 'resume':
-          if (sim.resume()) emit({ type: 'resumed' });
+          if (driver.resume()) emit({ type: 'resumed' });
           return;
         case 'chooseUpgrade':
-          sim.choose(command.index, command.choiceId);
+          driver.choose(command.choiceId, command.index);
           return;
         case 'abandon':
-          sim.abandon();
+          driver.abandon();
           return;
         case 'updateSettings':
           settings = command.settings;
@@ -65,7 +68,7 @@ export function startPhaserSession(options: GameSessionOptions): GameSession {
           scene.applySettings(settings);
           return;
         case 'debug':
-          if (options.debug) sim.debug(command.action);
+          if (options.debug) driver.debug(command.action);
           return;
       }
     },
@@ -75,22 +78,23 @@ export function startPhaserSession(options: GameSessionOptions): GameSession {
       return () => listeners.delete(listener);
     },
     inspect() {
-      if (!options.debug) return undefined;
-      const p = sim.state.players[0];
-      return {
-        phase: sim.phase,
-        time: sim.state.time,
-        player: { x: p.x, y: p.y, health: p.health },
-        enemies: sim.state.enemies.length,
-        bossAlive: !!sim.state.boss && !sim.state.boss.dead,
-      };
+      return options.debug ? driver.inspect() : undefined;
     },
     destroy(): void {
       if (destroyed) return;
       destroyed = true;
       listeners.clear();
+      driver.destroy();
       sound.destroy();
       game.destroy(true);
     },
   };
+}
+
+/** A solo run, a room's host (who runs it for everyone) or a guest (who plays the host's run). */
+function createDriver(options: GameSessionOptions, index: ContentIndex): RunDriver {
+  const room = options.room;
+  if (room?.role === 'guest') return new GuestDriver(index, options.run, room.slot, room.host);
+  const sim = new RunSimulation(options.run, index);
+  return new LocalDriver(sim, room ? new RoomHost(sim, room.guests) : undefined);
 }

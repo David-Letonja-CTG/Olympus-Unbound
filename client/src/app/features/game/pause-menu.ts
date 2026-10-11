@@ -3,6 +3,8 @@ import {
   Component,
   ElementRef,
   afterNextRender,
+  computed,
+  input,
   output,
   signal,
   viewChildren,
@@ -10,7 +12,20 @@ import {
 import { UiInput } from '../../../engine';
 import { SettingsControls } from '../../shared/settings-controls';
 
-/** Pause menu: resume, settings, and abandoning the run after a confirmation (spec: player-control / pausing). */
+const LABELS = {
+  solo: { button: 'Abandon run', question: 'Abandon this run?', confirm: 'Abandon' },
+  host: {
+    button: 'End run for everyone',
+    question: 'End the run for everyone?',
+    confirm: 'End run',
+  },
+  guest: { button: 'Leave room', question: 'Leave the room?', confirm: 'Leave' },
+} as const;
+
+/**
+ * Pause menu: resume, settings, and abandoning the run after a confirmation (spec: player-control / pausing). In a
+ * room the run goes on: the host can end it for everyone, a guest can leave (spec: rooms / pausing in a room).
+ */
 @Component({
   selector: 'app-pause-menu',
   imports: [SettingsControls],
@@ -20,14 +35,17 @@ import { SettingsControls } from '../../shared/settings-controls';
     <div class="backdrop">
       <section class="panel menu" role="dialog" aria-modal="true" aria-labelledby="pause-title">
         @if (!confirming()) {
-          <h2 id="pause-title">Paused</h2>
+          <h2 id="pause-title">{{ room() ? 'Menu' : 'Paused' }}</h2>
+          @if (room()) {
+            <p data-testid="room-runs-on">The fight goes on while this menu is open.</p>
+          }
           <button
             #action
             class="btn btn-primary"
             data-testid="resume"
             (click)="resumeRequested.emit()"
           >
-            Resume
+            {{ room() ? 'Back to the fight' : 'Resume' }}
           </button>
           <app-settings-controls />
           <button
@@ -36,10 +54,10 @@ import { SettingsControls } from '../../shared/settings-controls';
             data-testid="abandon"
             (click)="confirming.set(true)"
           >
-            Abandon run
+            {{ text().button }}
           </button>
         } @else {
-          <h2 id="pause-title">Abandon this run?</h2>
+          <h2 id="pause-title">{{ text().question }}</h2>
           <p>You keep half of the gold collected in this run.</p>
           <div class="actions">
             <button
@@ -56,7 +74,7 @@ import { SettingsControls } from '../../shared/settings-controls';
               data-testid="abandon-confirm"
               (click)="abandonRequested.emit()"
             >
-              Abandon
+              {{ text().confirm }}
             </button>
           </div>
         }
@@ -93,6 +111,9 @@ import { SettingsControls } from '../../shared/settings-controls';
   `,
 })
 export class PauseMenu {
+  /** In a room's run: this player's role. */
+  readonly room = input<'host' | 'guest' | undefined>(undefined);
+  protected readonly text = computed(() => LABELS[this.room() ?? 'solo']);
   readonly resumeRequested = output<void>();
   readonly abandonRequested = output<void>();
   protected readonly confirming = signal(false);

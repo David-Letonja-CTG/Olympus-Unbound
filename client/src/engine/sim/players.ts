@@ -3,7 +3,7 @@ import { clampLength } from '../core/vector';
 import { createWeapon, evaluateSynergies, refreshPlayer } from '../progression/loadout';
 import { useAbility } from '../weapons/weapon-system';
 import { RunState } from './run-state';
-import { Player, PlayerInput } from './types';
+import { NO_INPUT, Player, PlayerInput } from './types';
 
 /** Stick input shorter than this is ignored (spec: player-control / movement input). */
 export const DEAD_ZONE = 0.2;
@@ -54,7 +54,8 @@ export function updatePlayers(state: RunState, inputs: readonly PlayerInput[], d
     player.px = player.x;
     player.py = player.y;
     if (!player.alive) continue;
-    const input = inputs[player.slot] ?? inputs[0];
+    // A slot without input stands still; it never copies another player's (D16).
+    const input = inputs[player.slot] ?? NO_INPUT;
     const move = input ? normaliseMove(input) : { x: 0, y: 0 };
     player.moving = move.x !== 0 || move.y !== 0;
     if (player.moving) {
