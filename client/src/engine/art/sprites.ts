@@ -199,6 +199,27 @@ const symbols: Record<string, Symbol> = {
     g.lineWidth = 4;
     g.stroke();
   },
+  bident: (g, s, c) => {
+    line(g, [s * 0.3, s * 0.82, s * 0.62, s * 0.3], '#3a3340', 3);
+    line(g, [s * 0.56, s * 0.28, s * 0.74, s * 0.38], c, 2.5);
+    line(g, [s * 0.56, s * 0.28, s * 0.62, s * 0.12], c, 2.5);
+    line(g, [s * 0.74, s * 0.38, s * 0.86, s * 0.24], c, 2.5);
+  },
+  gates: (g, s, c) => {
+    glow(g, s / 2, s * 0.56, s * 0.34, 0x7fe0c8, 0.55);
+    g.beginPath();
+    g.moveTo(s * 0.26, s * 0.84);
+    g.lineTo(s * 0.26, s * 0.42);
+    g.arc(s / 2, s * 0.42, s * 0.24, Math.PI, 0);
+    g.lineTo(s * 0.74, s * 0.84);
+    g.fillStyle = '#0d0b12';
+    g.fill();
+    g.strokeStyle = c;
+    g.lineWidth = 2.5;
+    g.stroke();
+    circle(g, s * 0.44, s * 0.52, s * 0.035, c);
+    circle(g, s * 0.56, s * 0.52, s * 0.035, c);
+  },
   storm: (g, s, c) => {
     ellipse(g, s / 2, s * 0.32, s * 0.28, s * 0.14, '#9aa5b1');
     bolt(g, s * 0.5, s * 0.36, s * 0.48, c);
@@ -447,6 +468,8 @@ const ICONS: Record<string, [string, 'square' | 'round' | 'diamond' | 'hex', num
   thunderbolt: ['bolt', 'square', 0xc9f0ff],
   soul_scythe: ['scythe', 'square', 0xb68cff],
   wrath_of_olympus: ['storm', 'round', 0xfff6a8],
+  bident: ['bident', 'square', 0x7fe0c8],
+  gates_of_tartarus: ['gates', 'round', 0x7fe0c8],
   aegis_of_olympus: ['shield', 'square', 0xe8d38a],
   underworld_armour: ['shield', 'square', 0x7d5ca8],
   triton_shell: ['shell', 'square', 0x5fc6c0],

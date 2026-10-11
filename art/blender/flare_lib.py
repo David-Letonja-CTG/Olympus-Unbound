@@ -303,3 +303,39 @@ def strip_below(ob, z):
     bm.free()
 GRIP_SHORTSWORD = matrix([-0.00261, 0.15678, -0.98763, -0.03149, -0.51835, -0.8448, -0.13273, 0.08363,
                           -0.85516, 0.51159, 0.08347, 0.02711, 0.0, 0.0, 0.0, 1.0])
+
+
+def fork_head(staff, head_material, metal, prongs=2, spread=0.05, length=0.13):
+    """Turns a held staff into a bident or trident: `prongs` metal prongs rooted at the staff's head (the faces
+    using `head_material`, e.g. its crystal), pointing away from the hand, with a crossbar. Attached to the hand
+    like the staff. Run outside rest_pose()."""
+    from mathutils import Vector
+
+    arm = armature()
+    with rest_pose(arm):
+        hand = (arm.matrix_world @ arm.pose.bones['Hand.Right'].matrix).translation
+        shaft = staff.evaluated_get(bpy.context.evaluated_depsgraph_get())
+        names = [s.material.name for s in staff.material_slots]
+        points = [shaft.matrix_world @ shaft.data.vertices[i].co
+                  for p in shaft.data.polygons if names[p.material_index] == head_material for i in p.vertices]
+        centre = sum(points, Vector()) / len(points)
+        along = (centre - hand).normalized()
+        side = along.cross(Vector((0, 0, 1))).normalized()
+        parts = []
+        for k in range(prongs):
+            offset = (k - (prongs - 1) / 2) * 2 * spread / max(1, prongs - 1) if prongs > 1 else 0
+            # The middle prong of a trident reaches a little further.
+            reach = length * (1.25 if prongs % 2 and k == prongs // 2 else 1)
+            prong = add('cone', f'Prong.{k}', metal, centre + side * offset + along * (reach - 0.01),
+                        (0.022, 0.022, reach), vertices=6, radius1=1, radius2=0, depth=2)
+            prong.rotation_mode = 'QUATERNION'
+            prong.rotation_quaternion = along.to_track_quat('Z', 'Y')
+            parts.append(prong)
+        bar = add('cylinder', 'ProngBar', metal, centre - along * 0.03, (0.016, 0.016, spread + 0.015),
+                  vertices=6, radius=1, depth=2)
+        bar.rotation_mode = 'QUATERNION'
+        bar.rotation_quaternion = side.to_track_quat('Z', 'Y')
+        parts.append(bar)
+    for ob in parts:
+        attach(ob, 'Hand.Right')
+    return parts

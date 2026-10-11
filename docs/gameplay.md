@@ -6,7 +6,7 @@ The game as the player experiences it in the vertical slice. Numbers live in `cl
 
 0. **Intro** — on first launch, a ~55-second scene: the gods at the altar on a moonlit Olympus, the horde breaking in from the north, the gods falling one by one, and Zeus unleashing the storm. Skip with Esc, Enter, Space, a click or the gamepad; replay it from the main menu (*Intro*).
 1. **Main menu** → *Play*, *Progression*, *Settings*; the gold total is shown.
-2. **Choose a god** — Zeus (more gods later).
+2. **Choose a god** — Zeus or Hades (more gods later).
 3. **Choose a realm** — Mount Olympus, with a seed (random by default; enter one to replay an arena).
 4. **Survive.** Weapons fire on their own; the player moves, positions, collects XP and uses the divine ability.
 5. **Level up** — the run pauses; pick one of three upgrades.
@@ -39,6 +39,10 @@ Health fills an **amphora** (bottom left), the experience bar and your weapons, 
 ## Zeus, King of the Sky
 
 Health 120, speed 210, critical chance 13% (with his passive). Starts with **Thunder Spear**. Ability **Wrath of Olympus** (25 s): lightning strikes up to 8 nearby foes, stunning and shocking them. Passive **Thunderborn**: +10% lightning damage, +5% critical chance. Lightning items are offered more often.
+
+## Hades, Lord of the Underworld
+
+Health 150, speed 190, armour 2: he fights up close and outlasts the horde. Starts with the **Bident of Hades** (a forward thrust at the nearest foe that drinks 3% of its damage as life). Ability **Gates of Tartarus** (24 s): the abyss opens around him — every foe within reach is struck, held for a moment and slowed, and he heals from it. Passive **Lord of the Dead**: +15% shadow damage; heals for 1.5% of all damage dealt. Shadow and fire items are offered more often.
 
 ## Mount Olympus
 

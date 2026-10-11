@@ -109,6 +109,12 @@ function portrait(manifest: AssetManifest, key: string, px: number): Signal<stri
     const scale = (px * 0.92) / Math.max(w, h);
     const og = out.getContext('2d');
     if (!og) return;
+    // A soft light behind the figure, so dark characters (Hades) stand out on dark panels.
+    const halo = og.createRadialGradient(px / 2, px * 0.62, 0, px / 2, px * 0.62, px * 0.5);
+    halo.addColorStop(0, 'rgba(236, 213, 154, 0.28)');
+    halo.addColorStop(1, 'rgba(236, 213, 154, 0)');
+    og.fillStyle = halo;
+    og.fillRect(0, 0, px, px);
     og.imageSmoothingQuality = 'high';
     og.drawImage(
       canvas,

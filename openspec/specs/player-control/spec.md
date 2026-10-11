@@ -38,6 +38,10 @@ Each god SHALL have one active ability triggered by Space or the gamepad's south
 - **WHEN** the player presses Space while the ability is cooling down
 - **THEN** nothing fires
 
+#### Scenario: Hades's ability
+- **WHEN** wounded `hades` uses `gates_of_tartarus` with enemies around him
+- **THEN** every enemy within its radius is damaged, stunned and slowed, Hades regains health, and the ability goes on cooldown
+
 ### Requirement: Camera
 The camera SHALL keep the player centred while moving and SHALL show a similar amount of the world regardless of window size, so the window size gives no large advantage.
 

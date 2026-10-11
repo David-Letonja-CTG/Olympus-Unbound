@@ -31,12 +31,12 @@ export function quietContent(changes: Partial<RealmDefinition> = {}): GameConten
 }
 
 export function quietSim(
-  options: { seed?: number; modifiers?: Modifier[]; content?: GameContent } = {},
+  options: { seed?: number; modifiers?: Modifier[]; content?: GameContent; godId?: string } = {},
 ): RunSimulation {
   return new RunSimulation(
     {
       runId: 'test-run',
-      godId: 'zeus',
+      godId: options.godId ?? 'zeus',
       realmId: MOUNT_OLYMPUS_ID,
       seed: options.seed ?? 1,
       modifiers: options.modifiers ?? [],
