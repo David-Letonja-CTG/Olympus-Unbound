@@ -46,6 +46,14 @@ Each god SHALL have one active ability triggered by Space or the gamepad's south
 - **WHEN** `poseidon` uses `tidal_wave` with enemies in front of him
 - **THEN** a wide arc of waves passes through them, damaging, pushing back and slowing each, and the ability goes on cooldown
 
+#### Scenario: Athena's ability
+- **WHEN** `athena` uses `gorgons_gaze` with enemies around her
+- **THEN** every enemy within its radius is damaged and turned to stone (stunned) for 2.5 seconds, and the ability goes on cooldown
+
+#### Scenario: A quick tap still counts
+- **WHEN** the player taps Space so briefly that it is released before the next frame
+- **THEN** the ability still fires (if ready) on the next simulation step
+
 ### Requirement: Camera
 The camera SHALL keep the player centred while moving and SHALL show a similar amount of the world regardless of window size, so the window size gives no large advantage.
 
