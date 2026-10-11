@@ -9,6 +9,8 @@ import {
   SkillDefinition,
   WeaponDefinition,
 } from './types';
+import { ALLOWED_LICENCES, AssetManifest } from './assets';
+import { CutsceneDefinition } from './cutscene';
 
 function byId<T extends { id: string }>(items: readonly T[]): ReadonlyMap<string, T> {
   return new Map(items.map((item) => [item.id, item]));
@@ -186,7 +188,62 @@ export function validateContent(content: GameContent): string[] {
     }
   }
 
+  errors.push(...validateManifest(content.assets));
+  for (const cutscene of content.cutscenes) errors.push(...validateCutscene(cutscene, index));
+
   if (content.gods.length === 0) errors.push('Content needs at least one god.');
   if (content.realms.length === 0) errors.push('Content needs at least one realm.');
+  return errors;
+}
+
+/** Asset manifest checks that need no file system (`scripts/check-assets.mjs` checks the files themselves). */
+export function validateManifest(manifest: AssetManifest): string[] {
+  const errors: string[] = [];
+  const files = new Map<string, AssetManifest['files'][number]>();
+  for (const file of manifest.files) {
+    const where = `Asset "${file.id}"`;
+    if (files.has(file.id)) errors.push(`Duplicate asset file id "${file.id}".`);
+    files.set(file.id, file);
+    if (!ALLOWED_LICENCES.includes(file.licence.name)) {
+      errors.push(`${where} has a licence that is not allowed: ${file.licence.name}.`);
+    }
+    if (file.licence.name === 'commercial' && !file.licence.notes) {
+      errors.push(`${where} uses a commercial licence without a receipt reference in notes.`);
+    }
+    if (!file.licence.author || !file.licence.source)
+      errors.push(`${where} needs an author and a source.`);
+    if (file.type === 'atlas' && !file.data)
+      errors.push(`${where} is an atlas without its JSON data file.`);
+    if (file.type === 'spritesheet' && !(file.frameWidth && file.frameHeight)) {
+      errors.push(`${where} is a sprite sheet without frameWidth and frameHeight.`);
+    }
+  }
+  for (const [key, sprite] of Object.entries(manifest.sprites)) {
+    const file = files.get(sprite.file);
+    if (!file) errors.push(`Sprite "${key}" uses unknown asset file "${sprite.file}".`);
+    else if (file.type === 'font') errors.push(`Sprite "${key}" uses font file "${sprite.file}".`);
+  }
+  return errors;
+}
+
+function validateCutscene(scene: CutsceneDefinition, index: ContentIndex): string[] {
+  const errors: string[] = [];
+  const where = `Cutscene "${scene.id}"`;
+  if (!index.realms.has(scene.realmId))
+    errors.push(`${where} is set in unknown realm "${scene.realmId}".`);
+  const actors = new Set<string>();
+  for (const cue of [...scene.cues].sort((a, b) => a.at - b.at)) {
+    if (cue.at < 0 || cue.at > scene.duration)
+      errors.push(`${where} has a ${cue.type} cue outside its duration.`);
+    if (cue.type === 'spawn') actors.add(cue.actor.id);
+    if ((cue.type === 'move' || cue.type === 'remove') && !actors.has(cue.actor)) {
+      errors.push(`${where} uses actor "${cue.actor}" before spawning it.`);
+    }
+  }
+  for (const caption of scene.captions) {
+    if (caption.at < 0 || caption.at + caption.duration > scene.duration) {
+      errors.push(`${where} has a caption outside its duration: "${caption.text}".`);
+    }
+  }
   return errors;
 }

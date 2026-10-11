@@ -9,6 +9,8 @@ All game content is typed TypeScript in `client/src/content/` (decision D4). The
 | `items.ts` | armour, relics, skills, synergies |
 | `enemies.ts` | enemies and bosses |
 | `realms.ts` | realms: map generation, spawn timeline, events, scaling, elites, boss, rewards |
+| `assets.ts` | external art manifest: files with licences, sprite key → frame/animation (D12) |
+| `cutscenes/intro.ts` | the intro scene: actors, cues and captions (D14) |
 | `index.ts` | balance, permanent upgrades, and the assembled `CONTENT` |
 
 ## Conventions
@@ -26,9 +28,21 @@ All game content is typed TypeScript in `client/src/content/` (decision D4). The
 
 **New relic / armour / skill / synergy:** modifiers only (see the stat list in [systems.md](systems.md)); skills may require an element or behavior; synergies list requirements (`weapon`/`armour`/`skill` with optional `minLevel`, `relic`, or `element` with `count`).
 
-**New realm:** a `RealmDefinition` with terrain types and bands, obstacle kinds, points of interest, scatter and decoration rules, a timeline, events, scaling, elite multipliers, a boss and rewards → painters for its sprites → it appears in realm selection automatically.
+**New realm:** a `RealmDefinition` with `atmosphere` (ambient light ≥ 30% brightness, fog and particle colours), terrain types and bands, obstacle kinds, points of interest, scatter and decoration rules, a timeline, events, scaling, elite multipliers, a boss and rewards → painters for its sprites → it appears in realm selection automatically.
 
 **New god:** a `GodDefinition` (base stats, starting weapon, ability as a weapon-like definition, passive modifiers, affinities, sprite) → it appears in god selection automatically.
+
+## Adding an asset pack
+
+1. Check the licence is on the allow-list (CC0, CC-BY 3.0/4.0, CC-BY-SA 3.0/4.0, OFL, or a commercial licence you hold — keep the receipt reference) and that it fits [art-direction.md](art-direction.md).
+2. Put the files in `client/public/assets/<pack>/`. Convert other formats to a PNG plus a Phaser/TexturePacker JSON atlas, or a uniform sprite sheet; record conversions in `notes`.
+3. Add each file to `files` in `content/assets.ts` with `id`, `type`, `url` (and `data` for atlases, `frameWidth/frameHeight` for sheets) and its `licence` (name, author, title, source, notes).
+4. Map sprite keys in `sprites`: `file`, the still `frame`, optional `animations` (`idle`, `walk`, `attack`, `death`: frames + fps), `scale` (so the figure matches the enemy's gameplay radius), `originY` (feet at the entity position, ≈ 0.85) and `faces`.
+5. Run `npm run assets:check`, `npm test` (manifest validation) and look at the result in a run and in `/dev/art` (code-drawn fallbacks) — unmapped keys keep the code-drawn art. CC-BY credits appear on Settings → Credits.
+
+## Authoring a cutscene
+
+A `CutsceneDefinition` names its realm, arena seed, duration (the intro is 45–60 s), ambient light and lists `captions` (`at`, `duration`, `text`, `style` title/narration) and `cues`: `camera`, `fade`, `shake`, `spawn` (an actor with sprite key, position, scale, optional light), `move`, `remove`, `horde` (N actors from a point to a point), `strike` (lightning that also fells horde actors in its radius), `light`, `burst`, `sound`. Positions are relative to the arena's central plaza. `validateContent` reports unknown realms, cues or captions outside the duration, and actors used before they are spawned.
 
 ## The vertical slice's content
 
@@ -79,6 +93,8 @@ Boss: `cyclops` (two phases; `ground_slam`, `boulder_throw`, `rampage_charge`, `
 | All sprites, tiles, icons | Drawn in code (`engine/art/sprites.ts`, `engine/phaser/textures.ts`) | Original, project-owned |
 | All sound effects | Synthesized in code (`engine/audio/sound-player.ts`) | Original, project-owned |
 | `client/public/favicon.svg` | Drawn by hand (SVG) | Original, project-owned |
+| `client/public/ui/*.svg` (frame, divider, stone grain) | Drawn by hand (SVG) | Original, project-owned |
+| External packs and fonts | Listed in `client/src/content/assets.ts` | Checked by `npm run assets:check`; none yet |
 
 Add a row for every external asset before it is committed. Never copy sprites, sounds, music or UI from other games.
 

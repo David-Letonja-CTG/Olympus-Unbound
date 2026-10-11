@@ -29,7 +29,7 @@ const q = <T extends Element>(h: RouterTestingHarness, selector: string) =>
 
 describe('main menu', () => {
   it('shows Play, Progression, Settings and the gold total', async () => {
-    const h = await open('/', { version: 1, gold: 75 });
+    const h = await open('/', { version: 2, gold: 75, introSeen: true });
     expect(text(h)).toContain('Play');
     expect(text(h)).toContain('Progression');
     expect(text(h)).toContain('Settings');
@@ -103,7 +103,7 @@ describe('route guards', () => {
   });
 
   it('sends a summary visit without a finished run to the menu', async () => {
-    await open('/summary');
+    await open('/summary', { version: 2, introSeen: true });
     expect(TestBed.inject(Router).url).toBe('/');
   });
 });
@@ -138,5 +138,28 @@ describe('settings screen', () => {
     numbers.checked = false;
     numbers.dispatchEvent(new Event('change'));
     expect(JSON.parse(storage.getItem(SAVE_KEY) ?? '{}').settings.damageNumbers).toBe(false);
+  });
+});
+
+describe('graphics quality', () => {
+  it('persists the chosen quality', async () => {
+    const data: Record<string, string> = {};
+    TestBed.configureTestingModule({
+      providers: [
+        provideRouter(routes),
+        {
+          provide: SAVE_STORAGE,
+          useValue: {
+            getItem: (k: string) => data[k] ?? null,
+            setItem: (k: string, v: string) => void (data[k] = v),
+          },
+        },
+      ],
+    });
+    const h = await RouterTestingHarness.create('/settings');
+    q<HTMLButtonElement>(h, '[data-testid=quality-high]')?.click();
+    h.detectChanges();
+    expect(JSON.parse(data[SAVE_KEY]).settings.quality).toBe('high');
+    expect(q(h, '[data-testid=quality-high]')?.getAttribute('aria-checked')).toBe('true');
   });
 });

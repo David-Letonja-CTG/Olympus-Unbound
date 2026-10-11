@@ -20,9 +20,23 @@ interface DebugWindow {
   olympusDebug?: { send(action: DebugAction): void; inspect(): Snapshot | undefined };
 }
 
+/**
+ * Opens the game as a returning player: the intro already seen and graphics pinned to Low, so runs stay fast with
+ * software rendering (CI).
+ */
+export async function openAsReturningPlayer(page: Page, save: object = {}): Promise<void> {
+  await page.addInitScript((extra) => {
+    if (localStorage.getItem('olympus-unbound/save')) return;
+    const save = { version: 2, introSeen: true, settings: { quality: 'low' }, ...extra };
+    localStorage.setItem('olympus-unbound/save', JSON.stringify(save));
+  }, save);
+  await page.goto('/?debug');
+  await expect(page.getByRole('link', { name: 'Play' })).toBeVisible();
+}
+
 /** Menu → Zeus → Mount Olympus with a fixed seed; returns once the game is running. */
 export async function startRun(page: Page, seed = '847291'): Promise<void> {
-  await page.goto('/?debug');
+  await openAsReturningPlayer(page);
   await page.getByRole('link', { name: 'Play' }).click();
   await page.getByTestId('god-zeus').click();
   await page.getByRole('button', { name: 'Continue' }).click();

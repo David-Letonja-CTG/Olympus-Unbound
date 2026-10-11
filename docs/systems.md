@@ -85,12 +85,22 @@ Synergies are checked after every change; each activates once, is announced, and
 
 `playing` → `choosing` (choice open) → `playing`; `pause()` from playing/choosing, `resume()` returns to the previous phase; `end(outcome)` once, from any phase (later calls are ignored). Choices carry an ID; answers for another ID or an invalid index are ignored. Victory is checked before defeat in the same step.
 
+## Lighting and atmosphere — `engine/phaser/atmosphere.ts` (D13)
+
+Each frame: clear the light map to the realm's `atmosphere.ambient`; add lights (priority: player 10, boss 8, strikes 6, elites 5, effects 3–4, braziers 2, projectiles 1); keep those overlapping the view, sorted by priority then distance to the view centre, up to the quality budget; stamp each as a radial falloff (≈ (1 − r)^2.2) tinted by its colour, additively; multiply the result over the world. Brazier flicker is two slow sines per brazier. Enemy copies above the darkness use the quality's `silhouette` opacity (Low 0.5, Medium 0.42, High 0.36; ×1.5 for elites and the boss).
+
+## Cutscene timing — `engine/cutscene/timeline.ts` (D14)
+
+Cues fire when `previous < at ≤ now` (the first frame includes `at = 0`). The camera eases (smoothstep) from where earlier camera cues left it to each cue's target over its duration; fades work the same way on visibility (0 black, 1 clear; a fade at 0 starts black). Captions are active for `at ≤ t < at + duration`. Positions are relative to the arena's central plaza.
+
 ## Arena generation — `engine/maps/generate-arena.ts`
 
-Deterministic from `(map config, seed)`: terrain bands from two-octave value noise; a cliff border; marble plazas (spawn, boss arena ≥ `minDistanceFromSpawn` away, temple rings); obstacles via rejection sampling with `minObstacleGap`, clear zones and `maxObstacles`; decorations only on their terrain and never on obstacles. Rendering (`engine/phaser/world-view.ts`) draws the terrain as one smoothed picture (one pixel per tile), round marble floors and y-sorted obstacles.
+Deterministic from `(map config, seed)`: terrain bands from two-octave value noise; a cliff border; marble plazas (spawn, boss arena ≥ `minDistanceFromSpawn` away, temple rings); obstacles via rejection sampling with `minObstacleGap`, clear zones and `maxObstacles`; decorations only on their terrain and never on obstacles; `plazaLights` rules then place light-bearing obstacles (braziers) evenly around every plaza, outside the spawn and boss-arena clear zones. Rendering (`engine/phaser/world-view.ts`) draws the terrain as one smoothed picture (one pixel per tile), round marble floors and y-sorted obstacles.
 
 ## Saves and rewards — `client/src/app/core/save/`
 
-`SaveData v1 { version, gold, permanentUpgrades, discovered { weapons, armour, relics }, stats { runs, victories, kills, bestTimeSeconds }, settings { sfxVolume, screenShake, damageNumbers }, processedRunIds }` under `localStorage['olympus-unbound/save']`. `parseSave` validates each field, clamps upgrade levels, drops unknown IDs, migrates older versions (`MIGRATIONS`), and refuses newer ones (fresh save). `applyRunResult` grants gold (half when abandoned, + realm victory bonus), discoveries and statistics once per run ID.
+`SaveData v2 { version, gold, permanentUpgrades, discovered { weapons, armour, relics }, stats { runs, victories, kills, bestTimeSeconds }, settings { sfxVolume, screenShake, damageNumbers, quality }, processedRunIds, introSeen }` under `localStorage['olympus-unbound/save']`. `parseSave` validates each field, clamps upgrade levels, drops unknown IDs, migrates older versions (`MIGRATIONS`), and refuses newer ones (fresh save). `applyRunResult` grants gold (half when abandoned, + realm victory bonus), discoveries and statistics once per run ID.
+
+Migrations: v0 (unversioned) → v1 renames nothing; v1 → v2 adds `introSeen: false`; a missing or invalid `quality` takes the detected default (`detectQuality`: software renderer → Low, ≥ 8 cores → High, else Medium).
 
 To change the save format: bump `SAVE_VERSION`, add `MIGRATIONS[oldVersion]`, extend `parseSave`, add tests for the old shape.

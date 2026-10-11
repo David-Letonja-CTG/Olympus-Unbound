@@ -61,6 +61,12 @@ export class Progression {
     this.commit({ ...save, settings: { ...save.settings, ...changes } });
   }
 
+  /** Records that the intro finished or was skipped, so it no longer plays on launch. */
+  markIntroSeen(): void {
+    const save = this.state();
+    if (!save.introSeen) this.commit({ ...save, introSeen: true });
+  }
+
   /** Modifiers from permanent upgrades, for the next run. */
   runModifiers(): Modifier[] {
     return permanentModifiers(this.state(), this.content);

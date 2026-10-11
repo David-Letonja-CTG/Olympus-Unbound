@@ -1,6 +1,7 @@
 import { TestBed } from '@angular/core/testing';
 import { CONTENT } from '../../../content';
 import { RunResult } from '../../../engine';
+import { isSoftwareRenderer } from '../graphics-quality';
 import { Progression } from '../progression';
 import { applyRunResult } from './rewards';
 import { freshSave, parseSave, permanentModifiers, SAVE_VERSION } from './save-data';
@@ -176,5 +177,51 @@ describe('SaveStore and Progression', () => {
     const { progression } = setup(storage);
     progression.updateSettings({ sfxVolume: 0 });
     expect(JSON.parse(storage.data[SAVE_KEY]).settings.sfxVolume).toBe(0);
+  });
+});
+
+describe('save format v2', () => {
+  it('migrates a version 1 save, keeping progress, with the intro not yet seen', () => {
+    const save = parseSave(
+      JSON.stringify({ version: 1, gold: 300, permanentUpgrades: { vitality: 2 } }),
+      CONTENT,
+      'high',
+    );
+    expect(save.version).toBe(2);
+    expect(save.gold).toBe(300);
+    expect(save.permanentUpgrades).toEqual({ vitality: 2 });
+    expect(save.introSeen).toBe(false);
+    expect(save.settings.quality).toBe('high');
+  });
+
+  it('keeps a chosen graphics quality and replaces an invalid one with the default', () => {
+    expect(
+      parseSave(JSON.stringify({ version: 2, settings: { quality: 'low' } }), CONTENT, 'high')
+        .settings.quality,
+    ).toBe('low');
+    expect(
+      parseSave(JSON.stringify({ version: 2, settings: { quality: 'ultra' } }), CONTENT, 'medium')
+        .settings.quality,
+    ).toBe('medium');
+  });
+
+  it('remembers that the intro was seen', () => {
+    expect(parseSave(JSON.stringify({ version: 2, introSeen: true }), CONTENT).introSeen).toBe(
+      true,
+    );
+  });
+});
+
+describe('graphics quality default', () => {
+  it('chooses Low for software renderers', () => {
+    expect(
+      isSoftwareRenderer(
+        'ANGLE (Google, Vulkan 1.3.0 (SwiftShader Device (Subzero)), SwiftShader driver)',
+      ),
+    ).toBe(true);
+    expect(isSoftwareRenderer('llvmpipe (LLVM 15.0.7, 256 bits)')).toBe(true);
+    expect(
+      isSoftwareRenderer('ANGLE (NVIDIA, NVIDIA GeForce GTX 1660 Direct3D11 vs_5_0 ps_5_0, D3D11)'),
+    ).toBe(false);
   });
 });

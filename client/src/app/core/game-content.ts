@@ -1,6 +1,6 @@
 import { InjectionToken } from '@angular/core';
 import { CONTENT } from '../../content';
-import { createGameSession, GameContent } from '../../engine';
+import { createCutsceneSession, createGameSession, GameContent } from '../../engine';
 
 /** All game content; a token so tests can provide small fixtures. */
 export const GAME_CONTENT = new InjectionToken<GameContent>('GAME_CONTENT', {
@@ -14,5 +14,14 @@ export const GAME_SESSION_FACTORY = new InjectionToken<typeof createGameSession>
   {
     providedIn: 'root',
     factory: () => createGameSession,
+  },
+);
+
+/** Starts a cutscene session; replaced by a stub in component tests. */
+export const CUTSCENE_SESSION_FACTORY = new InjectionToken<typeof createCutsceneSession>(
+  'CUTSCENE_SESSION_FACTORY',
+  {
+    providedIn: 'root',
+    factory: () => createCutsceneSession,
   },
 );

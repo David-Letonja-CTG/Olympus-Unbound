@@ -1,21 +1,32 @@
-/* OLYMPUS UNBOUND — dark mythological theme: night stone, marble and divine gold. */
+/*
+ * OLYMPUS UNBOUND — UI language (docs/art-direction.md): carved night stone, forged iron, worn gold leaf and
+ * blood-red accents. Ornaments are original SVGs in public/ui/.
+ * Colours that carry text are mirrored in src/app/shared/ui-palette.ts, where their contrast is tested.
+ */
 :root {
-  --bg: #0f0e15;
-  --bg-2: #17151f;
-  --panel: rgba(28, 25, 38, 0.92);
-  --panel-2: #262233;
-  --line: rgba(232, 211, 138, 0.22);
-  --text: #f1ece0;
-  --muted: #a49d8f;
-  --gold: #e8c25a;
-  --gold-2: #ffde7a;
-  --danger: #ff5a46;
-  --xp: #4fc3f7;
-  --health: #e5484d;
-  --ok: #7ee0a1;
+  --bg: #0b0a0c;
+  --bg-2: #141215;
+  --panel: linear-gradient(180deg, rgba(30, 27, 30, 0.96), rgba(16, 14, 16, 0.97));
+  --panel-solid: #171417;
+  --panel-2: #221e20;
+  --accent-bg: rgba(176, 38, 30, 0.22);
+  --line: rgba(201, 165, 90, 0.22);
+  --text: #e8dfcc;
+  --muted: #a39782;
+  --gold: #c9a55a;
+  --gold-2: #ecd59a;
+  --blood: #8e1c18;
+  --blood-2: #c8352a;
+  --danger: #e0483a;
+  --xp: #5fb7e8;
+  --health: #b3221b;
+  --ok: #8fcf8a;
+  --display: 'Cinzel', 'Trajan Pro', 'Palatino Linotype', 'Book Antiqua', Georgia, serif;
   --serif: 'Palatino Linotype', 'Book Antiqua', Palatino, Georgia, serif;
   --sans: system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
-  --radius: 12px;
+  --radius: 3px;
+  --frame: url('/ui/frame.svg') 24 / 18px / 0 stretch;
+  --stone: url('/ui/stone.svg');
   color-scheme: dark;
 }
 
@@ -28,8 +39,9 @@ body {
   margin: 0;
   height: 100%;
   background:
-    radial-gradient(ellipse at 50% -10%, rgba(232, 194, 90, 0.12), transparent 55%),
-    radial-gradient(ellipse at 50% 120%, rgba(90, 60, 140, 0.18), transparent 60%), var(--bg);
+    radial-gradient(ellipse at 50% 115%, rgba(160, 40, 20, 0.28), transparent 55%),
+    radial-gradient(ellipse at 50% -20%, rgba(120, 130, 170, 0.14), transparent 60%), var(--stone),
+    var(--bg);
   color: var(--text);
   font-family: var(--sans);
   -webkit-font-smoothing: antialiased;
@@ -38,9 +50,9 @@ body {
 h1,
 h2,
 h3 {
-  font-family: var(--serif);
+  font-family: var(--display);
   font-weight: 700;
-  letter-spacing: 0.02em;
+  letter-spacing: 0.06em;
   margin: 0;
 }
 
@@ -49,7 +61,7 @@ button {
 }
 
 :focus-visible {
-  outline: 3px solid var(--gold-2);
+  outline: 2px solid var(--gold-2);
   outline-offset: 3px;
 }
 
@@ -65,22 +77,41 @@ button {
 
 .screen-title {
   font-size: clamp(1.8rem, 4vw, 2.6rem);
-  color: var(--gold);
+  color: var(--gold-2);
   text-align: center;
-  text-shadow: 0 2px 18px rgba(232, 194, 90, 0.25);
+  text-transform: uppercase;
+  text-shadow:
+    0 2px 0 #000,
+    0 0 24px rgba(201, 165, 90, 0.25);
+}
+
+.screen-title::after {
+  content: '';
+  display: block;
+  width: min(320px, 70vw);
+  height: 18px;
+  margin: 10px auto 0;
+  background: url('/ui/divider.svg') center / contain no-repeat;
 }
 
 .screen-subtitle {
   color: var(--muted);
   text-align: center;
   margin: -12px 0 0;
+  font-family: var(--serif);
+  font-style: italic;
 }
 
+/* A carved stone panel inside a forged iron frame. */
 .panel {
-  background: var(--panel);
-  border: 1px solid var(--line);
+  background: var(--stone), var(--panel);
+  background-blend-mode: soft-light, normal;
+  border: 18px solid transparent;
+  border-image: var(--frame);
   border-radius: var(--radius);
-  box-shadow: 0 18px 50px rgba(0, 0, 0, 0.45);
+  box-shadow:
+    0 20px 60px rgba(0, 0, 0, 0.65),
+    inset 0 0 40px rgba(0, 0, 0, 0.6);
 }
 
 .actions {
@@ -90,26 +121,40 @@ button {
   justify-content: center;
 }
 
-/* Buttons */
+/* Buttons: iron plates with engraved lettering. */
 .btn {
   appearance: none;
-  border: 1px solid var(--line);
-  background: var(--panel-2);
+  position: relative;
+  border: 1px solid #0a0908;
+  background:
+    linear-gradient(180deg, rgba(255, 240, 210, 0.08), rgba(0, 0, 0, 0.25)),
+    linear-gradient(180deg, #3a3532, #1e1b1a);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 235, 200, 0.12),
+    inset 0 0 0 1px rgba(201, 165, 90, 0.25),
+    0 3px 8px rgba(0, 0, 0, 0.6);
   color: var(--text);
-  padding: 12px 22px;
-  border-radius: 10px;
+  padding: 12px 24px;
+  border-radius: 2px;
   cursor: pointer;
-  font-weight: 600;
-  letter-spacing: 0.02em;
+  font-family: var(--display);
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  text-shadow: 0 1px 0 #000;
   transition:
     transform 0.08s ease,
-    background 0.15s ease,
-    border-color 0.15s ease;
+    box-shadow 0.15s ease,
+    color 0.15s ease;
 }
 
 .btn:hover:not(:disabled) {
-  border-color: var(--gold);
-  background: #2f2a3e;
+  color: var(--gold-2);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 235, 200, 0.18),
+    inset 0 0 0 1px rgba(236, 213, 154, 0.6),
+    0 0 18px rgba(201, 165, 90, 0.25),
+    0 3px 8px rgba(0, 0, 0, 0.6);
 }
 
 .btn:active:not(:disabled) {
@@ -117,24 +162,37 @@ button {
 }
 
 .btn:disabled {
-  opacity: 0.45;
+  opacity: 0.4;
   cursor: not-allowed;
 }
 
 .btn-primary {
-  background: linear-gradient(180deg, #f2cf6b, #c99a2e);
-  color: #1d1606;
-  border-color: #f7dc8a;
-  box-shadow: 0 6px 24px rgba(232, 194, 90, 0.25);
+  color: #1a0d08;
+  text-shadow: 0 1px 0 rgba(255, 230, 190, 0.4);
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.18), rgba(0, 0, 0, 0.2)),
+    linear-gradient(180deg, #d9b467, #9c7633);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 245, 210, 0.5),
+    inset 0 0 0 1px rgba(60, 40, 10, 0.6),
+    0 0 22px rgba(201, 165, 90, 0.22),
+    0 3px 8px rgba(0, 0, 0, 0.6);
 }
 
 .btn-primary:hover:not(:disabled) {
-  background: linear-gradient(180deg, #ffe08a, #d8a838);
+  color: #000;
+  box-shadow:
+    inset 0 1px 0 rgba(255, 245, 210, 0.6),
+    inset 0 0 0 1px rgba(60, 40, 10, 0.6),
+    0 0 30px rgba(236, 213, 154, 0.45),
+    0 3px 8px rgba(0, 0, 0, 0.6);
 }
 
 .btn-danger {
-  border-color: rgba(255, 90, 70, 0.5);
-  color: #ffb4a8;
+  color: #f2b5a8;
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.06), rgba(0, 0, 0, 0.25)),
+    linear-gradient(180deg, #4a1714, #250a09);
 }
 
 .gold-amount {
@@ -145,9 +203,11 @@ button {
 
 .tag {
   display: inline-block;
-  padding: 2px 8px;
-  border-radius: 999px;
-  font-size: 0.75rem;
+  padding: 1px 8px;
+  border-radius: 2px;
+  font-size: 0.7rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
   border: 1px solid var(--line);
   color: var(--muted);
 }

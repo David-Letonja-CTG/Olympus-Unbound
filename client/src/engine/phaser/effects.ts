@@ -2,6 +2,7 @@ import Phaser from 'phaser';
 import { Element } from '../data/types';
 import { RunState } from '../sim/run-state';
 import { SimEvent } from '../sim/types';
+import { LightMap } from './atmosphere';
 import { DEPTH } from './world-view';
 
 const ELEMENT_COLOR: Record<Element, number> = {
@@ -50,6 +51,8 @@ export class Effects {
   private readonly freeNumbers: Phaser.GameObjects.Text[] = [];
   private seed = 1;
   damageNumbers = true;
+  /** Multiplier for burst particle counts (graphics quality). */
+  particleScale = 1;
 
   constructor(private readonly scene: Phaser.Scene) {
     this.ground = scene.add.graphics().setDepth(DEPTH.telegraph);
@@ -142,11 +145,19 @@ export class Effects {
   }
 
   /** Redraws telegraphs, transient effects, bars, numbers and the boss pointer. `dt` in seconds (real time). */
-  update(state: RunState, dt: number, camera: Phaser.Cameras.Scene2D.Camera): void {
-    this.drawTelegraphs(state);
-    this.drawTransients(dt);
-    this.drawBars(state);
-    this.drawPointer(state, camera);
+  /** `state` is absent in cutscenes: only transient effects, particles and numbers are drawn then. */
+  update(
+    state: RunState | undefined,
+    dt: number,
+    camera: Phaser.Cameras.Scene2D.Camera,
+    lights: LightMap,
+  ): void {
+    this.drawTransients(dt, lights);
+    if (state) {
+      this.drawTelegraphs(state);
+      this.drawBars(state);
+      this.drawPointer(state, camera);
+    }
     for (let i = this.numbers.length - 1; i >= 0; i--) {
       const n = this.numbers[i];
       n.life -= dt;
@@ -191,6 +202,11 @@ export class Effects {
     this.transients.push({ ...t, age: 0, seed: this.seed++ });
   }
 
+  /** Sparks (`glow`) or smoke-like puffs at a point, e.g. a fallen god in the intro. */
+  burstAt(x: number, y: number, color: number, count: number, glow = false): void {
+    this.burst(glow ? this.sparks : this.puffs, x, y, count, color);
+  }
+
   private burst(
     emitter: Phaser.GameObjects.Particles.ParticleEmitter,
     x: number,
@@ -199,7 +215,7 @@ export class Effects {
     color: number,
   ): void {
     emitter.setParticleTint(color);
-    emitter.explode(count, x, y);
+    emitter.explode(Math.max(1, Math.round(count * this.particleScale)), x, y);
   }
 
   private number(x: number, y: number, amount: number, crit: boolean, element: Element): void {
@@ -280,7 +296,38 @@ export class Effects {
     }
   }
 
-  private drawTransients(dt: number): void {
+  /** Attacks light the night as they happen (spec: visual-atmosphere / dynamic lighting). */
+  private light(t: Transient, fade: number, lights: LightMap): void {
+    switch (t.kind) {
+      case 'strike':
+        lights.add(t.x, t.y, Math.max(260, t.radius * 3.5), 0xdcefff, fade * 1.2, 6);
+        return;
+      case 'chain':
+        if (t.points)
+          for (let i = 2; i < t.points.length; i += 2)
+            lights.add(t.points[i], t.points[i + 1], 150, t.color, fade, 4);
+        return;
+      case 'nova':
+      case 'burst':
+        lights.add(t.x, t.y, t.radius * 1.5, t.color, fade * 0.8, 4);
+        return;
+      case 'sweep':
+        lights.add(
+          t.x + Math.cos(t.angle) * t.radius * 0.6,
+          t.y + Math.sin(t.angle) * t.radius * 0.6,
+          t.radius * 1.3,
+          t.color,
+          fade * 0.7,
+          3,
+        );
+        return;
+      case 'impact':
+        lights.add(t.x, t.y, t.radius * 1.6, 0xff9a4a, fade, 4);
+        return;
+    }
+  }
+
+  private drawTransients(dt: number, lights: LightMap): void {
     const g = this.fx;
     g.clear();
     for (let i = this.transients.length - 1; i >= 0; i--) {
@@ -292,6 +339,7 @@ export class Effects {
       }
       const k = t.age / t.ttl;
       const fade = 1 - k;
+      this.light(t, fade, lights);
       switch (t.kind) {
         case 'nova':
         case 'burst':

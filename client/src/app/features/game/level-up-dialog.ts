@@ -77,25 +77,31 @@ const KIND_LABEL: Record<UpgradeOffer['kind'], string> = {
       inset: 0;
       display: grid;
       place-items: center;
-      background: radial-gradient(ellipse at center, rgba(10, 8, 20, 0.55), rgba(5, 4, 10, 0.85));
+      background: radial-gradient(ellipse at center, rgba(12, 8, 6, 0.55), rgba(0, 0, 0, 0.88));
       padding: 16px;
     }
     .dialog {
-      width: min(560px, 100%);
+      width: min(580px, 100%);
       display: flex;
       flex-direction: column;
       gap: 12px;
-      animation: rise 0.18s ease-out;
+      animation: rise 0.2s ease-out;
     }
     h2 {
       text-align: center;
-      font-size: 2rem;
+      font-size: 2.1rem;
+      text-transform: uppercase;
+      letter-spacing: 0.16em;
       color: var(--gold-2);
-      text-shadow: 0 0 24px rgba(255, 222, 122, 0.5);
+      text-shadow:
+        0 2px 0 #000,
+        0 0 28px rgba(236, 213, 154, 0.45);
     }
     .subtitle {
       text-align: center;
       color: var(--muted);
+      font-family: var(--serif);
+      font-style: italic;
       margin: -6px 0 6px;
     }
     .offers {
@@ -110,18 +116,26 @@ const KIND_LABEL: Record<UpgradeOffer['kind'], string> = {
       padding: 12px 16px;
       text-align: left;
       color: var(--text);
-      background: var(--panel);
-      border: 1px solid var(--line);
-      border-radius: var(--radius);
+      background: var(--stone), var(--panel);
+      background-blend-mode: soft-light, normal;
+      border: 1px solid #050404;
+      box-shadow:
+        inset 0 0 0 1px rgba(201, 165, 90, 0.3),
+        inset 0 0 30px rgba(0, 0, 0, 0.6),
+        0 6px 18px rgba(0, 0, 0, 0.6);
+      border-radius: 2px;
       cursor: pointer;
       transition:
         transform 0.08s ease,
-        border-color 0.12s ease;
+        box-shadow 0.12s ease;
     }
     .offer.active,
     .offer:hover {
-      border-color: var(--gold);
-      box-shadow: 0 0 0 2px rgba(232, 194, 90, 0.6);
+      box-shadow:
+        inset 0 0 0 1px rgba(236, 213, 154, 0.85),
+        inset 0 0 30px rgba(0, 0, 0, 0.5),
+        0 0 26px rgba(201, 165, 90, 0.3),
+        0 6px 18px rgba(0, 0, 0, 0.6);
       transform: translateX(4px);
     }
     .key {
@@ -130,9 +144,9 @@ const KIND_LABEL: Record<UpgradeOffer['kind'], string> = {
       flex: none;
       display: grid;
       place-items: center;
-      border-radius: 6px;
       border: 1px solid var(--line);
-      color: var(--muted);
+      color: var(--gold);
+      font-family: var(--display);
       font-weight: 700;
     }
     .text {
@@ -141,29 +155,33 @@ const KIND_LABEL: Record<UpgradeOffer['kind'], string> = {
       gap: 2px;
     }
     .kind {
-      font-size: 0.72rem;
+      font-family: var(--display);
+      font-size: 0.68rem;
       text-transform: uppercase;
-      letter-spacing: 0.08em;
+      letter-spacing: 0.16em;
       color: var(--muted);
     }
     .name {
-      font-family: var(--serif);
-      font-size: 1.2rem;
+      font-family: var(--display);
+      font-size: 1.15rem;
       font-weight: 700;
+      letter-spacing: 0.04em;
+      color: var(--gold-2);
       display: flex;
       gap: 8px;
       align-items: center;
     }
     .level {
       font-family: var(--sans);
-      font-size: 0.72rem;
-      color: var(--gold-2);
+      font-size: 0.7rem;
+      letter-spacing: 0.06em;
+      color: var(--text);
       border: 1px solid var(--gold);
-      border-radius: 999px;
-      padding: 0 8px;
+      border-radius: 2px;
+      padding: 0 6px;
     }
     .description {
-      color: #d6cfc0;
+      color: #d6ccb8;
       font-size: 0.92rem;
     }
     @keyframes rise {
