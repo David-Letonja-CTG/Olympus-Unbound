@@ -6,7 +6,7 @@ The game as the player experiences it in the vertical slice. Numbers live in `cl
 
 0. **Intro** — on first launch, a ~55-second scene: the gods at the altar on a moonlit Olympus, the horde breaking in from the north, the gods falling one by one, and Zeus unleashing the storm. Skip with Esc, Enter, Space, a click or the gamepad; replay it from the main menu (*Intro*).
 1. **Main menu** → *Play*, *Progression*, *Settings*; the gold total is shown.
-2. **Choose a god** — Zeus or Hades (more gods later).
+2. **Choose a god** — Zeus, Hades or Poseidon (more gods later).
 3. **Choose a realm** — Mount Olympus, with a seed (random by default; enter one to replay an arena).
 4. **Survive.** Weapons fire on their own; the player moves, positions, collects XP and uses the divine ability.
 5. **Level up** — the run pauses; pick one of three upgrades.
@@ -43,6 +43,10 @@ Health 120, speed 210, critical chance 13% (with his passive). Starts with **Thu
 ## Hades, Lord of the Underworld
 
 Health 150, speed 190, armour 2: he fights up close and outlasts the horde. Starts with the **Bident of Hades** (a forward thrust at the nearest foe that drinks 3% of its damage as life). Ability **Gates of Tartarus** (24 s): the abyss opens around him — every foe within reach is struck, held for a moment and slowed, and he heals from it. Passive **Lord of the Dead**: +15% shadow damage; heals for 1.5% of all damage dealt. Shadow and fire items are offered more often.
+
+## Poseidon, Lord of the Sea
+
+Health 145, speed 200, armour 1: he holds the line and keeps the horde at bay. Starts with the **Trident** (three piercing prongs with heavy knockback). Ability **Tidal Wave** (20 s): nine walls of sea-water roll out in a wide arc, crash through every foe in their path, hurl them back and leave them slowed. Passive **Earth-Shaker**: +30% knockback, +10% area, +10% physical damage. Physical and lightning items are offered more often.
 
 ## Mount Olympus
 

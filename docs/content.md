@@ -52,7 +52,7 @@ A `CutsceneDefinition` names its realm, arena seed, duration (the intro is 45–
 |---|---|---|---|
 | `thunder_spear` | projectile | lightning | Zeus's start; pierces, may shock |
 | `divine_bow` | projectile | physical | volleys, homing, high crit |
-| `trident` | projectile | physical | 3-prong fan, pierce, heavy knockback |
+| `trident` | projectile | physical | Poseidon's start; 3-prong fan, pierce, heavy knockback |
 | `lightning_orb` | orbit | lightning | circling orbs, shock |
 | `war_hammer` | nova | physical | shockwave when enemies are close, stun |
 | `flaming_sword` | sweep | fire | arc toward the nearest foe, burn |
@@ -111,3 +111,7 @@ Tuned with headless autopilot runs (a kiting bot, no permanent upgrades, 6 seeds
 ## Balance notes (2026-10-11, Hades)
 
 First pass with the plain autopilot (always takes the first offer, 6 seeds, 9 minutes): Zeus dies at 02:50–03:45 in all six runs; Hades started stronger (lifesteal snowballed: two runs reached 09:00), so his lifesteal was trimmed — bident 4% → 3%, Gates of Tartarus 6% → 5%, passive 2% → 1.5%. Now five of six runs end at 02:50–03:35 and one survives, close to Zeus.
+
+## Balance notes (2026-10-11, Poseidon)
+
+Same autopilot probe: Poseidon first ended runs earlier than Zeus (two at 02:11), so he gained 10 health (135 → 145) and 1 armour. His runs now end at 02:12–04:10, mean 193 s against Zeus's 192 s.

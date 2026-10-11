@@ -110,6 +110,47 @@ export const CHARACTERS: Record<string, SpriteSpec> = {
     },
   },
 
+  poseidon: {
+    size: 56,
+    paint(g, s) {
+      glow(g, s / 2, s * 0.55, s * 0.5, 0x5fc6c0, 0.28);
+      footShadow(g, s, 0.3, 0.86);
+      // A sea-green chiton with a gold belt.
+      volume(g, s / 2, s * 0.62, s * 0.22, s * 0.24, 0x2e7470);
+      line(g, [s * 0.31, s * 0.6, s * 0.69, s * 0.54], '#d9ae3c', 3);
+      // Sun-dark face, dark sea-green hair and beard, a gold crown.
+      volume(g, s / 2, s * 0.33, s * 0.13, s * 0.13, 0x9e7050, { rim: 0.35 });
+      volume(g, s / 2, s * 0.44, s * 0.11, s * 0.1, 0x123a3c, { outline: 1.2, rim: 0 });
+      poly(
+        g,
+        [
+          s * 0.38,
+          s * 0.24,
+          s * 0.42,
+          s * 0.14,
+          s * 0.46,
+          s * 0.22,
+          s * 0.5,
+          s * 0.12,
+          s * 0.54,
+          s * 0.22,
+          s * 0.58,
+          s * 0.14,
+          s * 0.62,
+          s * 0.24,
+        ],
+        '#d9ae3c',
+      );
+      // The golden trident.
+      line(g, [s * 0.74, s * 0.9, s * 0.84, s * 0.2], '#d9ae3c', 3);
+      line(g, [s * 0.76, s * 0.24, s * 0.92, s * 0.26], '#d9ae3c', 2);
+      line(g, [s * 0.76, s * 0.24, s * 0.74, s * 0.08], '#f2d47a', 2);
+      line(g, [s * 0.84, s * 0.25, s * 0.84, s * 0.06], '#f2d47a', 2);
+      line(g, [s * 0.92, s * 0.26, s * 0.94, s * 0.1], '#f2d47a', 2);
+      circle(g, s * 0.84, s * 0.2, s * 0.02, '#bff7f0');
+    },
+  },
+
   satyr: {
     size: 44,
     paint(g, s) {
