@@ -13,7 +13,7 @@ Each enemy type SHALL be defined by data (health, speed, damage, size, XP, gold,
 - **THEN** it moves away and fires projectiles at the player on its cooldown
 
 #### Scenario: Charger telegraphs
-- **WHEN** a `bronze_bull` comes within charge range
+- **WHEN** a `minotaur` comes within charge range
 - **THEN** it stops, shows its charge direction for its wind-up time, then dashes in a straight line
 
 ### Requirement: Spawn timeline

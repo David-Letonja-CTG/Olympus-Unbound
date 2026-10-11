@@ -1,6 +1,6 @@
 # Art Direction
 
-How OLYMPUS UNBOUND should look and feel. Applies to code-drawn art (`client/src/engine/art/`), external packs (`client/src/content/assets.ts`), effects and UI. Decisions D9, D12–D14 in [decisions.md](decisions.md).
+How OLYMPUS UNBOUND should look and feel. Applies to code-drawn art (`client/src/engine/art/`), external packs (`client/src/content/assets.ts`), effects and UI. Decisions D9, D12–D15 in [decisions.md](decisions.md).
 
 ## Mood
 
@@ -33,10 +33,11 @@ Carved night stone panels in forged iron frames with worn gold-leaf inlays (`pub
 
 ## Typography
 
-Display: an inscriptional serif (Cinzel, SIL Open Font License, once bundled — see [content.md](content.md)); fallback stack `Trajan Pro, Palatino Linotype, Book Antiqua, Georgia, serif`. Narration and flavour: italic serif. Numbers and body: system sans.
+Display: an inscriptional serif — Cinzel (SIL Open Font License, bundled in `client/public/fonts/cinzel/`, see [content.md](content.md)); fallback stack `Trajan Pro, Palatino Linotype, Book Antiqua, Georgia, serif`. Narration and flavour: italic serif. Numbers and body: system sans.
 
 ## Packs: what fits
 
+- **One source and render setup for all characters** (D15): new characters are rendered in `art/blender/` from the Flare models with Flare's camera and sun, so they match the cast. Monsters come from Greek myth; gods must read as gods (attributes, gold, light), not as generic warriors.
 - Top-down or 3/4 (isometric pre-rendered sprites in 8 directions also work; the right-facing frames are used).
 - Dark fantasy palette, readable silhouettes, idle/walk/attack/death animations, ideally ≥ 64 px per character.
 - Licence on the allow-list (CC0, CC-BY, CC-BY-SA, OFL, or a commercial licence with a receipt). No "non-commercial" or unclear-licence art, no AI-generated art of unknown provenance.

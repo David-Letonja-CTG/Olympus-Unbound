@@ -1,0 +1,16 @@
+Character sprite sheets from the Flare collection on OpenGameArt.org, used as published
+
+Each sheet here is the right-facing row of the original 8-direction sheet, re-packed into an 8-column grid
+with client/scripts/pack-sheet.mjs. The game flips the art for the left-facing direction. The authoritative
+list is client/src/content/assets.ts; the game shows these credits in Settings -> Credits. The rest of the
+cast is rendered by this project: see ../olympus/CREDITS.txt.
+
+skeleton.png (Corrupted Hoplite)
+  "Skeleton Warrior" by Clint Bellanger (sword after a concept sketch by Misha)
+  https://opengameart.org/node/3102
+  CC-BY 3.0 https://creativecommons.org/licenses/by/3.0/
+
+minotaur.png (Minotaur)
+  "Minotaur" by Clint Bellanger
+  https://opengameart.org/content/minotaur
+  CC-BY 3.0 https://creativecommons.org/licenses/by/3.0/

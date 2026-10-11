@@ -51,6 +51,9 @@ interface Actor {
   readonly light?: CutsceneLight;
   readonly seed: number;
   moving: number;
+  /** Where the sprite was last frame, for its walking speed. */
+  lastX: number;
+  lastY: number;
 }
 
 interface PersistentLight {
@@ -315,7 +318,17 @@ export class CutsceneScene extends Phaser.Scene {
       .image(sprite.x, sprite.y, SHADOW_TEXTURE)
       .setDepth(DEPTH.shadow)
       .setScale(0.8 * scale);
-    return { sprite, shadow, resolved, scale, light: a.light, seed: this.nextSeed++, moving: 0 };
+    return {
+      sprite,
+      shadow,
+      resolved,
+      scale,
+      light: a.light,
+      seed: this.nextSeed++,
+      moving: 0,
+      lastX: sprite.x,
+      lastY: sprite.y,
+    };
   }
 
   private fall(actor: Actor, color: number): void {
@@ -339,6 +352,9 @@ export class CutsceneScene extends Phaser.Scene {
       if (!sprite.active) continue;
       actor.moving = Math.max(0, actor.moving - dt);
       const moving = actor.moving > 0;
+      const speed = dt > 0 ? Math.hypot(sprite.x - actor.lastX, sprite.y - actor.lastY) / dt : 0;
+      actor.lastX = sprite.x;
+      actor.lastY = sprite.y;
       if (actor.resolved.animations.walk || actor.resolved.animations.idle) {
         applySprite(
           sprite,
@@ -346,6 +362,7 @@ export class CutsceneScene extends Phaser.Scene {
           actor.scale,
           sprite.flipX === (actor.resolved.faces === 'right'),
           moving ? 'walk' : 'idle',
+          speed,
         );
       }
       sprite

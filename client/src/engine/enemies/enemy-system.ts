@@ -6,6 +6,9 @@ import { RunState } from '../sim/run-state';
 import { Enemy, Player } from '../sim/types';
 import { ENEMY_BEHAVIORS, Steering } from './behaviors';
 
+/** Sideways share of the heading needed before an enemy turns to face it. */
+const FACING_THRESHOLD = 0.35;
+
 /** Knockback velocity loses this fraction per second (exponential decay). */
 const KNOCKBACK_DECAY = 9;
 /** At most this many neighbours push an enemy apart per step (keeps big hordes cheap). */
@@ -48,7 +51,8 @@ export function updateEnemies(state: RunState, dt: number): void {
         const speed = enemy.speed * s.speed * speedMultiplier(enemy);
         enemy.x += s.x * speed * dt;
         enemy.y += s.y * speed * dt;
-        if (Math.abs(s.x) > 0.1) enemy.facing = s.x > 0 ? 1 : -1;
+        // Turn only on a clear sideways heading, so an enemy straight above or below its target does not flicker.
+        if (Math.abs(s.x) > FACING_THRESHOLD) enemy.facing = s.x > 0 ? 1 : -1;
       }
     }
     enemy.x += enemy.vx * dt;

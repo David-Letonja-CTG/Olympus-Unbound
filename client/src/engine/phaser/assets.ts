@@ -1,6 +1,6 @@
 import Phaser from 'phaser';
 import { paintSprite, SPRITES } from '../art/sprites';
-import { AnimationName, AssetManifest, SpriteAsset } from '../data/assets';
+import { AnimationName, AssetManifest, SpriteAsset, walkRate } from '../data/assets';
 
 /** Code-drawn sprites are painted at twice their display size and shown at half scale, for crisp edges. */
 export const ART_SCALE = 0.5;
@@ -17,6 +17,9 @@ export interface ResolvedSprite {
   readonly animations: Partial<Record<AnimationName, string>>;
   /** True when drawn by `engine/art` (eligible for view-only bob and lean). */
   readonly codeDrawn: boolean;
+  /** Ground covered per walk cycle and the cycle's length at its own frame rate (pack sprites with a stride). */
+  readonly stride?: number;
+  readonly walkCycle?: number;
 }
 
 /**
@@ -118,6 +121,10 @@ export class SpriteResolver {
       faces: asset.faces ?? 'right',
       animations,
       codeDrawn: false,
+      stride: asset.stride,
+      walkCycle: asset.animations?.walk
+        ? asset.animations.walk.frames.length / asset.animations.walk.fps
+        : undefined,
     };
   }
 
@@ -136,7 +143,8 @@ export class SpriteResolver {
 
 /**
  * Points a pooled sprite at a resolved sprite key, scaled by `scale` (gameplay size) and facing left or right;
- * plays `animation` when the pack provides it.
+ * plays `animation` when the pack provides it. `speed` (world px/s) times the walk to the movement when the
+ * sprite has a stride.
  */
 export function applySprite(
   sprite: Phaser.GameObjects.Sprite,
@@ -144,10 +152,13 @@ export function applySprite(
   scale: number,
   faceLeft: boolean,
   animation?: AnimationName,
+  speed?: number,
 ): void {
   const animKey = animation ? (r.animations[animation] ?? r.animations.idle) : undefined;
   if (animKey) {
     if (sprite.anims.currentAnim?.key !== animKey) sprite.play(animKey, true);
+    sprite.anims.timeScale =
+      animKey === r.animations.walk ? walkRate(r.walkCycle, r.stride, scale, speed) : 1;
   } else if (
     sprite.texture.key !== r.texture ||
     (r.frame !== undefined && sprite.frame.name !== String(r.frame))
