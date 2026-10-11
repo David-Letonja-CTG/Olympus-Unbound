@@ -1,6 +1,9 @@
 import type { BossDefinition, EnemyDefinition } from '../engine';
 
-/** Mount Olympus enemies. Fast, swarm and tank roles are chasers with different numbers. */
+/**
+ * Mount Olympus enemies: creatures of Greek myth turned by the old darkness (art rendered in art/blender/, see
+ * assets.ts). Fast, swarm and tank roles are chasers with different numbers.
+ */
 export const ENEMIES: readonly EnemyDefinition[] = [
   {
     id: 'satyr',
@@ -13,7 +16,7 @@ export const ENEMIES: readonly EnemyDefinition[] = [
     gold: { chance: 0.08, amount: 2 },
     knockbackResist: 0,
     behavior: { type: 'chaser', jitter: 0.15 },
-    visual: { sprite: 'satyr', color: 0xa0522d },
+    visual: { sprite: 'satyr', color: 0x6a4a30 },
   },
   {
     id: 'harpy',
@@ -26,7 +29,7 @@ export const ENEMIES: readonly EnemyDefinition[] = [
     gold: { chance: 0.06, amount: 2 },
     knockbackResist: 0,
     behavior: { type: 'chaser', jitter: 0.6 },
-    visual: { sprite: 'harpy', color: 0x9b59b6 },
+    visual: { sprite: 'harpy', color: 0x4a3f52 },
   },
   {
     id: 'stymphalian_bird',
@@ -39,7 +42,7 @@ export const ENEMIES: readonly EnemyDefinition[] = [
     gold: { chance: 0.03, amount: 1 },
     knockbackResist: 0,
     behavior: { type: 'chaser', jitter: 0.3 },
-    visual: { sprite: 'stymphalian_bird', color: 0x5d6d7e },
+    visual: { sprite: 'stymphalian_bird', color: 0xa8742e },
   },
   {
     id: 'corrupted_hoplite',
@@ -72,11 +75,11 @@ export const ENEMIES: readonly EnemyDefinition[] = [
       projectileDamage: 9,
       projectileRadius: 6,
     },
-    visual: { sprite: 'centaur_archer', color: 0x6e8b3d },
+    visual: { sprite: 'centaur_archer', color: 0x6b4426 },
   },
   {
-    id: 'bronze_bull',
-    name: 'Bronze Bull',
+    id: 'minotaur',
+    name: 'Minotaur',
     health: 120,
     speed: 70,
     damage: 14,
@@ -92,7 +95,7 @@ export const ENEMIES: readonly EnemyDefinition[] = [
       dashDuration: 0.75,
       cooldown: 3.5,
     },
-    visual: { sprite: 'bronze_bull', color: 0xcd7f32 },
+    visual: { sprite: 'minotaur', color: 0x7a5a40 },
   },
   {
     id: 'fallen_oracle',
@@ -111,7 +114,7 @@ export const ENEMIES: readonly EnemyDefinition[] = [
       summon: 'stymphalian_bird',
       count: 4,
     },
-    visual: { sprite: 'fallen_oracle', color: 0x7d3c98 },
+    visual: { sprite: 'fallen_oracle', color: 0x4a2a5a },
   },
   {
     id: 'marble_sentinel',
@@ -124,7 +127,7 @@ export const ENEMIES: readonly EnemyDefinition[] = [
     gold: { chance: 0.5, amount: 8 },
     knockbackResist: 0.95,
     behavior: { type: 'chaser' },
-    visual: { sprite: 'marble_sentinel', color: 0xbfc9ca },
+    visual: { sprite: 'marble_sentinel', color: 0xd8d4c8 },
   },
 ];
 
@@ -186,6 +189,6 @@ export const BOSSES: readonly BossDefinition[] = [
         ],
       },
     ],
-    visual: { sprite: 'cyclops', color: 0x8d6e63 },
+    visual: { sprite: 'cyclops', color: 0x7a6352 },
   },
 ];

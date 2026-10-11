@@ -3,6 +3,14 @@
  * blood-red accents. Ornaments are original SVGs in public/ui/.
  * Colours that carry text are mirrored in src/app/shared/ui-palette.ts, where their contrast is tested.
  */
+/* Cinzel by Natanael Gama and The Cinzel Project Authors, SIL Open Font License 1.1 (public/fonts/cinzel/OFL.txt). */
+@font-face {
+  font-family: 'Cinzel';
+  src: url('/fonts/cinzel/Cinzel-wght.ttf') format('truetype');
+  font-weight: 400 900;
+  font-display: swap;
+}
+
 :root {
   --bg: #0b0a0c;
   --bg-2: #141215;

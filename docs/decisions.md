@@ -73,3 +73,9 @@ Darkness is a screen-sized light map (ambient colour + additive radial lights) m
 ## D14 — Cutscenes are in-engine scripts (Accepted, 2026-10-11)
 
 Cutscenes are data (`content/cutscenes/*.ts`): actors, hordes, camera moves, fades, lights, strikes and captions on a timeline. A pure `CutsceneTimeline` (unit-tested) drives a Phaser `CutsceneScene` that reuses the arena, lighting and effects of a run; Angular renders captions and handles skipping. No video files. The intro plays once on first launch (remembered in save v2), is skippable at any moment and replayable from the menu.
+
+## D15 — The cast is rendered from one source (Accepted, 2026-10-11)
+
+Every character (gods, enemies, bosses, cutscene actors) is drawn from sprite sheets that share one source and render setup, so the cast has one look and our own Greek designs: we render them in Blender (`art/blender/`) from the Flare collection's CC-BY 3.0 Blender sources (Clint Bellanger's hero and heroine with their equipment, VWolfdog's troll and horse), with Flare's own isometric camera and sun, recoloured and extended with simple modelled parts (beards, horns, wings, a cyclops eye). Flare sheets that already fit (Skeleton Warrior, Minotaur) are used as published. Only CC-BY and CC0 sources; no share-alike. Sheets hold the right-facing row in an 8-column grid (`client/scripts/pack-sheet.mjs`); the game mirrors it. Every character must have idle, walk and death animations (unit test), every frame must exist (`npm run assets:check`), and each sheet has a stride so the walk follows movement speed.
+
+*Alternatives considered:* existing packs (none has the Greek roster or a god in a dark pre-rendered style); mixing packs (inconsistent, rejected by the owner); recasting the roster around Flare's generic creatures (rejected: monsters must be from Greek myth); rendering CC0 low-poly 3D models (a more stylised, toy-like look).

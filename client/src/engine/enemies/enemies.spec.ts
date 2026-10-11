@@ -29,16 +29,16 @@ describe('enemy behaviors', () => {
   it('a charger stops and telegraphs, then dashes in a straight line', () => {
     const sim = quietSim();
     disarm(sim);
-    const bull = spawnNear(sim, 'bronze_bull', 300, 0);
-    bull.actionTimer = 0;
+    const charger = spawnNear(sim, 'minotaur', 300, 0);
+    charger.actionTimer = 0;
     sim.step(STEP, [NO_INPUT]);
-    expect(bull.mode).toBe('windup');
-    const windupX = bull.x;
+    expect(charger.mode).toBe('windup');
+    const windupX = charger.x;
     run(sim, 0.5);
-    expect(bull.x).toBeCloseTo(windupX, 0);
+    expect(charger.x).toBeCloseTo(windupX, 0);
     run(sim, 0.5);
-    expect(bull.mode).toBe('dash');
-    expect(windupX - bull.x).toBeGreaterThan(40);
+    expect(charger.mode).toBe('dash');
+    expect(windupX - charger.x).toBeGreaterThan(40);
   });
 
   it('a summoner calls its minions', () => {

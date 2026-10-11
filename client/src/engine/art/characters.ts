@@ -15,6 +15,9 @@ import {
 /**
  * Characters (D9, docs/art-direction.md): seen from above at a 3/4 tilt, facing right, lit from the upper left.
  * Heroes are warm and bright; the corrupted are dark, cold-rimmed and marked by a sickly glow.
+ *
+ * With the rendered sheets installed (content/assets.ts, art/blender/) these are only fallbacks for a sheet that
+ * fails to load (spec: asset-pipeline). The `minotaur` falls back to the vertical slice's bronze bull.
  */
 
 const CORRUPTION = 0x9cff6a;
@@ -213,7 +216,7 @@ export const CHARACTERS: Record<string, SpriteSpec> = {
     },
   },
 
-  bronze_bull: {
+  minotaur: {
     size: 60,
     paint(g, s) {
       footShadow(g, s, 0.38, 0.86);

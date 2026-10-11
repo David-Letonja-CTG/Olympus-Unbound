@@ -80,7 +80,7 @@ A `CutsceneDefinition` names its realm, arena seed, duration (the intro is 45–
 | `stymphalian_bird` | swarm unit (flocks; summoned by oracles) |
 | `corrupted_hoplite` | tank chaser |
 | `centaur_archer` | ranged |
-| `bronze_bull` | charger |
+| `minotaur` | charger |
 | `fallen_oracle` | summoner |
 | `marble_sentinel` | heavy tank |
 
@@ -90,14 +90,19 @@ Boss: `cyclops` (two phases; `ground_slam`, `boulder_throw`, `rampage_charge`, `
 
 | Asset | Source | Licence |
 |---|---|---|
-| All sprites, tiles, icons | Drawn in code (`engine/art/sprites.ts`, `engine/phaser/textures.ts`) | Original, project-owned |
+| All sprites, tiles, icons except the characters below | Drawn in code (`engine/art/sprites.ts`, `engine/phaser/textures.ts`) | Original, project-owned |
 | All sound effects | Synthesized in code (`engine/audio/sound-player.ts`) | Original, project-owned |
 | `client/public/favicon.svg` | Drawn by hand (SVG) | Original, project-owned |
 | `client/public/ui/*.svg` (frame, divider, stone grain) | Drawn by hand (SVG) | Original, project-owned |
-| External packs and fonts | Listed in `client/src/content/assets.ts` | Checked by `npm run assets:check`; none yet |
+| `client/public/assets/olympus/*.png` (Zeus, satyr, harpy, Stymphalian bird, centaur archer, fallen oracle, marble sentinel, Cyclops, intro defenders) | Rendered by this project in Blender (`art/blender/`) from [Isometric Hero and Heroine](https://opengameart.org/content/isometric-hero-and-heroine) by Clint Bellanger, [FLARE Model - Troll](https://opengameart.org/content/flare-model-troll) by VWolfdog, [FLARE Model - Horse](https://opengameart.org/content/flare-model-horse) by VWolfdog on [3D Horse](https://opengameart.org/content/3d-horse-rigged-laking-textures) by _canyon | Derivatives of CC-BY 3.0 works — credited in Settings → Credits |
+| `client/public/assets/flare/skeleton.png` (`corrupted_hoplite`) | "Skeleton Warrior" by Clint Bellanger, [OpenGameArt](https://opengameart.org/node/3102); right-facing row re-packed | CC-BY 3.0 |
+| `client/public/assets/flare/minotaur.png` (`minotaur`) | "Minotaur" by Clint Bellanger, [OpenGameArt](https://opengameart.org/content/minotaur); right-facing row re-packed | CC-BY 3.0 |
+| `client/public/fonts/cinzel/Cinzel-wght.ttf` (display font) | Cinzel by Natanael Gama and The Cinzel Project Authors, [GitHub](https://github.com/NDISCOVER/Cinzel), unmodified | SIL OFL 1.1 (`OFL.txt` alongside) |
+
+Characters come from one source and render setup (D15): `art/blender/README.md` lists the source models and how to re-render; `client/scripts/pack-sheet.mjs` packs renders (`--frames`) or a Flare sheet's row (`--row`) into the 8-column sheets the game loads. Per-file credits are in `content/assets.ts` and `client/public/assets/*/CREDITS.txt`. The code-drawn sprites remain as fallbacks.
 
 Add a row for every external asset before it is committed. Never copy sprites, sounds, music or UI from other games.
 
 ## Balance notes (2026-10-10)
 
-Tuned with headless autopilot runs (a kiting bot, no permanent upgrades, 6 seeds): the bot reaches level ~16 at 04:00 and wins about half its runs; deaths cluster around 04:00–05:00 when bulls, centaurs and hoplite hordes overlap; boss fights take 1.5–2.5 minutes including the Cyclops's walk from its arena. Victory runs earn ~1,200–1,450 gold, defeats ~150–200. Changes made: satyr/harpy damage 7/6 → 5/5, contact interval 0.8 → 1 s, XP curve per-level 5 → 4 and growth 0.35 → 0.3, bull damage 16 → 14, damage scaling 0.06 → 0.05/min, Cyclops health 20,000 → 12,000.
+Tuned with headless autopilot runs (a kiting bot, no permanent upgrades, 6 seeds): the bot reaches level ~16 at 04:00 and wins about half its runs; deaths cluster around 04:00–05:00 when bulls (the bronze bull, now the minotaur with the same numbers), centaurs and hoplite hordes overlap; boss fights take 1.5–2.5 minutes including the Cyclops's walk from its arena. Victory runs earn ~1,200–1,450 gold, defeats ~150–200. Changes made: satyr/harpy damage 7/6 → 5/5, contact interval 0.8 → 1 s, XP curve per-level 5 → 4 and growth 0.35 → 0.3, bull damage 16 → 14, damage scaling 0.06 → 0.05/min, Cyclops health 20,000 → 12,000.

@@ -2,6 +2,7 @@ import Phaser from 'phaser';
 import { ArenaData } from '../maps/generate-arena';
 import { Element, LightSource, MapGenConfig } from '../data/types';
 import { RunState } from '../sim/run-state';
+import { STEP } from '../sim/run-simulation';
 import { applySprite, SpriteResolver } from './assets';
 import { ATMOSPHERE_DEPTH, LightMap, QualityProfile } from './atmosphere';
 import { DETAIL_TEXTURE, SHADOW_TEXTURE, shade, terrainCanvas } from './textures';
@@ -156,7 +157,8 @@ export class WorldView {
       const moving = pl.moving;
       const r = this.resolver.resolve(state.god.visual.sprite);
       const sprite = p.player.get(pl.id);
-      applySprite(sprite, r, 1.15, pl.facingX < 0, moving ? 'walk' : 'idle');
+      const speed = Math.hypot(pl.x - pl.px, pl.y - pl.py) / STEP;
+      applySprite(sprite, r, 1.15, pl.facingX < 0, moving ? 'walk' : 'idle', speed);
       const bob = r.codeDrawn && moving ? Math.sin(time / 70) * 1.5 : 0;
       sprite
         .setPosition(x, y - 6 + bob)
@@ -189,7 +191,15 @@ export class WorldView {
       const r = this.resolver.resolve(e.def.visual.sprite);
       const scale = e.radius / e.def.radius;
       const sprite = p.enemy.get(e.id);
-      applySprite(sprite, r, scale, e.facing < 0, e.dead ? 'death' : moving ? 'walk' : 'idle');
+      const speed = Math.sqrt(vx * vx + vy * vy) / STEP;
+      applySprite(
+        sprite,
+        r,
+        scale,
+        e.facing < 0,
+        e.dead ? 'death' : moving ? 'walk' : 'idle',
+        speed,
+      );
       const bob = r.codeDrawn && moving ? Math.sin(time / 80 + e.id) * e.radius * 0.07 : 0;
       const lean = r.codeDrawn && moving ? Math.max(-1, Math.min(1, vx)) * 0.07 : 0;
       sprite

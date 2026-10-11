@@ -80,12 +80,39 @@ export interface SpriteAsset {
   readonly originY?: number;
   /** Which way the art faces; the view flips it to face movement. Defaults to right. */
   readonly faces?: 'left' | 'right';
+  /**
+   * Ground covered by one walk cycle, in world pixels at this sprite's scale. With it, the walk animation plays as
+   * fast as the figure actually moves, so feet do not slide (a sprinting god and a lumbering giant share sheets
+   * timed for one speed). Without it, the walk plays at its own frame rate.
+   */
+  readonly stride?: number;
+  /** The frame menus show as the character's portrait (defaults to `frame`). */
+  readonly portrait?: string | number;
 }
 
 export interface AssetManifest {
   readonly files: readonly AssetFile[];
   /** Sprite key → external sprite. Keys not listed use the code-drawn art. */
   readonly sprites: Readonly<Record<string, SpriteAsset>>;
+}
+
+/** Walk speed-ups and slow-downs beyond these look wrong; past them the feet may slide a little. */
+const MIN_WALK_RATE = 0.2;
+const MAX_WALK_RATE = 3;
+
+/**
+ * Playback rate for a walk cycle of `walkCycle` seconds so that one cycle covers `stride` (world px at scale 1)
+ * while moving at `speed` px/s, drawn at `scale`. 1 when the sprite has no stride or the speed is unknown.
+ */
+export function walkRate(
+  walkCycle: number | undefined,
+  stride: number | undefined,
+  scale: number,
+  speed: number | undefined,
+): number {
+  if (speed === undefined || !stride || !walkCycle) return 1;
+  const rate = (walkCycle * speed) / (stride * scale);
+  return Math.min(MAX_WALK_RATE, Math.max(MIN_WALK_RATE, rate));
 }
 
 export const EMPTY_MANIFEST: AssetManifest = { files: [], sprites: {} };

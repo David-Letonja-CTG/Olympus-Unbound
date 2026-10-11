@@ -1,7 +1,8 @@
 // Licence check for external assets (D12, spec: asset-pipeline / licence registry).
 // Every file under public/assets and public/fonts must be listed in src/content/assets.ts with an allowed
-// licence, and every listed file must exist. Run with `npm run assets:check` (part of `npm run check`).
-import { readdirSync, statSync, existsSync } from 'node:fs';
+// licence, every listed file must exist, and sprite-sheet frames must lie inside their sheet. Run with
+// `npm run assets:check` (part of `npm run check`).
+import { readdirSync, readFileSync, statSync, existsSync } from 'node:fs';
 import { join, relative, sep } from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 
@@ -17,7 +18,7 @@ const ALLOWED = [
   'commercial',
 ];
 // Files that document a pack rather than being used by the game.
-const IGNORED = /(^|\/)(LICEN[CS]E[^/]*|README[^/]*|CREDITS[^/]*|\.gitkeep)$/i;
+const IGNORED = /(^|\/)(LICEN[CS]E[^/]*|OFL[^/]*|README[^/]*|CREDITS[^/]*|\.gitkeep)$/i;
 
 /** Node strips the TypeScript types of the manifest module (it imports only types). */
 const { ASSETS } = await import(pathToFileURL(join(root, 'src', 'content', 'assets.ts')).href);
@@ -49,6 +50,38 @@ for (const path of onDisk)
 for (const [path, file] of listed)
   if (!existsSync(join(publicDir, path)))
     errors.push(`${file.id}: listed file "${path}" does not exist.`);
+
+// Sprite sheets: the frame size must tile the PNG, and every frame a sprite uses must exist in it.
+const frameCounts = new Map();
+for (const file of ASSETS.files) {
+  const path = join(publicDir, file.url);
+  if (file.type !== 'spritesheet' || !existsSync(path)) continue;
+  const png = readFileSync(path);
+  if (png.toString('latin1', 12, 16) !== 'IHDR') {
+    errors.push(`${file.id}: "${file.url}" is not a PNG.`);
+    continue;
+  }
+  const [width, height] = [png.readUInt32BE(16), png.readUInt32BE(20)];
+  if (width % file.frameWidth || height % file.frameHeight)
+    errors.push(
+      `${file.id}: ${width}x${height} is not a grid of ${file.frameWidth}x${file.frameHeight} frames.`,
+    );
+  frameCounts.set(file.id, (width / file.frameWidth) * (height / file.frameHeight));
+}
+for (const [key, sprite] of Object.entries(ASSETS.sprites)) {
+  const count = frameCounts.get(sprite.file);
+  if (count === undefined) continue;
+  const frames = [
+    sprite.frame,
+    sprite.portrait,
+    ...Object.values(sprite.animations ?? {}).flatMap((a) => a.frames),
+  ];
+  const outside = frames.filter((f) => typeof f === 'number' && (f < 0 || f >= Math.floor(count)));
+  if (outside.length)
+    errors.push(
+      `${key}: frames ${outside.join(', ')} are outside "${sprite.file}" (${count} frames).`,
+    );
+}
 
 if (errors.length) {
   console.error(`Asset check failed:\n  ${errors.join('\n  ')}`);

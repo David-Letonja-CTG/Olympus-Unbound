@@ -20,6 +20,24 @@ describe('content', () => {
     expect(validateContent(CONTENT)).toEqual([]);
   });
 
+  it('draws every character from an animated pack sheet (spec: asset-pipeline / character art)', () => {
+    const keys = new Set([
+      ...CONTENT.gods.map((g) => g.visual.sprite),
+      ...CONTENT.enemies.map((e) => e.visual.sprite),
+      ...CONTENT.bosses.map((b) => b.visual.sprite),
+      ...CONTENT.cutscenes.flatMap((c) =>
+        c.cues.flatMap((cue) =>
+          cue.type === 'spawn' ? [cue.actor.sprite] : cue.type === 'horde' ? [cue.sprite] : [],
+        ),
+      ),
+    ]);
+    const missing = [...keys].filter((key) => {
+      const animations = CONTENT.assets.sprites[key]?.animations;
+      return !(animations?.idle && animations.walk && animations.death);
+    });
+    expect(missing).toEqual([]);
+  });
+
   it('reports broken references', () => {
     const broken = {
       ...CONTENT,

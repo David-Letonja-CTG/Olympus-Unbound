@@ -1,0 +1,4 @@
+
+# Blender render scripts
+__pycache__/
+*.pyc

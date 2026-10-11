@@ -53,8 +53,8 @@ A 64×64-tile arena (4096 px) of grass, meadow and earth ringed by cliffs. Marbl
 | 02:00 | **Elite** corrupted hoplite |
 | 02:30 | Centaur archers |
 | 03:00 | A harpy horde |
-| 03:30 | Bronze bulls (charge after a red telegraph) |
-| 04:00 | **Elite** bronze bull |
+| 03:30 | Minotaurs (charge after a red telegraph) |
+| 04:00 | **Elite** minotaur |
 | 04:30 | Fallen oracles (summon bird flocks) |
 | 05:00 | A hoplite horde |
 | 05:30 | Marble sentinels; **elite** centaur archer |

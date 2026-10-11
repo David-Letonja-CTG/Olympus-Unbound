@@ -1,4 +1,4 @@
-import { AssetManifest, manifestPaths } from './assets';
+import { AssetManifest, manifestPaths, walkRate } from './assets';
 import { validateManifest } from './content-index';
 
 const licence = {
@@ -60,5 +60,22 @@ describe('asset manifest validation', () => {
       'Asset "c" has a licence that is not allowed: CC-BY-NC-4.0.',
       'Sprite "satyr" uses unknown asset file "missing".',
     ]);
+  });
+});
+
+describe('walk rate', () => {
+  it('plays one walk cycle per stride of movement', () => {
+    // A 0.8 s cycle covering 80 px: at 100 px/s the cycle must take 0.8 s, at 200 px/s 0.4 s.
+    expect(walkRate(0.8, 80, 1, 100)).toBeCloseTo(1);
+    expect(walkRate(0.8, 80, 1, 200)).toBeCloseTo(2);
+    // A figure drawn 1.5× larger takes longer strides.
+    expect(walkRate(0.8, 80, 1.5, 150)).toBeCloseTo(1);
+  });
+
+  it('stays within limits and defaults to the sheet timing', () => {
+    expect(walkRate(0.8, 80, 1, 2000)).toBe(3);
+    expect(walkRate(0.8, 80, 1, 1)).toBe(0.2);
+    expect(walkRate(0.8, undefined, 1, 100)).toBe(1);
+    expect(walkRate(0.8, 80, 1, undefined)).toBe(1);
   });
 });
