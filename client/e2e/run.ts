@@ -42,9 +42,9 @@ export async function startRun(page: Page, seed = '847291'): Promise<void> {
   await page.getByRole('button', { name: 'Continue' }).click();
   await page.getByTestId('seed-input').fill(seed);
   await page.getByTestId('begin').click();
-  await expect(page.locator('[data-testid=game-host] canvas')).toBeVisible();
-  // The run's loading screen (art, then the painted realm) ends before the clock starts; without a GPU (CI) the
-  // painting and the first frames are slow.
+  // The game (a lazy chunk) boots and its loading screen (art, then the painted realm) ends before the clock
+  // starts; without a GPU (CI) or with parallel workers, booting, painting and the first frames are slow.
+  await expect(page.locator('[data-testid=game-host] canvas')).toBeVisible({ timeout: 30_000 });
   await expect(page.getByTestId('run-loading')).toHaveCount(0, { timeout: 120_000 });
   await expect
     .poll(() => inspect(page).then((s) => s?.time ?? 0), { timeout: 30_000 })

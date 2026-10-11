@@ -10,7 +10,7 @@ interface Candidate {
 
 /** Elements the build leans toward: the god's affinities plus the elements of held weapons. */
 function buildElements(state: RunState, player: Player): Set<Element> {
-  const elements = new Set<Element>(state.god.affinities);
+  const elements = new Set<Element>(player.god.affinities);
   for (const w of player.loadout.weapons) elements.add(w.def.element);
   return elements;
 }

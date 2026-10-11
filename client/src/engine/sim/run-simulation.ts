@@ -48,16 +48,27 @@ export class RunSimulation {
   private readonly director: SpawnDirector;
   private currentPhase: RunPhase = 'playing';
   private pausedFrom: RunPhase = 'playing';
-  private choice: UpgradeChoice | undefined;
+  /** The open choices of the current round, one per living player (spec: co-op / own upgrades). */
+  private readonly choices = new Map<number, UpgradeChoice>();
   private choiceCount = 0;
   private outcome: RunResult | undefined;
+  private endedAs: RunOutcome | undefined;
 
   constructor(config: RunConfig, content: GameContent | ContentIndex, arena?: ArenaData) {
     const index = content instanceof ContentIndex ? content : new ContentIndex(content);
     const realm = index.realm(config.realmId);
     this.arena = arena ?? generateArena(realm.map, config.seed);
     this.state = new RunState(config, index, this.arena);
-    this.state.players.push(createPlayer(this.state, 0, this.arena.spawn.x, this.arena.spawn.y));
+    // Every player of the party, side by side on the spawn plaza (D11).
+    const seats = this.state.party.length;
+    for (let slot = 0; slot < seats; slot++) {
+      const a = (slot / seats) * Math.PI * 2;
+      const r = seats > 1 ? 48 : 0;
+      const { x, y } = this.arena.spawn;
+      this.state.players.push(
+        createPlayer(this.state, slot, x + Math.cos(a) * r, y + Math.sin(a) * r),
+      );
+    }
     this.director = new SpawnDirector(this.state);
   }
 
@@ -69,8 +80,14 @@ export class RunSimulation {
     return this.outcome;
   }
 
+  /** The first player's open choice (the local player on the host). */
   get currentChoice(): UpgradeChoice | undefined {
-    return this.choice;
+    return this.choiceFor(this.state.players[0].id);
+  }
+
+  /** A player's open choice, if a round of choices is open and they have not answered. */
+  choiceFor(playerId: number): UpgradeChoice | undefined {
+    return this.choices.get(playerId);
   }
 
   /** Returns and clears the events produced since the last call. */
@@ -117,20 +134,26 @@ export class RunSimulation {
     return true;
   }
 
-  /** Applies offer `index` of the open choice. Stale or invalid answers are ignored. */
-  choose(index: number, choiceId = this.choice?.id): boolean {
-    const choice = this.choice;
-    if (this.currentPhase !== 'choosing' || !choice || choice.id !== choiceId) return false;
-    const offer = choice.offers[index];
-    if (!offer) return false;
-    const player = this.state.players[0];
+  /**
+   * Applies offer `index` of the open choice `choiceId` (default: the first player's) to the player it belongs
+   * to. Stale or invalid answers are ignored. The run continues once every player of the round has chosen.
+   */
+  choose(index: number, choiceId = this.currentChoice?.id): boolean {
+    if (this.currentPhase !== 'choosing') return false;
+    const choice = [...this.choices.values()].find((c) => c.id === choiceId);
+    const offer = choice?.offers[index];
+    if (!choice || !offer) return false;
+    const player = this.state.players.find((p) => p.id === choice.playerId);
+    if (!player) return false;
     applyOffer(this.state, player, offer);
-    if (choice.source === 'level') this.state.pendingLevels--;
-    else this.state.pendingChests--;
-    this.choice = undefined;
-    this.state.emit({ type: 'choiceResolved', offer });
-    this.currentPhase = 'playing';
-    this.openChoiceIfPending();
+    this.choices.delete(choice.playerId);
+    this.state.emit({ type: 'choiceResolved', offer, playerId: choice.playerId });
+    if (this.choices.size === 0) {
+      if (choice.source === 'level') this.state.pendingLevels--;
+      else this.state.pendingChests--;
+      this.currentPhase = 'playing';
+      this.openChoiceIfPending();
+    }
     return true;
   }
 
@@ -142,13 +165,22 @@ export class RunSimulation {
   end(outcome: RunOutcome): boolean {
     if (this.currentPhase === 'ended') return false;
     this.currentPhase = 'ended';
-    this.choice = undefined;
+    this.choices.clear();
+    this.endedAs = outcome;
+    this.outcome = this.resultFor(this.state.players[0].id);
+    this.state.emit({ type: 'runEnded', result: this.outcome });
+    return true;
+  }
+
+  /** The run's result as one player sees it: the shared outcome and their own god and loadout. */
+  resultFor(playerId: number): RunResult {
     const state = this.state;
-    const player = state.players[0];
+    const player = state.players.find((p) => p.id === playerId) ?? state.players[0];
     const loadout = player.loadout;
-    this.outcome = {
+    const outcome = this.endedAs ?? 'abandoned';
+    return {
       runId: state.config.runId,
-      godId: state.config.godId,
+      godId: player.god.id,
       realmId: state.config.realmId,
       seed: state.config.seed,
       outcome,
@@ -171,8 +203,6 @@ export class RunSimulation {
         synergies: loadout.synergies.map((s) => s.id),
       },
     };
-    state.emit({ type: 'runEnded', result: this.outcome });
-    return true;
   }
 
   debug(action: DebugAction): void {
@@ -215,9 +245,10 @@ export class RunSimulation {
     }
   }
 
-  hud(): HudSnapshot {
+  /** The HUD of one player (default: the first). */
+  hud(playerId = this.state.players[0].id): HudSnapshot {
     const state = this.state;
-    const player = state.players[0];
+    const player = state.players.find((p) => p.id === playerId) ?? state.players[0];
     const loadout = player.loadout;
     const boss = state.boss && !state.boss.dead ? state.boss : undefined;
     const weapons: HudItem[] = loadout.weapons.map((w) => ({
@@ -283,20 +314,27 @@ export class RunSimulation {
     };
   }
 
+  /** Opens a round of choices: one per living player, each with their own offers (spec: co-op). */
   private openChoiceIfPending(): void {
     const state = this.state;
-    if (this.choice || (state.pendingLevels <= 0 && state.pendingChests <= 0)) return;
-    const player = state.players[0];
-    if (!player.alive) return;
-    this.choice = {
-      id: ++this.choiceCount,
-      source: state.pendingLevels > 0 ? 'level' : 'chest',
-      // With several level-ups queued, each choice names the level it was earned at.
-      level: state.level - Math.max(0, state.pendingLevels - 1),
-      offers: generateOffers(state, player, state.offerRng),
-    };
+    if (this.choices.size > 0 || (state.pendingLevels <= 0 && state.pendingChests <= 0)) return;
+    const living = state.players.filter((p) => p.alive);
+    if (living.length === 0) return;
+    const source = state.pendingLevels > 0 ? 'level' : 'chest';
+    // With several level-ups queued, each choice names the level it was earned at.
+    const level = state.level - Math.max(0, state.pendingLevels - 1);
+    for (const player of living) {
+      const choice: UpgradeChoice = {
+        id: ++this.choiceCount,
+        playerId: player.id,
+        source,
+        level,
+        offers: generateOffers(state, player, state.offerRng),
+      };
+      this.choices.set(player.id, choice);
+      state.emit({ type: 'choice', choice });
+    }
     this.currentPhase = 'choosing';
-    state.emit({ type: 'choice', choice: this.choice });
   }
 
   private removeDead(): void {

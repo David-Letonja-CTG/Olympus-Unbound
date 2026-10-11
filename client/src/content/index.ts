@@ -26,6 +26,13 @@ export const BALANCE: BalanceConfig = {
   enemyAttackInterval: 1,
   caps: { enemies: 400, projectiles: 300, hostileProjectiles: 120, pickups: 400 },
   drops: { healChance: 0.006, healAmount: 30 },
+  // Co-op: each extra player adds 65% enemy health, half again the spawn rate and room, 90% boss health.
+  coop: {
+    enemyHealthPerPlayer: 0.65,
+    spawnRatePerPlayer: 0.5,
+    maxAlivePerPlayer: 0.5,
+    bossHealthPerPlayer: 0.9,
+  },
 };
 
 export const PERMANENT_UPGRADES: readonly PermanentUpgradeDefinition[] = [

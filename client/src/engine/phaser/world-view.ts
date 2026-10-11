@@ -156,7 +156,7 @@ export class WorldView {
       const x = lerp(pl.px, pl.x, alpha);
       const y = lerp(pl.py, pl.y, alpha);
       const moving = pl.moving;
-      const r = this.resolver.resolve(state.god.visual.sprite);
+      const r = this.resolver.resolve(pl.god.visual.sprite);
       const sprite = p.player.get(pl.id);
       const speed = Math.hypot(pl.x - pl.px, pl.y - pl.py) / STEP;
       applySprite(sprite, r, 1.15, pl.facingX < 0, moving ? 'walk' : 'idle', speed);

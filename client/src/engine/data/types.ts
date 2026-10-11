@@ -484,6 +484,13 @@ export interface BalanceConfig {
     readonly pickups: number;
   };
   readonly drops: { readonly healChance: number; readonly healAmount: number };
+  /** Each player beyond the first adds these fractions (spec: co-op / difficulty per player). */
+  readonly coop: {
+    readonly enemyHealthPerPlayer: number;
+    readonly spawnRatePerPlayer: number;
+    readonly maxAlivePerPlayer: number;
+    readonly bossHealthPerPlayer: number;
+  };
 }
 
 export interface GameContent {

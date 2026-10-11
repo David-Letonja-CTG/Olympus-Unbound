@@ -1,5 +1,6 @@
 import { StatBlock } from '../core/stats';
 import {
+  GodDefinition,
   ArmourDefinition,
   BossAttack,
   BossDefinition,
@@ -50,6 +51,9 @@ export interface Loadout {
 export interface Player {
   readonly id: number;
   readonly slot: number;
+  /** This player's god and name (co-op: each player has their own, D11). */
+  readonly god: GodDefinition;
+  readonly name: string;
   x: number;
   y: number;
   px: number;
@@ -230,6 +234,8 @@ export interface UpgradeOffer {
 export interface UpgradeChoice {
   /** Increments with every choice; lets the UI ignore stale answers. */
   readonly id: number;
+  /** The player who chooses (each player picks their own upgrade, spec: co-op). */
+  readonly playerId: number;
   readonly source: 'level' | 'chest';
   readonly level: number;
   readonly offers: readonly UpgradeOffer[];
@@ -310,7 +316,7 @@ export type SimEvent =
   | { type: 'enemyCharge'; enemyId: number }
   | { type: 'levelUp'; level: number }
   | { type: 'choice'; choice: UpgradeChoice }
-  | { type: 'choiceResolved'; offer: UpgradeOffer }
+  | { type: 'choiceResolved'; offer: UpgradeOffer; playerId: number }
   | { type: 'synergy'; id: string; name: string }
   | { type: 'announcement'; text: string; kind: AnnouncementKind }
   | { type: 'bossSpawned'; bossId: string; name: string }

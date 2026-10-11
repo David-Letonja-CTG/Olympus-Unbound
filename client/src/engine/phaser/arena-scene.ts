@@ -237,7 +237,7 @@ export class ArenaScene extends Phaser.Scene {
         return;
       case 'choiceResolved':
         sound.play('choose');
-        emit({ type: 'choiceResolved', offer: event.offer });
+        emit({ type: 'choiceResolved', offer: event.offer, playerId: event.playerId });
         emit({ type: 'hud', hud: sim.hud() });
         return;
       case 'synergy':

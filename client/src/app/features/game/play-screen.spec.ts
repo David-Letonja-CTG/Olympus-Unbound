@@ -66,6 +66,7 @@ const hud: HudSnapshot = {
 
 const choice: UpgradeChoice = {
   id: 3,
+  playerId: 1,
   source: 'level',
   level: 5,
   offers: [
@@ -169,7 +170,7 @@ describe('PlayScreen', () => {
     expect(el.textContent).toContain('Level 5!');
     (el.querySelector('[data-testid=offer-1]') as HTMLButtonElement).click();
     expect(session.sent).toContainEqual({ type: 'chooseUpgrade', choiceId: 3, index: 1 });
-    await update({ type: 'choiceResolved', offer: choice.offers[1] });
+    await update({ type: 'choiceResolved', offer: choice.offers[1], playerId: 1 });
     expect(el.querySelector('[data-testid=offer-0]')).toBeNull();
   });
 
