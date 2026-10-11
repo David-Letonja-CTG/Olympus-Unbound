@@ -99,7 +99,9 @@ const EMBERS = Array.from({ length: 26 }, (_, i) => ({
 
     <div class="content">
       <header>
-        <p class="kicker">Into the realm</p>
+        <p class="kicker" data-testid="loading-kicker">
+          {{ depth() ? 'Realm ' + (depth() + 1) + ' · deeper into the war' : 'Into the realm' }}
+        </p>
         <h1>{{ realm().name }}</h1>
         <div class="divider" aria-hidden="true"></div>
         <p class="description">{{ realm().description }}</p>
@@ -441,6 +443,8 @@ export class RunLoading {
   readonly party = input.required<readonly PartyMember[]>();
   readonly bossSprite = input.required<string>();
   readonly seed = input.required<number>();
+  /** Realms the party has cleared: past a gate, the screen names the realm's number (spec: run-loading). */
+  readonly depth = input(0);
   /** A room's code (spec: run-loading / party); absent for a solo run. */
   readonly roomCode = input<string | undefined>(undefined);
   readonly stage = input<LoadStage | undefined>(undefined);

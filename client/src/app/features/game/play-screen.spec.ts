@@ -64,6 +64,7 @@ const hud: HudSnapshot = {
   synergies: [{ id: 'storm', name: 'Storm', description: '' }],
   enemies: 10,
   waitingFor: [],
+  realm: { name: 'Mount Olympus', number: 1 },
 };
 
 const choice: UpgradeChoice = {
@@ -207,17 +208,18 @@ describe('PlayScreen', () => {
         godId: 'zeus',
         realmId: 'mount_olympus',
         seed: 1,
-        outcome: 'victory',
+        outcome: 'defeat',
         timeSeconds: 430,
         level: 18,
         kills: 700,
-        gold: 100,
-        bossDefeated: true,
+        gold: 350,
+        realmsCleared: 1,
+        realmReached: 'mount_olympus',
         loadout: { weapons: [], relics: [], skills: [], synergies: [] },
       };
       await update({ type: 'runEnded', result });
       await update({ type: 'runEnded', result });
-      expect(el.textContent).toContain('Victory');
+      expect(el.textContent).toContain('You have fallen');
       expect(TestBed.inject(Progression).gold()).toBe(350);
       vi.advanceTimersByTime(2000);
       expect(navigate).toHaveBeenCalledWith(['/summary']);
@@ -281,5 +283,24 @@ describe('PlayScreen', () => {
     await update({ type: 'paused' });
     expect(el.textContent).toContain('The fight goes on');
     expect(el.querySelector('[data-testid=abandon]')?.textContent).toContain('Leave room');
+  });
+
+  it('shows the loading screen again for the next realm past a gate (spec: run-loading / loading between realms)', async () => {
+    vi.useFakeTimers({ toFake: ['setTimeout'] });
+    try {
+      const { el, update } = await setup();
+      await update({ type: 'ready' });
+      vi.advanceTimersByTime(1000);
+      await update();
+      expect(el.querySelector('[data-testid=run-loading]')).toBeNull();
+      await update({ type: 'realmEntered', realmId: 'mount_olympus', depth: 1 });
+      expect(el.querySelector('[data-testid=loading-kicker]')?.textContent).toContain('Realm 2');
+      await update({ type: 'ready' });
+      vi.advanceTimersByTime(1000);
+      await update();
+      expect(el.querySelector('[data-testid=run-loading]')).toBeNull();
+    } finally {
+      vi.useRealTimers();
+    }
   });
 });

@@ -83,11 +83,25 @@ Synergies are checked after every change; each activates once, is announced, and
 
 ## Run phases — `engine/sim/run-simulation.ts`
 
-`playing` → `choosing` (choice open) → `playing`; `pause()` from playing/choosing, `resume()` returns to the previous phase; `end(outcome)` once, from any phase (later calls are ignored). Choices carry an ID; answers for another ID or an invalid index are ignored. Victory is checked before defeat in the same step.
+`playing` → `choosing` (choice open) → `playing`; `pause()` from playing/choosing, `resume()` returns to the previous phase; `end(outcome)` once, from any phase (later calls are ignored). Choices carry an ID; answers for another ID or an invalid index are ignored. A run ends only in `defeat` (every god down) or `abandoned`; a boss that falls in the same step still counts (its gold, a realm cleared).
 
 ## Co-op — `engine/sim/` (D11)
 
 A run's `party` lists 1–4 seats (god, name, the player's own permanent upgrades); each player has their own god, stats, ability, loadout and offers. XP and level are shared; a level-up or treasure opens a round with one choice per living player, and the run resumes when all have chosen. With `n` players, enemy health ×(1 + 0.65·(n−1)), spawn rate ×(1 + 0.5·(n−1)), enemies alive at once ×(1 + 0.5·(n−1)), boss health ×(1 + 0.9·(n−1)) (`balance.coop`). Spawns pick a random living player's view and reject any point inside any living player's view. `hud(playerId)` and `resultFor(playerId)` give each player's view; `hud().waitingFor` names the players a round still waits for. `leave(playerId)` takes a player out of the battle (not alive, never revived) and closes a round that only waited for them. A slot without input stands still.
+
+**Reviving** (`sim/revive.ts`, `balance.revive`): a fallen god's `revive` grows by `dt / 3 s` while a living ally stands within 70 of the spirit, and drains at the same rate otherwise. At 1 the god rises with 50% health and 2 s of invulnerability. Players who left are never revived. Solo runs have no spirits.
+
+## Endless runs — `engine/sim/realms.ts`, `run-simulation.ts`
+
+| Rule | Value |
+|---|---|
+| Realm order | content order from the starting realm, wrapping (`realmAt`) |
+| Arena seed | the run's seed in the first realm, then `realmSeed(seed, depth)` |
+| Realm time | timeline, events, boss time and per-minute scaling restart in every realm; the run clock (`time`) does not |
+| Boss defeated | `realm.rewards.bossGold` added to the run's gold; a gate opens where the boss fell |
+| Gate | radius 70; travels after a living god has stood in it for 2 s in a row, or 60 s after opening |
+| Travel | pickups gathered (quietly), enemies/projectiles/hazards cleared, fallen gods (not left) raised at 50%, party placed on the plaza, new director |
+| Depth `d` (realms cleared) | enemy health ×(1 + 0.6·d), damage ×(1 + 0.25·d), spawn rate and enemies alive ×(1 + 0.12·d), boss health ×(1 + 0.7·d), boss attack damage ×(1 + 0.25·d) (`balance.endless`) |
 
 ## Rooms — `engine/net/` (D16)
 
@@ -116,7 +130,7 @@ Deterministic from `(map config, seed)`: terrain bands from two-octave value noi
 
 ## Saves and rewards — `client/src/app/core/save/`
 
-`SaveData v2 { version, gold, permanentUpgrades, discovered { weapons, armour, relics }, stats { runs, victories, kills, bestTimeSeconds }, settings { sfxVolume, screenShake, damageNumbers, quality }, processedRunIds, introSeen }` under `localStorage['olympus-unbound/save']`. `parseSave` validates each field, clamps upgrade levels, drops unknown IDs, migrates older versions (`MIGRATIONS`), and refuses newer ones (fresh save). `applyRunResult` grants gold (half when abandoned, + realm victory bonus), discoveries and statistics once per run ID.
+`SaveData v2 { version, gold, permanentUpgrades, discovered { weapons, armour, relics }, stats { runs, victories, kills, bestTimeSeconds }, settings { sfxVolume, screenShake, damageNumbers, quality }, processedRunIds, introSeen }` under `localStorage['olympus-unbound/save']`. `parseSave` validates each field, clamps upgrade levels, drops unknown IDs, migrates older versions (`MIGRATIONS`), and refuses newer ones (fresh save). `applyRunResult` grants gold (half when abandoned; bosses' gold is already in the run's gold), discoveries and statistics once per run ID. `stats.victories` counts realms cleared (a victory of the old 7-minute runs was one realm cleared, so old saves stay right without a migration).
 
 Migrations: v0 (unversioned) → v1 renames nothing; v1 → v2 adds `introSeen: false`; a missing or invalid `quality` takes the detected default (`detectQuality`: software renderer → Low, ≥ 8 cores → High, else Medium).
 

@@ -1,7 +1,7 @@
 import { expect, test } from '@playwright/test';
 import { debug, inspect, startRun } from './run';
 
-test('the vertical slice: menu → Zeus → Olympus → level-up → elite → boss → victory → summary → menu', async ({
+test('the vertical slice: menu → Zeus → Olympus → level-up → elite → boss → gate → realm 2 → death → summary → menu', async ({
   page,
 }) => {
   const errors: string[] = [];
@@ -55,11 +55,21 @@ test('the vertical slice: menu → Zeus → Olympus → level-up → elite → b
   await debug(page, { type: 'skipTo', seconds: 419 });
   await expect(page.getByTestId('boss-bar')).toContainText('The Cyclops', { timeout: 10_000 });
 
-  // Defeat the boss → victory → summary with rewards.
+  // Defeat the boss → its gold and the gate → the next realm (spec: endless-run).
   await debug(page, { type: 'damageBoss', fraction: 1 });
-  await expect(page.getByRole('status')).toHaveText('Victory');
+  await expect(page.getByTestId('hud-gate')).toContainText('The gate to');
+  expect(Number(await page.getByTestId('hud-gold').textContent())).toBeGreaterThanOrEqual(250);
+  await debug(page, { type: 'travel' });
+  await expect(page.getByTestId('loading-kicker')).toContainText('Realm 2');
+  await expect(page.getByTestId('run-loading')).toHaveCount(0, { timeout: 120_000 });
+  await expect(page.getByTestId('hud-realm')).toContainText('2 ·');
+
+  // The run ends only at death: the summary counts the realm cleared.
+  await debug(page, { type: 'godMode', enabled: false });
+  await debug(page, { type: 'killPlayer' });
   await expect(page).toHaveURL(/\/summary$/, { timeout: 10_000 });
-  await expect(page.getByTestId('summary-outcome')).toHaveText('Victory');
+  await expect(page.getByTestId('summary-outcome')).toHaveText('You have fallen');
+  await expect(page.getByTestId('summary-realms')).toHaveText('1');
   const earned = Number(await page.getByTestId('summary-gold').textContent());
   expect(earned).toBeGreaterThanOrEqual(250);
 
@@ -76,7 +86,7 @@ test('defeat ends the run and shows the summary', async ({ page }) => {
   await startRun(page, '12345');
   await debug(page, { type: 'killPlayer' });
   await expect(page).toHaveURL(/\/summary$/, { timeout: 10_000 });
-  await expect(page.getByTestId('summary-outcome')).toHaveText('Defeat');
+  await expect(page.getByTestId('summary-outcome')).toHaveText('You have fallen');
 });
 
 test('pausing stops time; abandoning needs a confirmation', async ({ page }) => {

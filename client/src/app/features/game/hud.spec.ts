@@ -25,6 +25,7 @@ const base: HudSnapshot = {
   },
   enemies: 0,
   waitingFor: [],
+  realm: { name: 'Mount Olympus', number: 1 },
 };
 
 function render(hud: HudSnapshot) {

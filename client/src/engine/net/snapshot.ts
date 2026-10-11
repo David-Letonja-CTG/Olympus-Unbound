@@ -57,6 +57,11 @@ export interface Snapshot {
   readonly hazards: FrameHazard[];
   /** The boss's enemy ID, or 0. */
   readonly bossId: number;
+  /** Realms cleared: a deeper snapshot means the party has passed a gate (spec: endless-run). */
+  readonly depth: number;
+  /** The host is waiting for every member to load (the start, or a new realm). */
+  readonly waiting: boolean;
+  readonly gate: { x: number; y: number; radius: number; standing: number } | undefined;
 }
 
 const FLAG = {
@@ -73,14 +78,18 @@ const FLAG = {
   slow: 256,
   left: 512,
   orbit: 1,
+  // A player who left the room.
+  gone: 4,
 } as const;
+
+const HEADER = { waiting: 1, gate: 2 } as const;
 
 /**
  * The host's world as guests see it (D16, design: Snapshot): a compact binary picture of everything the views draw,
  * sent 20 times a second. Positions are 16-bit at a quarter pixel, IDs 32-bit (the ID counter is shared with
  * projectiles), and names go through a per-snapshot string table.
  */
-export function encodeSnapshot(state: RunState, phase: RunPhase): ArrayBuffer {
+export function encodeSnapshot(state: RunState, phase: RunPhase, waiting = false): ArrayBuffer {
   const names = new Map<string, number>();
   const name = (s: string) => {
     let i = names.get(s);
@@ -98,6 +107,15 @@ export function encodeSnapshot(state: RunState, phase: RunPhase): ArrayBuffer {
   w.u8(PHASES.indexOf(phase));
   w.f64(state.time);
   w.u32(state.boss && !state.boss.dead ? state.boss.id : 0);
+  w.u16(state.depth);
+  const gate = state.gate;
+  w.u8((waiting ? HEADER.waiting : 0) | (gate ? HEADER.gate : 0));
+  if (gate) {
+    w.f32(gate.x);
+    w.f32(gate.y);
+    w.f32(gate.radius);
+    w.f32(gate.standing);
+  }
   w.u8(names.size);
   for (const s of names.keys()) w.str(s);
 
@@ -109,10 +127,11 @@ export function encodeSnapshot(state: RunState, phase: RunPhase): ArrayBuffer {
     w.u8(name(p.god.id));
     w.u16(Math.round(p.radius * RADIUS));
     w.f32(p.stats.moveSpeed);
-    w.u8((p.alive ? FLAG.alive : 0) | (p.moving ? FLAG.moving : 0));
+    w.u8((p.alive ? FLAG.alive : 0) | (p.moving ? FLAG.moving : 0) | (p.left ? FLAG.gone : 0));
     w.i8(Math.round(p.facingX * 127));
     w.u8(timer(p.hurtFlash));
     w.u8(timer(p.invulnerable));
+    w.u8(Math.round(Math.max(0, Math.min(1, p.revive)) * 255));
   }
 
   w.u16(state.enemies.length);
@@ -191,6 +210,12 @@ export function decodeSnapshot(buffer: ArrayBuffer, index: ContentIndex): Snapsh
   const phase = PHASES[r.u8()] ?? 'playing';
   const time = r.f64();
   const bossId = r.u32();
+  const depth = r.u16();
+  const header = r.u8();
+  const gate =
+    header & HEADER.gate
+      ? { x: r.f32(), y: r.f32(), radius: r.f32(), standing: r.f32() }
+      : undefined;
   const names: string[] = [];
   for (let n = r.u8(); n > 0; n--) names.push(r.str());
 
@@ -214,9 +239,11 @@ export function decodeSnapshot(buffer: ArrayBuffer, index: ContentIndex): Snapsh
       moveSpeed,
       alive: (flags & FLAG.alive) !== 0,
       moving: (flags & FLAG.moving) !== 0,
+      left: (flags & FLAG.gone) !== 0 || undefined,
       facingX: r.i8() / 127,
       hurtFlash: r.u8() / TIMER,
       invulnerable: r.u8() / TIMER,
+      revive: r.u8() / 255,
     });
   }
 
@@ -327,6 +354,9 @@ export function decodeSnapshot(buffer: ArrayBuffer, index: ContentIndex): Snapsh
     pickups,
     hazards,
     bossId,
+    depth,
+    waiting: (header & HEADER.waiting) !== 0,
+    gate,
   };
 }
 

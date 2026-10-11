@@ -74,6 +74,8 @@ export type GameEvent =
   | { readonly type: 'resumed' }
   | { readonly type: 'announcement'; readonly text: string; readonly kind: AnnouncementKind }
   | { readonly type: 'uiInput'; readonly input: UiInput }
+  /** The party passed a gate: the next realm is being built (spec: endless-run, run-loading). */
+  | { readonly type: 'realmEntered'; readonly realmId: string; readonly depth: number }
   | { readonly type: 'runEnded'; readonly result: RunResult };
 
 export type Unsubscribe = () => void;
@@ -89,6 +91,8 @@ export interface DebugSnapshot {
   readonly players: number;
   /** Every player's position, in seat order. */
   readonly party: readonly { readonly x: number; readonly y: number; readonly alive: boolean }[];
+  /** Realms cleared. */
+  readonly depth: number;
 }
 
 /** A running game. Created by `createGameSession`; the only handle the application has on gameplay. */

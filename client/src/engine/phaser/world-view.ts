@@ -2,7 +2,7 @@ import Phaser from 'phaser';
 import { ArenaData } from '../maps/generate-arena';
 import { Element, LightSource, MapGenConfig } from '../data/types';
 import { STEP } from '../sim/run-state';
-import { WorldFrame } from '../sim/world-frame';
+import { FramePlayer, WorldFrame } from '../sim/world-frame';
 import { applySprite, SpriteResolver } from './assets';
 import { ATMOSPHERE_DEPTH, LightMap, QualityProfile } from './atmosphere';
 import { DETAIL_TEXTURE, SHADOW_TEXTURE, shade } from './textures';
@@ -154,7 +154,11 @@ export class WorldView {
     for (const pool of Object.values(p)) pool.begin();
 
     for (const pl of state.players) {
-      if (!pl.alive) continue;
+      if (!pl.alive) {
+        // A fallen ally's spirit waits where they fell (spec: co-op / reviving allies); Effects draws its ring.
+        if (!pl.left && state.players.length > 1) this.spirit(pl, time, lights);
+        continue;
+      }
       const x = lerp(pl.px, pl.x, alpha);
       const y = lerp(pl.py, pl.y, alpha);
       const moving = pl.moving;
@@ -292,6 +296,30 @@ export class WorldView {
     }
 
     for (const pool of Object.values(p)) pool.end();
+  }
+
+  /** A fallen god as a pale, floating spirit above the darkness, glowing brighter as it is revived. */
+  private spirit(pl: FramePlayer, time: number, lights: LightMap): void {
+    const p = this.pools;
+    const r = this.resolver.resolve(pl.god.visual.sprite);
+    const sprite = p.player.get(pl.id);
+    applySprite(sprite, r, 1.15, pl.facingX < 0, 'idle', 0);
+    const float = Math.sin(time / 420 + pl.id) * 4;
+    sprite
+      .setPosition(pl.x, pl.y - 14 + float)
+      .setDepth(DEPTH.player)
+      .setRotation(0)
+      .setAlpha(0.38 + 0.3 * pl.revive + Math.sin(time / 300) * 0.06)
+      .setTint(0x9fdcff)
+      .setTintMode(Phaser.TintModes.MULTIPLY);
+    p.ring
+      .get(pl.id)
+      .setPosition(pl.x, pl.y + 6)
+      .setDepth(DEPTH.playerRing)
+      .setScale(0.6, 0.36)
+      .setTint(0x9fdcff)
+      .setAlpha(0.45);
+    lights.add(pl.x, pl.y, 150 + 120 * pl.revive, 0x9fdcff, 0.55 + 0.4 * pl.revive, 6);
   }
 
   private drawArena(arena: ArenaData, config: MapGenConfig, ground: HTMLCanvasElement): void {

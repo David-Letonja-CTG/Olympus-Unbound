@@ -122,3 +122,24 @@ Same autopilot probe: Poseidon first ended runs earlier than Zeus (two at 02:11)
 ## Balance notes (2026-10-11, Athena)
 
 Autopilot probe (6 seeds; adding her spear to the pool changes everyone's first offers, so gods are compared within one probe): Athena first ended runs earlier than Zeus (mean 173 s vs 217 s), so she gained 10 health (125 → 135) and her spear 4 damage (22 → 26); now mean 185 s, median ≈187 s against Zeus's median ≈172 s.
+
+## Balance notes (2026-10-11, endless runs)
+
+`balance.endless`, per realm cleared:
+
+| Factor | Value |
+|---|---|
+| Enemy health | +60% |
+| Enemy damage | +25% |
+| Spawn rate | +12% |
+| Enemies alive at once | +12% |
+| Boss health | +70% |
+| Boss attack damage | +25% |
+
+`balance.revive`: reach 70, 3 s, 50% health, 2 s invulnerable. Mount Olympus's `rewards.bossGold` is the old victory bonus, 250.
+
+Headless checks (autopilot):
+- **Strong build** (`might` +6, `maxHealth` +3,000, `armor` +8, `regen` +20): survives 60 minutes and reaches realm 8 on two seeds, so the gate and travel loop holds up over many realms.
+- **No permanent upgrades:** the kiting bot falls around 01:30–03:00. It is a weak player, so these numbers set a floor, not the real pacing.
+
+Tune with playtests once the new realms exist. Each realm adds its own timeline and scaling on top of these factors.

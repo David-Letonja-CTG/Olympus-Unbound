@@ -65,6 +65,19 @@ export function emptyStatus() {
  * All mutable state of one run plus the helpers systems share: entity creation, spatial queries and the event
  * buffer. Systems are plain functions over this object; `RunSimulation` decides their order and the run phase.
  */
+/** The open gate to the next realm (spec: endless-run / the gate). */
+export interface Gate {
+  readonly x: number;
+  readonly y: number;
+  readonly radius: number;
+  /** The realm it leads to. */
+  readonly to: RealmDefinition;
+  /** Seconds a living god has stood inside without leaving. */
+  standing: number;
+  /** Seconds until it takes the party anyway. */
+  closesIn: number;
+}
+
 /** The fixed simulation step: 60 steps per simulated second (D5). */
 export const STEP = 1 / 60;
 
@@ -72,7 +85,10 @@ export class RunState implements WorldFrame {
   /** Positions move one step between `px`/`py` and `x`/`y` (WorldFrame). */
   readonly span = STEP;
   readonly balance: BalanceConfig;
-  readonly realm: RealmDefinition;
+  /** The realm the party is in; replaced when it passes a gate (spec: endless-run). */
+  realm: RealmDefinition;
+  arena: ArenaData;
+  collision: WorldCollision;
   readonly god: GodDefinition;
   readonly party: readonly PartySeat[];
   /** Difficulty multipliers for the party's size (1 for a solo run). */
@@ -82,14 +98,20 @@ export class RunState implements WorldFrame {
     readonly maxAlive: number;
     readonly bossHealth: number;
   };
-  readonly collision: WorldCollision;
 
   readonly spawnRng: Rng;
   readonly combatRng: Rng;
   readonly lootRng: Rng;
   readonly offerRng: Rng;
 
+  /** The run's clock (HUD, results). */
   time = 0;
+  /** Seconds in the current realm: its timeline, events, boss time and scaling count from here. */
+  realmTime = 0;
+  /** Realms cleared so far (spec: endless-run / difficulty by depth). */
+  depth = 0;
+  /** The gate to the next realm, open once the realm's boss has fallen. */
+  gate: Gate | undefined;
   kills = 0;
   gold = 0;
   level = 1;
@@ -116,10 +138,11 @@ export class RunState implements WorldFrame {
   constructor(
     readonly config: RunConfig,
     readonly index: ContentIndex,
-    readonly arena: ArenaData,
+    arena: ArenaData,
   ) {
     this.balance = index.content.balance;
     this.realm = index.realm(config.realmId);
+    this.arena = arena;
     this.party = partyOf(config);
     this.god = index.god(this.party[0].godId);
     // More players, more and tougher enemies (spec: co-op / difficulty per player).
@@ -216,14 +239,53 @@ export class RunState implements WorldFrame {
   // -------------------------------------------------------------------------------------------------------------
   // Creation
 
-  /** Health and damage multiplier for enemies spawned now (realm scaling, capped). */
+  /** Health and damage multiplier for enemies spawned now: the realm's own scaling (capped) times depth. */
   scaling(): { health: number; damage: number } {
-    const minutes = this.time / 60;
+    const minutes = this.realmTime / 60;
     const s = this.realm.scaling;
+    const depth = this.depthScale();
     return {
-      health: Math.min(s.max, 1 + s.healthPerMinute * minutes),
-      damage: Math.min(s.max, 1 + s.damagePerMinute * minutes),
+      health: Math.min(s.max, 1 + s.healthPerMinute * minutes) * depth.enemyHealth,
+      damage: Math.min(s.max, 1 + s.damagePerMinute * minutes) * depth.enemyDamage,
     };
+  }
+
+  /** How much harder every realm cleared makes the next (spec: endless-run / difficulty by depth). */
+  depthScale(): {
+    enemyHealth: number;
+    enemyDamage: number;
+    spawnRate: number;
+    maxAlive: number;
+    bossHealth: number;
+    bossDamage: number;
+  } {
+    const e = this.balance.endless;
+    const d = this.depth;
+    return {
+      enemyHealth: 1 + e.enemyHealthPerRealm * d,
+      enemyDamage: 1 + e.enemyDamagePerRealm * d,
+      spawnRate: 1 + e.spawnRatePerRealm * d,
+      maxAlive: 1 + e.maxAlivePerRealm * d,
+      bossHealth: 1 + e.bossHealthPerRealm * d,
+      bossDamage: 1 + e.bossDamagePerRealm * d,
+    };
+  }
+
+  /** Swaps in the next realm and its arena; the simulation clears and places everything (spec: endless-run). */
+  enterRealm(realm: RealmDefinition, arena: ArenaData): void {
+    this.realm = realm;
+    this.arena = arena;
+    this.collision = new WorldCollision(arena.bounds, arena.obstacles);
+    this.realmTime = 0;
+    this.boss = undefined;
+    this.bossDefeated = false;
+    this.gate = undefined;
+    this.enemies.length = 0;
+    this.projectiles.length = 0;
+    this.hostileProjectiles.length = 0;
+    this.hazards.length = 0;
+    this.pickups.length = 0;
+    this.enemyGrid.clear();
   }
 
   /** Spawns an enemy unless the global cap is reached (bosses ignore the cap). */
@@ -234,7 +296,9 @@ export class RunState implements WorldFrame {
     options: { elite?: boolean; boss?: BossRuntime } = {},
   ): Enemy | undefined {
     if (!options.boss && this.enemies.length >= this.balance.caps.enemies) return undefined;
-    const scale = options.boss ? { health: 1, damage: 1 } : this.scaling();
+    const scale = options.boss
+      ? { health: this.depthScale().bossHealth, damage: this.depthScale().bossDamage }
+      : this.scaling();
     const elite = options.elite ? this.realm.elite : undefined;
     const party = options.boss ? this.partyScale.bossHealth : this.partyScale.enemyHealth;
     const health = def.health * scale.health * (elite?.health ?? 1) * party;

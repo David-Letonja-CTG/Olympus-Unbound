@@ -23,7 +23,8 @@ interface Seat {
   readonly queue: { seq: number; input: PlayerInput }[];
   /** The seq of the guest's last input applied by a step. */
   ack: number;
-  loaded: boolean;
+  /** The deepest realm the guest has loaded (−1: none yet). */
+  loadedDepth: number;
   open: boolean;
   /** Events only this guest sees (their own choice answers). */
   own: SimEvent[];
@@ -59,7 +60,7 @@ export class RoomHost {
         inbox: [],
         queue: [],
         ack: 0,
-        loaded: false,
+        loadedDepth: -1,
         open: true,
         own: [],
       };
@@ -74,15 +75,27 @@ export class RoomHost {
     }
   }
 
-  /** Every guest has loaded, left, or had a minute to load. */
+  /** Every guest has loaded the current realm, left, or had a minute to load it. */
   get everyoneLoaded(): boolean {
-    return this.waited >= LOAD_TIMEOUT || this.seats.every((s) => s.loaded || !s.open);
+    return this.waited >= LOAD_TIMEOUT || this.seats.every((s) => this.ready(s));
   }
 
   /** The host and every guest who has loaded or left, as a fraction of the room. */
   get loadedFraction(): number {
-    const done = this.seats.filter((s) => s.loaded || !s.open).length;
+    const done = this.seats.filter((s) => this.ready(s)).length;
     return (1 + done) / (1 + this.seats.length);
+  }
+
+  /** The party passed a gate: everyone loads the new realm, and they hear of it at once (spec: endless-run). */
+  newRealm(): void {
+    this.waited = 0;
+    for (const seat of this.seats) seat.queue.length = 0;
+    this.frameTimer = FRAME_INTERVAL;
+    this.tick(0, true);
+  }
+
+  private ready(seat: Seat): boolean {
+    return !seat.open || seat.loadedDepth >= this.sim.state.depth;
   }
 
   /** Applies what the guests sent since the last frame, `dt` real seconds ago. */
@@ -93,7 +106,7 @@ export class RoomHost {
         if (!isGuestMessage(m)) continue;
         switch (m.type) {
           case 'loaded':
-            seat.loaded = true;
+            seat.loadedDepth = Math.max(seat.loadedDepth, m.depth);
             break;
           case 'input':
             seat.queue.push({ seq: m.seq, input: { moveX: m.x, moveY: m.y, ability: m.ability } });
@@ -144,13 +157,13 @@ export class RoomHost {
     }
   }
 
-  /** Sends frames and HUDs on their real-time schedules. */
-  tick(dt: number): void {
+  /** Sends frames and HUDs on their real-time schedules; `waiting`: the run waits for the party to load. */
+  tick(dt: number, waiting = false): void {
     this.frameTimer += dt;
     if (this.frameTimer >= FRAME_INTERVAL) {
       // After a hitch, send one frame now rather than a burst.
       this.frameTimer = Math.min(this.frameTimer - FRAME_INTERVAL, FRAME_INTERVAL);
-      const snapshot = encodeSnapshot(this.sim.state, this.sim.phase);
+      const snapshot = encodeSnapshot(this.sim.state, this.sim.phase, waiting);
       for (const seat of this.open()) {
         seat.link.send(
           message({

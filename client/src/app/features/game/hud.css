@@ -38,6 +38,9 @@
 
 .plaque {
   grid-column: 2;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
   padding: 4px 22px;
   border-radius: 2px;
   clip-path: polygon(
@@ -57,6 +60,58 @@
   letter-spacing: 0.08em;
   color: var(--gold-2);
   font-variant-numeric: tabular-nums;
+}
+
+/* The realm the party is in and its number in the run (spec: hud / realm and gate). */
+.realm {
+  margin-top: -2px;
+  font-family: var(--display);
+  font-size: 0.7rem;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--muted);
+  white-space: nowrap;
+}
+
+/* The open gate: where it leads and when it opens by itself. */
+.gate {
+  position: absolute;
+  top: 78px;
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  padding: 8px 26px;
+  background: linear-gradient(180deg, rgba(60, 46, 14, 0.85), rgba(20, 14, 6, 0.85));
+  border: 1px solid #050404;
+  box-shadow:
+    inset 0 0 0 1px rgba(255, 210, 122, 0.55),
+    0 0 24px rgba(255, 210, 122, 0.25);
+  text-align: center;
+  pointer-events: none;
+  animation: gate-glow 1.6s ease-in-out infinite alternate;
+}
+
+.gate-title {
+  font-family: var(--display);
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  color: var(--gold-2);
+}
+
+.gate-time {
+  font-size: 0.85rem;
+  color: #e8dcc0;
+}
+
+@keyframes gate-glow {
+  to {
+    box-shadow:
+      inset 0 0 0 1px rgba(255, 210, 122, 0.85),
+      0 0 34px rgba(255, 210, 122, 0.45);
+  }
 }
 
 .plaque.small {
@@ -167,17 +222,17 @@
   animation: announce 3s ease forwards;
 }
 
-.announcement.boss {
+.announcement.kind-boss {
   color: #ff8a70;
   font-size: clamp(1.4rem, 3.2vw, 2.3rem);
   text-transform: uppercase;
 }
 
-.announcement.elite {
+.announcement.kind-elite {
   color: var(--gold-2);
 }
 
-.announcement.synergy {
+.announcement.kind-synergy {
   color: #b3ecff;
 }
 

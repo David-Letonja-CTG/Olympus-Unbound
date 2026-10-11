@@ -109,14 +109,16 @@ describe('boss encounter', () => {
     expect(enraged).toHaveLength(1);
   });
 
-  it('defeating the boss ends the run in victory', () => {
+  it('defeating the boss adds its gold and opens the gate; the run goes on (spec: boss-encounter)', () => {
     const sim = bossSim();
-    spawnBoss(sim.state);
+    const boss = spawnBoss(sim.state);
+    const gold = sim.state.gold;
     sim.debug({ type: 'damageBoss', fraction: 1 });
     sim.step(STEP, [NO_INPUT]);
-    expect(sim.phase).toBe('ended');
-    expect(sim.result?.outcome).toBe('victory');
-    expect(sim.result?.bossDefeated).toBe(true);
+    expect(sim.phase).toBe('playing');
+    expect(sim.state.gold - gold).toBe(sim.state.realm.rewards.bossGold);
+    expect(sim.state.gate).toMatchObject({ x: boss?.x, y: boss?.y });
+    expect(sim.events().filter((e) => e.type === 'gateOpened')).toHaveLength(1);
   });
 
   it('summons and charges only in the second phase', () => {

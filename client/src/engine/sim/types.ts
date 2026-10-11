@@ -70,6 +70,8 @@ export interface Player {
   alive: boolean;
   /** Left a room's run (spec: rooms / leaving); never revived. */
   left?: boolean;
+  /** A fallen god's revival progress, 0–1 (spec: co-op / reviving allies). */
+  revive: number;
   revivalsUsed: number;
   abilityTimer: number;
   ability: WeaponInstance;
@@ -247,7 +249,8 @@ export interface UpgradeChoice {
 // Run phases, results and events
 
 export type RunPhase = 'playing' | 'choosing' | 'paused' | 'ended';
-export type RunOutcome = 'victory' | 'defeat' | 'abandoned';
+/** Runs go on realm after realm until every god has fallen (spec: run-outcome / run endings). */
+export type RunOutcome = 'defeat' | 'abandoned';
 
 export interface LoadoutSummary {
   readonly weapons: readonly {
@@ -271,7 +274,10 @@ export interface RunResult {
   readonly level: number;
   readonly kills: number;
   readonly gold: number;
-  readonly bossDefeated: boolean;
+  /** Realms whose boss the party defeated (spec: endless-run). */
+  readonly realmsCleared: number;
+  /** The realm the run ended in. */
+  readonly realmReached: string;
   readonly loadout: LoadoutSummary;
 }
 
@@ -333,6 +339,8 @@ export type SimEvent =
       y2: number;
       width: number;
     }
+  | { type: 'gateOpened'; to: string; x: number; y: number }
+  | { type: 'realmEntered'; realmId: string; depth: number }
   | { type: 'runEnded'; result: RunResult };
 
 /** Low-frequency summary of a run for the HUD (D7). */
@@ -369,6 +377,10 @@ export interface HudSnapshot {
   readonly enemies: number;
   /** Players the open round of choices still waits for, besides this one (spec: rooms / choices). */
   readonly waitingFor: readonly string[];
+  /** The current realm and its number in the run, from 1 (spec: hud / realm and gate). */
+  readonly realm: { readonly name: string; readonly number: number };
+  /** The open gate: where it leads and the seconds until it takes the party. */
+  readonly gate?: { readonly to: string; readonly closesIn: number };
 }
 
 export interface HudItem {

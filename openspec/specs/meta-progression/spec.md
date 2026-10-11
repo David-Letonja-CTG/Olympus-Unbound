@@ -39,7 +39,7 @@ The progression screen SHALL list permanent upgrades with their level, maximum l
 - **THEN** the buy action is disabled
 
 ### Requirement: Codex and statistics
-The progression screen SHALL show every weapon, armour and relic as discovered (name and description) or undiscovered (hidden), and the statistics: runs, victories, total kills and best survival time.
+The progression screen SHALL show every weapon, armour and relic as discovered (name and description) or undiscovered (hidden), and the statistics: runs, realms cleared, total kills and best survival time.
 
 #### Scenario: Discovering an item
 - **WHEN** a run ends holding `war_hammer` for the first time

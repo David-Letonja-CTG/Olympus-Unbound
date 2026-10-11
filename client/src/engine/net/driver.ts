@@ -15,6 +15,7 @@ export interface DriverSnapshot {
   readonly bossAlive: boolean;
   readonly players: number;
   readonly party: readonly { readonly x: number; readonly y: number; readonly alive: boolean }[];
+  readonly depth: number;
 }
 
 /**
@@ -40,7 +41,7 @@ export interface RunDriver {
   readonly started: boolean;
   /** Members loaded so far, 0–1 (rooms; 1 otherwise). */
   readonly partyProgress: number;
-  /** The local scene is built and ready to play. */
+  /** The local scene is built and ready to play (again after every gate, spec: endless-run). */
   markLoaded(): void;
   /** Advances by `dt` real seconds; `afterStep` runs after every fixed step (it clears input taps). */
   advance(dt: number, input: PlayerInput, afterStep: () => void): void;
@@ -126,7 +127,8 @@ export class LocalDriver implements RunDriver {
       this.accumulator = 0;
     }
     this.drain();
-    if (this.started) this.room?.tick(dt);
+    // Guests get the world as soon as this scene is ready; until everyone is, frames say "waiting".
+    if (this.loaded) this.room?.tick(dt, !this.started);
   }
 
   /** Sends the simulation's events to the guests and keeps the local player's own for this screen. */
@@ -135,6 +137,12 @@ export class LocalDriver implements RunDriver {
     this.room?.forward(events);
     const me = this.localId;
     for (const e of events) {
+      // A new realm: this scene rebuilds it, and the run waits until everyone has (spec: endless-run).
+      if (e.type === 'realmEntered') {
+        this.loaded = false;
+        this.accumulator = 0;
+        this.room?.newRealm();
+      }
       // Other players' choices are theirs alone (spec: rooms / choices in a room).
       if (e.type === 'choice' && e.choice.playerId !== me) continue;
       if (e.type === 'choiceResolved' && e.playerId !== me) continue;
@@ -198,6 +206,7 @@ export class LocalDriver implements RunDriver {
       bossAlive: !!state.boss && !state.boss.dead,
       players: state.players.filter((pl) => !pl.left).length,
       party: state.players.map((pl) => ({ x: pl.x, y: pl.y, alive: pl.alive })),
+      depth: state.depth,
     };
   }
 

@@ -33,6 +33,9 @@ export function queueAssets(
 ): Set<string> {
   const failed = new Set<string>();
   const load = scene.load;
+  // A restarted scene (a new realm) keeps its loader: drop the previous run of listeners.
+  load.off(Phaser.Loader.Events.PROGRESS);
+  load.off(Phaser.Loader.Events.FILE_LOAD_ERROR);
   for (const file of manifest.files) {
     if (scene.textures.exists(file.id)) continue;
     if (file.type === 'image') load.image(file.id, file.url);

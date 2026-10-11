@@ -84,7 +84,7 @@ export function updateBoss(state: RunState, enemy: Enemy, target: Player, dt: nu
           dy: enemy.dirY,
           time: attack.length / attack.speed,
           speed: attack.speed,
-          damage: attack.damage,
+          damage: attack.damage * state.depthScale().bossDamage,
           hit: false,
         };
       }
@@ -126,7 +126,7 @@ function startAttack(
         y: enemy.y,
         radius: attack.radius,
         warn: attack.windup,
-        damage: attack.damage,
+        damage: attack.damage * state.depthScale().bossDamage,
       });
       boss.current = attack;
       boss.windup = attack.windup;
@@ -142,7 +142,7 @@ function startAttack(
           y: target.y + Math.sin(a) * d,
           radius: attack.radius,
           warn: attack.windup + i * 0.15,
-          damage: attack.damage,
+          damage: attack.damage * state.depthScale().bossDamage,
         });
       }
       boss.current = attack;
