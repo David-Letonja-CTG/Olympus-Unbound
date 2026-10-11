@@ -82,6 +82,65 @@ export const WORLD: Record<string, SpriteSpec> = {
         circle(g, s * x, s * y, s * 0.04, 'rgba(70,90,50,0.55)');
     },
   },
+  altar: {
+    size: 64,
+    paint(g, s) {
+      groundShadow(g, s, 0.44, 0.34);
+      // A marble altar block on two steps, scorched on top, an offering bowl glowing with embers.
+      slab(g, [s * 0.1, s * 0.5, s * 0.9, s * 0.5, s * 0.9, s * 0.9, s * 0.1, s * 0.9], 0x8a857a, {
+        outline: 2.5,
+      });
+      slab(
+        g,
+        [s * 0.18, s * 0.3, s * 0.82, s * 0.3, s * 0.82, s * 0.78, s * 0.18, s * 0.78],
+        0xc9c2b2,
+        {
+          outline: 2.5,
+        },
+      );
+      ellipse(g, s / 2, s * 0.4, s * 0.22, s * 0.08, '#3a2a22');
+      glow(g, s / 2, s * 0.38, s * 0.2, 0xff8a3d, 0.7);
+      ellipse(g, s / 2, s * 0.39, s * 0.12, s * 0.04, '#ffb36b');
+      line(g, [s * 0.24, s * 0.62, s * 0.76, s * 0.62], '#a8a090', 1.5);
+    },
+  },
+  ruined_wall: {
+    size: 52,
+    paint(g, s) {
+      groundShadow(g, s, 0.42, 0.3);
+      // Two courses of worn blocks, the top one broken.
+      slab(
+        g,
+        [s * 0.08, s * 0.5, s * 0.92, s * 0.5, s * 0.92, s * 0.86, s * 0.08, s * 0.86],
+        0x9c958a,
+        { outline: 2.5 },
+      );
+      slab(
+        g,
+        [s * 0.16, s * 0.26, s * 0.66, s * 0.22, s * 0.7, s * 0.52, s * 0.14, s * 0.52],
+        0xb3ac9e,
+        {
+          outline: 2.5,
+        },
+      );
+      line(g, [s * 0.5, s * 0.5, s * 0.5, s * 0.86], '#6e685e', 1.5);
+      line(g, [s * 0.4, s * 0.26, s * 0.42, s * 0.5], '#7e786c', 1.5);
+      circle(g, s * 0.78, s * 0.42, s * 0.06, '#8c8578', 'rgba(8,6,10,0.8)', 1.5);
+      circle(g, s * 0.3, s * 0.78, s * 0.04, 'rgba(70,90,50,0.55)');
+    },
+  },
+  rubble: {
+    size: 26,
+    paint(g, s) {
+      for (const [x, y, r] of [
+        [0.3, 0.6, 0.12],
+        [0.58, 0.52, 0.1],
+        [0.46, 0.72, 0.08],
+        [0.72, 0.7, 0.07],
+      ])
+        circle(g, s * x, s * y, s * r, '#8c8578', 'rgba(8,6,10,0.7)', 1);
+    },
+  },
   olive_tree: {
     size: 60,
     paint(g, s) {

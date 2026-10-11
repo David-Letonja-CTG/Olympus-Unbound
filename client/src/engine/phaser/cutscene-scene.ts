@@ -15,6 +15,7 @@ import { CutsceneEvent, GameSettings } from '../session';
 import { applySprite, queueAssets, ResolvedSprite, SpriteResolver } from './assets';
 import { Atmosphere, LightMap, QUALITY, viewAround } from './atmosphere';
 import { Effects } from './effects';
+import { GroundBuilder } from './ground-canvas';
 import { InputReader } from './input';
 import { SHADOW_TEXTURE, registerTextures } from './textures';
 import { DEPTH, WorldView } from './world-view';
@@ -107,7 +108,10 @@ export class CutsceneScene extends Phaser.Scene {
     this.origin = arena.spawn;
     this.worldSize = { width: arena.width, height: arena.height };
     this.resolver = new SpriteResolver(this, content.assets, this.failedAssets);
-    this.view = new WorldView(this, this.resolver, arena, realm.map);
+    // The intro shows its own loading screen before it starts, so its ground is painted in one go.
+    const ground = new GroundBuilder(arena, realm.map, this.host.settings().quality);
+    ground.advance(Infinity);
+    this.view = new WorldView(this, this.resolver, arena, realm.map, ground.canvas);
     this.effects = new Effects(this);
     this.effects.damageNumbers = false;
     // The scene's own darkness: the realm's ambient light scaled to the cutscene's level.

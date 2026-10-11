@@ -1,6 +1,6 @@
 import { CONTENT } from '../testing/content';
 import { MapGenConfig } from '../data/types';
-import { generateArena } from './generate-arena';
+import { distanceToPolyline, generateArena, templeEntrance } from './generate-arena';
 
 const olympus = CONTENT.realms.find((r) => r.id === 'mount_olympus')?.map as MapGenConfig;
 
@@ -101,11 +101,67 @@ describe('braziers (plaza lights)', () => {
       const nearest = Math.min(
         ...arena.plazas.map((p) => Math.hypot(b.x - p.x, b.y - p.y) - p.radius),
       );
-      expect(nearest).toBeLessThan(140);
+      // Around a plaza, or flanking a temple's altar.
+      const onTemple = arena.temples.some(
+        (t) => Math.abs(b.x - t.x) <= t.width / 2 && Math.abs(b.y - t.y) <= t.depth / 2,
+      );
+      expect(onTemple || nearest < 140).toBe(true);
       expect(
         Math.hypot(b.x - arena.spawn.x, b.y - arena.spawn.y) - b.radius,
       ).toBeGreaterThanOrEqual(olympus.spawnClearRadius);
     }
     expect(olympus.obstacles.find((o) => o.id === 'brazier')?.light?.radius).toBeGreaterThan(0);
+  });
+});
+
+describe('roads and landmarks (spec: arena-generation / roads, temple landmark)', () => {
+  it('joins the spawn to every ruin, the temple and the boss arena, with no obstacle on a road', () => {
+    for (let seed = 0; seed < 20; seed++) {
+      const arena = generateArena(olympus, seed);
+      const ruins = arena.plazas.filter(
+        (p) =>
+          !(p.x === arena.spawn.x && p.y === arena.spawn.y) &&
+          !(p.x === arena.bossArena.x && p.y === arena.bossArena.y),
+      );
+      const ends = arena.roads.map((r) => r.points.slice(-2).join(':'));
+      for (const target of [
+        ...ruins,
+        ...arena.temples.map((tp) => templeEntrance(tp, arena.spawn)),
+        arena.bossArena,
+      ])
+        expect(ends).toContain(`${Math.round(target.x)}:${Math.round(target.y)}`);
+      for (const road of arena.roads) {
+        expect(road.points.slice(0, 2)).toEqual([
+          Math.round(arena.spawn.x),
+          Math.round(arena.spawn.y),
+        ]);
+        for (const o of arena.obstacles)
+          expect(distanceToPolyline(o.x, o.y, road.points)).toBeGreaterThanOrEqual(
+            road.width / 2 + o.radius,
+          );
+      }
+    }
+  });
+
+  it('places exactly one walkable temple with its altar, away from the spawn and the boss arena', () => {
+    for (let seed = 0; seed < 20; seed++) {
+      const arena = generateArena(olympus, seed);
+      expect(arena.temples.length).toBe(1);
+      const [t] = arena.temples;
+      const reach = Math.hypot(t.width, t.depth) / 2;
+      expect(Math.hypot(t.x - arena.spawn.x, t.y - arena.spawn.y)).toBeGreaterThan(
+        olympus.spawnClearRadius + reach,
+      );
+      expect(Math.hypot(t.x - arena.bossArena.x, t.y - arena.bossArena.y)).toBeGreaterThan(
+        arena.bossArena.radius + reach,
+      );
+      const inside = arena.obstacles.filter(
+        (o) => Math.abs(o.x - t.x) <= t.width / 2 + 1 && Math.abs(o.y - t.y) <= t.depth / 2 + 1,
+      );
+      expect(inside.filter((o) => o.kind === 'altar').length).toBe(1);
+      expect(
+        inside.filter((o) => o.kind === 'column' || o.kind === 'broken_column').length,
+      ).toBeGreaterThan(4);
+    }
   });
 });

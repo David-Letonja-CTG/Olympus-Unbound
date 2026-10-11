@@ -6,6 +6,7 @@ import { SimEvent } from '../sim/types';
 import { queueAssets, SpriteResolver } from './assets';
 import { Atmosphere, LightMap, QUALITY, viewAround } from './atmosphere';
 import { Effects } from './effects';
+import { GroundBuilder } from './ground-canvas';
 import { InputReader } from './input';
 import { registerTextures } from './textures';
 import { WorldView } from './world-view';
@@ -16,6 +17,8 @@ const VIEW_HEIGHT = 840;
 /** Longest real time simulated in one frame; longer hitches are dropped, not caught up. */
 const MAX_FRAME_SECONDS = 0.25;
 const HUD_INTERVAL_MS = 100;
+/** Time per frame spent painting the ground while loading, so the loading screen stays smooth. */
+const GROUND_BUDGET_MS = 10;
 
 const ATTACK_SOUNDS: Record<string, SoundCue> = {
   thunder_spear: 'spear',
@@ -46,6 +49,10 @@ export class ArenaScene extends Phaser.Scene {
   private lightMap!: LightMap;
   private atmosphere!: Atmosphere;
   private failedAssets = new Set<string>();
+  private resolver!: SpriteResolver;
+  private ground!: GroundBuilder;
+  /** Loading: painting the ground, then building the scene; the simulation waits until `ready`. */
+  private loading: 'realm' | 'scene' | 'ready' = 'realm';
   private accumulator = 0;
   private hudTimer = 0;
   private readonly onBlur = () => this.autoPause();
@@ -61,7 +68,7 @@ export class ArenaScene extends Phaser.Scene {
     // External art first (spec: asset-pipeline / loading with progress); failures fall back to code-drawn art.
     const content = this.host.sim.state.index.content;
     this.failedAssets = queueAssets(this, content.assets, (progress) =>
-      this.host.emit({ type: 'loadProgress', progress }),
+      this.host.emit({ type: 'loadProgress', progress, stage: 'art' }),
     );
   }
 
@@ -71,13 +78,39 @@ export class ArenaScene extends Phaser.Scene {
     const content = sim.state.index.content;
     registerTextures(this, content, [realm.map]);
     this.cameras.main.setBackgroundColor(this.host.backgroundColor);
-    const resolver = new SpriteResolver(this, content.assets, this.failedAssets);
-    this.view = new WorldView(this, resolver, sim.arena, realm.map);
+    this.resolver = new SpriteResolver(this, content.assets, this.failedAssets);
+    // The ground is painted over the next frames (spec: run-loading / progress stages); the world follows.
+    this.ground = new GroundBuilder(sim.arena, realm.map, this.host.settings().quality);
+    this.input$ = new InputReader(this);
+
+    window.addEventListener('blur', this.onBlur);
+    document.addEventListener('visibilitychange', this.onVisibility);
+    this.events.once(Phaser.Scenes.Events.SHUTDOWN, () => {
+      window.removeEventListener('blur', this.onBlur);
+      document.removeEventListener('visibilitychange', this.onVisibility);
+      this.scale.off(Phaser.Scale.Events.RESIZE, this.fitCamera, this);
+    });
+  }
+
+  /** One loading step per frame: paint more ground, then build the scene, then start (spec: run-loading). */
+  private continueLoading(): void {
+    const { sim } = this.host;
+    if (this.loading === 'realm') {
+      const done = this.ground.advance(GROUND_BUDGET_MS);
+      this.host.emit({ type: 'loadProgress', progress: this.ground.progress, stage: 'realm' });
+      if (done) {
+        this.loading = 'scene';
+        // Announce the stage now; the scene is built next frame, so the screen can show it first.
+        this.host.emit({ type: 'loadProgress', progress: 0, stage: 'scene' });
+      }
+      return;
+    }
+    const realm = sim.state.realm;
+    this.view = new WorldView(this, this.resolver, sim.arena, realm.map, this.ground.canvas);
     this.effects = new Effects(this);
     this.lightMap = new LightMap(this, realm.atmosphere.ambient);
     this.atmosphere = new Atmosphere(this, sim.arena.width, sim.arena.height, realm.atmosphere);
     this.applySettings(this.host.settings());
-    this.input$ = new InputReader(this);
 
     const camera = this.cameras.main;
     camera.setBounds(0, 0, sim.arena.width, sim.arena.height);
@@ -87,20 +120,16 @@ export class ArenaScene extends Phaser.Scene {
     const p = sim.state.players[0];
     camera.centerOn(p.x, p.y);
 
-    window.addEventListener('blur', this.onBlur);
-    document.addEventListener('visibilitychange', this.onVisibility);
-    this.events.once(Phaser.Scenes.Events.SHUTDOWN, () => {
-      window.removeEventListener('blur', this.onBlur);
-      document.removeEventListener('visibilitychange', this.onVisibility);
-      this.scale.off(Phaser.Scale.Events.RESIZE, this.fitCamera, this);
-    });
-
+    this.loading = 'ready';
+    this.accumulator = 0;
+    this.host.emit({ type: 'loadProgress', progress: 1, stage: 'scene' });
     this.host.emit({ type: 'ready' });
     this.host.emit({ type: 'hud', hud: sim.hud() });
   }
 
   /** Settings apply live, including graphics quality (spec: visual-atmosphere / graphics quality levels). */
   applySettings(settings: GameSettings): void {
+    if (this.loading !== 'ready' && !this.view) return; // applied when the scene is built
     const profile = QUALITY[settings.quality];
     this.effects.damageNumbers = settings.damageNumbers;
     this.effects.particleScale = profile.particles;
@@ -111,6 +140,10 @@ export class ArenaScene extends Phaser.Scene {
 
   override update(): void {
     const { sim } = this.host;
+    if (this.loading !== 'ready') {
+      this.continueLoading();
+      return;
+    }
     // Real elapsed time, not Phaser's smoothed delta: Phaser clamps the delta to one 60 fps frame while the page
     // lacks focus and for its first frames, which would run the game in slow motion below 60 fps (D5: the
     // simulation must follow real time through fixed steps).
@@ -243,6 +276,7 @@ export class ArenaScene extends Phaser.Scene {
 
   private autoPause(): void {
     this.input$?.reset();
+    if (this.loading !== 'ready') return; // nothing to pause yet; the run starts when loading ends
     if (this.host.sim.pause()) this.host.emit({ type: 'paused' });
   }
 

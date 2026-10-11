@@ -6,6 +6,9 @@ import { AnnouncementKind, HudSnapshot, RunResult, UpgradeChoice, UpgradeOffer }
 
 /** Graphics quality (spec: visual-atmosphere): lights, fog, bloom, shading and particle density. */
 export type GraphicsQuality = 'low' | 'medium' | 'high';
+
+/** What a run is loading (spec: run-loading / progress stages): the art, the realm (map and ground), the scene. */
+export type LoadStage = 'art' | 'realm' | 'scene';
 export const GRAPHICS_QUALITIES: readonly GraphicsQuality[] = ['low', 'medium', 'high'];
 
 /** Player-adjustable settings that affect a running game. */
@@ -48,7 +51,7 @@ export type UiInput = 'up' | 'down' | 'left' | 'right' | 'confirm' | 'back' | 'p
 
 /** What a running game tells the application (D3). Frequent state arrives only as throttled `hud` snapshots. */
 export type GameEvent =
-  | { readonly type: 'loadProgress'; readonly progress: number }
+  | { readonly type: 'loadProgress'; readonly progress: number; readonly stage?: LoadStage }
   | { readonly type: 'ready' }
   | { readonly type: 'hud'; readonly hud: HudSnapshot }
   | { readonly type: 'choice'; readonly choice: UpgradeChoice }

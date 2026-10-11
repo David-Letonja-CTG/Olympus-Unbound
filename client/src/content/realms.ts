@@ -9,6 +9,16 @@ export const MOUNT_OLYMPUS: RealmDefinition = {
   description:
     'Sacred slopes of marble ruins and olive groves, overrun by corrupted servants of the old gods.',
   backgroundColor: 0x16141c,
+  tips: [
+    'The roads lead from the altar of the gods to every ruin — and to the place where the Cyclops waits.',
+    'Elites always carry divine treasure. Hunt them before they hunt you.',
+    'Weapons of one element empower each other: lightning chains, shadow drains, fire lingers.',
+    'Columns and walls stop enemy arrows. Fight from the ruins when the centaurs come.',
+    'The Cyclops slams the ground around him and hurls boulders where you stand. Watch the red circles.',
+    'Gold earned in a run buys permanent blessings in the Hall of the Gods.',
+    'Your divine ability recharges on its own. Save it for the moment the horde closes in.',
+    'Some say the temple at the heart of the mountain still answers prayers. Most who went to ask did not return.',
+  ],
   // Moonlit night: cold ambient light, pale fog, embers drifting from the burning temples.
   atmosphere: { ambient: 0x5a6282, fog: 0x8a93ad, particles: 0xff9a4a },
   map: {
@@ -43,6 +53,8 @@ export const MOUNT_OLYMPUS: RealmDefinition = {
       { id: 'statue', radius: 22, visual: { sprite: 'statue', color: 0xdcd6c8 } },
       { id: 'olive_tree', radius: 24, visual: { sprite: 'olive_tree', color: 0x6b8e3d } },
       { id: 'rock', radius: 18, visual: { sprite: 'rock', color: 0x8a8580 } },
+      { id: 'altar', radius: 26, visual: { sprite: 'altar', color: 0xc9c2b2 } },
+      { id: 'wall', radius: 20, visual: { sprite: 'ruined_wall', color: 0xb3ac9e } },
       {
         id: 'brazier',
         radius: 14,
@@ -50,6 +62,7 @@ export const MOUNT_OLYMPUS: RealmDefinition = {
         light: { radius: 260, color: 0xff9a4a, intensity: 0.95, flicker: 0.3 },
       },
     ],
+    roads: { width: 64, wander: 90 },
     pointsOfInterest: [
       {
         type: 'ring',
@@ -59,6 +72,25 @@ export const MOUNT_OLYMPUS: RealmDefinition = {
         pieces: 10,
         missingChance: 0.3,
         plazaTerrain: 'marble',
+      },
+      {
+        type: 'temple',
+        column: 'column',
+        fallen: 'broken_column',
+        altar: 'altar',
+        light: 'brazier',
+        size: [560, 340],
+        spacing: 80,
+        fallenChance: 0.25,
+        missingChance: 0.12,
+      },
+      {
+        type: 'walls',
+        kind: 'wall',
+        count: [5, 8],
+        length: [220, 420],
+        spacing: 66,
+        missingChance: 0.2,
       },
       { type: 'cluster', kind: 'olive_tree', count: [5, 8], size: [4, 7], spread: 170 },
       // After the rings: their plazas get braziers too.
@@ -88,6 +120,12 @@ export const MOUNT_OLYMPUS: RealmDefinition = {
         terrain: ['earth'],
         density: 60,
         visual: { sprite: 'pebbles', color: 0x9c8a73 },
+      },
+      {
+        id: 'rubble',
+        terrain: ['earth', 'marble'],
+        density: 40,
+        visual: { sprite: 'rubble', color: 0x8c8578 },
       },
       {
         id: 'marble_shards',
