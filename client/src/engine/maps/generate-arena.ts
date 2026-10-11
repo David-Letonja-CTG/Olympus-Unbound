@@ -18,6 +18,20 @@ export interface ArenaDecoration {
   readonly y: number;
 }
 
+/** A road: a polyline (x0, y0, x1, y1, …) of open ground, `width` wide. */
+export interface ArenaRoad {
+  readonly points: readonly number[];
+  readonly width: number;
+}
+
+/** A temple's stylobate (floor), centred on (x, y). */
+export interface ArenaTemple {
+  readonly x: number;
+  readonly y: number;
+  readonly width: number;
+  readonly depth: number;
+}
+
 /** The playable rectangle (inside the cliff border), in world units. */
 export interface Bounds {
   readonly minX: number;
@@ -42,14 +56,25 @@ export interface ArenaData {
   readonly decorations: readonly ArenaDecoration[];
   readonly spawn: { readonly x: number; readonly y: number };
   readonly bossArena: { readonly x: number; readonly y: number; readonly radius: number };
-  /** Round marble floors (spawn plaza, boss arena, temple plazas), for drawing. */
+  /** Round marble floors (spawn plaza, boss arena, ruin plazas), for drawing. */
   readonly plazas: readonly { readonly x: number; readonly y: number; readonly radius: number }[];
+  /** Roads from the spawn to every ruin, temple and the boss arena (open ground), for drawing. */
+  readonly roads: readonly ArenaRoad[];
+  /** Temple floors, for drawing. */
+  readonly temples: readonly ArenaTemple[];
 }
+
+type RingRule = Extract<PointOfInterestRule, { type: 'ring' }>;
+type TempleRule = Extract<PointOfInterestRule, { type: 'temple' }>;
+type Place = (kind: ObstacleKind, x: number, y: number) => boolean;
+type RandomPoint = (r: Rng, margin: number) => { x: number; y: number };
+type IsClear = (x: number, y: number, reach: number) => boolean;
 
 /**
  * Generates an arena from a realm's map configuration and a seed (D5). Pure and deterministic: the same
  * configuration and seed always produce the same arena. Steps: terrain from noise → spawn plaza and boss arena
- * → points of interest → scattered obstacles → decorations.
+ * → sites (ruins, temple) → roads to them → their obstacles, walls, groves and lights → scattered obstacles →
+ * decorations. Obstacles never stand on a road, so a ruin's ring opens where its road enters.
  */
 export function generateArena(config: MapGenConfig, seed: number): ArenaData {
   const rng = new Rng(`arena:${seed}`);
@@ -81,6 +106,11 @@ export function generateArena(config: MapGenConfig, seed: number): ArenaData {
       terrain[ty * widthTiles + tx] = value;
     }
   }
+  const inside = (tx: number, ty: number) =>
+    tx >= borderTiles &&
+    ty >= borderTiles &&
+    tx < widthTiles - borderTiles &&
+    ty < heightTiles - borderTiles;
   const plazas: { x: number; y: number; radius: number }[] = [];
   const stamp = (cx: number, cy: number, radius: number, terrainId: string) => {
     if (terrainId === config.terrain.plaza) plazas.push({ x: cx, y: cy, radius });
@@ -90,18 +120,22 @@ export function generateArena(config: MapGenConfig, seed: number): ArenaData {
     const cty = Math.floor(cy / tileSize);
     for (let ty = cty - r; ty <= cty + r; ty++) {
       for (let tx = ctx - r; tx <= ctx + r; tx++) {
-        if (
-          tx < borderTiles ||
-          ty < borderTiles ||
-          tx >= widthTiles - borderTiles ||
-          ty >= heightTiles - borderTiles
-        )
-          continue;
+        if (!inside(tx, ty)) continue;
         const px = (tx + 0.5) * tileSize;
         const py = (ty + 0.5) * tileSize;
         if (distanceSq(px, py, cx, cy) <= radius * radius) terrain[ty * widthTiles + tx] = value;
       }
     }
+  };
+  const stampRect = (cx: number, cy: number, w: number, d: number, terrainId: string) => {
+    const value = terrainIndex(terrainId);
+    for (let ty = 0; ty < heightTiles; ty++)
+      for (let tx = 0; tx < widthTiles; tx++) {
+        const px = (tx + 0.5) * tileSize;
+        const py = (ty + 0.5) * tileSize;
+        if (inside(tx, ty) && Math.abs(px - cx) <= w / 2 && Math.abs(py - cy) <= d / 2)
+          terrain[ty * widthTiles + tx] = value;
+      }
   };
 
   // 2. Spawn plaza in the centre; boss arena far from it.
@@ -110,11 +144,14 @@ export function generateArena(config: MapGenConfig, seed: number): ArenaData {
   const bossArena = placeBossArena(config, bounds, spawn, rng.fork('boss-arena'));
   stamp(bossArena.x, bossArena.y, bossArena.radius, config.terrain.plaza);
 
-  // Obstacle placement shared by every rule.
+  // Obstacle placement shared by every rule. Roads are filled in once the sites are known.
+  let roads: ArenaRoad[] = [];
+  const nearRoad = (x: number, y: number, r: number) =>
+    roads.some((road) => distanceToPolyline(x, y, road.points) < road.width / 2 + r);
   const kinds = new Map(config.obstacles.map((o) => [o.id, o]));
   const obstacles: ArenaObstacle[] = [];
   const placed = new SpatialHash<ArenaObstacle>(128);
-  const tryPlace = (kind: ObstacleKind, x: number, y: number): boolean => {
+  const tryPlace: Place = (kind, x, y) => {
     if (obstacles.length >= config.maxObstacles) return false;
     const r = kind.radius;
     if (x - r < bounds.minX || y - r < bounds.minY || x + r > bounds.maxX || y + r > bounds.maxY)
@@ -123,6 +160,7 @@ export function generateArena(config: MapGenConfig, seed: number): ArenaData {
     if (distanceSq(x, y, spawn.x, spawn.y) < clear * clear) return false;
     const arenaClear = bossArena.radius + r;
     if (distanceSq(x, y, bossArena.x, bossArena.y) < arenaClear * arenaClear) return false;
+    if (nearRoad(x, y, r)) return false;
     let blocked = false;
     placed.query(x, y, r + config.minObstacleGap, () => {
       blocked = true;
@@ -134,15 +172,83 @@ export function generateArena(config: MapGenConfig, seed: number): ArenaData {
     placed.insert(obstacle);
     return true;
   };
-  const randomPoint = (r: Rng, margin: number) => ({
+  const randomPoint: RandomPoint = (r, margin) => ({
     x: r.range(bounds.minX + margin, bounds.maxX - margin),
     y: r.range(bounds.minY + margin, bounds.maxY - margin),
   });
 
-  // 3. Points of interest first, so they get the space they need.
+  // 3. Sites claim their ground first: ruins (rings of columns round a plaza) and the temple, apart from each
+  //    other and from the spawn and the boss arena.
   const poiRng = rng.fork('poi');
+  const sites: { x: number; y: number; reach: number }[] = [];
+  const isClear: IsClear = (x, y, reach) => {
+    const spawnReach = config.spawnClearRadius + reach;
+    const arenaReach = bossArena.radius + reach;
+    return (
+      distanceSq(x, y, spawn.x, spawn.y) > spawnReach * spawnReach &&
+      distanceSq(x, y, bossArena.x, bossArena.y) > arenaReach * arenaReach &&
+      sites.every((s) => distanceSq(x, y, s.x, s.y) > (s.reach + reach + 40) ** 2)
+    );
+  };
+  const rings: { x: number; y: number; radius: number; rule: RingRule }[] = [];
+  const temples: (ArenaTemple & { rule: TempleRule })[] = [];
   for (const rule of config.pointsOfInterest) {
-    if (rule.type === 'plazaLights') {
+    if (rule.type === 'ring') {
+      const pieceRadius = kinds.get(rule.kind)?.radius ?? 0;
+      const count = poiRng.int(rule.count[0], rule.count[1]);
+      for (let i = 0; i < count; i++) {
+        const radius = poiRng.range(rule.radius[0], rule.radius[1]);
+        const reach = radius + pieceRadius;
+        for (let attempt = 0; attempt < 30; attempt++) {
+          const c = randomPoint(poiRng, reach + 16);
+          if (!isClear(c.x, c.y, reach)) continue;
+          stamp(c.x, c.y, radius + 24, rule.plazaTerrain);
+          sites.push({ x: c.x, y: c.y, reach });
+          rings.push({ x: c.x, y: c.y, radius, rule });
+          break;
+        }
+      }
+    } else if (rule.type === 'temple') {
+      const [w, d] = rule.size;
+      const reach = Math.hypot(w, d) / 2 + 24;
+      for (let attempt = 0; attempt < 60; attempt++) {
+        const c = randomPoint(poiRng, reach + 16);
+        if (!isClear(c.x, c.y, reach)) continue;
+        stampRect(c.x, c.y, w + 48, d + 48, config.terrain.plaza);
+        sites.push({ x: c.x, y: c.y, reach });
+        temples.push({ x: c.x, y: c.y, width: w, depth: d, rule });
+        break;
+      }
+    }
+  }
+
+  // Roads from the spawn plaza to every site and the boss arena (spec: arena-generation / roads).
+  if (config.roads) {
+    const roadRng = rng.fork('roads');
+    const road = config.roads;
+    // A ruin's road ends in its plaza; a temple's at its entrance, the middle of the side facing the spawn
+    // (its altar stands at the centre).
+    const targets = [...rings, ...temples.map((t) => templeEntrance(t, spawn)), bossArena];
+    roads = targets.map((target) => buildRoad(spawn, target, road, roadRng, bounds));
+  }
+
+  // The sites' obstacles, walls, groves and lights, in the realm's order.
+  for (const rule of config.pointsOfInterest) {
+    if (rule.type === 'ring') {
+      const kind = kinds.get(rule.kind);
+      if (!kind) continue;
+      for (const ring of rings.filter((r) => r.rule === rule)) {
+        const start = poiRng.angle();
+        for (let p = 0; p < rule.pieces; p++) {
+          if (poiRng.chance(rule.missingChance)) continue;
+          const a = start + (p / rule.pieces) * Math.PI * 2;
+          tryPlace(kind, ring.x + Math.cos(a) * ring.radius, ring.y + Math.sin(a) * ring.radius);
+        }
+      }
+    } else if (rule.type === 'temple') {
+      for (const temple of temples.filter((t) => t.rule === rule))
+        placeTemple(temple, rule, kinds, tryPlace, poiRng);
+    } else if (rule.type === 'plazaLights') {
       // After the plazas above: braziers evenly around each one, outside the clear zones (spec: visual-atmosphere).
       const kind = kinds.get(rule.kind);
       if (!kind) continue;
@@ -162,16 +268,11 @@ export function generateArena(config: MapGenConfig, seed: number): ArenaData {
           tryPlace(kind, plaza.x + Math.cos(a) * radius, plaza.y + Math.sin(a) * radius);
         }
       }
-      continue;
+    } else if (rule.type === 'walls') {
+      placeWalls(rule, kinds, tryPlace, randomPoint, isClear, poiRng);
+    } else {
+      placeGroves(rule, kinds, tryPlace, randomPoint, isClear, poiRng);
     }
-    placePointsOfInterest(rule, poiRng, kinds, tryPlace, randomPoint, stamp, (x, y, reach) => {
-      const spawnReach = config.spawnClearRadius + reach;
-      const arenaReach = bossArena.radius + reach;
-      return (
-        distanceSq(x, y, spawn.x, spawn.y) > spawnReach * spawnReach &&
-        distanceSq(x, y, bossArena.x, bossArena.y) > arenaReach * arenaReach
-      );
-    });
   }
 
   // 4. Scattered single obstacles.
@@ -191,14 +292,14 @@ export function generateArena(config: MapGenConfig, seed: number): ArenaData {
     }
   }
 
-  // 5. Decorations: never on obstacles, only on their terrain.
+  // 5. Decorations: never on obstacles or roads, only on their terrain.
   const decorations: ArenaDecoration[] = [];
   const decorationRng = rng.fork('decorations');
   for (const rule of config.decorations) {
     const target = Math.round((rule.density * playableTiles) / 1000);
     for (let i = 0; i < target; i++) {
       const p = randomPoint(decorationRng, 8);
-      if (!rule.terrain.includes(terrainAt(p.x, p.y))) continue;
+      if (!rule.terrain.includes(terrainAt(p.x, p.y)) || nearRoad(p.x, p.y, 4)) continue;
       let covered = false;
       placed.query(p.x, p.y, 10, () => {
         covered = true;
@@ -223,6 +324,8 @@ export function generateArena(config: MapGenConfig, seed: number): ArenaData {
     spawn,
     bossArena,
     plazas,
+    roads,
+    temples: temples.map(({ x, y, width: w, depth }) => ({ x, y, width: w, depth })),
   };
 }
 
@@ -244,44 +347,153 @@ function placeBossArena(
   return { x: bounds.minX + margin, y: bounds.minY + margin, radius };
 }
 
-function placePointsOfInterest(
-  rule: Exclude<PointOfInterestRule, { type: 'plazaLights' }>,
+/**
+ * A road from `from` to `to`: waypoints every ~180 units that stray sideways up to `wander` (most in the
+ * middle, none at the ends), kept inside the bounds.
+ */
+function buildRoad(
+  from: { x: number; y: number },
+  to: { x: number; y: number },
+  config: { readonly width: number; readonly wander: number },
   rng: Rng,
+  bounds: Bounds,
+): ArenaRoad {
+  const dx = to.x - from.x;
+  const dy = to.y - from.y;
+  const length = Math.hypot(dx, dy);
+  const steps = Math.max(2, Math.ceil(length / 180));
+  const [nx, ny] = length > 0 ? [-dy / length, dx / length] : [0, 0];
+  const margin = config.width;
+  const points: number[] = [Math.round(from.x), Math.round(from.y)];
+  for (let i = 1; i < steps; i++) {
+    const t = i / steps;
+    const sway = config.wander * rng.range(-1, 1) * Math.sin(Math.PI * t);
+    const x = Math.min(
+      bounds.maxX - margin,
+      Math.max(bounds.minX + margin, from.x + dx * t + nx * sway),
+    );
+    const y = Math.min(
+      bounds.maxY - margin,
+      Math.max(bounds.minY + margin, from.y + dy * t + ny * sway),
+    );
+    points.push(Math.round(x), Math.round(y));
+  }
+  points.push(Math.round(to.x), Math.round(to.y));
+  return { points, width: config.width };
+}
+
+/** The middle of the temple side that faces `from`. */
+export function templeEntrance(
+  t: ArenaTemple,
+  from: { x: number; y: number },
+): { x: number; y: number } {
+  const dx = from.x - t.x;
+  const dy = from.y - t.y;
+  return Math.abs(dx) / t.width > Math.abs(dy) / t.depth
+    ? { x: t.x + Math.sign(dx) * (t.width / 2), y: t.y }
+    : { x: t.x, y: t.y + Math.sign(dy) * (t.depth / 2) };
+}
+
+/** Distance from (x, y) to the nearest point of a polyline (x0, y0, x1, y1, …). */
+export function distanceToPolyline(x: number, y: number, points: readonly number[]): number {
+  let best = Infinity;
+  for (let i = 0; i + 3 < points.length; i += 2) {
+    const [ax, ay, bx, by] = [points[i], points[i + 1], points[i + 2], points[i + 3]];
+    const lx = bx - ax;
+    const ly = by - ay;
+    const len = lx * lx + ly * ly;
+    const t = len > 0 ? Math.max(0, Math.min(1, ((x - ax) * lx + (y - ay) * ly) / len)) : 0;
+    best = Math.min(best, Math.hypot(x - (ax + lx * t), y - (ay + ly * t)));
+  }
+  return best;
+}
+
+/** A temple: columns along the stylobate's edge (some fallen or missing), the altar, a light each side. */
+function placeTemple(
+  temple: ArenaTemple,
+  rule: TempleRule,
   kinds: ReadonlyMap<string, ObstacleKind>,
-  tryPlace: (kind: ObstacleKind, x: number, y: number) => boolean,
-  randomPoint: (r: Rng, margin: number) => { x: number; y: number },
-  stamp: (x: number, y: number, radius: number, terrain: string) => void,
-  isClear: (x: number, y: number, reach: number) => boolean,
+  tryPlace: Place,
+  rng: Rng,
+): void {
+  const column = kinds.get(rule.column);
+  const fallen = kinds.get(rule.fallen) ?? column;
+  const altar = kinds.get(rule.altar);
+  const light = kinds.get(rule.light);
+  if (column && fallen) {
+    const [hw, hd] = [temple.width / 2, temple.depth / 2];
+    const corners = [
+      [-hw, -hd],
+      [hw, -hd],
+      [hw, hd],
+      [-hw, hd],
+    ];
+    for (let side = 0; side < 4; side++) {
+      const [ax, ay] = corners[side];
+      const [bx, by] = corners[(side + 1) % 4];
+      const n = Math.max(1, Math.round(Math.hypot(bx - ax, by - ay) / rule.spacing));
+      for (let i = 0; i < n; i++) {
+        if (rng.chance(rule.missingChance)) continue;
+        const t = i / n;
+        const kind = rng.chance(rule.fallenChance) ? fallen : column;
+        tryPlace(kind, temple.x + ax + (bx - ax) * t, temple.y + ay + (by - ay) * t);
+      }
+    }
+  }
+  if (altar) tryPlace(altar, temple.x, temple.y);
+  if (light)
+    for (const side of [-1, 1]) tryPlace(light, temple.x + side * temple.width * 0.24, temple.y);
+}
+
+/** Ruined walls: straight lines of blocks with breaches, in open ground. */
+function placeWalls(
+  rule: Extract<PointOfInterestRule, { type: 'walls' }>,
+  kinds: ReadonlyMap<string, ObstacleKind>,
+  tryPlace: Place,
+  randomPoint: RandomPoint,
+  isClear: IsClear,
+  rng: Rng,
 ): void {
   const kind = kinds.get(rule.kind);
   if (!kind) return;
   const count = rng.int(rule.count[0], rule.count[1]);
   for (let i = 0; i < count; i++) {
-    if (rule.type === 'ring') {
-      const radius = rng.range(rule.radius[0], rule.radius[1]);
-      const reach = radius + kind.radius;
-      for (let attempt = 0; attempt < 30; attempt++) {
-        const c = randomPoint(rng, reach + 16);
-        if (!isClear(c.x, c.y, reach)) continue;
-        stamp(c.x, c.y, radius + 24, rule.plazaTerrain);
-        const start = rng.angle();
-        let placed = 0;
-        for (let p = 0; p < rule.pieces; p++) {
-          if (rng.chance(rule.missingChance)) continue;
-          const a = start + (p / rule.pieces) * Math.PI * 2;
-          if (tryPlace(kind, c.x + Math.cos(a) * radius, c.y + Math.sin(a) * radius)) placed++;
-        }
-        if (placed > 0) break;
+    const length = rng.range(rule.length[0], rule.length[1]);
+    for (let attempt = 0; attempt < 20; attempt++) {
+      const c = randomPoint(rng, length / 2 + kind.radius);
+      if (!isClear(c.x, c.y, length / 2)) continue;
+      const a = rng.angle();
+      const pieces = Math.max(2, Math.floor(length / rule.spacing) + 1);
+      for (let p = 0; p < pieces; p++) {
+        if (rng.chance(rule.missingChance)) continue;
+        const d = -length / 2 + (p / (pieces - 1)) * length;
+        tryPlace(kind, c.x + Math.cos(a) * d, c.y + Math.sin(a) * d);
       }
-    } else {
-      const center = randomPoint(rng, rule.spread);
-      if (!isClear(center.x, center.y, rule.spread)) continue;
-      const size = rng.int(rule.size[0], rule.size[1]);
-      for (let n = 0, attempts = 0; n < size && attempts < size * 8; attempts++) {
-        const a = rng.angle();
-        const d = Math.sqrt(rng.next()) * rule.spread;
-        if (tryPlace(kind, center.x + Math.cos(a) * d, center.y + Math.sin(a) * d)) n++;
-      }
+      break;
+    }
+  }
+}
+
+/** Groves: clusters of obstacles. */
+function placeGroves(
+  rule: Extract<PointOfInterestRule, { type: 'cluster' }>,
+  kinds: ReadonlyMap<string, ObstacleKind>,
+  tryPlace: Place,
+  randomPoint: RandomPoint,
+  isClear: IsClear,
+  rng: Rng,
+): void {
+  const kind = kinds.get(rule.kind);
+  if (!kind) return;
+  const count = rng.int(rule.count[0], rule.count[1]);
+  for (let i = 0; i < count; i++) {
+    const center = randomPoint(rng, rule.spread);
+    if (!isClear(center.x, center.y, rule.spread)) continue;
+    const size = rng.int(rule.size[0], rule.size[1]);
+    for (let n = 0, attempts = 0; n < size && attempts < size * 8; attempts++) {
+      const a = rng.angle();
+      const d = Math.sqrt(rng.next()) * rule.spread;
+      if (tryPlace(kind, center.x + Math.cos(a) * d, center.y + Math.sin(a) * d)) n++;
     }
   }
 }

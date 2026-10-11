@@ -4,6 +4,7 @@ import {
   DestroyRef,
   ElementRef,
   afterNextRender,
+  computed,
   effect,
   inject,
   signal,
@@ -16,6 +17,7 @@ import {
   GameEvent,
   GameSession,
   HudSnapshot,
+  LoadStage,
   UiInput,
   UpgradeChoice,
 } from '../../../engine';
@@ -26,10 +28,13 @@ import { RunSetup } from '../../core/run-setup';
 import { Announcement, Hud } from './hud';
 import { LevelUpDialog } from './level-up-dialog';
 import { PauseMenu } from './pause-menu';
+import { PartyMember, RunLoading } from './run-loading';
 
 /** How long the final moment of a run stays on screen before the summary. */
 const END_DELAY_MS = 1600;
 const ANNOUNCEMENT_MS = 3200;
+/** How long the loading screen takes to fade out once the arena is ready. */
+const LOADING_FADE_MS = 750;
 
 declare global {
   interface Window {
@@ -48,10 +53,22 @@ declare global {
  */
 @Component({
   selector: 'app-play-screen',
-  imports: [Hud, LevelUpDialog, PauseMenu],
+  imports: [Hud, LevelUpDialog, PauseMenu, RunLoading],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     <div class="game-host" #host data-testid="game-host"></div>
+    @if (showLoading()) {
+      <app-run-loading
+        data-testid="run-loading"
+        [realm]="realm()"
+        [party]="party()"
+        [bossSprite]="bossSprite()"
+        [seed]="setup.seed()"
+        [stage]="loadStage()"
+        [stageProgress]="loadProgress()"
+        [done]="loaded()"
+      />
+    }
     @if (hud(); as h) {
       <app-hud [hud]="h" [announcements]="announcements()" />
     }
@@ -131,7 +148,7 @@ export class PlayScreen {
   private readonly content = inject(GAME_CONTENT);
   private readonly createSession = inject(GAME_SESSION_FACTORY);
   private readonly progression = inject(Progression);
-  private readonly setup = inject(RunSetup);
+  protected readonly setup = inject(RunSetup);
   private readonly router = inject(Router);
   private readonly host = viewChild.required<ElementRef<HTMLElement>>('host');
   private readonly levelUp = viewChild(LevelUpDialog);
@@ -143,6 +160,24 @@ export class PlayScreen {
   protected readonly ended = signal<'victory' | 'defeat' | 'abandoned' | undefined>(undefined);
   protected readonly announcements = signal<readonly Announcement[]>([]);
   protected readonly error = signal<string | undefined>(undefined);
+  /** Loading (spec: run-loading): the stage and its progress, until the arena is ready. */
+  protected readonly loadStage = signal<LoadStage | undefined>(undefined);
+  protected readonly loadProgress = signal(0);
+  protected readonly loaded = signal(false);
+  /** The loading screen stays while it fades out. */
+  protected readonly showLoading = signal(true);
+  protected readonly realm = computed(
+    () => this.content.realms.find((r) => r.id === this.setup.realmId()) ?? this.content.realms[0],
+  );
+  protected readonly bossSprite = computed(() => {
+    const id = this.realm().boss.id;
+    return this.content.bosses.find((b) => b.id === id)?.visual.sprite ?? id;
+  });
+  /** Everyone taking part: today the local player; rooms will add their members here. */
+  protected readonly party = computed<readonly PartyMember[]>(() => {
+    const god = this.content.gods.find((g) => g.id === this.setup.godId());
+    return god ? [{ name: 'You', godName: god.name, sprite: god.visual.sprite }] : [];
+  });
 
   private session: GameSession | undefined;
   private destroyed = false;
@@ -250,7 +285,15 @@ export class PlayScreen {
         this.later(() => void this.router.navigate(['/summary']), END_DELAY_MS);
         return;
       }
+      case 'loadProgress':
+        if (event.stage) {
+          this.loadStage.set(event.stage);
+          this.loadProgress.set(event.progress);
+        }
+        return;
       case 'ready':
+        this.loaded.set(true);
+        this.later(() => this.showLoading.set(false), LOADING_FADE_MS);
         return;
     }
   }

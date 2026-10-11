@@ -177,9 +177,14 @@ export function validateContent(content: GameContent): string[] {
     for (const id of [map.terrain.plaza, map.terrain.border]) {
       if (!terrainIds.has(id)) errors.push(`${where} uses unknown terrain "${id}".`);
     }
-    for (const rule of [...map.pointsOfInterest, ...map.scatter]) {
-      if (!obstacleIds.has(rule.kind))
-        errors.push(`${where} places unknown obstacle "${rule.kind}".`);
+    const placedKinds = [
+      ...map.pointsOfInterest.flatMap((rule) =>
+        rule.type === 'temple' ? [rule.column, rule.fallen, rule.altar, rule.light] : [rule.kind],
+      ),
+      ...map.scatter.map((rule) => rule.kind),
+    ];
+    for (const kind of placedKinds) {
+      if (!obstacleIds.has(kind)) errors.push(`${where} places unknown obstacle "${kind}".`);
     }
     for (const decoration of map.decorations) {
       for (const t of decoration.terrain) {

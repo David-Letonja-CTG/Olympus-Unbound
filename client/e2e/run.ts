@@ -43,7 +43,9 @@ export async function startRun(page: Page, seed = '847291'): Promise<void> {
   await page.getByTestId('seed-input').fill(seed);
   await page.getByTestId('begin').click();
   await expect(page.locator('[data-testid=game-host] canvas')).toBeVisible();
-  // Without a GPU (CI) the first frames are slow; wait for the simulation to be running.
+  // The run's loading screen (art, then the painted realm) ends before the clock starts; without a GPU (CI) the
+  // painting and the first frames are slow.
+  await expect(page.getByTestId('run-loading')).toHaveCount(0, { timeout: 120_000 });
   await expect
     .poll(() => inspect(page).then((s) => s?.time ?? 0), { timeout: 30_000 })
     .toBeGreaterThan(0.5);

@@ -54,7 +54,9 @@ Health 135, speed 205, armour 2, critical chance 12% (with her passive): a preci
 
 ## Mount Olympus
 
-A 64×64-tile arena (4096 px) of grass, meadow and earth ringed by cliffs. Marble plazas: the spawn plaza in the centre, temple ruins (rings of columns), and the Cyclops's arena far from the spawn. Olive groves, statues, rocks and broken columns block movement and enemy arrows; flowers, grass tufts, pebbles and marble shards are decoration only.
+A 64×64-tile arena (4096 px) of grass, meadow and earth ringed by cliffs, painted fresh for every seed with smooth transitions, texture and shadows. Marble plazas: the spawn plaza in the centre, ruins (rings of columns, braziers around them), and the Cyclops's arena far from the spawn. Worn dirt **roads** lead from the spawn to every ruin, to the **temple** — a stepped marble stylobate with a broken colonnade and an altar between two braziers — and to the Cyclops. **Ruined walls** with breaches, olive groves, statues, rocks and broken columns block movement and enemy arrows; roads are always open ground. Flowers, grass tufts, pebbles, rubble and marble shards are decoration only.
+
+**Loading:** starting a run shows the realm at night, your party and a line of lore while the art loads and the realm is painted (*Summoning the gods* → *Shaping the realm* → *The horde gathers*); the run starts at 00:00 when it fades away.
 
 | Time | What happens |
 |---|---|

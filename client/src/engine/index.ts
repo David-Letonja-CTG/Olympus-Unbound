@@ -16,6 +16,7 @@ export type {
   GameSessionOptions,
   GameSettings,
   GraphicsQuality,
+  LoadStage,
   UiInput,
   Unsubscribe,
 } from './session';

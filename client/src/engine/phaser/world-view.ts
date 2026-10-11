@@ -5,7 +5,7 @@ import { RunState } from '../sim/run-state';
 import { STEP } from '../sim/run-simulation';
 import { applySprite, SpriteResolver } from './assets';
 import { ATMOSPHERE_DEPTH, LightMap, QualityProfile } from './atmosphere';
-import { DETAIL_TEXTURE, SHADOW_TEXTURE, shade, terrainCanvas } from './textures';
+import { DETAIL_TEXTURE, SHADOW_TEXTURE, shade } from './textures';
 
 /**
  * Depth bands. The y-sorted world (obstacles, enemies) sits around 0–5000; fog and the light map cover it; the
@@ -103,8 +103,9 @@ export class WorldView {
     private readonly resolver: SpriteResolver,
     arena: ArenaData,
     config: MapGenConfig,
+    ground: HTMLCanvasElement,
   ) {
-    this.drawArena(arena, config);
+    this.drawArena(arena, config, ground);
     const pool = (texture = '__DEFAULT') => new SpritePool(scene, texture);
     this.pools = {
       player: pool(),
@@ -291,12 +292,12 @@ export class WorldView {
     for (const pool of Object.values(p)) pool.end();
   }
 
-  private drawArena(arena: ArenaData, config: MapGenConfig): void {
+  private drawArena(arena: ArenaData, config: MapGenConfig, ground: HTMLCanvasElement): void {
     const scene = this.scene;
-    // Ground: one pixel per tile, smoothed when scaled up, plus a tiled grain overlay.
-    const groundKey = `arena-ground-${arena.seed}-${arena.widthTiles}`;
-    if (!scene.textures.exists(groundKey))
-      scene.textures.addCanvas(groundKey, terrainCanvas(arena, config));
+    // Ground: painted for this run behind the loading screen (ground-canvas.ts), plus a tiled grain overlay.
+    const groundKey = `arena-ground-${arena.seed}-${ground.width}`;
+    if (scene.textures.exists(groundKey)) scene.textures.remove(groundKey);
+    scene.textures.addCanvas(groundKey, ground);
     scene.add
       .image(0, 0, groundKey)
       .setOrigin(0)
@@ -337,6 +338,49 @@ export class WorldView {
       }
       floors.lineStyle(4, shade(marble, 0.55), 0.95);
       floors.strokeCircle(pz.x, pz.y, pz.radius - 4);
+    }
+
+    // Temples: a stylobate of three worn steps, a floor of slabs, cracks across it.
+    for (const t of arena.temples) {
+      for (let step = 3; step >= 1; step--) {
+        const m = step * 10;
+        floors.fillStyle(shade(marble, 0.62 + 0.08 * (3 - step)), 1);
+        floors.fillRect(
+          t.x - t.width / 2 - m,
+          t.y - t.depth / 2 - m,
+          t.width + 2 * m,
+          t.depth + 2 * m,
+        );
+        floors.lineStyle(2, shade(marble, 0.5), 0.9);
+        floors.strokeRect(
+          t.x - t.width / 2 - m,
+          t.y - t.depth / 2 - m,
+          t.width + 2 * m,
+          t.depth + 2 * m,
+        );
+      }
+      floors.fillStyle(marble, 1);
+      floors.fillRect(t.x - t.width / 2, t.y - t.depth / 2, t.width, t.depth);
+      floors.lineStyle(1.5, shade(marble, 0.72), 0.8);
+      const slab = 56;
+      for (let x = t.x - t.width / 2 + slab; x < t.x + t.width / 2; x += slab)
+        floors.lineBetween(x, t.y - t.depth / 2, x, t.y + t.depth / 2);
+      for (let y = t.y - t.depth / 2 + slab / 2; y < t.y + t.depth / 2; y += slab / 2)
+        floors.lineBetween(t.x - t.width / 2, y, t.x + t.width / 2, y);
+      // A few cracks, from the arena's seed so the same temple always breaks the same way.
+      floors.lineStyle(2, shade(marble, 0.45), 0.7);
+      let h = (arena.seed * 2654435761) >>> 0;
+      const next = () => (h = (Math.imul(h ^ (h >>> 15), 2246822519) + 1) >>> 0) / 4294967296;
+      for (let c = 0; c < 5; c++) {
+        let x = t.x + (next() - 0.5) * t.width * 0.9;
+        let y = t.y + (next() - 0.5) * t.depth * 0.9;
+        for (let k = 0; k < 4; k++) {
+          const nx = x + (next() - 0.5) * 60;
+          const ny = y + (next() - 0.5) * 60;
+          floors.lineBetween(x, y, nx, ny);
+          [x, y] = [nx, ny];
+        }
+      }
     }
 
     // Cliffs: a deep shadow just inside the playable edge.

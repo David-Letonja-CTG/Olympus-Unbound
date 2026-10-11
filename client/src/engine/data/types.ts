@@ -331,6 +331,31 @@ export type PointOfInterestRule =
       readonly count: readonly [number, number];
       readonly size: readonly [number, number];
       readonly spread: number;
+    }
+  /**
+   * A temple landmark: a rectangular stylobate (`size` width × depth) with a colonnade of `column` obstacles
+   * every `spacing` along its edge (some `fallen` — another kind — or missing), an `altar` at its centre and a
+   * `light` obstacle on each side of the altar.
+   */
+  | {
+      readonly type: 'temple';
+      readonly column: string;
+      readonly fallen: string;
+      readonly altar: string;
+      readonly light: string;
+      readonly size: readonly [number, number];
+      readonly spacing: number;
+      readonly fallenChance: number;
+      readonly missingChance: number;
+    }
+  /** Ruined walls: straight lines of `kind` blocks, `spacing` apart, some missing (breaches). */
+  | {
+      readonly type: 'walls';
+      readonly kind: string;
+      readonly count: readonly [number, number];
+      readonly length: readonly [number, number];
+      readonly spacing: number;
+      readonly missingChance: number;
     };
 
 export interface MapGenConfig {
@@ -354,6 +379,11 @@ export interface MapGenConfig {
   readonly minObstacleGap: number;
   readonly maxObstacles: number;
   readonly obstacles: readonly ObstacleKind[];
+  /**
+   * Roads from the spawn plaza to every ruin, the temple and the boss arena: open ground (no obstacles), drawn
+   * as worn dirt. `wander` is how far a road strays sideways from the straight line.
+   */
+  readonly roads?: { readonly width: number; readonly wander: number };
   readonly pointsOfInterest: readonly PointOfInterestRule[];
   /** Single obstacles scattered across the map; `density` = obstacles per 1000 tiles. */
   readonly scatter: readonly {
@@ -400,6 +430,8 @@ export interface RealmDefinition {
     readonly particles: number;
   };
   readonly map: MapGenConfig;
+  /** Lore lines and tips for the loading screen. */
+  readonly tips?: readonly string[];
   /** Ordered by `from`; the last phase whose `from` has passed is active. */
   readonly timeline: readonly SpawnPhase[];
   readonly events: readonly SpawnEvent[];
