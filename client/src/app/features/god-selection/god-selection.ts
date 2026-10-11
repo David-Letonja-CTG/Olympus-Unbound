@@ -1,9 +1,17 @@
 import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@angular/core';
 import { Router, RouterLink } from '@angular/router';
-import { ContentIndex, GameContent, GodDefinition, computeStats } from '../../../engine';
+import { ContentIndex, Element, GameContent, GodDefinition, computeStats } from '../../../engine';
 import { GAME_CONTENT } from '../../core/game-content';
 import { RunSetup } from '../../core/run-setup';
 import { ItemIcon } from '../../shared/item-icon';
+
+/** The passive's emblem: the skill icon of the god's first affinity. */
+const PASSIVE_ICON: Record<Element, string> = {
+  lightning: 'skill_storm',
+  shadow: 'skill_shadow',
+  fire: 'skill_fire',
+  physical: 'skill_strength',
+};
 
 @Component({
   selector: 'app-god-selection',
@@ -50,7 +58,7 @@ import { ItemIcon } from '../../shared/item-icon';
               </div>
             </div>
             <div class="fact">
-              <app-item-icon sprite="skill_storm" [size]="44" />
+              <app-item-icon [sprite]="d.passiveIcon" [size]="44" />
               <div>
                 <h3>{{ d.god.passive.name }} <span class="tag">passive</span></h3>
                 <p>{{ d.god.passive.description }}</p>
@@ -182,6 +190,7 @@ export class GodSelection {
       weapon: this.index.weapon(god.startingWeapon),
       stats,
       crit: Math.round(stats.critChance * 100),
+      passiveIcon: PASSIVE_ICON[god.affinities[0] ?? 'lightning'],
     };
   });
 

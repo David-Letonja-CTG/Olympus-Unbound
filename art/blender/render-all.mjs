@@ -25,6 +25,7 @@ const HEROINE = "isometric_hero_heroine_blend/isometric_heroine_blender";
 /** name -> [source .blend, character script, frame size in the packed sheet] */
 const CHARACTERS = {
   zeus: [`${HERO}/clothes.blend`, "zeus.py", 128],
+  hades: [`${HERO}/steel_armor.blend`, "hades.py", 128],
   satyr: [`${HERO}/clothes.blend`, "satyr.py", 128],
   harpy: [`${HEROINE}/clothes.blend`, "harpy.py", 128],
   stymphalian_bird: [`${HERO}/clothes.blend`, "stymphalian_bird.py", 128],

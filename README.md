@@ -6,7 +6,7 @@ An original mythological horde-survival roguelite that runs entirely in the brow
 
 **Now:** a night-lit, dark-fantasy presentation (dynamic lighting, fog, braziers, an ornate stone-and-iron UI), an in-engine intro scene, and a pre-rendered cast of Greek myth — Zeus, satyrs, harpies, Stymphalian birds, centaurs, minotaurs, fallen oracles, marble sentinels and the Cyclops — rendered in Blender from licensed Flare models (`art/blender/`), with walk cycles that keep pace with movement and the Cinzel display font.
 
-**Vertical slice:** Zeus · Mount Olympus · 8 weapons · 4 armour · 6 relics · 16 skills · 7 synergies · 8 enemy types · elites · the Cyclops · run summary · permanent upgrades · codex · keyboard and gamepad.
+**Vertical slice:** Zeus and Hades · Mount Olympus · 9 weapons · 4 armour · 6 relics · 16 skills · 7 synergies · 8 enemy types · elites · the Cyclops · run summary · permanent upgrades · codex · keyboard and gamepad.
 
 ## Play it locally
 

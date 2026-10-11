@@ -217,4 +217,27 @@ export const WEAPONS: readonly WeaponDefinition[] = [
     ],
     visual: { sprite: 'soul_scythe', color: 0xb68cff },
   },
+  {
+    id: 'bident',
+    name: 'Bident of Hades',
+    description:
+      'The two-pronged spear of the underworld thrusts at the nearest foe, piercing the line and drinking its life.',
+    element: 'shadow',
+    behavior: 'sweep',
+    base: { ...BASE, damage: 20, cooldown: 1.25, size: 200, range: 220, arc: 0.7, knockback: 160 },
+    effects: [{ effect: 'slow', chance: 0.35, duration: 1.2, potency: 0.3 }],
+    lifesteal: 0.03,
+    levels: [
+      { text: '+8 damage.', damage: 8 },
+      { text: 'A wider thrust.', arc: 0.35 },
+      { text: 'Thrusts behind you as well.', amount: 1 },
+      { text: 'Thrusts 20% more often, +6 damage.', cooldown: -0.25, damage: 6 },
+      {
+        text: 'Longer reach; every thrust slows.',
+        size: 40,
+        effects: [{ effect: 'slow', chance: 1, duration: 1.5, potency: 0.4 }],
+      },
+    ],
+    visual: { sprite: 'bident', color: 0x7fe0c8 },
+  },
 ];

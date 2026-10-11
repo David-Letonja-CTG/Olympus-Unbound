@@ -143,4 +143,37 @@ describe('weapon behaviors', () => {
     sim.step(STEP, [{ ...NO_INPUT, ability: true }]);
     expect(targets.map((e) => e.health)).toEqual(before);
   });
+
+  it('Hades starts with the bident, a forward thrust that drains life', () => {
+    const sim = quietSim({ godId: 'hades' });
+    const player = sim.state.players[0];
+    expect(player.loadout.weapons.map((w) => w.def.id)).toEqual(['bident']);
+    player.loadout.weapons[0].timer = 0;
+    player.health = player.stats.maxHealth - 40;
+    const front = spawnNear(sim, 'marble_sentinel', 120, 0);
+    const behind = spawnNear(sim, 'marble_sentinel', -130, 0);
+    sim.step(STEP, [NO_INPUT]);
+    expect(front.health).toBeLessThan(front.maxHealth);
+    expect(behind.health).toBe(behind.maxHealth);
+    expect(player.health).toBeGreaterThan(player.stats.maxHealth - 40);
+  });
+
+  it("Hades's Gates of Tartarus strike, hold and slow every foe around him and heal him", () => {
+    const sim = quietSim({ godId: 'hades' });
+    disarm(sim);
+    const player = sim.state.players[0];
+    player.health = player.stats.maxHealth / 2;
+    const targets = [
+      [150, 0],
+      [-150, 60],
+      [0, -220],
+    ].map(([dx, dy]) => spawnNear(sim, 'marble_sentinel', dx, dy));
+    const far = spawnNear(sim, 'marble_sentinel', 420, 0);
+    sim.step(STEP, [{ ...NO_INPUT, ability: true }]);
+    expect(targets.every((e) => e.health < e.maxHealth)).toBe(true);
+    expect(targets.every((e) => e.status.stun > 0 && e.status.slow > 0)).toBe(true);
+    expect(far.health).toBe(far.maxHealth);
+    expect(player.health).toBeGreaterThan(player.stats.maxHealth / 2);
+    expect(player.abilityTimer).toBeGreaterThan(20);
+  });
 });

@@ -58,6 +58,7 @@ A `CutsceneDefinition` names its realm, arena seed, duration (the intro is 45–
 | `flaming_sword` | sweep | fire | arc toward the nearest foe, burn |
 | `thunderbolt` | chain | lightning | jumps between enemies, shock |
 | `soul_scythe` | sweep (360°) | shadow | slow, 3% lifesteal |
+| `bident` | sweep (narrow thrust) | shadow | Hades's start; long reach, slow, 3% lifesteal |
 
 ### Synergies
 
@@ -94,7 +95,7 @@ Boss: `cyclops` (two phases; `ground_slam`, `boulder_throw`, `rampage_charge`, `
 | All sound effects | Synthesized in code (`engine/audio/sound-player.ts`) | Original, project-owned |
 | `client/public/favicon.svg` | Drawn by hand (SVG) | Original, project-owned |
 | `client/public/ui/*.svg` (frame, divider, stone grain) | Drawn by hand (SVG) | Original, project-owned |
-| `client/public/assets/olympus/*.png` (Zeus, satyr, harpy, Stymphalian bird, centaur archer, fallen oracle, marble sentinel, Cyclops, intro defenders) | Rendered by this project in Blender (`art/blender/`) from [Isometric Hero and Heroine](https://opengameart.org/content/isometric-hero-and-heroine) by Clint Bellanger, [FLARE Model - Troll](https://opengameart.org/content/flare-model-troll) by VWolfdog, [FLARE Model - Horse](https://opengameart.org/content/flare-model-horse) by VWolfdog on [3D Horse](https://opengameart.org/content/3d-horse-rigged-laking-textures) by _canyon | Derivatives of CC-BY 3.0 works — credited in Settings → Credits |
+| `client/public/assets/olympus/*.png` (Zeus, Hades, satyr, harpy, Stymphalian bird, centaur archer, fallen oracle, marble sentinel, Cyclops, intro defenders) | Rendered by this project in Blender (`art/blender/`) from [Isometric Hero and Heroine](https://opengameart.org/content/isometric-hero-and-heroine) by Clint Bellanger, [FLARE Model - Troll](https://opengameart.org/content/flare-model-troll) by VWolfdog, [FLARE Model - Horse](https://opengameart.org/content/flare-model-horse) by VWolfdog on [3D Horse](https://opengameart.org/content/3d-horse-rigged-laking-textures) by _canyon | Derivatives of CC-BY 3.0 works — credited in Settings → Credits |
 | `client/public/assets/flare/skeleton.png` (`corrupted_hoplite`) | "Skeleton Warrior" by Clint Bellanger, [OpenGameArt](https://opengameart.org/node/3102); right-facing row re-packed | CC-BY 3.0 |
 | `client/public/assets/flare/minotaur.png` (`minotaur`) | "Minotaur" by Clint Bellanger, [OpenGameArt](https://opengameart.org/content/minotaur); right-facing row re-packed | CC-BY 3.0 |
 | `client/public/fonts/cinzel/Cinzel-wght.ttf` (display font) | Cinzel by Natanael Gama and The Cinzel Project Authors, [GitHub](https://github.com/NDISCOVER/Cinzel), unmodified | SIL OFL 1.1 (`OFL.txt` alongside) |
@@ -106,3 +107,7 @@ Add a row for every external asset before it is committed. Never copy sprites, s
 ## Balance notes (2026-10-10)
 
 Tuned with headless autopilot runs (a kiting bot, no permanent upgrades, 6 seeds): the bot reaches level ~16 at 04:00 and wins about half its runs; deaths cluster around 04:00–05:00 when bulls (the bronze bull, now the minotaur with the same numbers), centaurs and hoplite hordes overlap; boss fights take 1.5–2.5 minutes including the Cyclops's walk from its arena. Victory runs earn ~1,200–1,450 gold, defeats ~150–200. Changes made: satyr/harpy damage 7/6 → 5/5, contact interval 0.8 → 1 s, XP curve per-level 5 → 4 and growth 0.35 → 0.3, bull damage 16 → 14, damage scaling 0.06 → 0.05/min, Cyclops health 20,000 → 12,000.
+
+## Balance notes (2026-10-11, Hades)
+
+First pass with the plain autopilot (always takes the first offer, 6 seeds, 9 minutes): Zeus dies at 02:50–03:45 in all six runs; Hades started stronger (lifesteal snowballed: two runs reached 09:00), so his lifesteal was trimmed — bident 4% → 3%, Gates of Tartarus 6% → 5%, passive 2% → 1.5%. Now five of six runs end at 02:50–03:35 and one survives, close to Zeus.

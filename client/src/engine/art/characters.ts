@@ -59,6 +59,57 @@ export const CHARACTERS: Record<string, SpriteSpec> = {
     },
   },
 
+  hades: {
+    size: 56,
+    paint(g, s) {
+      glow(g, s / 2, s * 0.55, s * 0.5, 0x7fe0c8, 0.22);
+      footShadow(g, s, 0.3, 0.86);
+      // A black cloak, dark iron armour and a crimson sash.
+      g.beginPath();
+      g.moveTo(s * 0.32, s * 0.4);
+      g.quadraticCurveTo(s * 0.1, s * 0.64, s * 0.16, s * 0.9);
+      g.quadraticCurveTo(s * 0.5, s * 0.82, s * 0.82, s * 0.9);
+      g.quadraticCurveTo(s * 0.86, s * 0.6, s * 0.68, s * 0.4);
+      g.closePath();
+      g.fillStyle = '#16121c';
+      g.fill();
+      g.lineWidth = 2;
+      g.strokeStyle = 'rgba(8,6,10,0.85)';
+      g.stroke();
+      volume(g, s / 2, s * 0.62, s * 0.22, s * 0.24, 0x2b2733);
+      line(g, [s * 0.31, s * 0.58, s * 0.69, s * 0.66], '#7a1f24', 3);
+      // Pale face, black hair and beard, an iron crown lit by soul-fire.
+      volume(g, s / 2, s * 0.33, s * 0.13, s * 0.13, 0xb8aaa0, { rim: 0.35 });
+      volume(g, s / 2, s * 0.44, s * 0.11, s * 0.09, 0x1a1720, { outline: 1.2, rim: 0 });
+      poly(
+        g,
+        [
+          s * 0.38,
+          s * 0.24,
+          s * 0.42,
+          s * 0.12,
+          s * 0.46,
+          s * 0.22,
+          s * 0.5,
+          s * 0.1,
+          s * 0.54,
+          s * 0.22,
+          s * 0.58,
+          s * 0.12,
+          s * 0.62,
+          s * 0.24,
+        ],
+        '#3a3640',
+      );
+      circle(g, s * 0.5, s * 0.2, s * 0.022, '#9ff5e0');
+      circle(g, s * 0.55, s * 0.32, s * 0.018, '#9ff5e0');
+      // The bident.
+      line(g, [s * 0.74, s * 0.9, s * 0.84, s * 0.18], '#3a3640', 3);
+      line(g, [s * 0.8, s * 0.24, s * 0.78, s * 0.08], '#9ff5e0', 2);
+      line(g, [s * 0.88, s * 0.26, s * 0.9, s * 0.1], '#9ff5e0', 2);
+    },
+  },
+
   satyr: {
     size: 44,
     paint(g, s) {

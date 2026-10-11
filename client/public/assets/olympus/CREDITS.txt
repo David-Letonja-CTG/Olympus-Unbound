@@ -5,7 +5,7 @@ steps) from the following works, all licensed CC-BY 3.0 (https://creativecommons
 adaptations: recoloured, combined with other parts and extended with new modelled parts. The game shows these
 credits in Settings -> Credits; the authoritative list is client/src/content/assets.ts.
 
-zeus.png, satyr.png, harpy.png, fallen_oracle.png, marble_sentinel.png, ally_warrior.png, ally_maiden.png,
+zeus.png, hades.png, satyr.png, harpy.png, fallen_oracle.png, marble_sentinel.png, ally_warrior.png, ally_maiden.png,
 ally_smith.png, and the rider of centaur_archer.png
   "Isometric Hero and Heroine" by Clint Bellanger
   https://opengameart.org/content/isometric-hero-and-heroine
