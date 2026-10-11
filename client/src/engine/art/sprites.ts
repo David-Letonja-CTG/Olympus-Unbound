@@ -86,6 +86,16 @@ const projectiles: Record<string, SpriteSpec> = {
       poly(g, [s, s / 2, s * 0.72, s * 0.3, s * 0.72, s * 0.7], '#ff4d2e');
     },
   },
+  // A lampad's soul-fire: violet flame with a hot white heart, never the blue of experience gems (D13).
+  soul_fire: {
+    size: 26,
+    paint(g, s) {
+      glow(g, s / 2, s / 2, s / 2, 0x9a5cff, 0.65);
+      poly(g, [s * 0.05, s / 2, s * 0.45, s * 0.3, s * 0.45, s * 0.7], 'rgba(170,110,255,0.7)');
+      circle(g, s * 0.58, s / 2, s * 0.2, '#b98cff', 'rgba(255,90,140,0.9)', 1.5);
+      circle(g, s * 0.62, s / 2, s * 0.09, '#f4ecff');
+    },
+  },
   xp_small: {
     size: 16,
     paint(g, s) {

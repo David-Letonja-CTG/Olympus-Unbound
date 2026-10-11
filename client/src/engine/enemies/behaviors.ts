@@ -63,7 +63,7 @@ export const ENEMY_BEHAVIORS: BehaviorTable = {
         dir.y * behavior.projectileSpeed,
         behavior.projectileRadius,
         behavior.projectileDamage * state.scaling().damage,
-        'enemy_arrow',
+        behavior.projectileSprite ?? 'enemy_arrow',
       );
       state.emit({ type: 'enemyShot', x: enemy.x, y: enemy.y });
     }

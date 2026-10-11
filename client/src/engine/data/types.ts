@@ -184,6 +184,8 @@ export type EnemyBehavior =
       readonly projectileSpeed: number;
       readonly projectileDamage: number;
       readonly projectileRadius: number;
+      /** The projectile's sprite (default 'enemy_arrow'), e.g. a lampad's soul-fire. */
+      readonly projectileSprite?: string;
     }
   /** Approaches; within `triggerRange` stops, telegraphs for `windup`, then dashes. */
   | {
@@ -428,6 +430,8 @@ export interface RealmDefinition {
     readonly ambient: number;
     readonly fog: number;
     readonly particles: number;
+    /** A moon over the realm on its loading screen (default true; the Underworld has no sky). */
+    readonly moon?: boolean;
   };
   readonly map: MapGenConfig;
   /** Lore lines and tips for the loading screen. */

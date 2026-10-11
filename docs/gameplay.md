@@ -95,6 +95,27 @@ Enemy health and damage grow a little each minute (capped). Elites are larger an
 
 12,000 health. Phase 1: **Ground Slam** (circle around it) and **Boulder Throw** (circles at and around you). Below 50%: enraged — faster, adds **Rampage Charge** (a marked lane, then a dash), a bigger slam, five boulders and **Call the Legion** (summons hoplites). Every damaging attack is marked in red first; only a player inside the mark when it ends is hit. A red arrow at the screen edge points to the Cyclops while it is off-screen.
 
+## The Underworld
+
+The fields of Asphodel beneath a sunless sky: ash, pale asphodel and basalt in a cold violet light, soul-wisps instead of embers. Black-marble plazas are ringed by obsidian columns and blue soul-fire braziers. The ruined hall of Hades keeps a black altar, and dead groves and Greek grave stelae stand among bones. It follows Mount Olympus in the chain of realms, and you can also start a run here.
+
+| Realm time | What comes |
+|---|---|
+| 00:00 | **Shades**: frail, weaving spirits of the dead, in great numbers |
+| 00:40 | **Furies** (the Erinyes): fast, winged avengers |
+| 01:30 | The skeletal **hoplites** of Mount Olympus |
+| 02:30 | **Lampads**: torch-nymphs of Hecate who keep their distance and hurl violet soul-fire |
+| 03:30 | **Orthrus**: Cerberus's two-headed brother; lowers its heads, then charges |
+| 07:00 | **Cerberus** (spawning slows) |
+
+Hordes of shades and furies and elite furies, lampads and Orthrus arrive on the way, like on Olympus.
+
+## Cerberus
+
+The three-headed hound of Hades, with a smouldering serpent mane (13,000 health, 300 gold).
+- **Calm:** a triple bite in a circle around itself, hellfire breath on three circles under you, and a pounce along a red line.
+- **Below half health:** it howls for the pack, calling three Orthrus, then bites wider, breathes six fires and pounces faster.
+
 ## Building a run
 
 - **Weapons** (up to 6, levels 1–6): Thunder Spear, Divine Bow, Trident, Lightning Orb, War Hammer, Flaming Sword, Thunderbolt, Soul Scythe.

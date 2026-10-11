@@ -1,6 +1,7 @@
 # Helpers for turning Flare's hero, troll and horse models into OLYMPUS UNBOUND characters (art/blender/README.md).
 # Colours are display values, as in the 2.49-era files; flare_render.py converts them to linear.
 import os
+from math import pi
 
 import bpy
 from mathutils import Matrix
@@ -341,3 +342,146 @@ def fork_head(staff, head_material, metal, prongs=2, spread=0.05, length=0.13):
     return parts
 GRIP_HEROINE_SHIELD = matrix([0.01238, 0.07554, 0.71592, -0.0577, -0.71602, -0.07288, 0.02007, 0.16223,
                               0.07457, -0.71231, 0.07387, 0.0524, 0.0, 0.0, 0.0, 1.0])  # on Forearm.Left
+
+
+# ---------------------------------------------------------------------------------------------------------------
+# Creatures from other sources (CC0 models, README.md): put on a Flare file's stage and posed frame by frame.
+
+
+def clear_stage():
+    """Removes the stage file's own figure, keeping its camera, sun, shadow plane and platform."""
+    for ob in list(bpy.context.scene.objects):
+        if ob.type in ('MESH', 'ARMATURE') and ob.name not in ('RenderPlatform', 'ShadowPlane'):
+            D.objects.remove(ob)
+
+
+def stage_creature(blend, mesh_name, armature_name, height, facing='+X'):
+    """Appends a rigged model, stands it on the render platform facing the way Flare's figures do (-Y), and
+    scales it to `height` (stage units, the hero is about 1.9). Returns (mesh, armature)."""
+    with D.libraries.load(blend, link=False) as (_, dst):
+        dst.objects = [mesh_name, armature_name]
+    mesh, arm = dst.objects
+    for ob in (mesh, arm):
+        scene_collection().objects.link(ob)
+    root = D.objects.new(f'{armature_name}.Root', None)
+    scene_collection().objects.link(root)
+    root.parent = D.objects['RenderPlatform']
+    arm.parent = root
+    # The model's front to the stage's front (-Y).
+    turn = {'+X': -pi / 2, '-X': pi / 2, '+Y': pi, '-Y': 0.0}[facing]
+    root.rotation_euler = (0, 0, turn)
+    bpy.context.view_layer.update()
+    top = max((mesh.matrix_world @ v.co).z for v in mesh.data.vertices)
+    bottom = min((mesh.matrix_world @ v.co).z for v in mesh.data.vertices)
+    s = height / (top - bottom)
+    root.scale = (s, s, s)
+    root.location = (0, 0, -bottom * s)
+    bpy.context.view_layer.update()
+    return mesh, arm, root
+
+
+def bake_poses(arm, frames):
+    """Copies the model's own animation into one action, frame by frame: `frames[i]` is (action name, source frame)
+    for output frame i + 1. The Flare layout (idle, walk, attack, death) comes from the model's own cycles."""
+    sc = bpy.context.scene
+    arm.animation_data_create()
+    poses = []
+    for action_name, src in frames:
+        arm.animation_data.action = D.actions[action_name]
+        sc.frame_set(int(src), subframe=src - int(src))
+        poses.append({pb.name: pb.matrix_basis.copy() for pb in arm.pose.bones})
+    baked = D.actions.new(f'{arm.name}.Baked')
+    arm.animation_data.action = baked
+    for i, pose in enumerate(poses):
+        for pb in arm.pose.bones:
+            pb.matrix_basis = pose[pb.name]
+            pb.rotation_mode = 'QUATERNION'
+            for path in ('location', 'rotation_quaternion', 'scale'):
+                pb.keyframe_insert(path, frame=i + 1)
+    for fc in _fcurves(baked):
+        for k in fc.keyframe_points:
+            k.interpolation = 'CONSTANT'
+    return baked
+
+
+def _fcurves(action):
+    """F-curves of an action (Blender 4.4+ keeps them in layered channelbags)."""
+    if hasattr(action, 'fcurves') and len(action.fcurves):
+        return list(action.fcurves)
+    curves = []
+    for layer in getattr(action, 'layers', []):
+        for strip in layer.strips:
+            for bag in strip.channelbags:
+                curves.extend(bag.fcurves)
+    return curves
+
+
+def death_fall(root, first, count, tip=pi / 2, sink=0.0):
+    """Keys a fall over `count` frames from `first`: the creature rolls about its own long axis (the model's X, before
+    it was turned to face the stage) onto its side and settles; a negative `sink` lifts its flank off the ground."""
+    base_loc = root.location.copy()
+    base_rot = root.rotation_euler.copy()
+    for k in range(count):
+        t = (k + 1) / count
+        ease = 1 - (1 - t) ** 2
+        root.rotation_euler = (base_rot.x + tip * ease, base_rot.y, base_rot.z)
+        root.location = (base_loc.x, base_loc.y, base_loc.z - sink * ease)
+        root.keyframe_insert('rotation_euler', frame=first + k)
+        root.keyframe_insert('location', frame=first + k)
+    root.rotation_euler, root.location = base_rot, base_loc
+    for f in range(1, first):
+        root.keyframe_insert('rotation_euler', frame=f)
+        root.keyframe_insert('location', frame=f)
+    if root.animation_data and root.animation_data.action:
+        for fc in _fcurves(root.animation_data.action):
+            for k in fc.keyframe_points:
+                k.interpolation = 'CONSTANT'
+
+
+def copy_by_groups(ob, groups, threshold=0.4, name=None):
+    """A copy of the faces of `ob` weighted to any of `groups` (kept rigged): for extra heads and limbs."""
+    copy = ob.copy()
+    copy.data = ob.data.copy()
+    copy.name = name or f'{ob.name}.Copy'
+    scene_collection().objects.link(copy)
+    idx = {copy.vertex_groups[g].index for g in groups if g in copy.vertex_groups}
+    keep = set()
+    for v in copy.data.vertices:
+        if sum(g.weight for g in v.groups if g.group in idx) >= threshold:
+            keep.add(v.index)
+    import bmesh
+    bm = bmesh.new()
+    bm.from_mesh(copy.data)
+    bm.verts.ensure_lookup_table()
+    gone = [f for f in bm.faces if not all(v.index in keep for v in f.verts)]
+    bmesh.ops.delete(bm, geom=gone, context='FACES')
+    loose = [v for v in bm.verts if not v.link_faces]
+    bmesh.ops.delete(bm, geom=loose, context='VERTS')
+    bm.to_mesh(copy.data)
+    bm.free()
+    return copy
+
+
+def ghost(name, rgb, alpha, glow_strength=0.3):
+    """A translucent, faintly glowing material for the dead (already node-based, so the renderer leaves it as is;
+    the sheet keeps the partial alpha)."""
+    lin = tuple(c / 12.92 if c <= 0.04045 else ((c + 0.055) / 1.055) ** 2.4 for c in rgb)
+    m = D.materials.new(name)
+    m.use_nodes = True
+    bsdf = m.node_tree.nodes['Principled BSDF']
+    bsdf.inputs['Base Color'].default_value = (*lin, 1)
+    bsdf.inputs['Alpha'].default_value = alpha
+    bsdf.inputs['Roughness'].default_value = 0.8
+    bsdf.inputs['Emission Color'].default_value = (*lin, 1)
+    bsdf.inputs['Emission Strength'].default_value = glow_strength
+    return m
+
+
+def dress_all(mat, keep=('Invis',), only=None):
+    """Gives every slot of every visible mesh `mat`, except holdouts and the slots named in `keep`."""
+    for ob in scene_collection().objects:
+        if ob.type != 'MESH' or (only and ob not in only):
+            continue
+        for slot in ob.material_slots:
+            if slot.material and not slot.material.name.startswith(keep):
+                slot.material = mat

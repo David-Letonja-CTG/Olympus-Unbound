@@ -38,6 +38,12 @@ const CHARACTERS = {
   ally_warrior: [`${HERO}/leather_armor.blend`, "ally_warrior.py", 128],
   ally_maiden: [`${HEROINE}/clothes.blend`, "ally_maiden.py", 128],
   ally_smith: [`${HERO}/clothes.blend`, "ally_smith.py", 128],
+  // The Underworld.
+  shade: [`${HERO}/clothes.blend`, "shade.py", 128],
+  fury: [`${HEROINE}/clothes.blend`, "fury.py", 128],
+  lampad: [`${HEROINE}/clothes.blend`, "lampad.py", 128],
+  orthrus: [`${HERO}/clothes.blend`, "orthrus.py", 128],
+  cerberus: ["Troll.blend", "cerberus.py", 256],
 };
 
 mkdirSync(out, { recursive: true });
