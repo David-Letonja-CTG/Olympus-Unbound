@@ -44,5 +44,5 @@
 - [x] 8.1 Update the Playwright tests (intro on first launch, skip with Escape, no intro on return, replay; existing flows pinned to Low); verify `npm run e2e` and `E2E_NO_GPU=1 npm run e2e` pass
 - [x] 8.2 Run `npm run check`; it passes
 - [x] 8.3 Measure performance at High (300+ enemies, 1080p, reference GPU) and at Low with software rendering; record results in design.md
-- [ ] 8.4 Playtest a full run at High and Low and watch the intro; review screenshots against the art direction and the readability requirements; record findings in design.md
+- [x] 8.4 Playtest a full run at High and Low and watch the intro; review screenshots against the art direction and the readability requirements; record findings in design.md (screenshots and automated flows by the agent; the owner approved archiving on green CI on 2026-10-11 — an unassisted owner playtest is not recorded)
 - [x] 8.5 Update README, architecture, gameplay, systems and content docs; run `openspec validate add-dark-fantasy-presentation --strict`; it passes
