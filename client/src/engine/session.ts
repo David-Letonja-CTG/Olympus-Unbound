@@ -1,7 +1,12 @@
+import { CutsceneCaption } from './data/cutscene';
 import { GameContent } from './data/types';
 import { DebugAction } from './sim/run-simulation';
 import { RunConfig } from './sim/run-state';
 import { AnnouncementKind, HudSnapshot, RunResult, UpgradeChoice, UpgradeOffer } from './sim/types';
+
+/** Graphics quality (spec: visual-atmosphere): lights, fog, bloom, shading and particle density. */
+export type GraphicsQuality = 'low' | 'medium' | 'high';
+export const GRAPHICS_QUALITIES: readonly GraphicsQuality[] = ['low', 'medium', 'high'];
 
 /** Player-adjustable settings that affect a running game. */
 export interface GameSettings {
@@ -9,12 +14,14 @@ export interface GameSettings {
   readonly sfxVolume: number;
   readonly screenShake: boolean;
   readonly damageNumbers: boolean;
+  readonly quality: GraphicsQuality;
 }
 
 export const DEFAULT_SETTINGS: GameSettings = {
   sfxVolume: 0.6,
   screenShake: true,
   damageNumbers: true,
+  quality: 'medium',
 };
 
 export interface GameSessionOptions {
@@ -41,6 +48,7 @@ export type UiInput = 'up' | 'down' | 'left' | 'right' | 'confirm' | 'back' | 'p
 
 /** What a running game tells the application (D3). Frequent state arrives only as throttled `hud` snapshots. */
 export type GameEvent =
+  | { readonly type: 'loadProgress'; readonly progress: number }
   | { readonly type: 'ready' }
   | { readonly type: 'hud'; readonly hud: HudSnapshot }
   | { readonly type: 'choice'; readonly choice: UpgradeChoice }
@@ -78,4 +86,35 @@ export interface GameSession {
 export async function createGameSession(options: GameSessionOptions): Promise<GameSession> {
   const { startPhaserSession } = await import('./phaser/phaser-session');
   return startPhaserSession(options);
+}
+
+export interface CutsceneSessionOptions {
+  readonly parent: HTMLElement;
+  readonly content: GameContent;
+  readonly cutsceneId: string;
+  readonly settings: GameSettings;
+}
+
+/** What a playing cutscene tells the application (D14). Captions are rendered by Angular. */
+export type CutsceneEvent =
+  | { readonly type: 'loadProgress'; readonly progress: number }
+  | { readonly type: 'ready' }
+  | { readonly type: 'captions'; readonly captions: readonly CutsceneCaption[] }
+  | { readonly type: 'uiInput'; readonly input: UiInput }
+  | { readonly type: 'ended' };
+
+/** A playing in-engine cutscene (spec: intro-cutscene). */
+export interface CutsceneSession {
+  subscribe(listener: (event: CutsceneEvent) => void): Unsubscribe;
+  /** Ends the scene at once; `ended` follows. */
+  skip(): void;
+  destroy(): void;
+}
+
+/** Plays a cutscene from content in `options.parent`; Phaser is loaded on demand like for a run. */
+export async function createCutsceneSession(
+  options: CutsceneSessionOptions,
+): Promise<CutsceneSession> {
+  const { startCutsceneSession } = await import('./phaser/cutscene-session');
+  return startCutsceneSession(options);
 }

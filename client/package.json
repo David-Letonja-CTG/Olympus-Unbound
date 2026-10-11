@@ -10,8 +10,9 @@
     "lint": "ng lint",
     "format": "prettier --write .",
     "format:check": "prettier --check .",
-    "check": "npm run format:check && npm run lint && npm test && npm run build",
-    "e2e": "playwright test"
+    "check": "npm run format:check && npm run lint && npm run assets:check && npm test && npm run build",
+    "e2e": "playwright test",
+    "assets:check": "node --disable-warning=MODULE_TYPELESS_PACKAGE_JSON scripts/check-assets.mjs"
   },
   "private": true,
   "packageManager": "npm@11.19.0",

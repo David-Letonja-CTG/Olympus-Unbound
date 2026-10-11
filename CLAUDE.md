@@ -5,7 +5,7 @@ OLYMPUS UNBOUND is an original mythological horde-survival roguelite: the player
 - Vision and roadmap: `docs/product-vision.md`
 - Binding decisions (D1–D11): `docs/decisions.md` — if a task conflicts with one, raise it; do not silently override
 - How it is built (diagrams, boundaries, frame, state ownership, performance): `docs/architecture.md`
-- Rules and formulas: `docs/systems.md`; the game as players see it: `docs/gameplay.md`; content files and checklists: `docs/content.md`
+- Rules and formulas: `docs/systems.md`; the game as players see it: `docs/gameplay.md`; content files, packs, cutscenes and checklists: `docs/content.md`; the look: `docs/art-direction.md`
 - Specs and changes: `openspec/`
 
 Read the relevant doc before working on a feature.
@@ -23,17 +23,19 @@ Read the relevant doc before working on a feature.
 5. **One damage pipeline**: player damage to enemies goes through `hitEnemy`/`resolveHit`; never compute damage in a weapon or view.
 6. **Data-driven content** (D4): new content is data plus, at most, one new reusable behavior. No god-, weapon- or enemy-specific conditionals in systems.
 7. **Saves** (D8): explicit versioned `SaveData`; never serialize runtime objects; loading never throws; rewards are idempotent per run ID. Format change ⇒ bump `SAVE_VERSION` + migration + tests.
-8. **Original IP** (D9): no copied sprites, textures, sounds, music, UI or code from other games. Record every external asset and its licence in `docs/content.md`.
+8. **Original IP** (D9, D12): no copied sprites, textures, sounds, music, UI or code from other games. External art and fonts go through `client/src/content/assets.ts` with an allowed licence (`npm run assets:check`); follow `docs/art-direction.md`.
 9. **No placeholders that pretend to work**: every visible button does something; unavailable things are not shown.
 10. **No speculation**: no system, dependency or abstraction without a spec requiring it. Prefer a small, playable, well-structured game over a framework.
+11. **Readable darkness** (D13): anything the player must react to (telegraphs, enemy projectiles, pickups, enemies) stays readable above the light map at every quality level; check new visuals at Low and High.
 
 ## Commands
 
 ```bash
 cd client
 npm ci
-npm start                 # http://localhost:4200 (add ?debug to enable test hooks in dev builds)
-npm run check             # prettier check, eslint, unit tests (Vitest), production build
+npm start                 # http://localhost:4200 (add ?debug for test hooks; /dev/art shows all code-drawn art)
+npm run check             # prettier check, eslint, asset licence check, unit tests (Vitest), production build
+npm run assets:check      # every external file in public/assets and public/fonts has an allowed licence entry
 npm test                  # unit tests only (engine + Angular)
 npm run lint
 npm run format            # prettier --write

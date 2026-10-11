@@ -3,6 +3,8 @@ import { SoundCue, SoundPlayer } from '../audio/sound-player';
 import { GameEvent, GameSettings } from '../session';
 import { RunSimulation, STEP } from '../sim/run-simulation';
 import { SimEvent } from '../sim/types';
+import { queueAssets, SpriteResolver } from './assets';
+import { Atmosphere, LightMap, QUALITY, viewAround } from './atmosphere';
 import { Effects } from './effects';
 import { InputReader } from './input';
 import { registerTextures } from './textures';
@@ -41,6 +43,9 @@ export class ArenaScene extends Phaser.Scene {
   private input$!: InputReader;
   private view!: WorldView;
   private effects!: Effects;
+  private lightMap!: LightMap;
+  private atmosphere!: Atmosphere;
+  private failedAssets = new Set<string>();
   private accumulator = 0;
   private hudTimer = 0;
   private readonly onBlur = () => this.autoPause();
@@ -52,14 +57,26 @@ export class ArenaScene extends Phaser.Scene {
     super('arena');
   }
 
+  preload(): void {
+    // External art first (spec: asset-pipeline / loading with progress); failures fall back to code-drawn art.
+    const content = this.host.sim.state.index.content;
+    this.failedAssets = queueAssets(this, content.assets, (progress) =>
+      this.host.emit({ type: 'loadProgress', progress }),
+    );
+  }
+
   create(): void {
     const { sim } = this.host;
     const realm = sim.state.realm;
-    registerTextures(this, sim.state.index.content, realm.map);
+    const content = sim.state.index.content;
+    registerTextures(this, content, [realm.map]);
     this.cameras.main.setBackgroundColor(this.host.backgroundColor);
-    this.view = new WorldView(this, sim.arena, realm.map);
+    const resolver = new SpriteResolver(this, content.assets, this.failedAssets);
+    this.view = new WorldView(this, resolver, sim.arena, realm.map);
     this.effects = new Effects(this);
-    this.effects.damageNumbers = this.host.settings().damageNumbers;
+    this.lightMap = new LightMap(this, realm.atmosphere.ambient);
+    this.atmosphere = new Atmosphere(this, sim.arena.width, sim.arena.height, realm.atmosphere);
+    this.applySettings(this.host.settings());
     this.input$ = new InputReader(this);
 
     const camera = this.cameras.main;
@@ -82,8 +99,14 @@ export class ArenaScene extends Phaser.Scene {
     this.host.emit({ type: 'hud', hud: sim.hud() });
   }
 
+  /** Settings apply live, including graphics quality (spec: visual-atmosphere / graphics quality levels). */
   applySettings(settings: GameSettings): void {
+    const profile = QUALITY[settings.quality];
     this.effects.damageNumbers = settings.damageNumbers;
+    this.effects.particleScale = profile.particles;
+    this.view.setQuality(profile);
+    this.lightMap.setQuality(profile);
+    this.atmosphere.setQuality(profile);
   }
 
   override update(): void {
@@ -116,13 +139,18 @@ export class ArenaScene extends Phaser.Scene {
     for (const event of sim.events()) this.handle(event);
 
     const alpha = sim.phase === 'playing' ? this.accumulator / STEP : 1;
-    this.view.sync(sim.state, alpha, this.time.now);
+    const camera = this.cameras.main;
+    const time = this.time.now;
+    this.view.sync(sim.state, alpha, time, this.lightMap);
+    this.view.addArenaLights(this.lightMap, time);
     const focus = sim.state.players[0];
-    this.cameras.main.centerOn(
-      focus.px + (focus.x - focus.px) * alpha,
-      focus.py + (focus.y - focus.py) * alpha,
-    );
-    this.effects.update(sim.state, sim.phase === 'playing' ? dt : 0, this.cameras.main);
+    const fx = focus.px + (focus.x - focus.px) * alpha;
+    const fy = focus.py + (focus.y - focus.py) * alpha;
+    camera.centerOn(fx, fy);
+    const view = viewAround(camera, fx, fy, sim.arena.width, sim.arena.height);
+    this.effects.update(sim.state, sim.phase === 'playing' ? dt : 0, camera, this.lightMap);
+    this.atmosphere.update(camera, view, dt);
+    this.lightMap.render(view);
 
     this.hudTimer += this.game.loop.rawDelta;
     if (this.hudTimer >= HUD_INTERVAL_MS) {
@@ -222,6 +250,7 @@ export class ArenaScene extends Phaser.Scene {
     const { width, height } = this.scale.gameSize;
     const zoom = Math.max(0.35, Math.min(width / VIEW_WIDTH, height / VIEW_HEIGHT));
     camera.setZoom(zoom);
+    this.lightMap?.resize();
     this.host.sim.setView(width / zoom / 2, height / zoom / 2);
   }
 }

@@ -1,0 +1,15 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="320" height="18" viewBox="0 0 320 18">
+  <!-- Gold divider with a central lozenge. Original artwork. -->
+  <defs>
+    <linearGradient id="fade" x1="0" x2="1">
+      <stop offset="0" stop-color="#c9a55a" stop-opacity="0"/>
+      <stop offset="0.5" stop-color="#e2c27a"/>
+      <stop offset="1" stop-color="#c9a55a" stop-opacity="0"/>
+    </linearGradient>
+  </defs>
+  <rect x="0" y="8.5" width="320" height="1" fill="url(#fade)"/>
+  <path d="M160 2 L168 9 L160 16 L152 9 Z" fill="#1a1612" stroke="#e2c27a" stroke-width="1.2"/>
+  <path d="M160 6 L163 9 L160 12 L157 9 Z" fill="#b0261e"/>
+  <circle cx="140" cy="9" r="1.6" fill="#e2c27a"/>
+  <circle cx="180" cy="9" r="1.6" fill="#e2c27a"/>
+</svg>

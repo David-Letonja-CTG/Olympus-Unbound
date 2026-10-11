@@ -1,4 +1,6 @@
 import type { BalanceConfig, GameContent, PermanentUpgradeDefinition } from '../engine';
+import { ASSETS } from './assets';
+import { INTRO } from './cutscenes/intro';
 import { BOSSES, ENEMIES } from './enemies';
 import { GODS } from './gods';
 import { ARMOUR, RELICS, SKILLS, SYNERGIES } from './items';
@@ -84,4 +86,6 @@ export const CONTENT: GameContent = {
   realms: REALMS,
   permanentUpgrades: PERMANENT_UPGRADES,
   balance: BALANCE,
+  assets: ASSETS,
+  cutscenes: [INTRO],
 };

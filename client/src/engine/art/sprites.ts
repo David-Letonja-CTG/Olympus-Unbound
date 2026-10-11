@@ -1,290 +1,13 @@
-import { Rng } from '../core/rng';
+import { bolt, circle, Ctx, ellipse, glow, hex, line, poly, shade, SpriteSpec } from './canvas';
+import { CHARACTERS } from './characters';
+import { WORLD } from './world';
 
 /**
  * Original placeholder art (D9), drawn with Canvas 2D at startup: no image files, no licences. Characters face
  * right and are drawn top-down with a slight 3/4 tilt; projectiles point right (the view rotates them).
  * Shared by the Phaser layer (textures) and Angular (HUD and menu icons via `spriteDataUrl`).
+ * Characters live in `characters.ts`, world objects in `world.ts`, drawing helpers in `canvas.ts`.
  */
-
-type Ctx = CanvasRenderingContext2D;
-type Painter = (g: Ctx, s: number) => void;
-
-interface SpriteSpec {
-  readonly size: number;
-  readonly paint: Painter;
-}
-
-const hex = (c: number, a = 1) => `rgba(${(c >> 16) & 255},${(c >> 8) & 255},${c & 255},${a})`;
-
-function circle(
-  g: Ctx,
-  x: number,
-  y: number,
-  r: number,
-  fill: string,
-  stroke?: string,
-  width = 2,
-): void {
-  g.beginPath();
-  g.arc(x, y, r, 0, Math.PI * 2);
-  g.fillStyle = fill;
-  g.fill();
-  if (stroke) {
-    g.lineWidth = width;
-    g.strokeStyle = stroke;
-    g.stroke();
-  }
-}
-
-function ellipse(
-  g: Ctx,
-  x: number,
-  y: number,
-  rx: number,
-  ry: number,
-  fill: string,
-  stroke?: string,
-): void {
-  g.beginPath();
-  g.ellipse(x, y, rx, ry, 0, 0, Math.PI * 2);
-  g.fillStyle = fill;
-  g.fill();
-  if (stroke) {
-    g.lineWidth = 2;
-    g.strokeStyle = stroke;
-    g.stroke();
-  }
-}
-
-function poly(g: Ctx, points: number[], fill: string, stroke?: string, width = 2): void {
-  g.beginPath();
-  g.moveTo(points[0], points[1]);
-  for (let i = 2; i < points.length; i += 2) g.lineTo(points[i], points[i + 1]);
-  g.closePath();
-  g.fillStyle = fill;
-  g.fill();
-  if (stroke) {
-    g.lineWidth = width;
-    g.strokeStyle = stroke;
-    g.stroke();
-  }
-}
-
-function line(g: Ctx, points: number[], color: string, width: number): void {
-  g.beginPath();
-  g.moveTo(points[0], points[1]);
-  for (let i = 2; i < points.length; i += 2) g.lineTo(points[i], points[i + 1]);
-  g.strokeStyle = color;
-  g.lineWidth = width;
-  g.lineCap = 'round';
-  g.lineJoin = 'round';
-  g.stroke();
-}
-
-function shadow(g: Ctx, s: number, w = 0.34, y = 0.8): void {
-  ellipse(g, s / 2, s * y, s * w, s * 0.09, 'rgba(0,0,0,0.35)');
-}
-
-function glow(g: Ctx, x: number, y: number, r: number, color: number, alpha = 0.6): void {
-  const grad = g.createRadialGradient(x, y, 0, x, y, r);
-  grad.addColorStop(0, hex(color, alpha));
-  grad.addColorStop(1, hex(color, 0));
-  g.fillStyle = grad;
-  g.fillRect(x - r, y - r, r * 2, r * 2);
-}
-
-/** A lightning bolt from (x, y) scaled to height h. */
-function bolt(
-  g: Ctx,
-  x: number,
-  y: number,
-  h: number,
-  fill: string,
-  stroke = 'rgba(255,255,255,0.9)',
-): void {
-  const w = h * 0.5;
-  poly(
-    g,
-    [
-      x + w * 0.15,
-      y,
-      x - w * 0.45,
-      y + h * 0.55,
-      x - w * 0.02,
-      y + h * 0.55,
-      x - w * 0.2,
-      y + h,
-      x + w * 0.5,
-      y + h * 0.38,
-      x + w * 0.05,
-      y + h * 0.38,
-      x + w * 0.35,
-      y,
-    ],
-    fill,
-    stroke,
-    1.5,
-  );
-}
-
-// ---------------------------------------------------------------------------------------------------------------
-// Characters
-
-const characters: Record<string, SpriteSpec> = {
-  zeus: {
-    size: 56,
-    paint(g, s) {
-      glow(g, s / 2, s / 2, s / 2, 0xfff2a8, 0.35);
-      shadow(g, s, 0.3, 0.84);
-      ellipse(g, s / 2, s * 0.6, s * 0.24, s * 0.25, '#f4f1ea', '#c9a227'); // robe
-      line(g, [s * 0.3, s * 0.62, s * 0.7, s * 0.5], '#d4af37', 3); // sash
-      circle(g, s / 2, s * 0.32, s * 0.14, '#e9c9a5', '#8a6a4a', 1.5); // head
-      ellipse(g, s / 2, s * 0.42, s * 0.11, s * 0.09, '#f7f7f7'); // beard
-      line(g, [s * 0.36, s * 0.24, s * 0.5, s * 0.18, s * 0.64, s * 0.24], '#d4af37', 3); // laurel
-      bolt(g, s * 0.76, s * 0.3, s * 0.36, '#fff27a', '#ffffff');
-    },
-  },
-  satyr: {
-    size: 44,
-    paint(g, s) {
-      shadow(g, s);
-      ellipse(g, s / 2, s * 0.6, s * 0.24, s * 0.22, '#7a4a2a', '#3e2414');
-      circle(g, s / 2, s * 0.36, s * 0.15, '#9c6b45', '#3e2414', 1.5);
-      line(g, [s * 0.4, s * 0.26, s * 0.3, s * 0.12, s * 0.38, s * 0.08], '#e8dcc0', 3); // horns
-      line(g, [s * 0.6, s * 0.26, s * 0.7, s * 0.12, s * 0.62, s * 0.08], '#e8dcc0', 3);
-      circle(g, s * 0.56, s * 0.35, s * 0.035, '#ff3b30');
-      circle(g, s * 0.44, s * 0.35, s * 0.035, '#ff3b30');
-      line(g, [s * 0.4, s * 0.78, s * 0.38, s * 0.9], '#3e2414', 4);
-      line(g, [s * 0.6, s * 0.78, s * 0.62, s * 0.9], '#3e2414', 4);
-    },
-  },
-  harpy: {
-    size: 44,
-    paint(g, s) {
-      shadow(g, s, 0.26, 0.86);
-      poly(g, [s * 0.5, s * 0.5, s * 0.04, s * 0.3, s * 0.18, s * 0.62], '#4a2a5e', '#24112f');
-      poly(g, [s * 0.5, s * 0.5, s * 0.96, s * 0.3, s * 0.82, s * 0.62], '#4a2a5e', '#24112f');
-      ellipse(g, s / 2, s * 0.56, s * 0.13, s * 0.2, '#8e5aa8', '#24112f');
-      circle(g, s / 2, s * 0.34, s * 0.11, '#d9c2e0', '#24112f', 1.5);
-      circle(g, s * 0.46, s * 0.33, s * 0.025, '#ff2d55');
-      circle(g, s * 0.54, s * 0.33, s * 0.025, '#ff2d55');
-    },
-  },
-  stymphalian_bird: {
-    size: 28,
-    paint(g, s) {
-      shadow(g, s, 0.22, 0.86);
-      poly(
-        g,
-        [s * 0.5, s * 0.55, s * 0.05, s * 0.25, s * 0.3, s * 0.62],
-        '#3c4652',
-        '#1b2026',
-        1.5,
-      );
-      poly(
-        g,
-        [s * 0.5, s * 0.55, s * 0.95, s * 0.25, s * 0.7, s * 0.62],
-        '#3c4652',
-        '#1b2026',
-        1.5,
-      );
-      ellipse(g, s / 2, s * 0.56, s * 0.12, s * 0.16, '#566573', '#1b2026');
-      poly(g, [s * 0.62, s * 0.5, s * 0.82, s * 0.56, s * 0.62, s * 0.6], '#cd7f32');
-    },
-  },
-  corrupted_hoplite: {
-    size: 48,
-    paint(g, s) {
-      shadow(g, s);
-      ellipse(g, s / 2, s * 0.58, s * 0.22, s * 0.22, '#5b1e1a', '#2a0d0b');
-      circle(g, s * 0.5, s * 0.34, s * 0.14, '#8c6b3f', '#2a0d0b', 1.5); // helmet
-      poly(g, [s * 0.36, s * 0.22, s * 0.5, s * 0.06, s * 0.64, s * 0.22], '#c0392b'); // crest
-      circle(g, s * 0.62, s * 0.6, s * 0.2, '#b8860b', '#5e4407', 2.5); // shield
-      circle(g, s * 0.62, s * 0.6, s * 0.08, '#c0392b');
-      line(g, [s * 0.2, s * 0.85, s * 0.3, s * 0.2], '#8a8a8a', 3); // spear
-    },
-  },
-  centaur_archer: {
-    size: 52,
-    paint(g, s) {
-      shadow(g, s, 0.38, 0.84);
-      ellipse(g, s * 0.44, s * 0.62, s * 0.28, s * 0.15, '#5d4a2e', '#2b2115');
-      line(g, [s * 0.24, s * 0.7, s * 0.22, s * 0.84], '#2b2115', 4);
-      line(g, [s * 0.62, s * 0.7, s * 0.64, s * 0.84], '#2b2115', 4);
-      ellipse(g, s * 0.66, s * 0.42, s * 0.09, s * 0.15, '#6e8b3d', '#2b3a16');
-      circle(g, s * 0.66, s * 0.24, s * 0.09, '#c9a27e', '#2b2115', 1.5);
-      g.beginPath();
-      g.arc(s * 0.78, s * 0.4, s * 0.17, -1.2, 1.2);
-      g.strokeStyle = '#8b5a2b';
-      g.lineWidth = 3;
-      g.stroke();
-    },
-  },
-  bronze_bull: {
-    size: 60,
-    paint(g, s) {
-      shadow(g, s, 0.38, 0.84);
-      ellipse(g, s * 0.46, s * 0.58, s * 0.3, s * 0.2, '#a0632a', '#4a2c10');
-      circle(g, s * 0.74, s * 0.48, s * 0.14, '#b87333', '#4a2c10', 2);
-      line(g, [s * 0.7, s * 0.36, s * 0.66, s * 0.2, s * 0.74, s * 0.16], '#efe6d0', 4);
-      line(g, [s * 0.82, s * 0.38, s * 0.9, s * 0.24, s * 0.96, s * 0.24], '#efe6d0', 4);
-      circle(g, s * 0.84, s * 0.54, s * 0.03, '#ff8c00');
-      glow(g, s * 0.86, s * 0.55, s * 0.08, 0xff8c00, 0.8);
-      line(g, [s * 0.3, s * 0.74, s * 0.28, s * 0.88], '#4a2c10', 5);
-      line(g, [s * 0.6, s * 0.74, s * 0.62, s * 0.88], '#4a2c10', 5);
-    },
-  },
-  fallen_oracle: {
-    size: 44,
-    paint(g, s) {
-      glow(g, s / 2, s / 2, s / 2, 0x9b59b6, 0.35);
-      shadow(g, s);
-      poly(g, [s * 0.5, s * 0.18, s * 0.78, s * 0.82, s * 0.22, s * 0.82], '#4a235a', '#1c0b24');
-      circle(g, s / 2, s * 0.3, s * 0.12, '#2c1338', '#1c0b24', 1.5);
-      circle(g, s / 2, s * 0.31, s * 0.045, '#7fffd4');
-      glow(g, s / 2, s * 0.31, s * 0.12, 0x7fffd4, 0.7);
-    },
-  },
-  marble_sentinel: {
-    size: 68,
-    paint(g, s) {
-      shadow(g, s, 0.36, 0.86);
-      poly(
-        g,
-        [s * 0.24, s * 0.3, s * 0.76, s * 0.3, s * 0.82, s * 0.82, s * 0.18, s * 0.82],
-        '#bfc9ca',
-        '#5f6a6a',
-        3,
-      );
-      poly(
-        g,
-        [s * 0.34, s * 0.1, s * 0.66, s * 0.1, s * 0.7, s * 0.32, s * 0.3, s * 0.32],
-        '#d5dbdb',
-        '#5f6a6a',
-        2,
-      );
-      line(g, [s * 0.4, s * 0.4, s * 0.48, s * 0.55, s * 0.42, s * 0.7], '#7f8c8d', 2);
-      line(g, [s * 0.66, s * 0.5, s * 0.58, s * 0.62], '#7f8c8d', 2);
-      circle(g, s * 0.42, s * 0.2, s * 0.03, '#ff3b30');
-      circle(g, s * 0.58, s * 0.2, s * 0.03, '#ff3b30');
-    },
-  },
-  cyclops: {
-    size: 132,
-    paint(g, s) {
-      shadow(g, s, 0.36, 0.88);
-      ellipse(g, s / 2, s * 0.6, s * 0.3, s * 0.27, '#6d4c41', '#2e1f1a');
-      ellipse(g, s / 2, s * 0.66, s * 0.18, s * 0.14, '#8d6e63'); // belly
-      circle(g, s / 2, s * 0.3, s * 0.18, '#a1887f', '#2e1f1a', 3);
-      circle(g, s / 2, s * 0.28, s * 0.09, '#fafafa', '#2e1f1a', 2);
-      circle(g, s / 2, s * 0.28, s * 0.045, '#c62828');
-      circle(g, s / 2, s * 0.28, s * 0.018, '#111');
-      line(g, [s * 0.42, s * 0.4, s * 0.58, s * 0.4], '#2e1f1a', 3);
-      line(g, [s * 0.82, s * 0.86, s * 0.9, s * 0.4], '#5d4037', 10); // club
-      circle(g, s * 0.9, s * 0.38, s * 0.07, '#4e342e');
-    },
-  },
-};
 
 // ---------------------------------------------------------------------------------------------------------------
 // Projectiles and pickups
@@ -415,164 +138,6 @@ const projectiles: Record<string, SpriteSpec> = {
         2,
       );
       circle(g, s / 2, s * 0.52, s * 0.06, '#ffd34d');
-    },
-  },
-};
-
-// ---------------------------------------------------------------------------------------------------------------
-// World objects
-
-const world: Record<string, SpriteSpec> = {
-  column: {
-    size: 44,
-    paint(g, s) {
-      ellipse(g, s * 0.56, s * 0.58, s * 0.38, s * 0.3, 'rgba(0,0,0,0.3)');
-      circle(g, s / 2, s / 2, s * 0.38, '#e8e2d4', '#9e9686', 2);
-      for (let i = 0; i < 8; i++) {
-        const a = (i / 8) * Math.PI * 2;
-        line(
-          g,
-          [
-            s / 2 + Math.cos(a) * s * 0.12,
-            s / 2 + Math.sin(a) * s * 0.12,
-            s / 2 + Math.cos(a) * s * 0.34,
-            s / 2 + Math.sin(a) * s * 0.34,
-          ],
-          '#c9c1ad',
-          1.5,
-        );
-      }
-      circle(g, s / 2, s / 2, s * 0.12, '#f4f0e6');
-    },
-  },
-  broken_column: {
-    size: 48,
-    paint(g, s) {
-      ellipse(g, s * 0.56, s * 0.58, s * 0.38, s * 0.3, 'rgba(0,0,0,0.3)');
-      poly(
-        g,
-        [
-          s * 0.18,
-          s * 0.44,
-          s * 0.32,
-          s * 0.2,
-          s * 0.62,
-          s * 0.16,
-          s * 0.84,
-          s * 0.4,
-          s * 0.8,
-          s * 0.72,
-          s * 0.5,
-          s * 0.84,
-          s * 0.22,
-          s * 0.72,
-        ],
-        '#d8d0bf',
-        '#9e9686',
-        2,
-      );
-      line(g, [s * 0.34, s * 0.3, s * 0.5, s * 0.5, s * 0.46, s * 0.7], '#a59c8a', 1.5);
-    },
-  },
-  statue: {
-    size: 56,
-    paint(g, s) {
-      ellipse(g, s * 0.56, s * 0.6, s * 0.4, s * 0.3, 'rgba(0,0,0,0.3)');
-      poly(
-        g,
-        [s * 0.14, s * 0.3, s * 0.86, s * 0.3, s * 0.86, s * 0.86, s * 0.14, s * 0.86],
-        '#b9b2a2',
-        '#7d7666',
-        2,
-      );
-      ellipse(g, s / 2, s * 0.5, s * 0.2, s * 0.22, '#e6e0d2', '#8f8878');
-      circle(g, s / 2, s * 0.28, s * 0.11, '#efe9dc', '#8f8878', 1.5);
-      line(g, [s * 0.68, s * 0.44, s * 0.8, s * 0.12], '#d8d0bf', 3);
-    },
-  },
-  olive_tree: {
-    size: 60,
-    paint(g, s) {
-      ellipse(g, s * 0.56, s * 0.6, s * 0.42, s * 0.32, 'rgba(0,0,0,0.32)');
-      const rng = new Rng('olive');
-      circle(g, s / 2, s / 2, s * 0.36, '#55703a');
-      for (let i = 0; i < 9; i++) {
-        const a = rng.angle();
-        const d = rng.range(0, s * 0.2);
-        circle(
-          g,
-          s / 2 + Math.cos(a) * d,
-          s / 2 + Math.sin(a) * d,
-          s * rng.range(0.1, 0.16),
-          i % 2 ? '#7b9a55' : '#93ad6e',
-        );
-      }
-      for (let i = 0; i < 6; i++)
-        circle(g, s * rng.range(0.3, 0.7), s * rng.range(0.3, 0.7), s * 0.025, '#3d4a2a');
-    },
-  },
-  rock: {
-    size: 44,
-    paint(g, s) {
-      ellipse(g, s * 0.56, s * 0.6, s * 0.38, s * 0.28, 'rgba(0,0,0,0.3)');
-      poly(
-        g,
-        [
-          s * 0.14,
-          s * 0.56,
-          s * 0.24,
-          s * 0.26,
-          s * 0.52,
-          s * 0.14,
-          s * 0.8,
-          s * 0.3,
-          s * 0.86,
-          s * 0.62,
-          s * 0.6,
-          s * 0.82,
-          s * 0.28,
-          s * 0.78,
-        ],
-        '#8a8580',
-        '#56524e',
-        2,
-      );
-      line(g, [s * 0.3, s * 0.4, s * 0.52, s * 0.32, s * 0.7, s * 0.42], '#a7a29c', 2);
-    },
-  },
-  grass_tuft: {
-    size: 20,
-    paint(g, s) {
-      for (const [x, h] of [
-        [0.3, 0.5],
-        [0.45, 0.7],
-        [0.6, 0.55],
-        [0.72, 0.4],
-      ])
-        line(g, [s * x, s * 0.85, s * (x + 0.05), s * (0.85 - h)], 'rgba(120,170,80,0.85)', 2);
-    },
-  },
-  flowers: {
-    size: 18,
-    paint(g, s) {
-      circle(g, s * 0.3, s * 0.4, s * 0.12, '#f2e86d');
-      circle(g, s * 0.65, s * 0.6, s * 0.12, '#f7f7f7');
-      circle(g, s * 0.55, s * 0.25, s * 0.1, '#e98bd1');
-    },
-  },
-  pebbles: {
-    size: 18,
-    paint(g, s) {
-      ellipse(g, s * 0.3, s * 0.5, s * 0.14, s * 0.1, '#9c8a73');
-      ellipse(g, s * 0.62, s * 0.36, s * 0.1, s * 0.08, '#b09d85');
-      ellipse(g, s * 0.6, s * 0.7, s * 0.12, s * 0.09, '#8a7963');
-    },
-  },
-  marble_shards: {
-    size: 20,
-    paint(g, s) {
-      poly(g, [s * 0.2, s * 0.6, s * 0.4, s * 0.4, s * 0.5, s * 0.66], '#f2eee4', '#b5ad9c', 1);
-      poly(g, [s * 0.58, s * 0.3, s * 0.82, s * 0.36, s * 0.66, s * 0.5], '#e5dfd1', '#b5ad9c', 1);
     },
   },
 };
@@ -919,35 +484,57 @@ const ICONS: Record<string, [string, 'square' | 'round' | 'diamond' | 'hex', num
   icon_gold: ['coin', 'round', 0xffd34d],
 };
 
+/**
+ * Engraved icon frames: a dark stone face inside a forged iron rim with a thin line of the item's colour, like
+ * gold leaf worn into metal (docs/art-direction.md).
+ */
 function frame(
   g: Ctx,
   s: number,
   shape: 'square' | 'round' | 'diamond' | 'hex',
   color: number,
 ): void {
-  const fill = 'rgba(20,18,30,0.92)';
-  const stroke = hex(color, 0.95);
-  const m = s * 0.06;
-  if (shape === 'round') circle(g, s / 2, s / 2, s / 2 - m, fill, stroke, 2.5);
-  else if (shape === 'diamond')
-    poly(g, [s / 2, m, s - m, s / 2, s / 2, s - m, m, s / 2], fill, stroke, 2.5);
-  else if (shape === 'hex') {
-    const pts: number[] = [];
-    for (let i = 0; i < 6; i++)
-      pts.push(
-        s / 2 + Math.cos((i / 6) * Math.PI * 2) * (s / 2 - m),
-        s / 2 + Math.sin((i / 6) * Math.PI * 2) * (s / 2 - m),
-      );
-    poly(g, pts, fill, stroke, 2.5);
-  } else {
+  const m = s * 0.05;
+  const outline = (inset: number) => {
     g.beginPath();
-    g.roundRect(m, m, s - 2 * m, s - 2 * m, s * 0.16);
-    g.fillStyle = fill;
-    g.fill();
-    g.lineWidth = 2.5;
-    g.strokeStyle = stroke;
-    g.stroke();
-  }
+    const r = s / 2 - inset;
+    if (shape === 'round') g.arc(s / 2, s / 2, r, 0, Math.PI * 2);
+    else if (shape === 'diamond') {
+      g.moveTo(s / 2, s / 2 - r);
+      g.lineTo(s / 2 + r, s / 2);
+      g.lineTo(s / 2, s / 2 + r);
+      g.lineTo(s / 2 - r, s / 2);
+      g.closePath();
+    } else if (shape === 'hex') {
+      for (let i = 0; i < 6; i++) {
+        const a = (i / 6) * Math.PI * 2;
+        if (i === 0) g.moveTo(s / 2 + Math.cos(a) * r, s / 2 + Math.sin(a) * r);
+        else g.lineTo(s / 2 + Math.cos(a) * r, s / 2 + Math.sin(a) * r);
+      }
+      g.closePath();
+    } else g.roundRect(inset, inset, s - 2 * inset, s - 2 * inset, s * 0.1);
+  };
+  // Iron rim.
+  outline(m);
+  const iron = g.createLinearGradient(0, 0, s, s);
+  iron.addColorStop(0, '#5a5650');
+  iron.addColorStop(0.5, '#2a2724');
+  iron.addColorStop(1, '#141210');
+  g.fillStyle = iron;
+  g.fill();
+  g.lineWidth = Math.max(1.5, s * 0.04);
+  g.strokeStyle = 'rgba(0,0,0,0.9)';
+  g.stroke();
+  // Stone face.
+  outline(m + s * 0.07);
+  const stone = g.createRadialGradient(s * 0.42, s * 0.38, s * 0.05, s / 2, s / 2, s * 0.55);
+  stone.addColorStop(0, hex(shade(color, 0.32)));
+  stone.addColorStop(1, '#0c0a0e');
+  g.fillStyle = stone;
+  g.fill();
+  g.lineWidth = Math.max(1, s * 0.025);
+  g.strokeStyle = hex(shade(color, 0.85), 0.9);
+  g.stroke();
 }
 
 const icons: Record<string, SpriteSpec> = Object.fromEntries(
@@ -957,10 +544,26 @@ const icons: Record<string, SpriteSpec> = Object.fromEntries(
       size: 48,
       paint(g: Ctx, s: number) {
         frame(g, s, shape, color);
+        // The symbol is drawn apart, then given a worn-metal finish: desaturated, lit from above.
         const inner = s * 0.72;
+        // Match the target's scale so the symbol stays sharp at any icon size.
+        const k = g.getTransform().a || 1;
+        const layer = document.createElement('canvas');
+        layer.width = layer.height = Math.ceil(inner * k);
+        const lg = layer.getContext('2d') as Ctx;
+        lg.scale(k, k);
+        symbols[symbol](lg, inner, hex(color));
+        lg.globalCompositeOperation = 'source-atop';
+        const finish = lg.createLinearGradient(0, 0, 0, inner);
+        finish.addColorStop(0, 'rgba(255,250,235,0.28)');
+        finish.addColorStop(0.5, 'rgba(0,0,0,0)');
+        finish.addColorStop(1, 'rgba(0,0,0,0.42)');
+        lg.fillStyle = finish;
+        lg.fillRect(0, 0, inner, inner);
+        lg.setTransform(1, 0, 0, 1, 0, 0);
         g.save();
-        g.translate((s - inner) / 2, (s - inner) / 2);
-        symbols[symbol](g, inner, hex(color));
+        g.filter = 'saturate(0.62) drop-shadow(0 1px 1px rgba(0,0,0,0.9))';
+        g.drawImage(layer, (s - inner) / 2, (s - inner) / 2, inner, inner);
         g.restore();
       },
     },
@@ -968,13 +571,18 @@ const icons: Record<string, SpriteSpec> = Object.fromEntries(
 );
 
 export const SPRITES: Readonly<Record<string, SpriteSpec>> = {
-  ...characters,
+  ...CHARACTERS,
   ...projectiles,
-  ...world,
+  ...WORLD,
   ...icons,
 };
 
 /** Draws a sprite into a new canvas; unknown keys get a plain disc in `fallbackColor`. */
+/** Every code-drawn sprite key (for the development art gallery). */
+export function spriteKeys(): string[] {
+  return Object.keys(SPRITES);
+}
+
 export function paintSprite(
   key: string,
   fallbackColor = 0xcccccc,

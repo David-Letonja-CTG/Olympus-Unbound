@@ -88,3 +88,24 @@ describe('generateArena', () => {
     }
   });
 });
+
+describe('braziers (plaza lights)', () => {
+  it('places light-bearing braziers around the plazas, deterministically and outside the clear zones', () => {
+    const arena = generateArena(olympus, 847291);
+    const braziers = arena.obstacles.filter((o) => o.kind === 'brazier');
+    expect(braziers.length).toBeGreaterThanOrEqual(8);
+    expect(generateArena(olympus, 847291).obstacles.filter((o) => o.kind === 'brazier')).toEqual(
+      braziers,
+    );
+    for (const b of braziers) {
+      const nearest = Math.min(
+        ...arena.plazas.map((p) => Math.hypot(b.x - p.x, b.y - p.y) - p.radius),
+      );
+      expect(nearest).toBeLessThan(140);
+      expect(
+        Math.hypot(b.x - arena.spawn.x, b.y - arena.spawn.y) - b.radius,
+      ).toBeGreaterThanOrEqual(olympus.spawnClearRadius);
+    }
+    expect(olympus.obstacles.find((o) => o.id === 'brazier')?.light?.radius).toBeGreaterThan(0);
+  });
+});

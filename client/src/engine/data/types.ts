@@ -1,4 +1,9 @@
 import { Modifier, StatBlock } from '../core/stats';
+import { AssetManifest } from './assets';
+import { CutsceneDefinition } from './cutscene';
+
+export type * from './assets';
+export type * from './cutscene';
 
 /**
  * Content schema (D4). Content lives in `src/content/` as typed data; the engine only knows these shapes.
@@ -284,10 +289,21 @@ export interface TerrainType {
   readonly color: number;
 }
 
+/** A light an obstacle gives off (braziers, altars); drawn by the light map (D13). */
+export interface LightSource {
+  readonly radius: number;
+  readonly color: number;
+  /** 0–1. */
+  readonly intensity: number;
+  /** Flicker amount 0–1. */
+  readonly flicker?: number;
+}
+
 export interface ObstacleKind {
   readonly id: string;
   readonly radius: number;
   readonly visual: Visual;
+  readonly light?: LightSource;
 }
 
 export type PointOfInterestRule =
@@ -300,6 +316,13 @@ export type PointOfInterestRule =
       readonly pieces: number;
       readonly missingChance: number;
       readonly plazaTerrain: string;
+    }
+  /** Light-bearing obstacles (braziers) evenly around the edge of every plaza, `offset` beyond its rim. */
+  | {
+      readonly type: 'plazaLights';
+      readonly kind: string;
+      readonly count: number;
+      readonly offset: number;
     }
   /** Groves: clusters of `kind` obstacles. */
   | {
@@ -370,6 +393,12 @@ export interface RealmDefinition {
   readonly name: string;
   readonly description: string;
   readonly backgroundColor: number;
+  /** Night lighting and air (D13): ambient light colour (brightness ≥ 30%), fog and floating particle colours. */
+  readonly atmosphere: {
+    readonly ambient: number;
+    readonly fog: number;
+    readonly particles: number;
+  };
   readonly map: MapGenConfig;
   /** Ordered by `from`; the last phase whose `from` has passed is active. */
   readonly timeline: readonly SpawnPhase[];
@@ -437,4 +466,7 @@ export interface GameContent {
   readonly realms: readonly RealmDefinition[];
   readonly permanentUpgrades: readonly PermanentUpgradeDefinition[];
   readonly balance: BalanceConfig;
+  /** External art (D12); empty means everything is code-drawn. */
+  readonly assets: AssetManifest;
+  readonly cutscenes: readonly CutsceneDefinition[];
 }

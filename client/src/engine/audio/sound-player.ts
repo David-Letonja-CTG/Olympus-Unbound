@@ -146,7 +146,15 @@ export class SoundPlayer {
       this.master = this.context.createGain();
       this.master.gain.value = volume;
       this.master.connect(this.context.destination);
-      void this.context.resume();
+      void this.context.resume().catch(() => undefined);
+      // Browsers keep audio suspended until the first key press or click (e.g. an intro on first launch).
+      const unlock = () => {
+        void this.context?.resume().catch(() => undefined);
+        window.removeEventListener('keydown', unlock);
+        window.removeEventListener('pointerdown', unlock);
+      };
+      window.addEventListener('keydown', unlock);
+      window.addEventListener('pointerdown', unlock);
     } catch {
       // No audio available (old browser or tests): stay silent.
       this.context = undefined;
@@ -176,7 +184,7 @@ export class SoundPlayer {
   }
 
   destroy(): void {
-    void this.context?.close();
+    void this.context?.close().catch(() => undefined);
     this.context = undefined;
   }
 

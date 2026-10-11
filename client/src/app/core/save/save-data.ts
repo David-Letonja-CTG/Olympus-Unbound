@@ -1,7 +1,14 @@
-import { DEFAULT_SETTINGS, GameContent, GameSettings, Modifier } from '../../../engine';
+import {
+  DEFAULT_SETTINGS,
+  GameContent,
+  GameSettings,
+  GRAPHICS_QUALITIES,
+  GraphicsQuality,
+  Modifier,
+} from '../../../engine';
 
 /** Current save format version (D8). Bump it and add a migration when the shape changes. */
-export const SAVE_VERSION = 1;
+export const SAVE_VERSION = 2;
 /** How many processed run IDs are remembered to keep rewards idempotent. */
 export const REMEMBERED_RUNS = 20;
 
@@ -27,17 +34,20 @@ export interface SaveData {
   readonly stats: SaveStats;
   readonly settings: GameSettings;
   readonly processedRunIds: readonly string[];
+  /** The intro has finished or been skipped once (spec: intro-cutscene / plays once on first launch). */
+  readonly introSeen: boolean;
 }
 
-export function freshSave(): SaveData {
+export function freshSave(quality: GraphicsQuality = DEFAULT_SETTINGS.quality): SaveData {
   return {
     version: SAVE_VERSION,
     gold: 0,
     permanentUpgrades: {},
     discovered: { weapons: [], armour: [], relics: [] },
     stats: { runs: 0, victories: 0, kills: 0, bestTimeSeconds: 0 },
-    settings: DEFAULT_SETTINGS,
+    settings: { ...DEFAULT_SETTINGS, quality },
     processedRunIds: [],
+    introSeen: false,
   };
 }
 
@@ -58,14 +68,21 @@ const ids = (v: unknown, known: ReadonlySet<string>) =>
  */
 const MIGRATIONS: Record<number, (save: Raw) => Raw> = {
   0: (save) => ({ ...save, version: 1 }),
+  // v2 remembers the intro (not seen yet) and graphics quality (absent: the detected default).
+  1: (save) => ({ ...save, version: 2, introSeen: false }),
 };
 
 /**
  * Reads a stored save without ever throwing (spec: meta-progression / robust loading): invalid JSON starts
  * fresh, older versions are migrated, every field is validated on its own and unknown IDs are dropped.
+ * `defaultQuality` fills a missing or invalid graphics quality.
  */
-export function parseSave(raw: string | null, content: GameContent): SaveData {
-  const fresh = freshSave();
+export function parseSave(
+  raw: string | null,
+  content: GameContent,
+  defaultQuality: GraphicsQuality = DEFAULT_SETTINGS.quality,
+): SaveData {
+  const fresh = freshSave(defaultQuality);
   if (!raw) return fresh;
   let data: unknown;
   try {
@@ -97,6 +114,7 @@ export function parseSave(raw: string | null, content: GameContent): SaveData {
   const stats = isObject(save['stats']) ? save['stats'] : {};
   const settings = isObject(save['settings']) ? save['settings'] : {};
   const volume = settings['sfxVolume'];
+  const quality = settings['quality'];
 
   return {
     version: SAVE_VERSION,
@@ -120,12 +138,16 @@ export function parseSave(raw: string | null, content: GameContent): SaveData {
           : DEFAULT_SETTINGS.sfxVolume,
       screenShake: flag(settings['screenShake'], DEFAULT_SETTINGS.screenShake),
       damageNumbers: flag(settings['damageNumbers'], DEFAULT_SETTINGS.damageNumbers),
+      quality: GRAPHICS_QUALITIES.includes(quality as GraphicsQuality)
+        ? (quality as GraphicsQuality)
+        : defaultQuality,
     },
     processedRunIds: Array.isArray(save['processedRunIds'])
       ? save['processedRunIds']
           .filter((id): id is string => typeof id === 'string')
           .slice(-REMEMBERED_RUNS)
       : [],
+    introSeen: flag(save['introSeen'], false),
   };
 }
 

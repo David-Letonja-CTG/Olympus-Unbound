@@ -1,6 +1,7 @@
 import { Injectable, InjectionToken, inject } from '@angular/core';
-import { GameContent } from '../../../engine';
+import { GameContent, GraphicsQuality } from '../../../engine';
 import { GAME_CONTENT } from '../game-content';
+import { detectQuality } from '../graphics-quality';
 import { parseSave, SaveData } from './save-data';
 
 export const SAVE_KEY = 'olympus-unbound/save';
@@ -29,6 +30,7 @@ export class SaveStore {
   private readonly storage = inject(SAVE_STORAGE);
   private readonly content: GameContent = inject(GAME_CONTENT);
   private memory: string | null = null;
+  private detected: GraphicsQuality | undefined;
 
   load(): SaveData {
     let raw: string | null = this.memory;
@@ -37,7 +39,7 @@ export class SaveStore {
     } catch {
       // Storage blocked: fall back to what this session wrote.
     }
-    return parseSave(raw, this.content);
+    return parseSave(raw, this.content, this.defaultQuality());
   }
 
   write(save: SaveData): void {
@@ -48,5 +50,11 @@ export class SaveStore {
     } catch {
       // Storage full or blocked: the in-memory copy keeps the session going.
     }
+  }
+
+  /** Detected once per session, only when a save has no quality yet. */
+  private defaultQuality(): GraphicsQuality {
+    this.detected ??= detectQuality();
+    return this.detected;
   }
 }

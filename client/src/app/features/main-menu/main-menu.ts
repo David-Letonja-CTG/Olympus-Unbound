@@ -9,14 +9,15 @@ import { ItemIcon } from '../../shared/item-icon';
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     <main class="screen menu">
-      <div class="crest" aria-hidden="true"><app-item-icon sprite="zeus" [size]="96" /></div>
-      <h1 class="title">OLYMPUS <span>UNBOUND</span></h1>
+      <div class="crest" aria-hidden="true"><app-item-icon sprite="zeus" [size]="104" /></div>
+      <h1 class="title">Olympus <span>Unbound</span></h1>
       <p class="tagline">Unleash the gods. Survive the divine war.</p>
 
       <nav class="panel menu-panel" aria-label="Main menu">
         <a class="btn btn-primary" routerLink="/gods">Play</a>
         <a class="btn" routerLink="/progression">Progression</a>
         <a class="btn" routerLink="/settings">Settings</a>
+        <a class="btn" routerLink="/intro" data-testid="menu-intro">Intro</a>
       </nav>
 
       <p class="gold">
@@ -32,24 +33,29 @@ import { ItemIcon } from '../../shared/item-icon';
     .menu {
       justify-content: center;
       min-height: 100vh;
+      background: radial-gradient(ellipse at 50% 40%, transparent 30%, rgba(0, 0, 0, 0.65) 90%);
     }
     .crest {
-      filter: drop-shadow(0 0 24px rgba(255, 222, 122, 0.45));
+      filter: drop-shadow(0 0 28px rgba(191, 216, 255, 0.35)) drop-shadow(0 6px 10px #000);
     }
     .title {
-      font-size: clamp(2.4rem, 8vw, 5rem);
-      letter-spacing: 0.08em;
+      font-size: clamp(2.6rem, 8.5vw, 5.4rem);
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
       text-align: center;
-      background: linear-gradient(180deg, #fff3c4 10%, #e8c25a 60%, #a8761c);
+      line-height: 1;
+      background: linear-gradient(180deg, #f6ebcc 0%, #d9b467 45%, #7a5520 55%, #c9a55a 100%);
       -webkit-background-clip: text;
       background-clip: text;
       color: transparent;
-      line-height: 1.05;
+      filter: drop-shadow(0 3px 0 #000) drop-shadow(0 0 24px rgba(201, 165, 90, 0.3));
     }
     .title span {
       display: block;
-      font-size: 0.55em;
-      letter-spacing: 0.4em;
+      margin-top: 0.12em;
+      font-size: 0.5em;
+      letter-spacing: 0.5em;
+      padding-left: 0.5em;
     }
     .tagline {
       margin: 0;
@@ -62,13 +68,13 @@ import { ItemIcon } from '../../shared/item-icon';
       display: flex;
       flex-direction: column;
       gap: 12px;
-      padding: 24px;
+      padding: 10px;
       width: min(320px, 100%);
     }
     .menu-panel .btn {
       text-align: center;
       text-decoration: none;
-      font-size: 1.1rem;
+      font-size: 1.05rem;
     }
     .gold {
       display: flex;

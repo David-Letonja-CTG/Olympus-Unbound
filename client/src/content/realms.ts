@@ -8,7 +8,9 @@ export const MOUNT_OLYMPUS: RealmDefinition = {
   name: 'Mount Olympus',
   description:
     'Sacred slopes of marble ruins and olive groves, overrun by corrupted servants of the old gods.',
-  backgroundColor: 0x2b2a33,
+  backgroundColor: 0x16141c,
+  // Moonlit night: cold ambient light, pale fog, embers drifting from the burning temples.
+  atmosphere: { ambient: 0x5a6282, fog: 0x8a93ad, particles: 0xff9a4a },
   map: {
     widthTiles: 64,
     heightTiles: 64,
@@ -16,11 +18,11 @@ export const MOUNT_OLYMPUS: RealmDefinition = {
     borderTiles: 3,
     terrain: {
       types: [
-        { id: 'grass', color: 0x4c6b35 },
-        { id: 'meadow', color: 0x6a7f3f },
-        { id: 'earth', color: 0x7d6446 },
-        { id: 'marble', color: 0xc9c1ad },
-        { id: 'cliff', color: 0x3b3742 },
+        { id: 'grass', color: 0x46573a },
+        { id: 'meadow', color: 0x58613f },
+        { id: 'earth', color: 0x625142 },
+        { id: 'marble', color: 0xaea697 },
+        { id: 'cliff', color: 0x26232d },
       ],
       noiseScale: 9,
       bands: [
@@ -41,6 +43,12 @@ export const MOUNT_OLYMPUS: RealmDefinition = {
       { id: 'statue', radius: 22, visual: { sprite: 'statue', color: 0xdcd6c8 } },
       { id: 'olive_tree', radius: 24, visual: { sprite: 'olive_tree', color: 0x6b8e3d } },
       { id: 'rock', radius: 18, visual: { sprite: 'rock', color: 0x8a8580 } },
+      {
+        id: 'brazier',
+        radius: 14,
+        visual: { sprite: 'brazier', color: 0xff8a3d },
+        light: { radius: 260, color: 0xff9a4a, intensity: 0.95, flicker: 0.3 },
+      },
     ],
     pointsOfInterest: [
       {
@@ -53,6 +61,8 @@ export const MOUNT_OLYMPUS: RealmDefinition = {
         plazaTerrain: 'marble',
       },
       { type: 'cluster', kind: 'olive_tree', count: [5, 8], size: [4, 7], spread: 170 },
+      // After the rings: their plazas get braziers too.
+      { type: 'plazaLights', kind: 'brazier', count: 4, offset: 18 },
     ],
     scatter: [
       { kind: 'statue', density: 0.9 },
@@ -71,7 +81,7 @@ export const MOUNT_OLYMPUS: RealmDefinition = {
         id: 'flowers',
         terrain: ['meadow'],
         density: 70,
-        visual: { sprite: 'flowers', color: 0xf2e86d },
+        visual: { sprite: 'flowers', color: 0xcfc7a0 },
       },
       {
         id: 'pebbles',

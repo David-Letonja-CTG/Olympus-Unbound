@@ -50,7 +50,7 @@ One `localStorage` key (`olympus-unbound/save`) holds a versioned `SaveData` rec
 
 ## D9 — Original placeholder art and sound (Accepted, 2026-10-10)
 
-All sprites, tiles and icons are drawn with Canvas 2D at startup (`engine/art/sprites.ts`); all sound effects are synthesized with Web Audio (`engine/audio/sound-player.ts`). No third-party assets, so there are no licences to track yet. Real art or audio replaces these modules without touching gameplay. Any future asset must be original or properly licensed and recorded in `docs/content.md`.
+All sprites, tiles and icons are drawn with Canvas 2D at startup (`engine/art/`); all sound effects are synthesized with Web Audio (`engine/audio/sound-player.ts`). No third-party assets, so there are no licences to track yet. Real art plugs in through the asset manifest (D12) without touching gameplay; code-drawn art remains the fallback. Any future asset must be original or properly licensed and recorded in `docs/content.md`.
 
 ## D10 — English-only UI for the vertical slice (Accepted, 2026-10-10)
 
@@ -59,3 +59,17 @@ UI text lives in Angular templates and display names in content. A localization 
 ## D11 — Multiplayer-ready, single-player first (Accepted, 2026-10-10)
 
 The simulation keeps a list of players, per-player input (`PlayerInput[]` by slot) and targets the nearest living player; the camera follows the players' centre. Only one player is created and mapped in the slice. Local co-op (shared camera, second gamepad) is a later change; online play is out of scope (D1).
+
+## D12 — Pluggable external art with a licence registry (Accepted, 2026-10-11)
+
+Content refers to sprite keys only. `client/src/content/assets.ts` maps keys to external files (images, Phaser/TexturePacker atlases, sprite sheets, with optional idle/walk/attack/death animations); unmapped keys and files that fail to load use the code-drawn art (D9). Every external file under `public/assets` and `public/fonts` needs a manifest entry with author, source and an allowed licence (CC0, CC-BY, CC-BY-SA, OFL, or commercial with a receipt reference); `npm run assets:check` enforces it in `npm run check` and CI. Attribution licences are listed on the Settings → Credits panel. Art direction: `docs/art-direction.md`.
+
+## D13 — Light map lighting with quality levels (Accepted, 2026-10-11)
+
+Darkness is a screen-sized light map (ambient colour + additive radial lights) multiplied over the world each frame; lights are cheap, so the player, braziers, strikes, fire, glowing projectiles, elites and the boss all emit light. Everything that must be read in combat is drawn above the light map, and enemies get a partly transparent copy above it. Graphics quality Low/Medium/High scales lights, light-map resolution, fog, embers, bloom, colour grading and particles; it applies live and defaults from a renderer check (software rendering → Low).
+
+*Alternative considered:* Phaser's per-sprite lighting with normal maps — rejected for now: a hard light budget, broken batching, and combining it with darkness darkened scenes twice. Shading is painted into the art instead.
+
+## D14 — Cutscenes are in-engine scripts (Accepted, 2026-10-11)
+
+Cutscenes are data (`content/cutscenes/*.ts`): actors, hordes, camera moves, fades, lights, strikes and captions on a timeline. A pure `CutsceneTimeline` (unit-tested) drives a Phaser `CutsceneScene` that reuses the arena, lighting and effects of a run; Angular renders captions and handles skipping. No video files. The intro plays once on first launch (remembered in save v2), is skippable at any moment and replayable from the menu.

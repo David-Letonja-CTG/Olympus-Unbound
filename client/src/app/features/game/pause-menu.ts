@@ -74,7 +74,7 @@ import { SettingsControls } from '../../shared/settings-controls';
       padding: 16px;
     }
     .menu {
-      width: min(400px, 100%);
+      width: min(460px, 100%);
       padding: 24px;
       display: flex;
       flex-direction: column;

@@ -142,6 +142,28 @@ export function generateArena(config: MapGenConfig, seed: number): ArenaData {
   // 3. Points of interest first, so they get the space they need.
   const poiRng = rng.fork('poi');
   for (const rule of config.pointsOfInterest) {
+    if (rule.type === 'plazaLights') {
+      // After the plazas above: braziers evenly around each one, outside the clear zones (spec: visual-atmosphere).
+      const kind = kinds.get(rule.kind);
+      if (!kind) continue;
+      const seen = new Set<string>();
+      for (const plaza of plazas) {
+        const key = `${Math.round(plaza.x)}:${Math.round(plaza.y)}`;
+        if (seen.has(key)) continue;
+        seen.add(key);
+        let radius = plaza.radius + rule.offset + kind.radius;
+        if (plaza.x === spawn.x && plaza.y === spawn.y)
+          radius = Math.max(radius, config.spawnClearRadius + kind.radius + 1);
+        if (plaza.x === bossArena.x && plaza.y === bossArena.y)
+          radius = Math.max(radius, bossArena.radius + kind.radius + 1);
+        const start = poiRng.angle();
+        for (let i = 0; i < rule.count; i++) {
+          const a = start + (i / rule.count) * Math.PI * 2;
+          tryPlace(kind, plaza.x + Math.cos(a) * radius, plaza.y + Math.sin(a) * radius);
+        }
+      }
+      continue;
+    }
     placePointsOfInterest(rule, poiRng, kinds, tryPlace, randomPoint, stamp, (x, y, reach) => {
       const spawnReach = config.spawnClearRadius + reach;
       const arenaReach = bossArena.radius + reach;
@@ -223,7 +245,7 @@ function placeBossArena(
 }
 
 function placePointsOfInterest(
-  rule: PointOfInterestRule,
+  rule: Exclude<PointOfInterestRule, { type: 'plazaLights' }>,
   rng: Rng,
   kinds: ReadonlyMap<string, ObstacleKind>,
   tryPlace: (kind: ObstacleKind, x: number, y: number) => boolean,

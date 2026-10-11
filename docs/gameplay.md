@@ -4,6 +4,7 @@ The game as the player experiences it in the vertical slice. Numbers live in `cl
 
 ## The loop
 
+0. **Intro** — on first launch, a ~55-second scene: the gods at the altar on a moonlit Olympus, the horde breaking in from the north, the gods falling one by one, and Zeus unleashing the storm. Skip with Esc, Enter, Space, a click or the gamepad; replay it from the main menu (*Intro*).
 1. **Main menu** → *Play*, *Progression*, *Settings*; the gold total is shown.
 2. **Choose a god** — Zeus (more gods later).
 3. **Choose a realm** — Mount Olympus, with a seed (random by default; enter one to replay an arena).
@@ -24,6 +25,16 @@ The game as the player experiences it in the vertical slice. Numbers live in `cl
 | Choose an upgrade | 1–3, or arrows/W/S + Enter/Space, or mouse | d-pad + A |
 
 The game pauses by itself when the window loses focus or the tab is hidden.
+
+## Night on Olympus
+
+Runs take place at night. The arena is dark beyond your light; braziers ring the marble plazas, lightning and fire light up their surroundings, fog drifts and embers float over the field. Enemies outside the light stay visible as dim figures; telegraphs, enemy arrows and pickups are always drawn at full strength.
+
+**Graphics quality** (Settings or the pause menu, applies at once): *Low* — fewer lights, no fog, embers, bloom or colour grading (chosen automatically without hardware graphics); *Medium*; *High* — the most lights, denser fog and embers, bloom on lightning and fire.
+
+## The HUD
+
+Health fills an **amphora** (bottom left), the experience bar and your weapons, armour and relics sit along the bottom, the divine ability waits in an iron slot (bottom right) with a dark cooldown sweep and the seconds left, the run time sits in the top plaque with gold and kills at the top right, active synergies at the top left, and the boss appears in a banner under the timer.
 
 ## Zeus, King of the Sky
 
