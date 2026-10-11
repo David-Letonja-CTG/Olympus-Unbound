@@ -140,4 +140,48 @@ export const GODS: readonly GodDefinition[] = [
     affinities: ['physical', 'lightning'],
     visual: { sprite: 'poseidon', color: 0x5fc6c0 },
   },
+  {
+    id: 'athena',
+    name: 'Athena',
+    title: 'Goddess of Wisdom and War',
+    description:
+      'The strategist strikes where the line is weakest. Her spear pierces the ranks, her criticals come often, and the Gorgon on her Aegis turns the horde to stone.',
+    baseStats: { maxHealth: 135, moveSpeed: 205, armor: 2 },
+    startingWeapon: 'spear_of_athena',
+    ability: {
+      id: 'gorgons_gaze',
+      name: "Gorgon's Gaze",
+      description:
+        'Raises the Aegis and the Gorgon’s head upon it: every foe around her is struck and turned to stone for a moment.',
+      element: 'physical',
+      behavior: 'nova',
+      base: {
+        damage: 35,
+        cooldown: 26,
+        amount: 1,
+        speed: 0,
+        pierce: 0,
+        size: 340,
+        range: 340,
+        arc: 0,
+        duration: 0,
+        knockback: 0,
+        chains: 0,
+        critChance: 0.1,
+        homing: 0,
+      },
+      effects: [{ effect: 'stun', chance: 1, duration: 2.5, potency: 0 }],
+      visual: { sprite: 'gorgons_gaze', color: 0xc9d68a },
+    },
+    passive: {
+      name: 'Wisdom of War',
+      description: '+15% experience gained and +7% critical chance.',
+      modifiers: [
+        { stat: 'xpGain', flat: 0.15 },
+        { stat: 'critChance', flat: 0.07 },
+      ],
+    },
+    affinities: ['physical', 'lightning'],
+    visual: { sprite: 'athena', color: 0xe8c070 },
+  },
 ];

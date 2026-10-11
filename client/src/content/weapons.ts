@@ -240,4 +240,33 @@ export const WEAPONS: readonly WeaponDefinition[] = [
     ],
     visual: { sprite: 'bident', color: 0x7fe0c8 },
   },
+  {
+    id: 'spear_of_athena',
+    name: 'Spear of Athena',
+    description:
+      'A bronze javelin thrown with a strategist’s aim: it pierces the line and finds weak points.',
+    element: 'physical',
+    behavior: 'projectile',
+    base: {
+      ...BASE,
+      damage: 26,
+      cooldown: 1.15,
+      amount: 1,
+      speed: 640,
+      pierce: 3,
+      size: 9,
+      range: 540,
+      duration: 1,
+      knockback: 120,
+      critChance: 0.15,
+    },
+    levels: [
+      { text: '+8 damage.', damage: 8 },
+      { text: '+1 javelin.', amount: 1, arc: 0.2 },
+      { text: '+2 pierce, +5% critical chance.', pierce: 2, critChance: 0.05 },
+      { text: 'Throws 20% more often.', cooldown: -0.23 },
+      { text: '+1 javelin, +10 damage.', amount: 1, damage: 10 },
+    ],
+    visual: { sprite: 'spear_of_athena', color: 0xe8c070, projectile: 'proj_javelin' },
+  },
 ];

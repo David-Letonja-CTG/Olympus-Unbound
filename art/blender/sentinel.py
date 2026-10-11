@@ -29,6 +29,7 @@ for ob in (shield, sword):
             slot.material = m
 
 with rest_pose():
-    crest = add('torus', 'Crest', material('CrestMarble', VEIN), (0.0, 0.03, 1.86), (0.13, 0.15, 0.03),
-                (0, 1.5708, 0), major_radius=1.0, minor_radius=0.35, major_segments=20, minor_segments=6)
+    # A solid horsehair crest: a thin disc front to back, its lower half inside the head.
+    crest = add('cylinder', 'Crest', material('CrestMarble', VEIN), (0.0, 0.03, 1.8), (0.13, 0.15, 0.024),
+                (0, 1.5708, 0), vertices=24, radius=1, depth=2)
 attach(crest, 'Head')

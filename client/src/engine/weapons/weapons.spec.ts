@@ -199,4 +199,26 @@ describe('weapon behaviors', () => {
     expect(targets.every((e) => e.vx > 0)).toBe(true);
     expect(sim.state.players[0].abilityTimer).toBeGreaterThan(15);
   });
+
+  it('Athena starts with the Spear of Athena', () => {
+    const sim = quietSim({ godId: 'athena' });
+    expect(sim.state.players[0].loadout.weapons.map((w) => w.def.id)).toEqual(['spear_of_athena']);
+  });
+
+  it("Athena's Gorgon's Gaze turns every foe around her to stone for a moment", () => {
+    const sim = quietSim({ godId: 'athena' });
+    disarm(sim);
+    const near = [
+      [200, 0],
+      [-150, 150],
+      [0, -300],
+    ].map(([dx, dy]) => spawnNear(sim, 'marble_sentinel', dx, dy));
+    const far = spawnNear(sim, 'marble_sentinel', 520, 0);
+    sim.step(STEP, [{ ...NO_INPUT, ability: true }]);
+    expect(near.every((e) => e.health < e.maxHealth && e.status.stun >= 2)).toBe(true);
+    expect(far.health).toBe(far.maxHealth);
+    const held = near.map((e) => [e.x, e.y]);
+    run(sim, 1.5);
+    expect(near.map((e) => [e.x, e.y])).toEqual(held);
+  });
 });

@@ -59,6 +59,7 @@ A `CutsceneDefinition` names its realm, arena seed, duration (the intro is 45–
 | `thunderbolt` | chain | lightning | jumps between enemies, shock |
 | `soul_scythe` | sweep (360°) | shadow | slow, 3% lifesteal |
 | `bident` | sweep (narrow thrust) | shadow | Hades's start; long reach, slow, 3% lifesteal |
+| `spear_of_athena` | projectile | physical | Athena's start; piercing javelin, high crit |
 
 ### Synergies
 
@@ -115,3 +116,7 @@ First pass with the plain autopilot (always takes the first offer, 6 seeds, 9 mi
 ## Balance notes (2026-10-11, Poseidon)
 
 Same autopilot probe: Poseidon first ended runs earlier than Zeus (two at 02:11), so he gained 10 health (135 → 145) and 1 armour. His runs now end at 02:12–04:10, mean 193 s against Zeus's 192 s.
+
+## Balance notes (2026-10-11, Athena)
+
+Autopilot probe (6 seeds; adding her spear to the pool changes everyone's first offers, so gods are compared within one probe): Athena first ended runs earlier than Zeus (mean 173 s vs 217 s), so she gained 10 health (125 → 135) and her spear 4 damage (22 → 26); now mean 185 s, median ≈187 s against Zeus's median ≈172 s.

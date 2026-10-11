@@ -15,6 +15,8 @@ export class InputReader {
   >;
   private readonly previous = new Map<UiInput, boolean>();
   private pauseRequested = false;
+  /** A tap of the ability key between two frames still counts (it may be shorter than a frame at low fps). */
+  private abilityTapped = false;
 
   constructor(private readonly scene: Phaser.Scene) {
     const keyboard = scene.input.keyboard as Phaser.Input.Keyboard.KeyboardPlugin;
@@ -38,6 +40,9 @@ export class InputReader {
       // Angular marks the event when an open menu already handled it (e.g. Escape closing the pause menu).
       if (!event.defaultPrevented) this.pauseRequested = true;
     };
+    const tapAbility = () => (this.abilityTapped = true);
+    keyboard.on('keydown-SPACE', tapAbility);
+    keyboard.on('keydown-SHIFT', tapAbility);
     keyboard.on('keydown-ESC', requestPause);
     keyboard.on('keydown-P', requestPause);
   }
@@ -47,7 +52,7 @@ export class InputReader {
     const k = this.keys;
     let x = (k.right.isDown || k.d.isDown ? 1 : 0) - (k.left.isDown || k.a.isDown ? 1 : 0);
     let y = (k.down.isDown || k.s.isDown ? 1 : 0) - (k.up.isDown || k.w.isDown ? 1 : 0);
-    let ability = k.space.isDown || k.shift.isDown;
+    let ability = k.space.isDown || k.shift.isDown || this.abilityTapped;
     const pad = this.pad();
     if (pad) {
       const stickX = pad.leftStick.x;
@@ -63,6 +68,11 @@ export class InputReader {
       ability ||= pad.A || pad.R2 > 0.5;
     }
     return { moveX: x, moveY: y, ability };
+  }
+
+  /** The simulation has stepped with the current input: a latched ability tap is used up. */
+  consumeTaps(): void {
+    this.abilityTapped = false;
   }
 
   /** True once per key/button press of pause (Escape, P, gamepad Start). */
@@ -94,6 +104,7 @@ export class InputReader {
   reset(): void {
     for (const key of Object.values(this.keys)) key.reset();
     this.pauseRequested = false;
+    this.abilityTapped = false;
   }
 
   private pad(): Phaser.Input.Gamepad.Gamepad | undefined {
