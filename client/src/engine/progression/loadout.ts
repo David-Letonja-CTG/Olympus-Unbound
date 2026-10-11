@@ -22,8 +22,10 @@ export function createWeapon(
 }
 
 /** Every modifier currently affecting a player, from all sources (D4). */
-export function collectModifiers(state: RunState, loadout: Loadout): Modifier[] {
-  const mods: Modifier[] = [...state.god.passive.modifiers, ...state.config.modifiers];
+export function collectModifiers(state: RunState, player: Player): Modifier[] {
+  const loadout = player.loadout;
+  const seat = state.party[player.slot] ?? state.party[0];
+  const mods: Modifier[] = [...player.god.passive.modifiers, ...seat.modifiers];
   if (loadout.armour) {
     for (const level of loadout.armour.def.levels.slice(0, loadout.armour.level))
       mods.push(...level.modifiers);
@@ -40,7 +42,7 @@ export function collectModifiers(state: RunState, loadout: Loadout): Modifier[] 
 /** Recomputes stats after a loadout change; extra maximum health is granted as health too. */
 export function refreshPlayer(state: RunState, player: Player): void {
   const oldMax = player.stats.maxHealth;
-  player.stats = computeStats(state.god.baseStats, collectModifiers(state, player.loadout));
+  player.stats = computeStats(player.god.baseStats, collectModifiers(state, player));
   if (player.stats.maxHealth > oldMax) player.health += player.stats.maxHealth - oldMax;
   player.health = Math.min(player.health, player.stats.maxHealth);
   for (const weapon of [...player.loadout.weapons, player.ability]) {

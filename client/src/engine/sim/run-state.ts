@@ -18,13 +18,33 @@ import {
 } from './types';
 
 /** What a run is started with. */
+/** One player of a run: their god, name and permanent upgrades (from their own save). */
+export interface PartySeat {
+  readonly godId: string;
+  readonly name: string;
+  readonly modifiers: readonly Modifier[];
+}
+
 export interface RunConfig {
   readonly runId: string;
+  /** The first player's god (the only one in a solo run). */
   readonly godId: string;
   readonly realmId: string;
   readonly seed: number;
-  /** Permanent-upgrade modifiers from the save (applied to every player). */
+  /** Permanent-upgrade modifiers of the first player's save. */
   readonly modifiers: readonly Modifier[];
+  /**
+   * Everyone in the run, in slot order (D11). Absent: a solo run of `godId` with `modifiers`. Difficulty scales
+   * with its size (spec: co-op / difficulty per player).
+   */
+  readonly party?: readonly PartySeat[];
+}
+
+/** The party of a run config: its seats, or the solo player. */
+export function partyOf(config: RunConfig): readonly PartySeat[] {
+  return config.party?.length
+    ? config.party
+    : [{ godId: config.godId, name: 'You', modifiers: config.modifiers }];
 }
 
 export function emptyStatus() {
@@ -48,6 +68,14 @@ export class RunState {
   readonly balance: BalanceConfig;
   readonly realm: RealmDefinition;
   readonly god: GodDefinition;
+  readonly party: readonly PartySeat[];
+  /** Difficulty multipliers for the party's size (1 for a solo run). */
+  readonly partyScale: {
+    readonly enemyHealth: number;
+    readonly spawnRate: number;
+    readonly maxAlive: number;
+    readonly bossHealth: number;
+  };
   readonly collision: WorldCollision;
 
   readonly spawnRng: Rng;
@@ -86,7 +114,17 @@ export class RunState {
   ) {
     this.balance = index.content.balance;
     this.realm = index.realm(config.realmId);
-    this.god = index.god(config.godId);
+    this.party = partyOf(config);
+    this.god = index.god(this.party[0].godId);
+    // More players, more and tougher enemies (spec: co-op / difficulty per player).
+    const extra = this.party.length - 1;
+    const coop = this.balance.coop;
+    this.partyScale = {
+      enemyHealth: 1 + coop.enemyHealthPerPlayer * extra,
+      spawnRate: 1 + coop.spawnRatePerPlayer * extra,
+      maxAlive: 1 + coop.maxAlivePerPlayer * extra,
+      bossHealth: 1 + coop.bossHealthPerPlayer * extra,
+    };
     this.collision = new WorldCollision(arena.bounds, arena.obstacles);
     const rng = new Rng(`run:${config.seed}`);
     this.spawnRng = rng.fork('spawn');
@@ -192,7 +230,8 @@ export class RunState {
     if (!options.boss && this.enemies.length >= this.balance.caps.enemies) return undefined;
     const scale = options.boss ? { health: 1, damage: 1 } : this.scaling();
     const elite = options.elite ? this.realm.elite : undefined;
-    const health = def.health * scale.health * (elite?.health ?? 1);
+    const party = options.boss ? this.partyScale.bossHealth : this.partyScale.enemyHealth;
+    const health = def.health * scale.health * (elite?.health ?? 1) * party;
     const enemy: Enemy = {
       id: this.id(),
       def,

@@ -9,11 +9,14 @@ import { Player, PlayerInput } from './types';
 export const DEAD_ZONE = 0.2;
 
 export function createPlayer(state: RunState, slot: number, x: number, y: number): Player {
-  const god = state.god;
+  const seat = state.party[slot] ?? state.party[0];
+  const god = state.index.god(seat.godId);
   const stats = computeStats(god.baseStats, []);
   const player: Player = {
     id: state.id(),
     slot,
+    god,
+    name: seat.name,
     x,
     y,
     px: x,

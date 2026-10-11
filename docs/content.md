@@ -28,6 +28,8 @@ All game content is typed TypeScript in `client/src/content/` (decision D4). The
 
 **New relic / armour / skill / synergy:** modifiers only (see the stat list in [systems.md](systems.md)); skills may require an element or behavior; synergies list requirements (`weapon`/`armour`/`skill` with optional `minLevel`, `relic`, or `element` with `count`).
 
+**Co-op balance:** `balance.coop` in `content/index.ts` sets what each extra player adds (enemy health, spawn rate, enemies alive at once, boss health).
+
 **New realm:** a `RealmDefinition` with `atmosphere` (ambient light ≥ 30% brightness, fog and particle colours), loading-screen `tips`, terrain types and bands, obstacle kinds, `roads` (width, wander), points of interest (`ring` ruins, a `temple` landmark with column/fallen/altar/light kinds, `walls`, `cluster` groves, `plazaLights`), scatter and decoration rules, a timeline, events, scaling, elite multipliers, a boss and rewards → painters for its sprites → it appears in realm selection automatically.
 
 **New god:** a `GodDefinition` (base stats, starting weapon, ability as a weapon-like definition, passive modifiers, affinities, sprite) → it appears in god selection automatically.

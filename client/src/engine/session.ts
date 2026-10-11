@@ -55,7 +55,7 @@ export type GameEvent =
   | { readonly type: 'ready' }
   | { readonly type: 'hud'; readonly hud: HudSnapshot }
   | { readonly type: 'choice'; readonly choice: UpgradeChoice }
-  | { readonly type: 'choiceResolved'; readonly offer: UpgradeOffer }
+  | { readonly type: 'choiceResolved'; readonly offer: UpgradeOffer; readonly playerId: number }
   | { readonly type: 'paused' }
   | { readonly type: 'resumed' }
   | { readonly type: 'announcement'; readonly text: string; readonly kind: AnnouncementKind }

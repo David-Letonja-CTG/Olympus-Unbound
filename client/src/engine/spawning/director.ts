@@ -33,12 +33,16 @@ export class SpawnDirector {
     const state = this.state;
     const phase = this.currentPhase();
     const bossActive = !!state.boss && !state.boss.dead;
-    const rate = phase.rate * (bossActive ? state.realm.boss.spawnRateMultiplier : 1);
+    const rate =
+      phase.rate *
+      (bossActive ? state.realm.boss.spawnRateMultiplier : 1) *
+      state.partyScale.spawnRate;
+    const maxAlive = Math.round(phase.maxAlive * state.partyScale.maxAlive);
 
     this.accumulator += rate * dt;
     while (this.accumulator >= 1) {
       this.accumulator -= 1;
-      if (this.regularCount() >= phase.maxAlive) continue;
+      if (this.regularCount() >= maxAlive) continue;
       const pick = state.spawnRng.weighted(phase.enemies, (e) => e.weight);
       if (pick) this.spawnAtEdge(state.index.enemy(pick.id));
     }
@@ -50,7 +54,7 @@ export class SpawnDirector {
         dt * (bossActive ? state.realm.boss.spawnRateMultiplier : 1);
       if (t >= group.every) {
         this.groupTimers.set(key, t - group.every);
-        if (this.regularCount() < phase.maxAlive)
+        if (this.regularCount() < maxAlive)
           this.spawnPack(
             state.index.enemy(group.id),
             state.spawnRng.int(group.size[0], group.size[1]),
@@ -83,10 +87,16 @@ export class SpawnDirector {
   spawnPosition(radius: number): { x: number; y: number } | undefined {
     const state = this.state;
     const rng = state.spawnRng;
-    const focus = state.focus();
+    // Around one living player's view — a random one in co-op, so pressure follows everyone — and never
+    // inside any player's view (spec: enemy-spawning / fair spawn positions).
+    const living = state.players.filter((p) => p.alive);
+    const focus =
+      living.length > 1 ? living[Math.floor(rng.next() * living.length)] : state.focus();
     const hw = state.view.halfWidth + SPAWN_MARGIN + radius;
     const hh = state.view.halfHeight + SPAWN_MARGIN + radius;
     const b = state.arena.bounds;
+    const seen = (x: number, y: number) =>
+      living.some((p) => Math.abs(x - p.x) < hw - 1 && Math.abs(y - p.y) < hh - 1);
     for (let attempt = 0; attempt < 16; attempt++) {
       // A random point on the rectangle around the view, sides weighted by length.
       const along = rng.next() * (4 * hw + 4 * hh);
@@ -108,6 +118,7 @@ export class SpawnDirector {
       if (x < b.minX + radius || x > b.maxX - radius || y < b.minY + radius || y > b.maxY - radius)
         continue;
       if (state.collision.isBlocked(x, y, radius)) continue;
+      if (living.length > 1 && seen(x, y)) continue;
       return { x, y };
     }
     return undefined;
