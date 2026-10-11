@@ -13,7 +13,7 @@ A mythological horde-survival roguelite. The player is a god thrown into hostile
 5. **Replayability** — seeded arenas, varied builds, gods, enemies and rewards.
 6. **Mythological identity** — each god and realm is distinctive.
 7. **Maintainable architecture** — new content does not need core rewrites.
-8. **Local multiplayer potential** — couch co-op later, without premature complexity.
+8. **Play together** — co-op rooms for up to four friends, joined by code, browser to browser (D16); couch co-op later.
 
 ## Audience and platform
 
@@ -33,6 +33,7 @@ Choose a god (Zeus, Hades, …) → choose a realm (Olympus, Atlantis, Egyptian 
 |---|---|---|
 | 0–5 Vertical slice | Zeus, Mount Olympus, 8 weapons, 4 armour, 6 relics, 16 skills, 7 synergies, 8 enemies, elites, the Cyclops, run summary, permanent upgrades, codex, settings | **Done** (`add-vertical-slice`) |
 | 6 Content and polish | More weapons/relics, music, richer effects and animation, UI refinement, balance passes | Next |
-| 7 Expansion | Hades; Atlantis and further realms and bosses; unlockable gods/realms; achievements; controller refinement; local co-op; mobile controls if prioritized | Later |
+| 6b Gods, realm and co-op | Hades, Poseidon, Athena; a painted realm and loading screen; co-op parties (difficulty per player) and online rooms by code | **Done** (`add-hades` … `add-coop-rooms`) |
+| 7 Expansion | Atlantis and further realms and bosses; unlockable gods/realms; achievements; controller refinement; reviving allies, host migration; local co-op; mobile controls if prioritized | Later |
 
 Each step is an OpenSpec change (see `CLAUDE.md`).

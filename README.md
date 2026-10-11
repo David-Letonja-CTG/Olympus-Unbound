@@ -2,11 +2,11 @@
 
 *Unleash the gods. Survive the divine war.*
 
-An original mythological horde-survival roguelite that runs entirely in the browser. Choose a god, enter a procedurally generated realm, survive ever-larger hordes, combine weapons, armour, relics and skills into synergies, defeat the realm's boss, and spend your rewards on lasting upgrades — then go again.
+An original mythological horde-survival roguelite that runs entirely in the browser. Choose a god, enter a procedurally generated realm, survive ever-larger hordes, combine weapons, armour, relics and skills into synergies, defeat the realm's boss, and spend your rewards on lasting upgrades — then go again. Play alone, or with up to three friends in a co-op room joined by code.
 
 **Now:** a night-lit, dark-fantasy presentation (dynamic lighting, fog, braziers, an ornate stone-and-iron UI), an in-engine intro scene, and a pre-rendered cast of Greek myth — Zeus, satyrs, harpies, Stymphalian birds, centaurs, minotaurs, fallen oracles, marble sentinels and the Cyclops — rendered in Blender from licensed Flare models (`art/blender/`), with walk cycles that keep pace with movement and the Cinzel display font.
 
-**Vertical slice:** Zeus, Hades, Poseidon and Athena · Mount Olympus · 10 weapons · 4 armour · 6 relics · 16 skills · 7 synergies · 8 enemy types · elites · the Cyclops · run summary · permanent upgrades · codex · keyboard and gamepad.
+**Vertical slice:** Zeus, Hades, Poseidon and Athena · Mount Olympus · 10 weapons · 4 armour · 6 relics · 16 skills · 7 synergies · 8 enemy types · elites · the Cyclops · run summary · permanent upgrades · codex · co-op rooms for up to 4 players (peer-to-peer, difficulty per player) · keyboard and gamepad.
 
 ## Play it locally
 

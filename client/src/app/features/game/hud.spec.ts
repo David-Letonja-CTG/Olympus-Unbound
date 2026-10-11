@@ -24,6 +24,7 @@ const base: HudSnapshot = {
     maxHealth: 12000,
   },
   enemies: 0,
+  waitingFor: [],
 };
 
 function render(hud: HudSnapshot) {

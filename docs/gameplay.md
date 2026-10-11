@@ -5,7 +5,7 @@ The game as the player experiences it in the vertical slice. Numbers live in `cl
 ## The loop
 
 0. **Intro** — on first launch, a ~55-second scene: the gods at the altar on a moonlit Olympus, the horde breaking in from the north, the gods falling one by one, and Zeus unleashing the storm. Skip with Esc, Enter, Space, a click or the gamepad; replay it from the main menu (*Intro*).
-1. **Main menu** → *Play*, *Progression*, *Settings*; the gold total is shown.
+1. **Main menu** → *Play*, *Co-op*, *Progression*, *Settings*; the gold total is shown.
 2. **Choose a god** — Zeus, Hades, Poseidon or Athena (more gods later).
 3. **Choose a realm** — Mount Olympus, with a seed (random by default; enter one to replay an arena).
 4. **Survive.** Weapons fire on their own; the player moves, positions, collects XP and uses the divine ability.
@@ -24,7 +24,19 @@ The game as the player experiences it in the vertical slice. Numbers live in `cl
 | Pause / resume | Esc or P | Start |
 | Choose an upgrade | 1–3, or arrows/W/S + Enter/Space, or mouse | d-pad + A |
 
-The game pauses by itself when the window loses focus or the tab is hidden.
+The game pauses by itself when the window loses focus or the tab is hidden (not in a room's run).
+
+## Co-op rooms
+
+Up to four gods fight one horde, each player in their own browser.
+
+- **Create a room** (*Co-op → Create room*): you get a five-character code, like `K7QXP`, to share with friends. **Join a room** with a friend's code.
+- **Lobby:** everyone picks a name and a god (several players may pick the same god), and guests mark themselves *Ready*. The host picks the realm and starts once everyone is ready. The loading screen lists the party and the room code, and the run starts when everyone has loaded.
+- **Together:** each camera follows its own god, or an ally after you fall. Experience and level are shared, but each player gets their own three offers and picks their own upgrade. The run waits until everyone has chosen (*Waiting for Bo to choose…*).
+- **Difficulty per player:** every god beyond the first adds 65% enemy health, 50% more spawns and enemies alive at once, and 90% boss health.
+- **Pause:** in a room, the menu does not stop the fight, and leaving the window does not pause. The host's menu offers *End run for everyone*, a guest's *Leave room*.
+- **Leaving:** a guest who leaves (or loses the connection) leaves the battle, and the run goes on. If the host leaves, everyone's run ends as abandoned. Everyone keeps their own rewards in their own save. A room lasts one run; the summary offers *Co-op* to start another.
+- Rooms connect browsers directly (WebRTC). A public service only introduces them; nothing is stored online. Keep the host's game visible, because browsers slow down hidden tabs.
 
 ## Night on Olympus
 

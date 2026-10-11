@@ -87,7 +87,20 @@ Synergies are checked after every change; each activates once, is announced, and
 
 ## Co-op — `engine/sim/` (D11)
 
-A run's `party` lists 1–4 seats (god, name, the player's own permanent upgrades); each player has their own god, stats, ability, loadout and offers. XP and level are shared; a level-up or treasure opens a round with one choice per living player, and the run resumes when all have chosen. With `n` players, enemy health ×(1 + 0.65·(n−1)), spawn rate ×(1 + 0.5·(n−1)), enemies alive at once ×(1 + 0.5·(n−1)), boss health ×(1 + 0.9·(n−1)) (`balance.coop`). Spawns pick a random living player's view and reject any point inside any living player's view. `hud(playerId)` and `resultFor(playerId)` give each player's view.
+A run's `party` lists 1–4 seats (god, name, the player's own permanent upgrades); each player has their own god, stats, ability, loadout and offers. XP and level are shared; a level-up or treasure opens a round with one choice per living player, and the run resumes when all have chosen. With `n` players, enemy health ×(1 + 0.65·(n−1)), spawn rate ×(1 + 0.5·(n−1)), enemies alive at once ×(1 + 0.5·(n−1)), boss health ×(1 + 0.9·(n−1)) (`balance.coop`). Spawns pick a random living player's view and reject any point inside any living player's view. `hud(playerId)` and `resultFor(playerId)` give each player's view; `hud().waitingFor` names the players a round still waits for. `leave(playerId)` takes a player out of the battle (not alive, never revived) and closes a round that only waited for them. A slot without input stands still.
+
+## Rooms — `engine/net/` (D16)
+
+| Parameter | Value |
+|---|---|
+| Frames (snapshot + events) | 20 Hz of real time, every guest |
+| HUD | 10 Hz; every 10th also carries the guest's result so far |
+| Guest input | every guest step (60 Hz); the host applies one per step, in order; more than 6 queued → the oldest are dropped down to 3 |
+| Interpolation | drawn at newest − 100 ms; eased toward it, jumps when more than 250 ms off |
+| Prediction | own god only; corrections eased (15% per frame kept), jumps beyond 64 px |
+| Snapshot | positions i16 at ¼ px, IDs u32, flags and health ratio in bytes; under 20 bytes per entity (test) |
+| Loading | the host starts when every guest has loaded, at most 60 s |
+| Room code | 5 characters from `ABCDEFGHJKLMNPQRSTUVWXYZ23456789`; up to 4 members |
 
 ## Lighting and atmosphere — `engine/phaser/atmosphere.ts` (D13)
 

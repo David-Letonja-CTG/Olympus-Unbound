@@ -1,8 +1,8 @@
 import Phaser from 'phaser';
 import { SoundCue, SoundPlayer } from '../audio/sound-player';
 import { GameEvent, GameSettings } from '../session';
-import { RunSimulation, STEP } from '../sim/run-simulation';
-import { SimEvent } from '../sim/types';
+import { RunDriver } from '../net/driver';
+import { NO_INPUT, SimEvent } from '../sim/types';
 import { queueAssets, SpriteResolver } from './assets';
 import { Atmosphere, LightMap, QUALITY, viewAround } from './atmosphere';
 import { Effects } from './effects';
@@ -31,7 +31,8 @@ const ATTACK_SOUNDS: Record<string, SoundCue> = {
 };
 
 export interface SceneHost {
-  readonly sim: RunSimulation;
+  /** Where the run comes from: the local simulation, or a room's host (D16). */
+  readonly driver: RunDriver;
   readonly settings: () => GameSettings;
   readonly emit: (event: GameEvent) => void;
   readonly sound: SoundPlayer;
@@ -39,8 +40,9 @@ export interface SceneHost {
 }
 
 /**
- * Hosts a `RunSimulation` (D2): reads input, advances the simulation in fixed steps, draws the result and turns
- * simulation events into feedback and session events. Gameplay rules live in the simulation, not here.
+ * Runs a game from a `RunDriver` (D2, D16): reads input, advances the driver (the simulation in fixed steps, or a
+ * room's host's world), draws the result and turns events into feedback and session events. Gameplay rules live in
+ * the simulation, not here.
  */
 export class ArenaScene extends Phaser.Scene {
   private input$!: InputReader;
@@ -51,9 +53,8 @@ export class ArenaScene extends Phaser.Scene {
   private failedAssets = new Set<string>();
   private resolver!: SpriteResolver;
   private ground!: GroundBuilder;
-  /** Loading: painting the ground, then building the scene; the simulation waits until `ready`. */
-  private loading: 'realm' | 'scene' | 'ready' = 'realm';
-  private accumulator = 0;
+  /** Loading: painting the ground, building the scene, then (rooms) waiting for the party; the run waits. */
+  private loading: 'realm' | 'scene' | 'party' | 'ready' = 'realm';
   private hudTimer = 0;
   private readonly onBlur = () => this.autoPause();
   private readonly onVisibility = () => {
@@ -66,21 +67,21 @@ export class ArenaScene extends Phaser.Scene {
 
   preload(): void {
     // External art first (spec: asset-pipeline / loading with progress); failures fall back to code-drawn art.
-    const content = this.host.sim.state.index.content;
+    const content = this.host.driver.index.content;
     this.failedAssets = queueAssets(this, content.assets, (progress) =>
       this.host.emit({ type: 'loadProgress', progress, stage: 'art' }),
     );
   }
 
   create(): void {
-    const { sim } = this.host;
-    const realm = sim.state.realm;
-    const content = sim.state.index.content;
+    const { driver } = this.host;
+    const realm = driver.realm;
+    const content = driver.index.content;
     registerTextures(this, content, [realm.map]);
     this.cameras.main.setBackgroundColor(this.host.backgroundColor);
     this.resolver = new SpriteResolver(this, content.assets, this.failedAssets);
     // The ground is painted over the next frames (spec: run-loading / progress stages); the world follows.
-    this.ground = new GroundBuilder(sim.arena, realm.map, this.host.settings().quality);
+    this.ground = new GroundBuilder(driver.arena, realm.map, this.host.settings().quality);
     this.input$ = new InputReader(this);
 
     window.addEventListener('blur', this.onBlur);
@@ -94,7 +95,15 @@ export class ArenaScene extends Phaser.Scene {
 
   /** One loading step per frame: paint more ground, then build the scene, then start (spec: run-loading). */
   private continueLoading(): void {
-    const { sim } = this.host;
+    const { driver } = this.host;
+    if (this.loading === 'party') {
+      // Rooms: every member loads before the run starts (spec: rooms / lobby). The room's messages keep flowing.
+      const dt = Math.min(this.game.loop.rawDelta / 1000, MAX_FRAME_SECONDS);
+      driver.advance(dt, NO_INPUT, () => undefined);
+      this.host.emit({ type: 'loadProgress', progress: driver.partyProgress, stage: 'party' });
+      if (driver.started) this.start();
+      return;
+    }
     if (this.loading === 'realm') {
       const done = this.ground.advance(GROUND_BUDGET_MS);
       this.host.emit({ type: 'loadProgress', progress: this.ground.progress, stage: 'realm' });
@@ -105,26 +114,36 @@ export class ArenaScene extends Phaser.Scene {
       }
       return;
     }
-    const realm = sim.state.realm;
-    this.view = new WorldView(this, this.resolver, sim.arena, realm.map, this.ground.canvas);
+    const realm = driver.realm;
+    const arena = driver.arena;
+    this.view = new WorldView(this, this.resolver, arena, realm.map, this.ground.canvas);
     this.effects = new Effects(this);
     this.lightMap = new LightMap(this, realm.atmosphere.ambient);
-    this.atmosphere = new Atmosphere(this, sim.arena.width, sim.arena.height, realm.atmosphere);
+    this.atmosphere = new Atmosphere(this, arena.width, arena.height, realm.atmosphere);
     this.applySettings(this.host.settings());
 
     const camera = this.cameras.main;
-    camera.setBounds(0, 0, sim.arena.width, sim.arena.height);
+    camera.setBounds(0, 0, arena.width, arena.height);
     camera.roundPixels = false;
     this.fitCamera();
     this.scale.on(Phaser.Scale.Events.RESIZE, this.fitCamera, this);
-    const p = sim.state.players[0];
-    camera.centerOn(p.x, p.y);
-
-    this.loading = 'ready';
-    this.accumulator = 0;
     this.host.emit({ type: 'loadProgress', progress: 1, stage: 'scene' });
+    driver.markLoaded();
+    if (driver.started) this.start();
+    else this.loading = 'party';
+  }
+
+  private start(): void {
+    const focus = this.host.driver.focus();
+    this.cameras.main.centerOn(focus.x, focus.y);
+    this.loading = 'ready';
     this.host.emit({ type: 'ready' });
-    this.host.emit({ type: 'hud', hud: sim.hud() });
+    this.emitHud();
+  }
+
+  private emitHud(): void {
+    const hud = this.host.driver.hud();
+    if (hud) this.host.emit({ type: 'hud', hud });
   }
 
   /** Settings apply live, including graphics quality (spec: visual-atmosphere / graphics quality levels). */
@@ -139,7 +158,7 @@ export class ArenaScene extends Phaser.Scene {
   }
 
   override update(): void {
-    const { sim } = this.host;
+    const { driver } = this.host;
     if (this.loading !== 'ready') {
       this.continueLoading();
       return;
@@ -150,51 +169,42 @@ export class ArenaScene extends Phaser.Scene {
     const dt = Math.min(this.game.loop.rawDelta / 1000, MAX_FRAME_SECONDS);
 
     if (this.input$.takePauseRequest()) {
-      if (sim.phase === 'playing' || sim.phase === 'choosing') {
-        if (sim.pause()) this.host.emit({ type: 'paused' });
-      } else if (sim.phase === 'paused') {
+      if (driver.paused) {
         this.host.emit({ type: 'uiInput', input: 'pause' });
+      } else if (driver.phase === 'playing' || driver.phase === 'choosing') {
+        if (driver.pause()) this.host.emit({ type: 'paused' });
       }
     }
 
-    if (sim.phase === 'playing') {
-      const input = this.input$.player();
-      this.accumulator += dt;
-      while (this.accumulator >= STEP && sim.phase === 'playing') {
-        sim.step(STEP, [input]);
-        this.accumulator -= STEP;
-        this.input$.consumeTaps();
-      }
-    } else {
-      this.accumulator = 0;
+    driver.advance(dt, this.input$.player(), () => this.input$.consumeTaps());
+    if (driver.paused || driver.phase !== 'playing')
       for (const ui of this.input$.uiInputs()) this.host.emit({ type: 'uiInput', input: ui });
-    }
 
-    for (const event of sim.events()) this.handle(event);
+    for (const event of driver.events()) this.handle(event);
 
-    const alpha = sim.phase === 'playing' ? this.accumulator / STEP : 1;
+    const alpha = driver.alpha;
     const camera = this.cameras.main;
     const time = this.time.now;
-    this.view.sync(sim.state, alpha, time, this.lightMap);
+    const world = driver.world;
+    this.view.sync(world, alpha, time, this.lightMap);
     this.view.addArenaLights(this.lightMap, time);
-    const focus = sim.state.players[0];
-    const fx = focus.px + (focus.x - focus.px) * alpha;
-    const fy = focus.py + (focus.y - focus.py) * alpha;
-    camera.centerOn(fx, fy);
-    const view = viewAround(camera, fx, fy, sim.arena.width, sim.arena.height);
-    this.effects.update(sim.state, sim.phase === 'playing' ? dt : 0, camera, this.lightMap);
+    const focus = driver.focus();
+    camera.centerOn(focus.x, focus.y);
+    const { width, height } = driver.arena;
+    const view = viewAround(camera, focus.x, focus.y, width, height);
+    this.effects.update(world, driver.phase === 'playing' ? dt : 0, camera, this.lightMap);
     this.atmosphere.update(camera, view, dt);
     this.lightMap.render(view);
 
     this.hudTimer += this.game.loop.rawDelta;
     if (this.hudTimer >= HUD_INTERVAL_MS) {
       this.hudTimer = 0;
-      this.host.emit({ type: 'hud', hud: sim.hud() });
+      this.emitHud();
     }
   }
 
   private handle(event: SimEvent): void {
-    const { sound, emit, sim } = this.host;
+    const { sound, emit, driver } = this.host;
     this.effects.handle(event);
     switch (event.type) {
       case 'hit':
@@ -205,6 +215,8 @@ export class ArenaScene extends Phaser.Scene {
         if (event.boss) this.shake(600, 0.012);
         return;
       case 'playerHurt':
+        // Only this player's own wounds hurt on this screen (spec: rooms).
+        if (event.playerId !== driver.localId) return;
         sound.play('hurt');
         this.shake(120, 0.004);
         return;
@@ -227,8 +239,8 @@ export class ArenaScene extends Phaser.Scene {
         sound.play('charge');
         return;
       case 'levelUp': {
-        const p = sim.state.players[0];
-        this.effects.levelUpBurst(p.x, p.y);
+        // The level is shared: every living god glows.
+        for (const p of driver.world.players) if (p.alive) this.effects.levelUpBurst(p.x, p.y);
         sound.play('levelUp');
         return;
       }
@@ -238,7 +250,7 @@ export class ArenaScene extends Phaser.Scene {
       case 'choiceResolved':
         sound.play('choose');
         emit({ type: 'choiceResolved', offer: event.offer, playerId: event.playerId });
-        emit({ type: 'hud', hud: sim.hud() });
+        this.emitHud();
         return;
       case 'synergy':
         sound.play('synergy');
@@ -262,7 +274,7 @@ export class ArenaScene extends Phaser.Scene {
         return;
       case 'runEnded':
         sound.play(event.result.outcome === 'victory' ? 'victory' : 'defeat');
-        emit({ type: 'hud', hud: sim.hud() });
+        this.emitHud();
         emit({ type: 'runEnded', result: event.result });
         return;
       default:
@@ -277,7 +289,9 @@ export class ArenaScene extends Phaser.Scene {
   private autoPause(): void {
     this.input$?.reset();
     if (this.loading !== 'ready') return; // nothing to pause yet; the run starts when loading ends
-    if (this.host.sim.pause()) this.host.emit({ type: 'paused' });
+    // A room's run goes on without this window (spec: rooms / pausing in a room).
+    if (this.host.driver.shared) return;
+    if (this.host.driver.pause()) this.host.emit({ type: 'paused' });
   }
 
   private fitCamera(): void {
@@ -286,6 +300,6 @@ export class ArenaScene extends Phaser.Scene {
     const zoom = Math.max(0.35, Math.min(width / VIEW_WIDTH, height / VIEW_HEIGHT));
     camera.setZoom(zoom);
     this.lightMap?.resize();
-    this.host.sim.setView(width / zoom / 2, height / zoom / 2);
+    this.host.driver.setView(width / zoom / 2, height / zoom / 2);
   }
 }

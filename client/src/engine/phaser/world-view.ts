@@ -1,8 +1,8 @@
 import Phaser from 'phaser';
 import { ArenaData } from '../maps/generate-arena';
 import { Element, LightSource, MapGenConfig } from '../data/types';
-import { RunState } from '../sim/run-state';
-import { STEP } from '../sim/run-simulation';
+import { STEP } from '../sim/run-state';
+import { WorldFrame } from '../sim/world-frame';
 import { applySprite, SpriteResolver } from './assets';
 import { ATMOSPHERE_DEPTH, LightMap, QualityProfile } from './atmosphere';
 import { DETAIL_TEXTURE, SHADOW_TEXTURE, shade } from './textures';
@@ -145,7 +145,9 @@ export class WorldView {
     }
   }
 
-  sync(state: RunState, alpha: number, time: number, lights: LightMap): void {
+  sync(state: WorldFrame, alpha: number, time: number, lights: LightMap): void {
+    // Movement per step, whatever the gap between the previous and current positions (a guest's snapshots, D16).
+    const perStep = STEP / state.span;
     const flash = Phaser.TintModes.FILL;
     const multiply = Phaser.TintModes.MULTIPLY;
     const p = this.pools;
@@ -158,7 +160,7 @@ export class WorldView {
       const moving = pl.moving;
       const r = this.resolver.resolve(pl.god.visual.sprite);
       const sprite = p.player.get(pl.id);
-      const speed = Math.hypot(pl.x - pl.px, pl.y - pl.py) / STEP;
+      const speed = Math.hypot(pl.x - pl.px, pl.y - pl.py) / state.span;
       applySprite(sprite, r, 1.15, pl.facingX < 0, moving ? 'walk' : 'idle', speed);
       const bob = r.codeDrawn && moving ? Math.sin(time / 70) * 1.5 : 0;
       sprite
@@ -186,8 +188,8 @@ export class WorldView {
     for (const e of state.enemies) {
       const x = lerp(e.px, e.x, alpha);
       const y = lerp(e.py, e.y, alpha);
-      const vx = e.x - e.px;
-      const vy = e.y - e.py;
+      const vx = (e.x - e.px) * perStep;
+      const vy = (e.y - e.py) * perStep;
       const moving = vx * vx + vy * vy > 0.01;
       const r = this.resolver.resolve(e.def.visual.sprite);
       const scale = e.radius / e.def.radius;

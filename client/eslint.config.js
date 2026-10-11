@@ -12,6 +12,16 @@ const noAngular = [
     group: ['**/content', '**/content/*'],
     message: 'The engine receives content through createGameSession; it must not import it (D4).',
   },
+  { group: ['peerjs'], message: 'The engine talks to rooms only through PeerLink (D16).' },
+];
+
+/** Angular sees the engine only through its public surface (D3). */
+const appBoundaries = [
+  {
+    group: ['**/engine/**'],
+    message: 'Import the engine only through src/engine/index.ts (D3).',
+  },
+  { group: ['phaser'], message: 'Angular must not use Phaser directly (D2).' },
 ];
 
 module.exports = defineConfig([
@@ -42,22 +52,26 @@ module.exports = defineConfig([
     rules: {},
   },
   {
-    // Angular sees the engine only through its public surface (D3).
     files: ['src/app/**/*.ts'],
+    ignores: ['src/app/core/rooms/peer-network.ts'],
     rules: {
       'no-restricted-imports': [
         'error',
         {
           patterns: [
+            ...appBoundaries,
             {
-              group: ['**/engine/**'],
-              message: 'Import the engine only through src/engine/index.ts (D3).',
+              group: ['peerjs'],
+              message: 'Only core/rooms/peer-network.ts uses PeerJS, loaded lazily (D16).',
             },
-            { group: ['phaser'], message: 'Angular must not use Phaser directly (D2).' },
           ],
         },
       ],
     },
+  },
+  {
+    files: ['src/app/core/rooms/peer-network.ts'],
+    rules: { 'no-restricted-imports': ['error', { patterns: appBoundaries }] },
   },
   {
     // Content is data: it may use engine types only.

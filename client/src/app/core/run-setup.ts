@@ -22,6 +22,8 @@ export function parseSeed(text: string): number | undefined {
 export interface FinishedRun {
   readonly result: RunResult;
   readonly rewards: RunRewards;
+  /** Played in a room (spec: rooms): the summary offers co-op again instead of a solo run. */
+  readonly inRoom?: boolean;
 }
 
 /** What the player chose for the next run, and how the last run went. Kept in memory only. */

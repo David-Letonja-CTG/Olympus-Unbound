@@ -11,6 +11,7 @@ import {
 } from '../../../engine';
 import { GAME_SESSION_FACTORY } from '../../core/game-content';
 import { Progression } from '../../core/progression';
+import { RoomRun, RoomService } from '../../core/rooms/room-service';
 import { RunSetup } from '../../core/run-setup';
 import { SAVE_STORAGE } from '../../core/save/save-store';
 import { PlayScreen } from './play-screen';
@@ -62,6 +63,7 @@ const hud: HudSnapshot = {
   relics: [],
   synergies: [{ id: 'storm', name: 'Storm', description: '' }],
   enemies: 10,
+  waitingFor: [],
 };
 
 const choice: UpgradeChoice = {
@@ -103,7 +105,7 @@ const choice: UpgradeChoice = {
   ],
 };
 
-async function setup() {
+async function setup(room?: RoomRun) {
   const session = new StubSession();
   const data: Record<string, string> = {};
   TestBed.configureTestingModule({
@@ -125,6 +127,7 @@ async function setup() {
       },
     ],
   });
+  if (room) TestBed.inject(RoomService).run.set(room);
   const run = TestBed.inject(RunSetup);
   run.godId.set('zeus');
   run.realmId.set('mount_olympus');
@@ -234,5 +237,49 @@ describe('PlayScreen', () => {
     });
     fixture.destroy();
     expect(session.destroyed).toBe(true);
+  });
+
+  it('plays a room run as a guest: party, room code, own pause menu, waiting line (spec: rooms)', async () => {
+    const link = {
+      send: () => undefined,
+      onMessage: () => () => undefined,
+      onClose: () => () => undefined,
+      close: () => undefined,
+    };
+    const room: RoomRun = {
+      code: 'K7QXP',
+      config: {
+        runId: 'r',
+        godId: 'zeus',
+        realmId: 'mount_olympus',
+        seed: 99,
+        modifiers: [],
+        party: [
+          { godId: 'zeus', name: 'Ada', modifiers: [] },
+          { godId: 'hades', name: 'Bo', modifiers: [] },
+        ],
+      },
+      seat: { role: 'guest', slot: 1, host: link },
+      members: [
+        { slot: 0, name: 'Ada', godId: 'zeus', ready: true, host: true },
+        { slot: 1, name: 'Bo', godId: 'hades', ready: true, host: false },
+      ],
+      localSeat: 1,
+    };
+    const { session, el, update } = await setup(room);
+    expect(session.options?.room).toBe(room.seat);
+    expect(session.options?.run.seed).toBe(99);
+    expect(el.querySelector('[data-testid=loading-room-code]')?.textContent).toContain('K7QXP');
+    const members = [...el.querySelectorAll('[data-testid=party-member]')];
+    expect(members).toHaveLength(2);
+    expect(members[0].textContent).toMatch(/Ada\s*Host\s*Zeus/);
+    expect(members[1].textContent).toMatch(/Bo\s*You\s*Hades/);
+
+    await update({ type: 'hud', hud: { ...hud, phase: 'choosing', waitingFor: ['Ada'] } });
+    expect(el.querySelector('[data-testid=waiting-for]')?.textContent).toContain('Waiting for Ada');
+
+    await update({ type: 'paused' });
+    expect(el.textContent).toContain('The fight goes on');
+    expect(el.querySelector('[data-testid=abandon]')?.textContent).toContain('Leave room');
   });
 });

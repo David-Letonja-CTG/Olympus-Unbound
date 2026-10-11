@@ -15,6 +15,7 @@ import { ItemIcon } from '../../shared/item-icon';
 
       <nav class="panel menu-panel" aria-label="Main menu">
         <a class="btn btn-primary" routerLink="/gods">Play</a>
+        <a class="btn" routerLink="/coop" data-testid="menu-coop">Co-op</a>
         <a class="btn" routerLink="/progression">Progression</a>
         <a class="btn" routerLink="/settings">Settings</a>
         <a class="btn" routerLink="/intro" data-testid="menu-intro">Intro</a>

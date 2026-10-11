@@ -68,6 +68,8 @@ export interface Player {
   invulnerable: number;
   hurtFlash: number;
   alive: boolean;
+  /** Left a room's run (spec: rooms / leaving); never revived. */
+  left?: boolean;
   revivalsUsed: number;
   abilityTimer: number;
   ability: WeaponInstance;
@@ -365,6 +367,8 @@ export interface HudSnapshot {
     readonly maxHealth: number;
   };
   readonly enemies: number;
+  /** Players the open round of choices still waits for, besides this one (spec: rooms / choices). */
+  readonly waitingFor: readonly string[];
 }
 
 export interface HudItem {

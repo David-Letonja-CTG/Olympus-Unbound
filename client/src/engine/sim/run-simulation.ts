@@ -26,8 +26,7 @@ import {
   UpgradeChoice,
 } from './types';
 
-/** The fixed simulation step: 60 steps per simulated second (D5). */
-export const STEP = 1 / 60;
+export { STEP } from './run-state';
 
 /** Development and test shortcuts; only reachable when a session is created with `debug: true`. */
 export type DebugAction =
@@ -148,13 +147,36 @@ export class RunSimulation {
     applyOffer(this.state, player, offer);
     this.choices.delete(choice.playerId);
     this.state.emit({ type: 'choiceResolved', offer, playerId: choice.playerId });
-    if (this.choices.size === 0) {
-      if (choice.source === 'level') this.state.pendingLevels--;
-      else this.state.pendingChests--;
-      this.currentPhase = 'playing';
-      this.openChoiceIfPending();
+    if (this.choices.size === 0) this.closeRound(choice.source);
+    return true;
+  }
+
+  /**
+   * A player leaves a room's run (spec: rooms / leaving): their god leaves the battle, the others are told, and a
+   * round of choices no longer waits for them.
+   */
+  leave(playerId: number): boolean {
+    const player = this.state.players.find((p) => p.id === playerId);
+    if (!player || player.left || this.currentPhase === 'ended') return false;
+    player.left = true;
+    player.alive = false;
+    player.health = 0;
+    this.state.emit({ type: 'announcement', text: `${player.name} left the battle`, kind: 'info' });
+    const choice = this.choices.get(playerId);
+    if (choice) {
+      this.choices.delete(playerId);
+      if (this.choices.size === 0 && this.currentPhase === 'choosing')
+        this.closeRound(choice.source);
     }
     return true;
+  }
+
+  /** Every player of a round has chosen (or left): the run continues, or the next round opens. */
+  private closeRound(source: UpgradeChoice['source']): void {
+    if (source === 'level') this.state.pendingLevels--;
+    else this.state.pendingChests--;
+    this.currentPhase = 'playing';
+    this.openChoiceIfPending();
   }
 
   abandon(): boolean {
@@ -262,6 +284,11 @@ export class RunSimulation {
     const armour = loadout.armour;
     let enemies = 0;
     for (const e of state.enemies) if (!e.dead) enemies++;
+    const waitingFor: string[] = [];
+    for (const c of this.choices.values()) {
+      const other = state.players.find((p) => p.id === c.playerId);
+      if (other && other !== player) waitingFor.push(other.name);
+    }
     return {
       time: state.time,
       phase: this.currentPhase,
@@ -311,6 +338,7 @@ export class RunSimulation {
           }
         : undefined,
       enemies,
+      waitingFor,
     };
   }
 
