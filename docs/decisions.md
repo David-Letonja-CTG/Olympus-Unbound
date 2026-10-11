@@ -62,7 +62,7 @@ The simulation keeps a list of players, per-player input (`PlayerInput[]` by slo
 
 ## D12 — Pluggable external art with a licence registry (Accepted, 2026-10-11)
 
-Content refers to sprite keys only. `client/src/content/assets.ts` maps keys to external files (images, Phaser/TexturePacker atlases, sprite sheets, with optional idle/walk/attack/death animations); unmapped keys and files that fail to load use the code-drawn art (D9). Every external file under `public/assets` and `public/fonts` needs a manifest entry with author, source and an allowed licence (CC0, CC-BY, CC-BY-SA, OFL, or commercial with a receipt reference); `npm run assets:check` enforces it in `npm run check` and CI. Attribution licences are listed on the Settings → Credits panel. Art direction: `docs/art-direction.md`.
+Content refers to sprite keys only. `client/src/content/assets.ts` maps keys to external files (images, Phaser/TexturePacker atlases, sprite sheets, with optional idle/walk/attack/death animations); unmapped keys and files that fail to load use the code-drawn art (D9). Every external file under `public/assets` and `public/fonts` needs a manifest entry with author, source and an allowed licence (CC0, CC-BY, CC-BY-SA, OFL, or commercial with a receipt reference); `npm run assets:check` enforces it in `npm run check` and CI. Attribution licences are listed in the credits, a dialog opened from Settings → Credits. Art direction: `docs/art-direction.md`.
 
 ## D13 — Light map lighting with quality levels (Accepted, 2026-10-11)
 
