@@ -176,4 +176,27 @@ describe('weapon behaviors', () => {
     expect(player.health).toBeGreaterThan(player.stats.maxHealth / 2);
     expect(player.abilityTimer).toBeGreaterThan(20);
   });
+
+  it('Poseidon starts with the trident', () => {
+    const sim = quietSim({ godId: 'poseidon' });
+    expect(sim.state.players[0].loadout.weapons.map((w) => w.def.id)).toEqual(['trident']);
+  });
+
+  it("Poseidon's Tidal Wave crashes through a wide arc, hurls foes back and slows them", () => {
+    const sim = quietSim({ godId: 'poseidon' });
+    disarm(sim);
+    const targets = [
+      [160, 0],
+      [140, 90],
+      [140, -90],
+      [300, 0],
+    ].map(([dx, dy]) => spawnNear(sim, 'marble_sentinel', dx, dy));
+    sim.step(STEP, [{ ...NO_INPUT, ability: true }]);
+    run(sim, 0.85);
+    expect(targets.every((e) => e.health < e.maxHealth)).toBe(true);
+    expect(targets.every((e) => e.status.slow > 0)).toBe(true);
+    // Thrown back: moving away from Poseidon (who stands at the origin of the offsets, facing +x).
+    expect(targets.every((e) => e.vx > 0)).toBe(true);
+    expect(sim.state.players[0].abilityTimer).toBeGreaterThan(15);
+  });
 });

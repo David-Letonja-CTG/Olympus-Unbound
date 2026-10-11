@@ -40,6 +40,28 @@ const projectiles: Record<string, SpriteSpec> = {
       line(g, [s * 0.72, s * 0.7, s * 0.95, s * 0.7], '#e8fbff', 3);
     },
   },
+  proj_wave: {
+    size: 72,
+    paint(g, s) {
+      // A rolling crest of sea-water, foam on its leading edge (projectiles point right).
+      glow(g, s * 0.55, s / 2, s * 0.45, 0x5fc6c0, 0.45);
+      g.beginPath();
+      g.moveTo(s * 0.62, s * 0.06);
+      g.quadraticCurveTo(s * 1.0, s / 2, s * 0.62, s * 0.94);
+      g.quadraticCurveTo(s * 0.74, s / 2, s * 0.62, s * 0.06);
+      const water = g.createLinearGradient(s * 0.6, 0, s, 0);
+      water.addColorStop(0, '#1f6f78');
+      water.addColorStop(1, '#bff7f0');
+      g.fillStyle = water;
+      g.fill();
+      g.beginPath();
+      g.moveTo(s * 0.4, s * 0.12);
+      g.quadraticCurveTo(s * 0.74, s / 2, s * 0.4, s * 0.88);
+      g.strokeStyle = 'rgba(191, 247, 240, 0.55)';
+      g.lineWidth = 3;
+      g.stroke();
+    },
+  },
   proj_orb: {
     size: 36,
     paint(g, s) {
@@ -204,6 +226,21 @@ const symbols: Record<string, Symbol> = {
     line(g, [s * 0.56, s * 0.28, s * 0.74, s * 0.38], c, 2.5);
     line(g, [s * 0.56, s * 0.28, s * 0.62, s * 0.12], c, 2.5);
     line(g, [s * 0.74, s * 0.38, s * 0.86, s * 0.24], c, 2.5);
+  },
+  wave: (g, s, c) => {
+    g.beginPath();
+    g.moveTo(s * 0.16, s * 0.7);
+    g.quadraticCurveTo(s * 0.34, s * 0.3, s * 0.62, s * 0.34);
+    g.quadraticCurveTo(s * 0.46, s * 0.46, s * 0.58, s * 0.6);
+    g.quadraticCurveTo(s * 0.74, s * 0.66, s * 0.86, s * 0.56);
+    g.lineTo(s * 0.86, s * 0.76);
+    g.lineTo(s * 0.16, s * 0.76);
+    g.closePath();
+    g.fillStyle = c;
+    g.fill();
+    g.strokeStyle = '#e8fffb';
+    g.lineWidth = 1.5;
+    g.stroke();
   },
   gates: (g, s, c) => {
     glow(g, s / 2, s * 0.56, s * 0.34, 0x7fe0c8, 0.55);
@@ -470,6 +507,7 @@ const ICONS: Record<string, [string, 'square' | 'round' | 'diamond' | 'hex', num
   wrath_of_olympus: ['storm', 'round', 0xfff6a8],
   bident: ['bident', 'square', 0x7fe0c8],
   gates_of_tartarus: ['gates', 'round', 0x7fe0c8],
+  tidal_wave: ['wave', 'round', 0x5fc6c0],
   aegis_of_olympus: ['shield', 'square', 0xe8d38a],
   underworld_armour: ['shield', 'square', 0x7d5ca8],
   triton_shell: ['shell', 'square', 0x5fc6c0],
