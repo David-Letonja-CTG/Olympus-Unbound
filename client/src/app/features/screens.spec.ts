@@ -144,6 +144,23 @@ describe('settings screen', () => {
     numbers.dispatchEvent(new Event('change'));
     expect(JSON.parse(storage.getItem(SAVE_KEY) ?? '{}').settings.damageNumbers).toBe(false);
   });
+
+  it('keeps the credits behind a button, grouped by work', async () => {
+    const h = await open('/settings');
+    const dialog = q<HTMLDialogElement>(h, '[data-testid=credits]');
+    expect(dialog?.hasAttribute('open')).toBe(false);
+    q<HTMLButtonElement>(h, '[data-testid=credits-button]')?.click();
+    h.detectChanges();
+    expect(dialog?.hasAttribute('open')).toBe(true);
+    const titles = [...(dialog?.querySelectorAll(':scope > ul > li .work strong') ?? [])].map(
+      (el) => el.textContent ?? '',
+    );
+    // Many sheets share Clint Bellanger's hero model: one entry, with each use listed under it.
+    expect(titles.filter((t) => t === 'Isometric Hero and Heroine').length).toBe(1);
+    expect(titles).toContain('Cinzel');
+    q<HTMLButtonElement>(h, '[aria-label="Close credits"]')?.click();
+    expect(dialog?.hasAttribute('open')).toBe(false);
+  });
 });
 
 describe('graphics quality', () => {
