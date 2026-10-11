@@ -41,7 +41,11 @@ describe('god selection', () => {
   it('offers only the defined gods and continues with the choice', async () => {
     const h = await open('/gods');
     const cards = (h.routeNativeElement as HTMLElement).querySelectorAll('[data-testid^=god-]');
-    expect([...cards].map((c) => c.getAttribute('data-testid'))).toEqual(['god-zeus', 'god-hades', 'god-poseidon']);
+    expect([...cards].map((c) => c.getAttribute('data-testid'))).toEqual([
+      'god-zeus',
+      'god-hades',
+      'god-poseidon',
+    ]);
     expect(text(h)).toContain('Thunder Spear');
     expect(text(h)).toContain('Wrath of Olympus');
     const continueButton = [
