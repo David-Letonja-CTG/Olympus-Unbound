@@ -108,6 +108,12 @@ export const ASSETS: AssetManifest = {
       HERO_MODEL,
       'Poseidon: the hero in a sea-green chiton, gold crown and trident',
     ),
+    rendered(
+      'athena',
+      128,
+      HERO_MODEL,
+      'Athena: the heroine in bronze and gold with crested helmet, Aegis and spear',
+    ),
     rendered('satyr', 128, HERO_MODEL, 'Satyr: the hero with horns, goat legs and a thyrsus'),
     rendered('harpy', 128, HERO_MODEL, 'Harpy: the heroine with feathered wings and talons'),
     rendered('fallen_oracle', 128, HERO_MODEL, 'Fallen Oracle: the heroine in dark robes'),
@@ -181,6 +187,8 @@ export const ASSETS: AssetManifest = {
     hades: { ...character('hades', 1, 0.47, 0.72, 77, humanoid()), portrait: 26 },
     // His portrait raises the trident (the cast frames).
     poseidon: { ...character('poseidon', 1, 0.47, 0.72, 77, humanoid()), portrait: 26 },
+    // Her portrait raises the spear (the cast frames).
+    athena: { ...character('athena', 0.95, 0.5, 0.71, 74, humanoid()), portrait: 26 },
     satyr: character('satyr', 1.06, 0.5, 0.71, 83, humanoid()),
     harpy: character('harpy', 0.92, 0.52, 0.7, 72, humanoid()),
     // Flies at body height: one wingbeat for idle and flight.

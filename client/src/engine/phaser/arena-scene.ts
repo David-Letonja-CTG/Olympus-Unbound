@@ -130,6 +130,7 @@ export class ArenaScene extends Phaser.Scene {
       while (this.accumulator >= STEP && sim.phase === 'playing') {
         sim.step(STEP, [input]);
         this.accumulator -= STEP;
+        this.input$.consumeTaps();
       }
     } else {
       this.accumulator = 0;

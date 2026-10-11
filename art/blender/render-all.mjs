@@ -27,6 +27,7 @@ const CHARACTERS = {
   zeus: [`${HERO}/clothes.blend`, "zeus.py", 128],
   hades: [`${HERO}/steel_armor.blend`, "hades.py", 128],
   poseidon: [`${HERO}/clothes.blend`, "poseidon.py", 128],
+  athena: [`${HEROINE}/steel_armor.blend`, "athena.py", 128],
   satyr: [`${HERO}/clothes.blend`, "satyr.py", 128],
   harpy: [`${HEROINE}/clothes.blend`, "harpy.py", 128],
   stymphalian_bird: [`${HERO}/clothes.blend`, "stymphalian_bird.py", 128],

@@ -339,3 +339,5 @@ def fork_head(staff, head_material, metal, prongs=2, spread=0.05, length=0.13):
     for ob in parts:
         attach(ob, 'Hand.Right')
     return parts
+GRIP_HEROINE_SHIELD = matrix([0.01238, 0.07554, 0.71592, -0.0577, -0.71602, -0.07288, 0.02007, 0.16223,
+                              0.07457, -0.71231, 0.07387, 0.0524, 0.0, 0.0, 0.0, 1.0])  # on Forearm.Left

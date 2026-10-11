@@ -151,6 +151,29 @@ export const CHARACTERS: Record<string, SpriteSpec> = {
     },
   },
 
+  athena: {
+    size: 56,
+    paint(g, s) {
+      glow(g, s / 2, s * 0.55, s * 0.5, 0xe8c070, 0.26);
+      footShadow(g, s, 0.3, 0.86);
+      // Bronze cuirass over a deep-blue skirt; the round Aegis on her arm.
+      volume(g, s / 2, s * 0.64, s * 0.2, s * 0.22, 0x23345e);
+      volume(g, s / 2, s * 0.54, s * 0.18, s * 0.14, 0xc8964a);
+      circle(g, s * 0.3, s * 0.6, s * 0.14, '#d9ae3c', '#7a5a20', 2);
+      // Face under a gold crested helmet.
+      volume(g, s / 2, s * 0.34, s * 0.12, s * 0.12, 0xbf9070, { rim: 0.35 });
+      volume(g, s / 2, s * 0.27, s * 0.13, s * 0.09, 0xd9ae3c, { outline: 1.2, rim: 0.3 });
+      poly(
+        g,
+        [s * 0.36, s * 0.22, s * 0.5, s * 0.06, s * 0.66, s * 0.22, s * 0.5, s * 0.18],
+        '#8e1c1c',
+      );
+      // The spear.
+      line(g, [s * 0.74, s * 0.9, s * 0.84, s * 0.14], '#6b4a2a', 3);
+      poly(g, [s * 0.85, s * 0.04, s * 0.81, s * 0.16, s * 0.88, s * 0.17], '#f2d38a');
+    },
+  },
+
   satyr: {
     size: 44,
     paint(g, s) {

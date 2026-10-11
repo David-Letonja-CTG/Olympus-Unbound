@@ -40,6 +40,14 @@ const projectiles: Record<string, SpriteSpec> = {
       line(g, [s * 0.72, s * 0.7, s * 0.95, s * 0.7], '#e8fbff', 3);
     },
   },
+  proj_javelin: {
+    size: 40,
+    paint(g, s) {
+      glow(g, s * 0.6, s / 2, s * 0.32, 0xe8c070, 0.35);
+      line(g, [s * 0.04, s / 2, s * 0.78, s / 2], '#6b4a2a', 3);
+      poly(g, [s * 0.98, s / 2, s * 0.74, s * 0.38, s * 0.74, s * 0.62], '#f2d38a', '#8a6a2a', 1);
+    },
+  },
   proj_wave: {
     size: 72,
     paint(g, s) {
@@ -226,6 +234,27 @@ const symbols: Record<string, Symbol> = {
     line(g, [s * 0.56, s * 0.28, s * 0.74, s * 0.38], c, 2.5);
     line(g, [s * 0.56, s * 0.28, s * 0.62, s * 0.12], c, 2.5);
     line(g, [s * 0.74, s * 0.38, s * 0.86, s * 0.24], c, 2.5);
+  },
+  gorgon: (g, s, c) => {
+    // The Gorgon's head on the Aegis: a round face with snakes for hair.
+    circle(g, s / 2, s * 0.54, s * 0.36, '#5a4a2a', c, 2);
+    for (let i = 0; i < 7; i++) {
+      const a = Math.PI * (1.05 + (i / 6) * 0.9);
+      const [x, y] = [s / 2 + Math.cos(a) * s * 0.2, s * 0.5 + Math.sin(a) * s * 0.2];
+      line(
+        g,
+        [x, y, x + Math.cos(a) * s * 0.12, y + Math.sin(a) * s * 0.12 - s * 0.03],
+        '#8fbf5a',
+        2,
+      );
+    }
+    circle(g, s / 2, s * 0.56, s * 0.15, '#d9c9a0');
+    circle(g, s * 0.45, s * 0.53, s * 0.025, '#2a1a10');
+    circle(g, s * 0.55, s * 0.53, s * 0.025, '#2a1a10');
+  },
+  javelin: (g, s, c) => {
+    line(g, [s * 0.22, s * 0.8, s * 0.7, s * 0.32], '#8a5a2b', 3);
+    poly(g, [s * 0.84, s * 0.18, s * 0.64, s * 0.3, s * 0.72, s * 0.38], c, '#fff', 1);
   },
   wave: (g, s, c) => {
     g.beginPath();
@@ -508,6 +537,8 @@ const ICONS: Record<string, [string, 'square' | 'round' | 'diamond' | 'hex', num
   bident: ['bident', 'square', 0x7fe0c8],
   gates_of_tartarus: ['gates', 'round', 0x7fe0c8],
   tidal_wave: ['wave', 'round', 0x5fc6c0],
+  spear_of_athena: ['javelin', 'square', 0xe8c070],
+  gorgons_gaze: ['gorgon', 'round', 0xc9d68a],
   aegis_of_olympus: ['shield', 'square', 0xe8d38a],
   underworld_armour: ['shield', 'square', 0x7d5ca8],
   triton_shell: ['shell', 'square', 0x5fc6c0],

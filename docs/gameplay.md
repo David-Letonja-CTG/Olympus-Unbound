@@ -6,7 +6,7 @@ The game as the player experiences it in the vertical slice. Numbers live in `cl
 
 0. **Intro** — on first launch, a ~55-second scene: the gods at the altar on a moonlit Olympus, the horde breaking in from the north, the gods falling one by one, and Zeus unleashing the storm. Skip with Esc, Enter, Space, a click or the gamepad; replay it from the main menu (*Intro*).
 1. **Main menu** → *Play*, *Progression*, *Settings*; the gold total is shown.
-2. **Choose a god** — Zeus, Hades or Poseidon (more gods later).
+2. **Choose a god** — Zeus, Hades, Poseidon or Athena (more gods later).
 3. **Choose a realm** — Mount Olympus, with a seed (random by default; enter one to replay an arena).
 4. **Survive.** Weapons fire on their own; the player moves, positions, collects XP and uses the divine ability.
 5. **Level up** — the run pauses; pick one of three upgrades.
@@ -47,6 +47,10 @@ Health 150, speed 190, armour 2: he fights up close and outlasts the horde. Star
 ## Poseidon, Lord of the Sea
 
 Health 145, speed 200, armour 1: he holds the line and keeps the horde at bay. Starts with the **Trident** (three piercing prongs with heavy knockback). Ability **Tidal Wave** (20 s): nine walls of sea-water roll out in a wide arc, crash through every foe in their path, hurl them back and leave them slowed. Passive **Earth-Shaker**: +30% knockback, +10% area, +10% physical damage. Physical and lightning items are offered more often.
+
+## Athena, Goddess of Wisdom and War
+
+Health 135, speed 205, armour 2, critical chance 12% (with her passive): a precise striker who controls the field. Starts with the **Spear of Athena** (a piercing bronze javelin with a high critical chance). Ability **Gorgon's Gaze** (26 s): she raises the Aegis and every foe within a wide radius is struck and turned to stone for 2.5 seconds. Passive **Wisdom of War**: +15% experience, +7% critical chance. Physical and lightning items are offered more often.
 
 ## Mount Olympus
 

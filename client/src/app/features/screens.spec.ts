@@ -45,6 +45,7 @@ describe('god selection', () => {
       'god-zeus',
       'god-hades',
       'god-poseidon',
+      'god-athena',
     ]);
     expect(text(h)).toContain('Thunder Spear');
     expect(text(h)).toContain('Wrath of Olympus');
