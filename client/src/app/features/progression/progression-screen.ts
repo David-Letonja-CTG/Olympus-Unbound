@@ -1,129 +1,245 @@
-import { ChangeDetectionStrategy, Component, computed, inject } from '@angular/core';
+import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import { GameContent, PermanentUpgradeDefinition } from '../../../engine';
 import { GAME_CONTENT } from '../../core/game-content';
 import { Progression } from '../../core/progression';
 import { formatTime, ItemIcon } from '../../shared/item-icon';
 
-/** Permanent upgrades, codex and statistics (spec: meta-progression). */
+interface CodexItem {
+  readonly id: string;
+  readonly name: string;
+  readonly description: string;
+  readonly sprite: string;
+  readonly known: boolean;
+}
+
+interface CodexGroup {
+  readonly title: string;
+  readonly items: readonly CodexItem[];
+  readonly found: number;
+}
+
+/**
+ * Permanent upgrades, codex and statistics (spec: meta-progression), on one screen without scrolling: the blessings
+ * on the left, the codex as an icon grid with a tab per kind on the right, and the statistics in the header.
+ */
 @Component({
   selector: 'app-progression-screen',
   imports: [RouterLink, ItemIcon],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
-    <main class="screen">
-      <h1 class="screen-title">Progression</h1>
-      <p class="gold">
-        <app-item-icon sprite="icon_gold" [size]="22" />
-        <span class="gold-amount" data-testid="progression-gold">{{ progression.gold() }}</span>
-        gold
-      </p>
+    <main class="screen progression">
+      <header class="top">
+        <h1 class="screen-title">Progression</h1>
+        <div class="summary">
+          <p class="gold">
+            <app-item-icon sprite="icon_gold" [size]="22" />
+            <span class="gold-amount" data-testid="progression-gold">{{ progression.gold() }}</span>
+            gold
+          </p>
+          @let s = progression.save().stats;
+          <dl class="stats" aria-label="Statistics">
+            <div>
+              <dt>Runs</dt>
+              <dd>{{ s.runs }}</dd>
+            </div>
+            <div>
+              <dt>Victories</dt>
+              <dd>{{ s.victories }}</dd>
+            </div>
+            <div>
+              <dt>Total kills</dt>
+              <dd>{{ s.kills }}</dd>
+            </div>
+            <div>
+              <dt>Best time</dt>
+              <dd>{{ best() }}</dd>
+            </div>
+          </dl>
+        </div>
+      </header>
 
-      <section class="panel">
-        <h2>Blessings of Olympus</h2>
-        <p class="hint">Permanent upgrades apply to every run.</p>
-        <ul class="upgrades">
-          @for (u of upgrades; track u.id) {
-            @let level = progression.level(u);
-            @let cost = progression.nextCost(u);
-            <li [attr.data-testid]="'upgrade-' + u.id">
-              <div class="info">
-                <strong>{{ u.name }}</strong>
-                <span class="desc">{{ u.description }}</span>
-                <span class="pips" [attr.aria-label]="'Level ' + level + ' of ' + u.costs.length">
-                  @for (c of u.costs; track $index) {
-                    <span class="pip" [class.on]="$index < level"></span>
-                  }
-                </span>
-              </div>
-              @if (cost !== undefined) {
-                <button
-                  class="btn"
-                  [disabled]="!progression.canBuy(u)"
-                  (click)="progression.buy(u)"
-                  [attr.data-testid]="'buy-' + u.id"
-                >
-                  Buy · <span class="gold-amount">{{ cost }}</span>
-                </button>
-              } @else {
-                <span class="tag">Max</span>
-              }
-            </li>
-          }
-        </ul>
-      </section>
-
-      <section class="panel">
-        <h2>Codex</h2>
-        @for (group of codex(); track group.title) {
-          <h3>
-            {{ group.title }}
-            <span class="count">{{ group.found }} / {{ group.items.length }}</span>
-          </h3>
-          <ul class="codex">
-            @for (item of group.items; track item.id) {
-              <li
-                [class.unknown]="!item.known"
-                [attr.data-testid]="'codex-' + item.id"
-                [attr.data-known]="item.known"
-              >
-                @if (item.known) {
-                  <app-item-icon [sprite]="item.sprite" [size]="40" />
-                  <span
-                    ><strong>{{ item.name }}</strong
-                    ><br /><span class="desc">{{ item.description }}</span></span
+      <div class="columns">
+        <section class="panel blessings" aria-labelledby="blessings-title">
+          <h2 id="blessings-title">Blessings of Olympus</h2>
+          <p class="hint">Permanent upgrades apply to every run.</p>
+          <ul class="upgrades">
+            @for (u of upgrades; track u.id) {
+              @let level = progression.level(u);
+              @let cost = progression.nextCost(u);
+              <li [attr.data-testid]="'upgrade-' + u.id">
+                <div class="info">
+                  <span class="name-row">
+                    <strong>{{ u.name }}</strong>
+                    <span
+                      class="pips"
+                      [attr.aria-label]="'Level ' + level + ' of ' + u.costs.length"
+                    >
+                      @for (c of u.costs; track $index) {
+                        <span class="pip" [class.on]="$index < level"></span>
+                      }
+                    </span>
+                  </span>
+                  <span class="desc">{{ u.description }}</span>
+                </div>
+                @if (cost !== undefined) {
+                  <button
+                    class="btn buy"
+                    [disabled]="!progression.canBuy(u)"
+                    (click)="progression.buy(u)"
+                    [attr.data-testid]="'buy-' + u.id"
                   >
+                    <app-item-icon sprite="icon_gold" [size]="16" />
+                    <span class="gold-amount">{{ cost }}</span>
+                  </button>
                 } @else {
-                  <span class="mystery" aria-hidden="true">?</span>
-                  <span class="desc">Undiscovered</span>
+                  <span class="tag">Max</span>
                 }
               </li>
             }
           </ul>
-        }
-      </section>
+        </section>
 
-      <section class="panel">
-        <h2>Statistics</h2>
-        @let s = progression.save().stats;
-        <dl class="stats">
-          <div>
-            <dt>Runs</dt>
-            <dd>{{ s.runs }}</dd>
+        <section class="panel codex-panel" aria-labelledby="codex-title">
+          <div class="codex-head">
+            <h2 id="codex-title">Codex</h2>
+            <div class="tabs" role="tablist" aria-label="Codex">
+              @for (g of codex(); track g.title; let i = $index) {
+                <button
+                  role="tab"
+                  class="tab"
+                  [attr.aria-selected]="tab() === i"
+                  [attr.data-testid]="'codex-tab-' + g.title.toLowerCase()"
+                  (click)="selectTab(i)"
+                >
+                  {{ g.title }} <span class="count">{{ g.found }}/{{ g.items.length }}</span>
+                </button>
+              }
+            </div>
           </div>
-          <div>
-            <dt>Victories</dt>
-            <dd>{{ s.victories }}</dd>
-          </div>
-          <div>
-            <dt>Total kills</dt>
-            <dd>{{ s.kills }}</dd>
-          </div>
-          <div>
-            <dt>Best time</dt>
-            <dd>{{ best() }}</dd>
-          </div>
-        </dl>
-      </section>
+          @if (group(); as g) {
+            <ul class="codex" role="tabpanel" [attr.aria-label]="g.title">
+              @for (item of g.items; track item.id) {
+                <li>
+                  <button
+                    class="tile"
+                    [class.unknown]="!item.known"
+                    [class.selected]="selected()?.id === item.id"
+                    [attr.data-testid]="'codex-' + item.id"
+                    [attr.data-known]="item.known"
+                    [attr.aria-label]="item.known ? item.name : 'Undiscovered'"
+                    [attr.title]="item.known ? item.name : 'Undiscovered'"
+                    (click)="selectedId.set(item.id)"
+                    (mouseenter)="selectedId.set(item.id)"
+                    (focus)="selectedId.set(item.id)"
+                  >
+                    @if (item.known) {
+                      <app-item-icon [sprite]="item.sprite" [size]="48" />
+                    } @else {
+                      <span class="mystery" aria-hidden="true">?</span>
+                    }
+                  </button>
+                </li>
+              }
+            </ul>
+            <div class="detail" aria-live="polite" data-testid="codex-detail">
+              @if (selected(); as item) {
+                @if (item.known) {
+                  <app-item-icon [sprite]="item.sprite" [size]="56" />
+                  <div>
+                    <strong>{{ item.name }}</strong>
+                    <p class="desc">{{ item.description }}</p>
+                  </div>
+                } @else {
+                  <span class="mystery big" aria-hidden="true">?</span>
+                  <div>
+                    <strong>Undiscovered</strong>
+                    <p class="desc">Hold it at the end of a run to add it to the codex.</p>
+                  </div>
+                }
+              } @else {
+                <p class="desc">Point at an item to read about it.</p>
+              }
+            </div>
+          }
+        </section>
+      </div>
 
       <a class="btn" routerLink="/">Back</a>
     </main>
   `,
   styles: `
+    /* One screen, no scrolling (wide enough windows); narrow or short windows fall back to a scrolling column. */
+    .progression {
+      height: 100vh;
+      min-height: 0;
+      padding: 24px 24px 20px;
+      gap: 14px;
+      overflow: hidden;
+      justify-content: center;
+    }
+    .top {
+      width: min(1180px, 100%);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 24px;
+    }
+    .top .screen-title {
+      text-align: left;
+      margin: 0;
+    }
+    .top .screen-title::after {
+      margin-left: 0;
+    }
+    .summary {
+      display: flex;
+      align-items: center;
+      gap: 28px;
+    }
+    .gold {
+      display: flex;
+      gap: 8px;
+      align-items: center;
+      margin: 0;
+      font-size: 1.3rem;
+    }
+    .stats {
+      display: flex;
+      gap: 22px;
+      margin: 0;
+    }
+    dt {
+      color: var(--muted);
+      font-size: 0.75rem;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+    }
+    dd {
+      margin: 0;
+      font-size: 1.2rem;
+      font-weight: 700;
+    }
+    .columns {
+      flex: 1;
+      min-height: 0;
+      /* Tall windows: the panels stay compact and the page centres. */
+      max-height: 600px;
+      width: min(1180px, 100%);
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) minmax(0, 1.1fr);
+      gap: 18px;
+    }
     .panel {
-      width: min(760px, 100%);
-      padding: 18px 22px;
+      min-height: 0;
+      padding: 14px 18px;
+      display: flex;
+      flex-direction: column;
     }
     h2 {
       color: var(--gold);
-      font-size: 1.25rem;
-    }
-    h3 {
-      font-size: 1rem;
-      margin: 16px 0 8px;
-      display: flex;
-      gap: 8px;
-      align-items: baseline;
+      font-size: 1.15rem;
+      margin: 0;
     }
     .count,
     .hint,
@@ -132,93 +248,164 @@ import { formatTime, ItemIcon } from '../../shared/item-icon';
       font-size: 0.85rem;
     }
     .hint {
-      margin: 4px 0 12px;
-    }
-    .gold {
-      display: flex;
-      gap: 8px;
-      align-items: center;
-      margin: -8px 0 0;
-      font-size: 1.2rem;
+      margin: 2px 0 10px;
     }
     .upgrades {
       list-style: none;
       padding: 0;
       margin: 0;
       display: grid;
-      gap: 10px;
+      gap: 8px;
+      flex: 1;
+      align-content: start;
     }
     .upgrades li {
       display: flex;
       align-items: center;
       justify-content: space-between;
       gap: 12px;
-      padding: 10px 12px;
+      padding: 8px 12px;
       border: 1px solid var(--line);
-      border-radius: 10px;
       background: var(--bg-2);
     }
     .info {
       display: flex;
       flex-direction: column;
-      gap: 4px;
+      gap: 3px;
+      min-width: 0;
+    }
+    .name-row {
+      display: flex;
+      align-items: center;
+      gap: 10px;
     }
     .pips {
       display: flex;
-      gap: 4px;
+      gap: 3px;
     }
     .pip {
-      width: 14px;
-      height: 6px;
+      width: 12px;
+      height: 5px;
       border-radius: 3px;
       background: #3a3448;
     }
     .pip.on {
       background: var(--gold);
     }
+    .buy {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 8px 14px;
+      min-width: 86px;
+      justify-content: center;
+    }
+    .codex-head {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      flex-wrap: wrap;
+      margin-bottom: 12px;
+    }
+    .tabs {
+      display: flex;
+      gap: 4px;
+    }
+    .tab {
+      font: inherit;
+      font-size: 0.85rem;
+      padding: 5px 12px;
+      color: var(--muted);
+      background: rgba(0, 0, 0, 0.35);
+      border: 1px solid var(--line);
+      cursor: pointer;
+    }
+    .tab[aria-selected='true'] {
+      color: var(--gold-2);
+      border-color: var(--gold);
+      box-shadow: inset 0 -2px 0 var(--gold);
+    }
     .codex {
       list-style: none;
       padding: 0;
       margin: 0;
       display: grid;
-      grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+      grid-template-columns: repeat(auto-fill, minmax(68px, 1fr));
       gap: 8px;
+      align-content: start;
+      flex: 1;
+      min-height: 0;
     }
-    .codex li {
-      display: flex;
-      gap: 10px;
-      align-items: center;
-      padding: 8px;
-      border-radius: 10px;
-      background: var(--bg-2);
-    }
-    .codex li.unknown {
-      opacity: 0.55;
-    }
-    .mystery {
-      width: 40px;
-      height: 40px;
+    .tile {
+      width: 100%;
+      aspect-ratio: 1;
       display: grid;
       place-items: center;
-      border-radius: 8px;
+      padding: 0;
+      background: var(--bg-2);
+      border: 1px solid var(--line);
+      cursor: pointer;
+    }
+    .tile.unknown {
+      opacity: 0.55;
+    }
+    .tile.selected,
+    .tile:focus-visible {
+      border-color: var(--gold);
+      box-shadow: 0 0 0 1px var(--gold);
+      outline: none;
+    }
+    .mystery {
+      width: 44px;
+      height: 44px;
+      display: grid;
+      place-items: center;
       border: 1px dashed var(--line);
       font-family: var(--serif);
       font-size: 1.3rem;
-    }
-    .stats {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
-      gap: 12px;
-      margin: 12px 0 0;
-    }
-    dt {
       color: var(--muted);
-      font-size: 0.8rem;
     }
-    dd {
-      margin: 0;
-      font-size: 1.3rem;
-      font-weight: 700;
+    .mystery.big {
+      width: 56px;
+      height: 56px;
+      flex: none;
+    }
+    .detail {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      min-height: 84px;
+      margin-top: 12px;
+      padding: 10px 12px;
+      border-top: 1px solid var(--line);
+    }
+    .detail p {
+      margin: 4px 0 0;
+    }
+    @media (max-width: 900px), (max-height: 620px) {
+      .progression {
+        height: auto;
+        min-height: 100%;
+        overflow: visible;
+      }
+      .top {
+        flex-direction: column;
+      }
+      .top .screen-title {
+        text-align: center;
+      }
+      .top .screen-title::after {
+        margin-left: auto;
+      }
+      .summary {
+        flex-wrap: wrap;
+        justify-content: center;
+      }
+      .columns {
+        grid-template-columns: 1fr;
+        max-height: none;
+      }
     }
   `,
 })
@@ -230,8 +417,10 @@ export class ProgressionScreen {
   protected readonly best = computed(() =>
     formatTime(this.progression.save().stats.bestTimeSeconds),
   );
+  protected readonly tab = signal(0);
+  protected readonly selectedId = signal<string | undefined>(undefined);
 
-  protected readonly codex = computed(() => {
+  protected readonly codex = computed<readonly CodexGroup[]>(() => {
     const d = this.progression.save().discovered;
     const group = (
       title: string,
@@ -242,7 +431,7 @@ export class ProgressionScreen {
         visual: { sprite: string };
       }[],
       known: readonly string[],
-    ) => {
+    ): CodexGroup => {
       const list = items.map((i) => ({
         id: i.id,
         name: i.name,
@@ -258,4 +447,13 @@ export class ProgressionScreen {
       group('Relics', this.content.relics, d.relics),
     ];
   });
+  protected readonly group = computed(() => this.codex()[this.tab()]);
+  protected readonly selected = computed(() =>
+    this.group()?.items.find((i) => i.id === this.selectedId()),
+  );
+
+  protected selectTab(index: number): void {
+    this.tab.set(index);
+    this.selectedId.set(undefined);
+  }
 }

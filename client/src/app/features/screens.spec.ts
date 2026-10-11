@@ -129,6 +129,21 @@ describe('progression screen', () => {
     expect(q(h, '[data-testid=codex-war_hammer]')?.getAttribute('data-known')).toBe('true');
     expect(q(h, '[data-testid=codex-trident]')?.getAttribute('data-known')).toBe('false');
   });
+
+  it('shows the codex one kind at a time, with the pointed item described', async () => {
+    const h = await open('/progression', {
+      version: 1,
+      discovered: { weapons: ['war_hammer'], relics: ['golden_fleece'] },
+    });
+    q<HTMLButtonElement>(h, '[data-testid=codex-war_hammer]')?.click();
+    h.detectChanges();
+    expect(q(h, '[data-testid=codex-detail]')?.textContent).toContain('War Hammer');
+    expect(q(h, '[data-testid=codex-golden_fleece]')).toBeNull();
+    q<HTMLButtonElement>(h, '[data-testid=codex-tab-relics]')?.click();
+    h.detectChanges();
+    expect(q(h, '[data-testid=codex-golden_fleece]')?.getAttribute('data-known')).toBe('true');
+    expect(q(h, '[data-testid=codex-war_hammer]')).toBeNull();
+  });
 });
 
 describe('settings screen', () => {
