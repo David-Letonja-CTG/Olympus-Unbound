@@ -24,8 +24,12 @@ God selection SHALL list every playable god defined in content with its name, ti
 - **THEN** realm selection opens with `zeus` as the selected god
 
 #### Scenario: Only defined gods are offered
-- **WHEN** god selection opens in this slice
-- **THEN** only `zeus` is offered and no disabled placeholder buttons are shown
+- **WHEN** god selection opens
+- **THEN** `zeus` and `hades` are offered and no disabled placeholder buttons are shown
+
+#### Scenario: Choosing Hades
+- **WHEN** the player selects god `hades`, continues and starts a run
+- **THEN** the run starts as `hades` with the weapon `bident`
 
 ### Requirement: Realm selection and seed
 Realm selection SHALL list every playable realm with its name and description and SHALL show the seed the run will use. A new random seed SHALL be proposed each time; the player MAY enter their own whole-number seed. Starting SHALL begin a run with the selected god, realm and seed.
