@@ -10,107 +10,173 @@ import { ItemIcon } from '../../shared/item-icon';
   imports: [RouterLink, ItemIcon],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
-    <main class="screen">
+    <main class="screen realm-screen">
       <h1 class="screen-title">Choose a realm</h1>
 
-      <div class="realms" role="radiogroup" aria-label="Realms">
-        @for (realm of realms; track realm.id) {
-          <button
-            class="panel realm-card"
-            role="radio"
-            [attr.aria-checked]="selected() === realm.id"
-            [class.selected]="selected() === realm.id"
-            [attr.data-testid]="'realm-' + realm.id"
-            (click)="selected.set(realm.id)"
-          >
-            <span class="name">{{ realm.name }}</span>
-            <span class="description">{{ realm.description }}</span>
-            <span class="boss">
+      <div class="layout">
+        <div class="panel realms" role="radiogroup" aria-label="Realms">
+          @for (realm of realms; track realm.id) {
+            <button
+              class="realm"
+              role="radio"
+              [attr.aria-checked]="selected() === realm.id"
+              [class.selected]="selected() === realm.id"
+              [attr.data-testid]="'realm-' + realm.id"
+              (click)="selected.set(realm.id)"
+            >
               <app-item-icon [sprite]="bossSprite(realm)" [size]="40" />
-              Guarded by {{ bossName(realm) }}
-            </span>
-          </button>
-        }
-      </div>
-
-      <section class="panel seed">
-        <label for="seed">Seed</label>
-        <div class="seed-row">
-          <input
-            id="seed"
-            data-testid="seed-input"
-            inputmode="numeric"
-            autocomplete="off"
-            [value]="seedText()"
-            (input)="seedText.set($any($event.target).value)"
-            [attr.aria-invalid]="!validSeed()"
-            aria-describedby="seed-help"
-          />
-          <button class="btn" type="button" (click)="reroll()">Randomize</button>
-        </div>
-        <p id="seed-help" class="help" [class.error]="!validSeed()">
-          @if (validSeed()) {
-            The same seed always builds the same arena.
-          } @else {
-            The seed must be a whole number from 0 to {{ maxSeed }}.
+              <span class="label">
+                <span class="name">{{ realm.name }}</span>
+                <span class="guard">Guarded by {{ bossName(realm) }}</span>
+              </span>
+            </button>
           }
-        </p>
-      </section>
+        </div>
 
-      <div class="actions">
-        <a class="btn" routerLink="/gods">Back</a>
-        <button
-          class="btn btn-primary"
-          data-testid="begin"
-          [disabled]="!canStart()"
-          (click)="begin()"
-        >
-          Begin
-        </button>
+        <div class="side">
+          @if (current(); as realm) {
+            <section class="panel detail" aria-live="polite">
+              <h2 class="name">{{ realm.name }}</h2>
+              <p class="description">{{ realm.description }}</p>
+              <p class="boss">
+                <app-item-icon [sprite]="bossSprite(realm)" [size]="48" />
+                Guarded by {{ bossName(realm) }}
+              </p>
+              <p class="next">Beyond its gate: {{ nextName(realm) }}</p>
+            </section>
+          }
+
+          <section class="panel seed">
+            <label for="seed">Seed</label>
+            <div class="seed-row">
+              <input
+                id="seed"
+                data-testid="seed-input"
+                inputmode="numeric"
+                autocomplete="off"
+                [value]="seedText()"
+                (input)="seedText.set($any($event.target).value)"
+                [attr.aria-invalid]="!validSeed()"
+                aria-describedby="seed-help"
+              />
+              <button class="btn" type="button" (click)="reroll()">Randomize</button>
+            </div>
+            <p id="seed-help" class="help" [class.error]="!validSeed()">
+              @if (validSeed()) {
+                The same seed always builds the same arenas.
+              } @else {
+                The seed must be a whole number from 0 to {{ maxSeed }}.
+              }
+            </p>
+          </section>
+
+          <div class="actions">
+            <a class="btn" routerLink="/gods">Back</a>
+            <button
+              class="btn btn-primary"
+              data-testid="begin"
+              [disabled]="!canStart()"
+              (click)="begin()"
+            >
+              Begin
+            </button>
+          </div>
+        </div>
       </div>
     </main>
   `,
   styles: `
+    /* The realms as a list beside the chosen one's details: every realm fits on one screen. */
+    .realm-screen {
+      padding-top: 28px;
+      gap: 18px;
+    }
+    .layout {
+      display: flex;
+      gap: 20px;
+      width: min(960px, 100%);
+      align-items: flex-start;
+    }
     .realms {
       display: flex;
-      gap: 16px;
-      flex-wrap: wrap;
-      justify-content: center;
-    }
-    .realm-card {
-      display: flex;
       flex-direction: column;
-      gap: 10px;
-      padding: 22px 26px;
-      width: min(440px, 100%);
+      gap: 6px;
+      padding: 14px;
+      flex: 0 0 340px;
+    }
+    .realm {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 8px 12px;
       text-align: left;
       color: var(--text);
       cursor: pointer;
-      background: linear-gradient(180deg, rgba(201, 193, 173, 0.08), transparent 60%), var(--panel);
+      background: transparent;
+      border: 1px solid transparent;
+      border-radius: 8px;
+      font: inherit;
     }
-    .realm-card.selected {
+    .realm:hover {
+      background: rgba(201, 193, 173, 0.06);
+    }
+    .realm.selected {
       border-color: var(--gold);
-      box-shadow: 0 0 0 2px var(--gold);
+      background: rgba(201, 165, 90, 0.1);
     }
-    .name {
+    .label {
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+    }
+    .realm .name {
       font-family: var(--serif);
-      font-size: 1.6rem;
+      font-size: 1.15rem;
+      color: var(--gold-2);
+    }
+    .guard {
+      color: #ffb4a8;
+      font-size: 0.82rem;
+    }
+    .side {
+      flex: 1;
+      min-width: 0;
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+    }
+    .detail {
+      padding: 20px 26px;
+    }
+    .detail .name {
+      margin: 0 0 8px;
+      font-family: var(--serif);
+      font-size: 1.7rem;
       color: var(--gold-2);
     }
     .description {
+      margin: 0;
       color: var(--muted);
-      line-height: 1.45;
+      line-height: 1.5;
     }
     .boss {
       display: flex;
       align-items: center;
       gap: 10px;
+      margin: 14px 0 0;
       color: #ffb4a8;
-      font-size: 0.9rem;
+    }
+    .next {
+      margin: 8px 0 0;
+      color: var(--muted);
+      font-size: 0.85rem;
+      font-style: italic;
     }
     .seed {
       padding: 16px 20px;
-      width: min(440px, 100%);
+    }
+    .actions {
+      justify-content: flex-end;
     }
     label {
       font-weight: 600;
@@ -142,6 +208,15 @@ import { ItemIcon } from '../../shared/item-icon';
     .help.error {
       color: #ffb4a8;
     }
+    @media (max-width: 760px) {
+      .layout {
+        flex-direction: column;
+        align-items: stretch;
+      }
+      .realms {
+        flex-basis: auto;
+      }
+    }
   `,
 })
 export class RealmSelection {
@@ -160,12 +235,20 @@ export class RealmSelection {
     () => !!this.selected() && this.validSeed() && !!this.setup.godId(),
   );
 
+  protected readonly current = computed(() => this.realms.find((r) => r.id === this.selected()));
+
   protected bossName(realm: RealmDefinition): string {
     return this.content.bosses.find((b) => b.id === realm.boss.id)?.name ?? realm.boss.id;
   }
 
   protected bossSprite(realm: RealmDefinition): string {
     return this.content.bosses.find((b) => b.id === realm.boss.id)?.visual.sprite ?? '';
+  }
+
+  /** The realm a party reaches through this one's gate (content order, wrapping; spec: endless-run). */
+  protected nextName(realm: RealmDefinition): string {
+    const i = this.realms.indexOf(realm);
+    return this.realms[(i + 1) % this.realms.length].name;
   }
 
   protected reroll(): void {
