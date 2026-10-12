@@ -116,6 +116,24 @@ The three-headed hound of Hades, with a smouldering serpent mane (13,000 health,
 - **Calm:** a triple bite in a circle around itself, hellfire breath on three circles under you, and a pounce along a red line.
 - **Below half health:** it howls for the pack, calling three Orthrus, then bites wider, breathes six fires and pounces faster.
 
+## Lernaean Marsh
+
+The poisoned swamp of Lerna: bog, mud and reedbeds around deep water in a green mist, lit by will-o'-wisps. Sunken shrines of mossy marble, a drowned temple and cypress groves stand among reeds and lily pads. It follows the Underworld in the chain of realms, and you can also start a run here.
+
+| Realm time | What comes |
+|---|---|
+| 00:00 | **Swamp serpents**: the Hydra's brood; fast, weaving, numerous, later in packs |
+| 00:40 | **Lamiae**: serpent-tailed; they coil, then lunge |
+| 01:30 | **Giant crabs**: the brood of Karkinos; slow, tough, heavy blows |
+| 02:30 | **Naiads**: nymphs of the poisoned springs who keep their distance and spit venom |
+| 07:00 | **The Hydra** (spawning slows) |
+
+## The Hydra
+
+Five serpent necks rising from one body (15,000 health, 320 gold).
+- **Calm:** its heads bite in a circle around it, venom rains on four circles under you, and it calls a brood of four serpents.
+- **Below half health:** "Cut one head and two grow back!" It moves faster, calls six serpents, rains seven venoms, and lunges along a red line.
+
 ## Building a run
 
 - **Weapons** (up to 6, levels 1–6): Thunder Spear, Divine Bow, Trident, Lightning Orb, War Hammer, Flaming Sword, Thunderbolt, Soul Scythe.

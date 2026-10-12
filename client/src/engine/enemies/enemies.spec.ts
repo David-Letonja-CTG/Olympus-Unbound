@@ -37,6 +37,10 @@ describe('enemy behaviors', () => {
     archer.actionTimer = 0;
     sim.step(STEP, [NO_INPUT]);
     expect(sim.state.hostileProjectiles.map((p) => p.sprite)).toContain('enemy_arrow');
+    const naiad = spawnNear(sim, 'naiad', -200, 0);
+    naiad.actionTimer = 0;
+    sim.step(STEP, [NO_INPUT]);
+    expect(sim.state.hostileProjectiles.map((p) => p.sprite)).toContain('venom_spit');
   });
 
   it('a charger stops and telegraphs, then dashes in a straight line', () => {

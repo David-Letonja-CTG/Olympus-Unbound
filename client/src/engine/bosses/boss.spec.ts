@@ -155,4 +155,28 @@ describe('boss encounter', () => {
     run(sim, 0.5);
     expect(sim.state.enemies.filter((e) => e.def.id === 'orthrus').length).toBeGreaterThan(before);
   });
+
+  it('the Hydra calls its brood of swamp serpents (spec: realm-lerna)', () => {
+    const sim = new RunSimulation(
+      { runId: 'h', godId: 'zeus', realmId: 'lernaean_marsh', seed: 3, modifiers: [] },
+      CONTENT,
+    );
+    sim.state.godMode = true;
+    disarm(sim);
+    sim.debug({ type: 'skipTo', seconds: 419.5 });
+    run(sim, 1);
+    const boss = sim.state.enemies.find((e) => e.boss);
+    if (!boss?.boss) throw new Error('no Hydra');
+    expect(boss.def.id).toBe('hydra');
+    const near = () =>
+      sim.state.enemies.filter(
+        (e) => e.def.id === 'swamp_serpent' && Math.hypot(e.x - boss.x, e.y - boss.y) < 200,
+      ).length;
+    // Its third attack is the brood.
+    boss.boss.attackIndex = 2;
+    boss.boss.attackTimer = 0;
+    const before = near();
+    run(sim, 0.2);
+    expect(near()).toBeGreaterThan(before);
+  });
 });

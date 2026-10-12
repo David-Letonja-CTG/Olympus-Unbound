@@ -66,14 +66,22 @@ describe('content', () => {
   });
 
   it('chains Mount Olympus into the Underworld, guarded by Cerberus (spec: realm-underworld)', () => {
-    expect(CONTENT.realms.map((r) => r.id).slice(0, 2)).toEqual([
+    expect(CONTENT.realms.map((r) => r.id).slice(0, 3)).toEqual([
       'mount_olympus',
       'the_underworld',
+      'lernaean_marsh',
     ]);
     const underworld = CONTENT.realms.find((r) => r.id === 'the_underworld');
     expect(underworld?.boss.id).toBe('cerberus');
     const ids = new Set(underworld?.timeline.flatMap((p) => p.enemies.map((e) => e.id)));
     expect([...ids].sort()).toEqual(['corrupted_hoplite', 'fury', 'lampad', 'orthrus', 'shade']);
+  });
+
+  it('has the Lernaean Marsh, guarded by the Hydra (spec: realm-lerna)', () => {
+    const marsh = CONTENT.realms.find((r) => r.id === 'lernaean_marsh');
+    expect(marsh?.boss.id).toBe('hydra');
+    const ids = new Set(marsh?.timeline.flatMap((p) => p.enemies.map((e) => e.id)));
+    expect([...ids].sort()).toEqual(['giant_crab', 'lamia', 'naiad', 'swamp_serpent']);
   });
 });
 

@@ -30,6 +30,20 @@ const QUATERNIUS_WOLF = {
   source: 'https://opengameart.org/content/animated-animales-low-poly',
 } as const;
 
+/** The marsh's serpents and crabs: methodical pixel's CC0 animated models (D15). */
+const METHODICAL_SNAKE = {
+  name: 'CC0-1.0',
+  author: 'methodical pixel',
+  title: 'Snake low poly animated 3D model',
+  source: 'https://opengameart.org/content/snake-low-poly-animated-3d-model',
+} as const;
+const METHODICAL_CRAB = {
+  name: 'CC0-1.0',
+  author: 'methodical pixel',
+  title: 'Crab low poly animated 3D model',
+  source: 'https://opengameart.org/content/crab-low-poly-animated-3d-model',
+} as const;
+
 /** A sheet rendered by this project from a CC-BY model; `what` names the character and the parts used. */
 function rendered(
   id: string,
@@ -183,6 +197,32 @@ export const ASSETS: AssetManifest = {
       QUATERNIUS_WOLF,
       "Cerberus: the wolf with three heads and a mane of spines, on the Flare troll file's stage",
     ),
+    // The Lernaean Marsh.
+    rendered(
+      'swamp_serpent',
+      128,
+      METHODICAL_SNAKE,
+      "Swamp serpent: the snake thickened and recoloured, on the Flare hero file's stage",
+    ),
+    rendered(
+      'giant_crab',
+      128,
+      METHODICAL_CRAB,
+      "Giant crab: the crab with a bronze-red shell, on the Flare hero file's stage",
+    ),
+    rendered(
+      'lamia',
+      128,
+      HERO_MODEL,
+      'Lamia: the heroine to the hips, with a modelled serpent tail',
+    ),
+    rendered('naiad', 128, HERO_MODEL, 'Naiad: the heroine in sea-green robes with a venom staff'),
+    rendered(
+      'hydra',
+      256,
+      METHODICAL_SNAKE,
+      "The Hydra: five snakes as necks on a modelled body, on the Flare troll file's stage",
+    ),
     flareSheet('flare_skeleton', 'skeleton.png', {
       name: 'CC-BY-3.0',
       author: CLINT,
@@ -258,6 +298,27 @@ export const ASSETS: AssetManifest = {
       ...character('cerberus', 1.55, 0.5, 0.64, 250, {
         idle: run(0, 3, 4),
         walk: run(4, 11, 10),
+        death: run(12, 17, 10, false),
+      }),
+      portrait: 0,
+    },
+    // The Lernaean Marsh.
+    swamp_serpent: character('swamp_serpent', 1, 0.5, 0.69, 50, {
+      idle: run(0, 3, 4),
+      walk: run(4, 11, 10),
+      death: run(12, 17, 10, false),
+    }),
+    giant_crab: character('giant_crab', 1, 0.5, 0.76, 48, {
+      idle: run(0, 3, 4),
+      walk: run(4, 11, 12),
+      death: run(12, 17, 10, false),
+    }),
+    lamia: character('lamia', 1, 0.5, 0.72, 70, humanoid()),
+    naiad: character('naiad', 1, 0.51, 0.71, 74, humanoid()),
+    hydra: {
+      ...character('hydra', 1.7, 0.51, 0.66, 120, {
+        idle: run(0, 3, 4),
+        walk: run(4, 11, 8),
         death: run(12, 17, 10, false),
       }),
       portrait: 0,
