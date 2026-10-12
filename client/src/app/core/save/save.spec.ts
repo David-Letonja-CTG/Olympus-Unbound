@@ -185,7 +185,7 @@ describe('save format v2', () => {
       CONTENT,
       'high',
     );
-    expect(save.version).toBe(2);
+    expect(save.version).toBe(3);
     expect(save.gold).toBe(300);
     expect(save.permanentUpgrades).toEqual({ vitality: 2 });
     expect(save.introSeen).toBe(false);
@@ -207,6 +207,30 @@ describe('save format v2', () => {
     expect(parseSave(JSON.stringify({ version: 2, introSeen: true }), CONTENT).introSeen).toBe(
       true,
     );
+  });
+});
+
+describe('save format v3', () => {
+  it('migrates a version 2 save with the enemy health bars on, keeping its settings', () => {
+    const save = parseSave(
+      JSON.stringify({
+        version: 2,
+        introSeen: true,
+        settings: { damageNumbers: false, quality: 'low' },
+      }),
+      CONTENT,
+    );
+    expect(save.version).toBe(3);
+    expect(save.settings.enemyHealthBars).toBe(true);
+    expect(save.settings.damageNumbers).toBe(false);
+    expect(save.settings.quality).toBe('low');
+  });
+
+  it('remembers that the enemy health bars are off', () => {
+    expect(
+      parseSave(JSON.stringify({ version: 3, settings: { enemyHealthBars: false } }), CONTENT)
+        .settings.enemyHealthBars,
+    ).toBe(false);
   });
 });
 

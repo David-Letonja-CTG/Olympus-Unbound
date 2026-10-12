@@ -39,6 +39,7 @@ export type { DebugAction } from './sim/run-simulation';
 export type {
   AnnouncementKind,
   HudItem,
+  HudPartyMember,
   HudSnapshot,
   LoadoutSummary,
   RunOutcome,
@@ -49,3 +50,4 @@ export type {
   UpgradeOffer,
 } from './sim/types';
 export { spriteDataUrl, spriteKeys } from './art/sprites';
+export { SEAT_COLORS } from './art/minimap';

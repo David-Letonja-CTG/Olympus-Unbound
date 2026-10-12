@@ -46,7 +46,7 @@ The progression screen SHALL show every weapon, armour and relic as discovered (
 - **THEN** the codex shows `war_hammer` as discovered
 
 ### Requirement: Settings
-The settings screen SHALL let the player change sound effect volume, screen shake on/off, damage numbers on/off and graphics quality (Low, Medium, High). Changes SHALL apply immediately, including to a running game, and SHALL persist.
+The settings screen SHALL let the player change sound effect volume, screen shake on/off, damage numbers on/off, enemy health bars on/off and graphics quality (Low, Medium, High). Changes SHALL apply immediately, including to a running game, and SHALL persist.
 
 #### Scenario: Muting
 - **WHEN** the player sets sound effect volume to 0
@@ -56,9 +56,20 @@ The settings screen SHALL let the player change sound effect volume, screen shak
 - **WHEN** the player sets graphics quality to High and reloads the page
 - **THEN** graphics quality is still High
 
+#### Scenario: Enemy health bars persist
+- **WHEN** the player turns enemy health bars off and reloads the page
+- **THEN** the setting is still off
+
 ### Requirement: Save format version 2
 The save SHALL also record whether the intro has been seen. Saves of version 1 SHALL be migrated to version 2 keeping all their progress; the intro counts as not seen, and graphics quality takes the capability-based default.
 
 #### Scenario: Migrating a version 1 save
 - **WHEN** a version 1 save with 300 gold and `vitality` level 2 is loaded
 - **THEN** it becomes version 2 with 300 gold, `vitality` level 2 and the intro not yet seen
+
+### Requirement: Save format version 3
+The save SHALL also record whether enemy health bars are shown. Saves of version 2 SHALL be migrated to version 3 keeping all their progress and settings, with enemy health bars on.
+
+#### Scenario: An older save
+- **WHEN** a version 2 save with damage numbers off is loaded
+- **THEN** it becomes version 3 with damage numbers still off and enemy health bars on

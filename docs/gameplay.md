@@ -58,6 +58,10 @@ Runs take place at night. The arena is dark beyond your light; braziers ring the
 
 Health fills an **amphora** (bottom left), the experience bar and your weapons, armour and relics sit along the bottom, the divine ability waits in an iron slot (bottom right) with a dark cooldown sweep and the seconds left, the run time sits in the top plaque with gold and kills at the top right, active synergies at the top left, and the boss appears in a banner under the timer.
 
+**Health bars:** every monster that has been hurt shows a thin red bar above it (Settings → *Enemy health bars* hides them); elites keep their gold bar and the boss its banner.
+
+**Party health** (co-op, on the left): every god in the run in their seat's colour (the same as on the minimap), with their god, name, a health bar and the numbers; your own is marked *(you)*, and a fallen god shows how far their revive has come.
+
 **Minimap** (top right, under the gold and kills): the whole realm with its walls and the boss arena; monsters as red dots (elites larger and gold), the boss as a large red mark once it wakes, the open gate as a pale ring, every god in their own colour (yours largest, with a white rim; fallen gods as hollow rings), and the outline of what the screen shows.
 
 ## Zeus, King of the Sky
@@ -209,7 +213,7 @@ The Minotaur, king of the Labyrinth, with a bronze labrys (18,000 health, 380 go
 
 ## Feedback
 
-Hit flashes and damage numbers (critical hits larger and gold), status tints (burn orange, shock blue, slow violet, stun yellow), particles on hits and deaths, shockwaves, sword arcs, chain lightning, lightning strikes, screen shake (optional), and synthesized sound.
+Hit flashes, health bars over hurt monsters and damage numbers (critical hits larger and gold), status tints (burn orange, shock blue, slow violet, stun yellow), particles on hits and deaths, shockwaves, sword arcs, chain lightning, lightning strikes, screen shake (optional), and synthesized sound.
 
 **Sound:**
 - Every weapon and every god's ability has its own sound: the spear's crackle, the bow's twang, the hammer's thump, the bolt's thunder, Hades's Gates of Tartarus booming open, Poseidon's wave crashing, Athena's gaze cracking into stone.

@@ -1,5 +1,5 @@
 import { ChangeDetectionStrategy, Component, computed, input } from '@angular/core';
-import { HudSnapshot } from '../../../engine';
+import { HudPartyMember, HudSnapshot, SEAT_COLORS } from '../../../engine';
 import { formatTime, ItemIcon } from '../../shared/item-icon';
 
 export interface Announcement {
@@ -50,6 +50,48 @@ const VESSEL_BOTTOM = 130;
         >
       </div>
     </div>
+
+    @if (h.party.length > 1) {
+      <ul class="party" aria-label="Party health" data-testid="hud-party">
+        @for (m of h.party; track m.id) {
+          <li class="member" [class.self]="m.self" [class.fallen]="!m.alive">
+            <span class="seat" [style.background]="seatColor(m)"></span>
+            <app-item-icon [sprite]="m.sprite" [size]="28" />
+            <span class="who">
+              <span class="member-name"
+                >{{ m.name }}
+                @if (m.self) {
+                  <span class="you"> (you)</span>
+                }
+              </span>
+              @if (m.alive) {
+                <span
+                  class="member-track"
+                  role="progressbar"
+                  [attr.aria-label]="m.name + ' health'"
+                  [attr.aria-valuenow]="m.health"
+                  aria-valuemin="0"
+                  [attr.aria-valuemax]="m.maxHealth"
+                  ><span
+                    class="member-fill"
+                    [class.low]="m.health / m.maxHealth < 0.3"
+                    [style.width.%]="percent(m)"
+                  ></span
+                ></span>
+                <span class="member-hp">{{ m.health }} / {{ m.maxHealth }}</span>
+              } @else {
+                <span class="member-track revive"
+                  ><span class="member-fill" [style.width.%]="m.revive * 100"></span
+                ></span>
+                <span class="member-hp">{{
+                  m.self ? 'Fallen · an ally can revive you' : 'Fallen · stand by their spirit'
+                }}</span>
+              }
+            </span>
+          </li>
+        }
+      </ul>
+    }
 
     @if (h.boss; as boss) {
       <div class="boss" data-testid="boss-bar">
@@ -219,6 +261,14 @@ export class Hud {
     const share = cooldown > 0 ? Math.min(1, remaining / cooldown) : 0;
     return `${(share * 100).toFixed(1)}%`;
   });
+
+  protected seatColor(m: HudPartyMember): string {
+    return '#' + SEAT_COLORS[m.seat % SEAT_COLORS.length].toString(16).padStart(6, '0');
+  }
+
+  protected percent(m: HudPartyMember): number {
+    return m.maxHealth > 0 ? Math.max(0, Math.min(100, (m.health / m.maxHealth) * 100)) : 0;
+  }
 
   protected round(n: number): number {
     return Math.ceil(n);

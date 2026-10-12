@@ -21,6 +21,8 @@ export interface GameSettings {
   readonly sfxVolume: number;
   readonly screenShake: boolean;
   readonly damageNumbers: boolean;
+  /** Health bars over hurt monsters (spec: hud / enemy health bars). */
+  readonly enemyHealthBars: boolean;
   readonly quality: GraphicsQuality;
 }
 
@@ -28,6 +30,7 @@ export const DEFAULT_SETTINGS: GameSettings = {
   sfxVolume: 0.6,
   screenShake: true,
   damageNumbers: true,
+  enemyHealthBars: true,
   quality: 'medium',
 };
 

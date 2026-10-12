@@ -8,7 +8,7 @@ import {
 } from '../../../engine';
 
 /** Current save format version (D8). Bump it and add a migration when the shape changes. */
-export const SAVE_VERSION = 2;
+export const SAVE_VERSION = 3;
 /** How many processed run IDs are remembered to keep rewards idempotent. */
 export const REMEMBERED_RUNS = 20;
 
@@ -71,6 +71,12 @@ const MIGRATIONS: Record<number, (save: Raw) => Raw> = {
   0: (save) => ({ ...save, version: 1 }),
   // v2 remembers the intro (not seen yet) and graphics quality (absent: the detected default).
   1: (save) => ({ ...save, version: 2, introSeen: false }),
+  // v3 adds the enemy health bars setting (on, like a fresh save).
+  2: (save) => ({
+    ...save,
+    version: 3,
+    settings: { ...((save['settings'] as Raw | undefined) ?? {}), enemyHealthBars: true },
+  }),
 };
 
 /**
@@ -139,6 +145,7 @@ export function parseSave(
           : DEFAULT_SETTINGS.sfxVolume,
       screenShake: flag(settings['screenShake'], DEFAULT_SETTINGS.screenShake),
       damageNumbers: flag(settings['damageNumbers'], DEFAULT_SETTINGS.damageNumbers),
+      enemyHealthBars: flag(settings['enemyHealthBars'], DEFAULT_SETTINGS.enemyHealthBars),
       quality: GRAPHICS_QUALITIES.includes(quality as GraphicsQuality)
         ? (quality as GraphicsQuality)
         : defaultQuality,

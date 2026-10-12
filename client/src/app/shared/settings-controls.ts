@@ -48,6 +48,16 @@ const QUALITY_LABEL: Record<GraphicsQuality, string> = {
         (change)="progression.updateSettings({ damageNumbers: $any($event.target).checked })"
       />
     </div>
+    <div class="row">
+      <label for="enemy-bars">Enemy health bars</label>
+      <input
+        id="enemy-bars"
+        type="checkbox"
+        data-testid="enemy-health-bars"
+        [checked]="s.enemyHealthBars"
+        (change)="progression.updateSettings({ enemyHealthBars: $any($event.target).checked })"
+      />
+    </div>
     <div class="row quality">
       <span id="quality-label">Graphics</span>
       <div class="segments" role="radiogroup" aria-labelledby="quality-label">
