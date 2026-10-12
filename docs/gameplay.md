@@ -58,6 +58,8 @@ Runs take place at night. The arena is dark beyond your light; braziers ring the
 
 Health fills an **amphora** (bottom left), the experience bar and your weapons, armour and relics sit along the bottom, the divine ability waits in an iron slot (bottom right) with a dark cooldown sweep and the seconds left, the run time sits in the top plaque with gold and kills at the top right, active synergies at the top left, and the boss appears in a banner under the timer.
 
+**Minimap** (top right, under the gold and kills): the whole realm with its walls and the boss arena; monsters as red dots (elites larger and gold), the boss as a large red mark once it wakes, the open gate as a pale ring, every god in their own colour (yours largest, with a white rim; fallen gods as hollow rings), and the outline of what the screen shows.
+
 ## Zeus, King of the Sky
 
 Health 120, speed 210, critical chance 13% (with his passive). Starts with **Thunder Spear**. Ability **Wrath of Olympus** (25 s): lightning strikes up to 8 nearby foes, stunning and shocking them. Passive **Thunderborn**: +10% lightning damage, +5% critical chance. Lightning items are offered more often.

@@ -93,8 +93,8 @@ const PASSIVE_ICON: Record<Element, string> = {
   styles: `
     /* Every god's card the same size, however long their title. */
     .gods {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(210px, 250px));
+      display: flex;
+      flex-wrap: wrap;
       gap: 16px;
       justify-content: center;
       width: 100%;
@@ -108,6 +108,7 @@ const PASSIVE_ICON: Record<Element, string> = {
       cursor: pointer;
       color: var(--text);
       text-align: center;
+      width: 240px;
     }
     .god-card.selected {
       border-color: var(--gold);
