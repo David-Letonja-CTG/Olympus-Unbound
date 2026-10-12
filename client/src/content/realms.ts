@@ -696,5 +696,235 @@ export const LERNAEAN_MARSH: RealmDefinition = {
   rewards: { bossGold: 320 },
 };
 
+/**
+ * The Aegean Shore: moonlit sand and sea-worn marble between the cliffs, wrecks of Odysseus's fleet on the beach,
+ * beacons burning for ships that never come. Drowned sailors, Sirens, Tritons and crabs; Scylla guards the strait
+ * (spec: realm-aegean).
+ */
+export const AEGEAN_SHORE: RealmDefinition = {
+  id: 'aegean_shore',
+  name: 'Aegean Shore',
+  description:
+    'Moonlit sands and sea-worn temples above the strait, where wrecked ships rot and Scylla waits beneath the cliffs.',
+  backgroundColor: 0x0d121a,
+  tips: [
+    'The drowned sailors of Odysseus walk again. Slow, but they never stop coming.',
+    'A Siren’s song strikes from afar. The rose rings are slower than arrows: step out of their path.',
+    'A Triton lowers his trident before he charges. When he stops, move.',
+    'Scylla’s six hounds bite all around her, Charybdis opens whirlpools under you, and her tentacles lash along a line.',
+    'Wound Scylla and the drowned rise to answer her.',
+    'The beacons on the shore were lit for ships. Now they light the way for the dead.',
+    'Odysseus lost six men to Scylla. Count yourself lucky if she only takes your gold.',
+    'The crabs of the shore are as stubborn as their marsh cousins. Strike them from afar.',
+  ],
+  // Moonlight on the sea: a cool silver-blue light, sea mist, spray drifting on the wind.
+  atmosphere: { ambient: 0x6a7290, fog: 0x8a98b4, particles: 0xd8ecff },
+  map: {
+    widthTiles: 64,
+    heightTiles: 64,
+    tileSize: 64,
+    borderTiles: 3,
+    terrain: {
+      types: [
+        { id: 'wet_sand', color: 0x6a6048 },
+        { id: 'dune', color: 0x847858 },
+        { id: 'sea_rock', color: 0x4a4c56 },
+        { id: 'marble', color: 0xb0aea6 },
+        { id: 'sea', color: 0x0e1e2e },
+      ],
+      noiseScale: 9,
+      bands: [
+        { below: 0.32, terrain: 'sea_rock' },
+        { below: 0.66, terrain: 'wet_sand' },
+        { below: 1.01, terrain: 'dune' },
+      ],
+      plaza: 'marble',
+      border: 'sea',
+    },
+    spawnClearRadius: 260,
+    bossArena: { radius: 300, minDistanceFromSpawn: 1300 },
+    minObstacleGap: 46,
+    maxObstacles: 260,
+    obstacles: [
+      { id: 'column', radius: 16, visual: { sprite: 'column', color: 0xe8e2d4 } },
+      { id: 'broken_column', radius: 18, visual: { sprite: 'broken_column', color: 0xd8d0bf } },
+      { id: 'statue', radius: 22, visual: { sprite: 'statue', color: 0xdcd6c8 } },
+      { id: 'rock', radius: 18, visual: { sprite: 'rock', color: 0x8a8580 } },
+      { id: 'wreck', radius: 30, visual: { sprite: 'shipwreck', color: 0x6e6252 } },
+      { id: 'amphorae', radius: 14, visual: { sprite: 'amphorae', color: 0xa25a34 } },
+      { id: 'altar', radius: 26, visual: { sprite: 'altar', color: 0xc9c2b2 } },
+      { id: 'wall', radius: 20, visual: { sprite: 'ruined_wall', color: 0xb3ac9e } },
+      {
+        id: 'brazier',
+        radius: 14,
+        visual: { sprite: 'brazier', color: 0xff8a3d },
+        light: { radius: 270, color: 0xffa860, intensity: 0.95, flicker: 0.3 },
+      },
+    ],
+    roads: { width: 60, wander: 100 },
+    pointsOfInterest: [
+      {
+        type: 'ring',
+        kind: 'column',
+        count: [3, 5],
+        radius: [130, 190],
+        pieces: 10,
+        missingChance: 0.35,
+        plazaTerrain: 'marble',
+      },
+      {
+        type: 'temple',
+        column: 'column',
+        fallen: 'broken_column',
+        altar: 'altar',
+        light: 'brazier',
+        size: [520, 320],
+        spacing: 80,
+        fallenChance: 0.3,
+        missingChance: 0.15,
+      },
+      {
+        type: 'walls',
+        kind: 'wall',
+        count: [4, 6],
+        length: [200, 360],
+        spacing: 66,
+        missingChance: 0.25,
+      },
+      { type: 'cluster', kind: 'amphorae', count: [5, 8], size: [3, 6], spread: 90 },
+      { type: 'plazaLights', kind: 'brazier', count: 4, offset: 18 },
+    ],
+    scatter: [
+      { kind: 'wreck', density: 1.6, terrain: ['wet_sand', 'dune'] },
+      { kind: 'rock', density: 7 },
+      { kind: 'statue', density: 0.6 },
+      { kind: 'broken_column', density: 2.5, terrain: ['sea_rock', 'marble'] },
+    ],
+    decorations: [
+      {
+        id: 'shells',
+        terrain: ['wet_sand', 'dune'],
+        density: 70,
+        visual: { sprite: 'shells', color: 0xe8dcc8 },
+      },
+      {
+        id: 'seaweed',
+        terrain: ['wet_sand', 'sea_rock'],
+        density: 60,
+        visual: { sprite: 'seaweed', color: 0x2c4a26 },
+      },
+      {
+        id: 'sand_pebbles',
+        terrain: ['dune', 'wet_sand'],
+        density: 60,
+        visual: { sprite: 'sand_pebbles', color: 0x8a7e64 },
+      },
+      {
+        id: 'marble_shards',
+        terrain: ['marble'],
+        density: 80,
+        visual: { sprite: 'marble_shards', color: 0xeae4d6 },
+      },
+    ],
+  },
+  timeline: [
+    { from: 0, rate: 1.3, maxAlive: 45, enemies: [{ id: 'drowned_sailor', weight: 1 }] },
+    {
+      from: 40,
+      rate: 1.9,
+      maxAlive: 75,
+      enemies: [
+        { id: 'drowned_sailor', weight: 3 },
+        { id: 'siren', weight: 1 },
+      ],
+    },
+    {
+      from: 90,
+      rate: 2.5,
+      maxAlive: 105,
+      enemies: [
+        { id: 'drowned_sailor', weight: 3 },
+        { id: 'siren', weight: 1.5 },
+        { id: 'giant_crab', weight: 0.6 },
+      ],
+    },
+    {
+      from: 150,
+      rate: 3,
+      maxAlive: 140,
+      enemies: [
+        { id: 'drowned_sailor', weight: 2.5 },
+        { id: 'siren', weight: 2 },
+        { id: 'giant_crab', weight: 1 },
+        { id: 'triton', weight: 1.2 },
+      ],
+    },
+    {
+      from: 210,
+      rate: 3.6,
+      maxAlive: 175,
+      enemies: [
+        { id: 'drowned_sailor', weight: 2 },
+        { id: 'siren', weight: 2 },
+        { id: 'giant_crab', weight: 1.5 },
+        { id: 'triton', weight: 1.8 },
+      ],
+      groups: [{ id: 'drowned_sailor', size: [8, 12], every: 16 }],
+    },
+    {
+      from: 270,
+      rate: 4.2,
+      maxAlive: 215,
+      enemies: [
+        { id: 'drowned_sailor', weight: 2 },
+        { id: 'siren', weight: 2 },
+        { id: 'giant_crab', weight: 2 },
+        { id: 'triton', weight: 2 },
+      ],
+      groups: [{ id: 'drowned_sailor', size: [10, 14], every: 14 }],
+    },
+    {
+      from: 330,
+      rate: 4.9,
+      maxAlive: 255,
+      enemies: [
+        { id: 'drowned_sailor', weight: 1.5 },
+        { id: 'siren', weight: 2 },
+        { id: 'giant_crab', weight: 2 },
+        { id: 'triton', weight: 2.5 },
+      ],
+    },
+    {
+      from: 390,
+      rate: 5.5,
+      maxAlive: 290,
+      enemies: [
+        { id: 'drowned_sailor', weight: 1.5 },
+        { id: 'siren', weight: 2 },
+        { id: 'giant_crab', weight: 2 },
+        { id: 'triton', weight: 2.5 },
+      ],
+    },
+  ],
+  events: [
+    { at: 60, type: 'horde', enemy: 'drowned_sailor', count: 30 },
+    { at: 120, type: 'elite', enemy: 'siren' },
+    { at: 180, type: 'horde', enemy: 'siren', count: 18 },
+    { at: 240, type: 'elite', enemy: 'triton' },
+    { at: 300, type: 'horde', enemy: 'drowned_sailor', count: 40 },
+    { at: 330, type: 'elite', enemy: 'giant_crab' },
+    { at: 375, type: 'elite', enemy: 'triton' },
+  ],
+  scaling: { healthPerMinute: 0.12, damagePerMinute: 0.05, max: 2.2 },
+  elite: { health: 12, damage: 1.6, size: 1.5, gold: 15, xp: 10 },
+  boss: { id: 'scylla', at: 420, spawnRateMultiplier: 0.45 },
+  rewards: { bossGold: 340 },
+};
+
 /** The chain of realms in order (spec: endless-run / chain of realms). */
-export const REALMS: readonly RealmDefinition[] = [MOUNT_OLYMPUS, THE_UNDERWORLD, LERNAEAN_MARSH];
+export const REALMS: readonly RealmDefinition[] = [
+  MOUNT_OLYMPUS,
+  THE_UNDERWORLD,
+  LERNAEAN_MARSH,
+  AEGEAN_SHORE,
+];

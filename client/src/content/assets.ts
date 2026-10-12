@@ -223,6 +223,26 @@ export const ASSETS: AssetManifest = {
       METHODICAL_SNAKE,
       "The Hydra: five snakes as necks on a modelled body, on the Flare troll file's stage",
     ),
+    // The Aegean Shore.
+    rendered('siren', 128, HERO_MODEL, 'Siren: the heroine with white wings and copper hair'),
+    rendered(
+      'triton',
+      128,
+      HERO_MODEL,
+      'Triton: the hero to the hips with a modelled fish tail and trident',
+    ),
+    rendered(
+      'drowned_sailor',
+      128,
+      HERO_MODEL,
+      'Drowned sailor: the hero sea-bleached and hung with kelp',
+    ),
+    rendered(
+      'scylla',
+      256,
+      HERO_MODEL,
+      "Scylla: the heroine with hound heads cut from Quaternius's CC0 wolf and tentacles from methodical pixel's CC0 snake",
+    ),
     flareSheet('flare_skeleton', 'skeleton.png', {
       name: 'CC-BY-3.0',
       author: CLINT,
@@ -323,5 +343,10 @@ export const ASSETS: AssetManifest = {
       }),
       portrait: 0,
     },
+    // The Aegean Shore.
+    siren: character('siren', 0.95, 0.52, 0.71, 74, humanoid()),
+    triton: character('triton', 1.05, 0.5, 0.72, 80, humanoid()),
+    drowned_sailor: character('drowned_sailor', 1, 0.5, 0.73, 77, humanoid()),
+    scylla: { ...character('scylla', 1.6, 0.5, 0.74, 150, humanoid()), portrait: 26 },
   },
 };

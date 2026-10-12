@@ -50,6 +50,11 @@ const CHARACTERS = {
   lamia: [`${HEROINE}/clothes.blend`, "lamia.py", 128],
   naiad: [`${HEROINE}/clothes.blend`, "naiad.py", 128],
   hydra: ["Troll.blend", "hydra.py", 256],
+  // The Aegean Shore.
+  siren: [`${HEROINE}/clothes.blend`, "siren.py", 128],
+  triton: [`${HERO}/clothes.blend`, "triton.py", 128],
+  drowned_sailor: [`${HERO}/clothes.blend`, "drowned_sailor.py", 128],
+  scylla: [`${HEROINE}/clothes.blend`, "scylla.py", 256],
 };
 
 mkdirSync(out, { recursive: true });

@@ -134,6 +134,24 @@ Five serpent necks rising from one body (15,000 health, 320 gold).
 - **Calm:** its heads bite in a circle around it, venom rains on four circles under you, and it calls a brood of four serpents.
 - **Below half health:** "Cut one head and two grow back!" It moves faster, calls six serpents, rains seven venoms, and lunges along a red line.
 
+## Aegean Shore
+
+Moonlit sand, dunes and sea-rock above the strait, under a cool silver light with drifting spray. Sea-worn marble temples and plazas, wrecks of Odysseus's fleet, spilled amphorae and beacon braziers line the beach among shells and seaweed. It follows the Lernaean Marsh in the chain of realms, and you can also start a run here.
+
+| Realm time | What comes |
+|---|---|
+| 00:00 | **Drowned sailors**: Odysseus's lost crew; slow, relentless, later in packs |
+| 00:40 | **Sirens**: they keep their distance and hurl their song (rose rings) |
+| 01:30 | **Giant crabs** from the shore |
+| 02:30 | **Tritons**: Poseidon's mermen; they lower their tridents, then charge |
+| 07:00 | **Scylla** (spawning slows) |
+
+## Scylla
+
+The monster of the strait: a woman with six hounds at her waist and serpent tentacles beneath (16,000 health, 340 gold).
+- **Calm:** her six hounds bite in a circle around her, Charybdis opens four whirlpools under you, and her tentacles lash along a red line.
+- **Below half health:** "The drowned answer Scylla's call!" She calls five drowned sailors, moves faster, bites wider and opens seven whirlpools.
+
 ## Building a run
 
 - **Weapons** (up to 6, levels 1–6): Thunder Spear, Divine Bow, Trident, Lightning Orb, War Hammer, Flaming Sword, Thunderbolt, Soul Scythe.
