@@ -87,6 +87,8 @@ export interface DebugSnapshot {
   readonly player: { readonly x: number; readonly y: number; readonly health: number };
   readonly enemies: number;
   readonly bossAlive: boolean;
+  /** Where the living boss is (solo runs and a room's host), for scripts that wait for it to come into view. */
+  readonly boss?: { readonly x: number; readonly y: number };
   /** Players still in the run (not left). */
   readonly players: number;
   /** Every player's position, in seat order. */

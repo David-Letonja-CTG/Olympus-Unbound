@@ -2,11 +2,21 @@
 
 *Unleash the gods. Survive the divine war.*
 
-An original mythological horde-survival roguelite that runs entirely in the browser. Choose a god, enter a procedurally generated realm, survive ever-larger hordes, combine weapons, armour, relics and skills into synergies, defeat the realm's boss, and spend your rewards on lasting upgrades — then go again. Play alone, or with up to three friends in a co-op room joined by code.
+An original mythological horde-survival roguelite that runs entirely in the browser. Choose a god, survive ever-larger hordes in procedurally generated realms of Greek myth, combine weapons, armour, relics and skills into synergies, defeat each realm's boss and pass its gate into the next, harder realm. The run goes on until every god has fallen; then spend your rewards on lasting upgrades and go again. Play alone, or with up to three friends in a co-op room joined by code.
 
-**Now:** a night-lit, dark-fantasy presentation (dynamic lighting, fog, braziers, an ornate stone-and-iron UI), an in-engine intro scene, and a pre-rendered cast of Greek myth — Zeus, satyrs, harpies, Stymphalian birds, centaurs, minotaurs, fallen oracles, marble sentinels and the Cyclops — rendered in Blender from licensed Flare models (`art/blender/`), with walk cycles that keep pace with movement and the Cinzel display font.
+![A run in every realm: Mount Olympus, the Underworld, the Lernaean Marsh, the Aegean Shore and the Labyrinth of Crete](docs/images/hero.gif)
 
-**Vertical slice:** Zeus, Hades, Poseidon and Athena · Mount Olympus · 10 weapons · 4 armour · 6 relics · 16 skills · 7 synergies · 8 enemy types · elites · the Cyclops · run summary · permanent upgrades · codex · co-op rooms for up to 4 players (peer-to-peer, difficulty per player) · keyboard and gamepad.
+- **Four gods:** Zeus, Hades, Poseidon and Athena, each with a starting weapon, a divine ability and a passive.
+- **Five realms, endless runs:** Mount Olympus, the Underworld, the Lernaean Marsh, the Aegean Shore and the Labyrinth of Crete. Each has its own map, monsters and boss: the Cyclops, Cerberus, the Hydra, Scylla and Asterion. After the Labyrinth comes Olympus again, harder.
+- **Build a god:** 10 weapons, 4 armours, 6 relics, 16 skills and 7 synergies; permanent upgrades and a codex between runs.
+- **Co-op:** rooms for up to four players, peer to peer, with difficulty per player; a living ally revives a fallen god by standing beside their spirit.
+- **Night and myth:** dynamic light, fog and torchlight, and a cast rendered in Blender from licensed models (`art/blender/`).
+
+| Every realm's boss | Level up | The gate onward |
+|---|---|---|
+| ![The boss of every realm](docs/images/bosses.jpg) | ![A level-up choice](docs/images/level-up.jpg) | ![The gate to the next realm](docs/images/gate.jpg) |
+
+**More:** [Gameplay](docs/gameplay.md) (the loop, gods, realms, bosses, co-op) · [Systems](docs/systems.md) (rules and formulas) · [Architecture](docs/architecture.md) (layers, frame, state) · [Content](docs/content.md) (adding gods, enemies, realms)
 
 ## Play it locally
 
@@ -18,14 +28,14 @@ npm ci
 npm start          # http://localhost:4200
 ```
 
-WASD/arrows or a gamepad to move, Space (A) for Zeus's *Wrath of Olympus*, Esc (Start) to pause, 1–3 to pick upgrades.
+WASD/arrows or a gamepad to move, Space (A) for the god's divine ability, Esc (Start) to pause, 1–3 to pick upgrades.
 
 Checks (CI runs the same on every push and pull request):
 
 ```bash
 cd client
-npm run check      # format, lint, unit tests, production build
-npm run e2e        # plays the vertical slice in Chromium (npx playwright install chromium once)
+npm run check      # format, lint, asset licences, unit tests, production build
+npm run e2e        # plays the game in Chromium, solo and in a co-op room (npx playwright install chromium once)
 ```
 
 `npm run build` produces a static site in `client/dist/olympus-unbound/browser` that any static host can serve.
@@ -40,16 +50,19 @@ flowchart LR
   Phaser -- "step(1/60)" --> Sim["Simulation<br/>pure TypeScript rules"]
   Content[("Typed content")] --> UI
   UI <--> Save[("localStorage save")]
+  Phaser <-. "co-op: WebRTC" .-> Peers(["Other players' browsers"])
 ```
 
-- **Angular owns the application**, **Phaser hosts and draws the game**, and a **Phaser-free simulation owns every gameplay rule** — testable in Node, deterministic per seed.
-- **Content is typed data**; new weapons, enemies, relics or realms reuse behaviors instead of new code.
-- **No backend**: progress is a versioned save in the browser.
+- **Angular owns the application**, **Phaser hosts and draws the game**, and a **Phaser-free simulation owns every gameplay rule**. The rules are testable in Node and deterministic per seed.
+- **Content is typed data**: new weapons, enemies, relics or realms reuse behaviors instead of new code.
+- **No backend**: progress is a versioned save in the browser. Co-op rooms connect browsers directly, and the host's simulation is the authority.
 
 | Area | Technology |
 |---|---|
 | Application | Angular 22 (standalone, signals, zoneless) |
 | Game | Phaser 4 + TypeScript simulation core |
+| Co-op | WebRTC via PeerJS |
+| Art | Blender renders of CC-BY / CC0 models, code-drawn world and effects |
 | Tests | Vitest, Playwright |
 | Workflow | [OpenSpec](https://github.com/Fission-AI/OpenSpec) |
 
@@ -57,7 +70,8 @@ flowchart LR
 
 ```text
 client/     Angular app (src/app), engine (src/engine), content (src/content), Playwright tests (e2e)
-docs/       product vision, architecture, gameplay, systems, content, decisions
+art/        Blender scripts that render the characters (art/blender)
+docs/       product vision, architecture, gameplay, systems, content, art direction, decisions, images
 openspec/   capability specs and change proposals
 .claude/    OpenSpec commands and skills for Claude Code
 ```
@@ -71,13 +85,15 @@ openspec/   capability specs and change proposals
 | [docs/content.md](docs/content.md) | Content files, checklists, assets and licences, balance notes |
 | [docs/art-direction.md](docs/art-direction.md) | The look: light, colour, forms, UI, packs, originality |
 | [art/blender/README.md](art/blender/README.md) | How the characters are rendered: sources, licences, scripts |
-| [docs/decisions.md](docs/decisions.md) | Binding decisions D1–D14 |
+| [docs/decisions.md](docs/decisions.md) | Binding decisions |
 | [CLAUDE.md](CLAUDE.md) | Rules for the AI development agent |
+
+Pictures in the docs are generated from the running game by [`client/scripts/docs-media/capture.mjs`](client/scripts/docs-media/capture.mjs); rerun it when something visible changes.
 
 ## How work is done
 
-Spec → plan → implement → validate → playtest → iterate, one OpenSpec change at a time (`openspec/changes/<id>/`). The vertical slice was the change `add-vertical-slice`, archived in [`openspec/changes/archive/2026-10-10-add-vertical-slice`](openspec/changes/archive/2026-10-10-add-vertical-slice); its requirements now live in [`openspec/specs/`](openspec/specs/).
+Spec → plan → implement → validate → playtest → iterate, one OpenSpec change at a time (`openspec/changes/<id>/`). When a change is done it is archived (`openspec/changes/archive/`) and its requirements merge into the capability specs in [`openspec/specs/`](openspec/specs/).
 
 ## Originality
 
-OLYMPUS UNBOUND is an original game inspired by the *genre* of horde-survival roguelites and by mythology. The characters are rendered by this project from CC-BY 3.0 models of the Flare collection (credited in Settings → Credits); the world, effects, UI art and all sound are generated by the game's own code. Every external file needs a recorded, allowed licence (`npm run assets:check`, credited in Settings → Credits and [docs/content.md](docs/content.md)). No assets, names, UI or code are taken from other games. Name and tagline are provisional; trademark availability has not been checked.
+OLYMPUS UNBOUND is an original game inspired by the *genre* of horde-survival roguelites and by Greek mythology. The characters are rendered by this project from CC-BY 3.0 models of the Flare collection and CC0 models (credited in Settings → Credits); the world, effects, UI art and all sound are generated by the game's own code. Every external file needs a recorded, allowed licence (`npm run assets:check`, credited in Settings → Credits and [docs/content.md](docs/content.md)). No assets, names, UI or code are taken from other games. Name and tagline are provisional; trademark availability has not been checked.

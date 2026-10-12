@@ -1,13 +1,15 @@
 # Gameplay
 
-The game as the player experiences it in the vertical slice. Numbers live in `client/src/content/` and may change with balancing; this page describes the shape.
+The game as the player experiences it. Numbers live in `client/src/content/` and may change with balancing; this page describes the shape.
+
+![A run in every realm: Mount Olympus, the Underworld, the Lernaean Marsh, the Aegean Shore and the Labyrinth of Crete](images/hero.gif)
 
 ## The loop
 
 0. **Intro** — on first launch, a ~55-second scene: the gods at the altar on a moonlit Olympus, the horde breaking in from the north, the gods falling one by one, and Zeus unleashing the storm. Skip with Esc, Enter, Space, a click or the gamepad; replay it from the main menu (*Intro*).
 1. **Main menu** → *Play*, *Co-op*, *Progression*, *Settings*; the gold total is shown.
 2. **Choose a god** — Zeus, Hades, Poseidon or Athena (more gods later).
-3. **Choose a realm** — Mount Olympus, with a seed (random by default; enter one to replay an arena).
+3. **Choose a realm** — where the run starts (Mount Olympus, the Underworld, the Lernaean Marsh, the Aegean Shore or the Labyrinth of Crete), with a seed (random by default; enter one to replay the same arenas).
 4. **Survive.** Weapons fire on their own; the player moves, positions, collects XP and uses the divine ability.
 5. **Level up** — the run pauses; pick one of three upgrades.
 6. **Pressure rises** — new enemy types, packs, hordes and elites.
@@ -15,6 +17,12 @@ The game as the player experiences it in the vertical slice. Numbers live in `cl
 8. **Deeper** — step into the gate (or wait a minute) and the party enters the next realm: a new arena, the realm's own monsters from the start of its timeline, everything a little stronger than before. The run goes on realm after realm until every god has fallen.
 9. **Run summary** — time, realms cleared, the realm reached, level, kills, gold, rewards, build, discoveries → main menu or play again.
 10. **Progression** — spend gold on permanent upgrades; browse the codex.
+
+| Choose a god | Choose a realm | Level up |
+|---|---|---|
+| ![God selection](images/gods.jpg) | ![Realm selection](images/realm-select.jpg) | ![A level-up choice](images/level-up.jpg) |
+| **The gate after a boss** | **The run summary** | **Progression** |
+| ![The gate to the next realm](images/gate.jpg) | ![The summary after a run](images/summary.jpg) | ![Permanent upgrades and the codex](images/progression.jpg) |
 
 ## Controls
 
@@ -65,6 +73,14 @@ Health 145, speed 200, armour 1: he holds the line and keeps the horde at bay. S
 ## Athena, Goddess of Wisdom and War
 
 Health 135, speed 205, armour 2, critical chance 12% (with her passive): a precise striker who controls the field. Starts with the **Spear of Athena** (a piercing bronze javelin with a high critical chance). Ability **Gorgon's Gaze** (26 s): she raises the Aegis and every foe within a wide radius is struck and turned to stone for 2.5 seconds. Passive **Wisdom of War**: +15% experience, +7% critical chance. Physical and lightning items are offered more often.
+
+## The realms
+
+Five realms, each with its own map, monsters and boss, in the order a run passes through them (after the Labyrinth comes Mount Olympus again, harder).
+
+![A still from every realm](images/realms.jpg)
+
+![The boss of every realm](images/bosses.jpg)
 
 ## Mount Olympus
 
@@ -171,6 +187,8 @@ The Minotaur, king of the Labyrinth, with a bronze labrys (18,000 health, 380 go
 - **Below 60% health:** "The Labyrinth answers its king!" He calls three minotaurs, moves faster, rushes further, brings down seven stones and sweeps wider.
 - **Below 25% health:** "Asterion goes berserk!" Faster still; he rushes twice in every round of attacks, and nine stones fall.
 
+![Fighting Asterion in the Labyrinth](images/boss.gif)
+
 ## Building a run
 
 - **Weapons** (up to 6, levels 1–6): Thunder Spear, Divine Bow, Trident, Lightning Orb, War Hammer, Flaming Sword, Thunderbolt, Soul Scythe.
@@ -185,7 +203,7 @@ The Minotaur, king of the Labyrinth, with a bronze labrys (18,000 health, 380 go
 - Gold collected in the run is kept when you fall, including each boss's gold (**+250** for the Cyclops); **half** (rounded down) when abandoned.
 - Weapons, armour and relics held at the end become **discovered** in the codex.
 - **Permanent upgrades**: Vitality, Might, Swiftness, Greed, Attraction, Resilience.
-- Statistics: runs, victories, total kills, best survival time.
+- Statistics: runs, realms cleared, total kills, best survival time.
 
 ## Feedback
 

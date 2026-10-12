@@ -13,6 +13,8 @@ export interface DriverSnapshot {
   readonly player: { readonly x: number; readonly y: number; readonly health: number };
   readonly enemies: number;
   readonly bossAlive: boolean;
+  /** Where the living boss is (local runs only), so scripts can wait for it to come into view. */
+  readonly boss?: { readonly x: number; readonly y: number };
   readonly players: number;
   readonly party: readonly { readonly x: number; readonly y: number; readonly alive: boolean }[];
   readonly depth: number;
@@ -204,6 +206,7 @@ export class LocalDriver implements RunDriver {
       player: { x: p.x, y: p.y, health: p.health },
       enemies: state.enemies.length,
       bossAlive: !!state.boss && !state.boss.dead,
+      boss: state.boss && !state.boss.dead ? { x: state.boss.x, y: state.boss.y } : undefined,
       players: state.players.filter((pl) => !pl.left).length,
       party: state.players.map((pl) => ({ x: pl.x, y: pl.y, alive: pl.alive })),
       depth: state.depth,
