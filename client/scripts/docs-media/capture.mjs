@@ -18,8 +18,10 @@ const here = dirname(fileURLToPath(import.meta.url));
 const out = join(here, '..', '..', '..', 'docs', 'images');
 const base = process.env.DOCS_MEDIA_URL ?? 'http://localhost:4200';
 const VIEW = { width: 1280, height: 720 };
-/** GIF frames are half the window. */
-const GIF = { width: 640, height: 360 };
+/** GIF frames: three quarters of the window, about as wide as a README on GitHub. */
+const GIF = { width: 960, height: 540 };
+/** At most this many GIF frames a second (keeps the files a few megabytes). */
+const FPS = 12;
 /** A save past the intro, at High quality, with some progress to show. */
 const SAVE = {
   version: 2,
@@ -105,7 +107,10 @@ async function record(page, decoder, ms) {
   const shots = [];
   const start = Date.now();
   while (Date.now() - start < ms) {
-    shots.push({ at: Date.now(), jpeg: await page.screenshot({ type: 'jpeg', quality: 92 }) });
+    const at = Date.now();
+    shots.push({ at, jpeg: await page.screenshot({ type: 'jpeg', quality: 92 }) });
+    const rest = 1000 / FPS - (Date.now() - at);
+    if (rest > 0) await page.waitForTimeout(rest);
   }
   const frames = [];
   for (const shot of shots) {

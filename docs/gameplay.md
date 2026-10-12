@@ -2,7 +2,7 @@
 
 The game as the player experiences it. Numbers live in `client/src/content/` and may change with balancing; this page describes the shape.
 
-![A run in every realm: Mount Olympus, the Underworld, the Lernaean Marsh, the Aegean Shore and the Labyrinth of Crete](images/hero.gif)
+<img src="images/hero.gif" width="100%" alt="A run in every realm: Mount Olympus, the Underworld, the Lernaean Marsh, the Aegean Shore and the Labyrinth of Crete">
 
 ## The loop
 
@@ -187,7 +187,7 @@ The Minotaur, king of the Labyrinth, with a bronze labrys (18,000 health, 380 go
 - **Below 60% health:** "The Labyrinth answers its king!" He calls three minotaurs, moves faster, rushes further, brings down seven stones and sweeps wider.
 - **Below 25% health:** "Asterion goes berserk!" Faster still; he rushes twice in every round of attacks, and nine stones fall.
 
-![Fighting Asterion in the Labyrinth](images/boss.gif)
+<img src="images/boss.gif" width="100%" alt="Fighting Asterion in the Labyrinth">
 
 ## Building a run
 
