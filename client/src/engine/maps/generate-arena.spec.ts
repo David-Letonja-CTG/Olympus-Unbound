@@ -1,6 +1,7 @@
 import { CONTENT } from '../testing/content';
 import { MapGenConfig } from '../data/types';
 import { distanceToPolyline, generateArena, templeEntrance } from './generate-arena';
+import { WorldCollision } from '../core/collision';
 
 const olympus = CONTENT.realms.find((r) => r.id === 'mount_olympus')?.map as MapGenConfig;
 
@@ -163,5 +164,78 @@ describe('roads and landmarks (spec: arena-generation / roads, temple landmark)'
         inside.filter((o) => o.kind === 'column' || o.kind === 'broken_column').length,
       ).toBeGreaterThan(4);
     }
+  });
+});
+
+describe('the Labyrinth (spec: arena-generation / maze)', () => {
+  const labyrinth = CONTENT.realms.find((r) => r.id === 'labyrinth_of_crete')?.map as MapGenConfig;
+  const PLAYER = 14;
+
+  /** Flood fill over a 16-unit grid of places a player can stand, from the spawn. */
+  function reachable(arena: ReturnType<typeof generateArena>) {
+    const collision = new WorldCollision(arena.bounds, arena.obstacles);
+    const step = 16;
+    const cols = Math.ceil(arena.width / step);
+    const rows = Math.ceil(arena.height / step);
+    const seen = new Uint8Array(cols * rows);
+    const open = (c: number, r: number) =>
+      !collision.isBlocked(c * step + step / 2, r * step + step / 2, PLAYER);
+    const start = Math.floor(arena.spawn.y / step) * cols + Math.floor(arena.spawn.x / step);
+    const queue = [start];
+    seen[start] = 1;
+    let free = 0;
+    let reached = 0;
+    for (let i = 0; i < cols * rows; i++) if (open(i % cols, Math.floor(i / cols))) free++;
+    while (queue.length) {
+      const at = queue.pop() as number;
+      reached++;
+      const c = at % cols;
+      const r = Math.floor(at / cols);
+      for (const [dc, dr] of [
+        [1, 0],
+        [-1, 0],
+        [0, 1],
+        [0, -1],
+      ]) {
+        const [nc, nr] = [c + dc, r + dr];
+        const n = nr * cols + nc;
+        if (nc < 0 || nr < 0 || nc >= cols || nr >= rows || seen[n] || !open(nc, nr)) continue;
+        seen[n] = 1;
+        queue.push(n);
+      }
+    }
+    const at = (x: number, y: number) => seen[Math.floor(y / step) * cols + Math.floor(x / step)];
+    return { share: reached / free, at };
+  }
+
+  it('builds walls no god or creature fits through', () => {
+    const arena = generateArena(labyrinth, 7);
+    const walls = arena.obstacles.filter((o) => o.kind === 'wall');
+    expect(walls.length).toBeGreaterThan(200);
+    const tight = walls.filter((a) =>
+      walls.some(
+        (b) => b !== a && Math.hypot(a.x - b.x, a.y - b.y) - a.radius - b.radius < PLAYER * 2,
+      ),
+    );
+    expect(tight.length / walls.length).toBeGreaterThan(0.8);
+  });
+
+  it('keeps the boss arena and nearly all the floor reachable from the spawn for 10 seeds', () => {
+    for (let seed = 0; seed < 10; seed++) {
+      const arena = generateArena(labyrinth, seed);
+      const { share, at } = reachable(arena);
+      expect(at(arena.bossArena.x, arena.bossArena.y)).toBe(1);
+      expect(share).toBeGreaterThan(0.97);
+    }
+  });
+
+  it("marks the road to the boss arena for Ariadne's thread", () => {
+    const arena = generateArena(labyrinth, 3);
+    const toBoss = arena.roads.filter((r) => r.toBoss);
+    expect(toBoss).toHaveLength(1);
+    expect(toBoss[0].points.slice(-2)).toEqual([
+      Math.round(arena.bossArena.x),
+      Math.round(arena.bossArena.y),
+    ]);
   });
 });

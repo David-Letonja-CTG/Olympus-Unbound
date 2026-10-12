@@ -25,7 +25,7 @@ export class GroundBuilder {
 
   constructor(
     private readonly arena: ArenaData,
-    map: MapGenConfig,
+    private readonly map: MapGenConfig,
     quality: GraphicsQuality,
   ) {
     this.scale = GROUND_SCALE[quality];
@@ -144,6 +144,40 @@ export class GroundBuilder {
           g.fillStyle = rng.chance(0.5) ? 'rgba(150,132,104,0.7)' : 'rgba(40,30,22,0.45)';
           g.fillRect(x, y, Math.max(1, 4 * scale), Math.max(1, 3 * scale));
         }
+      }
+    }
+
+    // Ariadne's thread: a fine line of colour along the road to the boss arena, wavering a little about the road's
+    // middle (spec: realm-labyrinth / Ariadne's thread).
+    const thread = this.map.roads?.thread;
+    if (thread !== undefined) {
+      const color = `#${thread.toString(16).padStart(6, '0')}`;
+      for (const road of arena.roads.filter((r) => r.toBoss)) {
+        const p = road.points;
+        g.beginPath();
+        let first = true;
+        for (let i = 0; i + 3 < p.length; i += 2) {
+          const len = Math.hypot(p[i + 2] - p[i], p[i + 3] - p[i + 1]) || 1;
+          const [nx, ny] = [-(p[i + 3] - p[i + 1]) / len, (p[i + 2] - p[i]) / len];
+          const steps = Math.max(1, Math.round(len / 24));
+          for (let s = 0; s <= steps; s++) {
+            const t = s / steps;
+            const sway = Math.sin((i * 7 + t * len) / 37) * road.width * 0.12;
+            const x = (p[i] + (p[i + 2] - p[i]) * t + nx * sway) * scale;
+            const y = (p[i + 1] + (p[i + 3] - p[i + 1]) * t + ny * sway) * scale;
+            if (first) g.moveTo(x, y);
+            else g.lineTo(x, y);
+            first = false;
+          }
+        }
+        g.lineCap = 'round';
+        g.lineJoin = 'round';
+        g.strokeStyle = 'rgba(0,0,0,0.45)';
+        g.lineWidth = Math.max(2, 6 * scale);
+        g.stroke();
+        g.strokeStyle = color;
+        g.lineWidth = Math.max(1, 3 * scale);
+        g.stroke();
       }
     }
 

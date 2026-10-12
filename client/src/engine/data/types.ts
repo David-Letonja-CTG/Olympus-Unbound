@@ -358,6 +358,19 @@ export type PointOfInterestRule =
       readonly length: readonly [number, number];
       readonly spacing: number;
       readonly missingChance: number;
+    }
+  /**
+   * A labyrinth over the whole map: square cells `cellPieces` blocks of `kind` wide (`spacing` apart, close enough
+   * that the walls stop players and enemies) carved into a maze with every cell reachable, a share `loops` of the
+   * inner walls knocked down, single blocks missing (`missingChance`, breaches).
+   */
+  | {
+      readonly type: 'maze';
+      readonly kind: string;
+      readonly spacing: number;
+      readonly cellPieces: number;
+      readonly loops: number;
+      readonly missingChance: number;
     };
 
 export interface MapGenConfig {
@@ -385,7 +398,12 @@ export interface MapGenConfig {
    * Roads from the spawn plaza to every ruin, the temple and the boss arena: open ground (no obstacles), drawn
    * as worn dirt. `wander` is how far a road strays sideways from the straight line.
    */
-  readonly roads?: { readonly width: number; readonly wander: number };
+  readonly roads?: {
+    readonly width: number;
+    readonly wander: number;
+    /** A thread of this colour drawn along the road to the boss arena (Ariadne's thread in the Labyrinth). */
+    readonly thread?: number;
+  };
   readonly pointsOfInterest: readonly PointOfInterestRule[];
   /** Single obstacles scattered across the map; `density` = obstacles per 1000 tiles. */
   readonly scatter: readonly {

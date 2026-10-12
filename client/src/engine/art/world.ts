@@ -509,4 +509,94 @@ export const WORLD: Record<string, SpriteSpec> = {
     },
   },
   sand_pebbles: pebbles(['#8a7e64', '#9c9074', '#6e6450']),
+
+  // ---------------------------------------------------------------------------------------- The Labyrinth of Crete
+  // A dressed block of the Labyrinth's walls, drawn a little wider than its spacing so a row reads as one wall.
+  labyrinth_wall: {
+    size: 72,
+    paint(g, s) {
+      ellipse(g, s * 0.54, s * 0.78, s * 0.5, s * 0.22, 'rgba(0,0,0,0.45)');
+      slab(g, [0, s * 0.62, s, s * 0.62, s, s * 0.96, 0, s * 0.96], 0x4e463c, { outline: 2.5 });
+      slab(g, [0, s * 0.04, s, s * 0.04, s, s * 0.64, 0, s * 0.64], 0x8a7e6a, { outline: 2.5 });
+      line(g, [s * 0.5, s * 0.04, s * 0.5, s * 0.64], 'rgba(30,24,18,0.45)', 1.5);
+      line(g, [s * 0.24, s * 0.64, s * 0.24, s * 0.96], 'rgba(20,16,12,0.5)', 1.5);
+      line(g, [s * 0.76, s * 0.64, s * 0.76, s * 0.96], 'rgba(20,16,12,0.5)', 1.5);
+      line(g, [s * 0.08, s * 0.12, s * 0.36, s * 0.1], 'rgba(220,200,170,0.25)', 1.5);
+    },
+  },
+  // Knossos's columns: red shafts with black capitals.
+  minoan_column: column(0x9a3022, 0x2a2220, 'rgba(40,10,8,0.35)'),
+  broken_minoan_column: brokenColumn(0x8a2c20, '#5a1a12'),
+  bull_altar: altar(0x5e5446, 0x8a7e6a, 0xff7a2a, '#2e2018', '#ffb36b'),
+  // The horns of consecration: a stone plinth carved with two upturned horns.
+  sacred_horns: {
+    size: 52,
+    paint(g, s) {
+      groundShadow(g, s, 0.4, 0.26);
+      slab(
+        g,
+        [s * 0.14, s * 0.56, s * 0.86, s * 0.56, s * 0.86, s * 0.84, s * 0.14, s * 0.84],
+        0x8a7e6a,
+        {
+          outline: 2.5,
+        },
+      );
+      for (const side of [-1, 1]) {
+        const x = s / 2 + side * s * 0.22;
+        poly(
+          g,
+          [x - s * 0.08, s * 0.6, x + s * 0.08, s * 0.6, x + side * s * 0.1, s * 0.14],
+          '#d8ccb0',
+          'rgba(20,14,10,0.8)',
+          2,
+        );
+      }
+      line(g, [s * 0.3, s * 0.6, s * 0.7, s * 0.6], '#d8ccb0', 4);
+    },
+  },
+  labyrinth_torch: brazier(0xff7a2a, '#ff6a1a', 0xffc870, 'rgba(255,170,80,0.85)'),
+  straw: {
+    size: 22,
+    paint(g, s) {
+      for (const [x, y, a] of [
+        [0.2, 0.5, 0.3],
+        [0.4, 0.4, -0.4],
+        [0.5, 0.62, 0.1],
+        [0.66, 0.46, 0.6],
+        [0.3, 0.7, -0.2],
+      ])
+        line(
+          g,
+          [s * x, s * y, s * (x + 0.3 * Math.cos(a)), s * (y + 0.3 * Math.sin(a))],
+          '#a8904e',
+          1.5,
+        );
+    },
+  },
+  // A floor tile with the labrys, the double axe of the palace.
+  labrys_mosaic: {
+    size: 26,
+    paint(g, s) {
+      slab(g, [s * 0.1, s * 0.1, s * 0.9, s * 0.1, s * 0.9, s * 0.9, s * 0.1, s * 0.9], 0x6a5e4c, {
+        outline: 1,
+      });
+      line(g, [s / 2, s * 0.2, s / 2, s * 0.8], '#2a2018', 2);
+      for (const side of [-1, 1])
+        poly(
+          g,
+          [
+            s / 2,
+            s * 0.4,
+            s / 2 + side * s * 0.3,
+            s * 0.26,
+            s / 2 + side * s * 0.3,
+            s * 0.6,
+            s / 2,
+            s * 0.48,
+          ],
+          '#9a3022',
+        );
+    },
+  },
+  dust_pebbles: pebbles(['#5e5446', '#6e6252', '#4a4236']),
 };

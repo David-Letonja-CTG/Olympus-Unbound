@@ -22,6 +22,8 @@ export interface ArenaDecoration {
 export interface ArenaRoad {
   readonly points: readonly number[];
   readonly width: number;
+  /** The road to the boss arena. */
+  readonly toBoss: boolean;
 }
 
 /** A temple's stylobate (floor), centred on (x, y). */
@@ -229,7 +231,9 @@ export function generateArena(config: MapGenConfig, seed: number): ArenaData {
     // A ruin's road ends in its plaza; a temple's at its entrance, the middle of the side facing the spawn
     // (its altar stands at the centre).
     const targets = [...rings, ...temples.map((t) => templeEntrance(t, spawn)), bossArena];
-    roads = targets.map((target) => buildRoad(spawn, target, road, roadRng, bounds));
+    roads = targets.map((target) =>
+      buildRoad(spawn, target, road, roadRng, bounds, target === bossArena),
+    );
   }
 
   // The sites' obstacles, walls, groves and lights, in the realm's order.
@@ -270,6 +274,8 @@ export function generateArena(config: MapGenConfig, seed: number): ArenaData {
       }
     } else if (rule.type === 'walls') {
       placeWalls(rule, kinds, tryPlace, randomPoint, isClear, poiRng);
+    } else if (rule.type === 'maze') {
+      placeMaze(rule, kinds, tryPlace, bounds, sites, poiRng);
     } else {
       placeGroves(rule, kinds, tryPlace, randomPoint, isClear, poiRng);
     }
@@ -357,6 +363,7 @@ function buildRoad(
   config: { readonly width: number; readonly wander: number },
   rng: Rng,
   bounds: Bounds,
+  toBoss: boolean,
 ): ArenaRoad {
   const dx = to.x - from.x;
   const dy = to.y - from.y;
@@ -379,7 +386,7 @@ function buildRoad(
     points.push(Math.round(x), Math.round(y));
   }
   points.push(Math.round(to.x), Math.round(to.y));
-  return { points, width: config.width };
+  return { points, width: config.width, toBoss };
 }
 
 /** The middle of the temple side that faces `from`. */
@@ -494,6 +501,80 @@ function placeGroves(
       const a = rng.angle();
       const d = Math.sqrt(rng.next()) * rule.spread;
       if (tryPlace(kind, center.x + Math.cos(a) * d, center.y + Math.sin(a) * d)) n++;
+    }
+  }
+}
+
+/**
+ * The Labyrinth: a maze of `kind` blocks over the whole playable area (spec: arena-generation / maze). A grid of
+ * square cells, `cellPieces` blocks of `spacing` wide, is carved into a perfect maze (a randomized depth-first
+ * search, so every cell is reachable), then a share `loops` of the remaining inner walls is knocked down so there is
+ * more than one way round; single blocks go missing (`missingChance`, breaches). The cliff border closes the maze
+ * outside. No block stands in a site (ruin, temple), the spawn plaza, the boss arena or on a road, so those open
+ * as rooms and passages through it.
+ */
+function placeMaze(
+  rule: Extract<PointOfInterestRule, { type: 'maze' }>,
+  kinds: ReadonlyMap<string, ObstacleKind>,
+  tryPlace: Place,
+  bounds: Bounds,
+  sites: readonly { x: number; y: number; reach: number }[],
+  rng: Rng,
+): void {
+  const kind = kinds.get(rule.kind);
+  if (!kind) return;
+  const cell = rule.spacing * rule.cellPieces;
+  const cols = Math.floor((bounds.maxX - bounds.minX) / cell);
+  const rows = Math.floor((bounds.maxY - bounds.minY) / cell);
+  if (cols < 2 || rows < 2) return;
+  const x0 = (bounds.minX + bounds.maxX - cols * cell) / 2;
+  const y0 = (bounds.minY + bounds.maxY - rows * cell) / 2;
+  // Walls between neighbouring cells: east of (c, r) and south of (c, r); true while standing.
+  const east = new Array<boolean>(cols * rows).fill(true);
+  const south = new Array<boolean>(cols * rows).fill(true);
+  const visited = new Array<boolean>(cols * rows).fill(false);
+  const stack = [rng.int(0, cols * rows - 1)];
+  visited[stack[0]] = true;
+  while (stack.length > 0) {
+    const at = stack[stack.length - 1];
+    const c = at % cols;
+    const r = Math.floor(at / cols);
+    const next: number[] = [];
+    if (c > 0 && !visited[at - 1]) next.push(at - 1);
+    if (c < cols - 1 && !visited[at + 1]) next.push(at + 1);
+    if (r > 0 && !visited[at - cols]) next.push(at - cols);
+    if (r < rows - 1 && !visited[at + cols]) next.push(at + cols);
+    if (next.length === 0) {
+      stack.pop();
+      continue;
+    }
+    const to = next[rng.int(0, next.length - 1)];
+    if (to === at + 1) east[at] = false;
+    else if (to === at - 1) east[to] = false;
+    else if (to === at + cols) south[at] = false;
+    else south[to] = false;
+    visited[to] = true;
+    stack.push(to);
+  }
+  const inSite = (x: number, y: number) =>
+    sites.some((s) => distanceSq(x, y, s.x, s.y) < (s.reach + kind.radius) ** 2);
+  const wall = (ax: number, ay: number, bx: number, by: number) => {
+    for (let p = 0; p <= rule.cellPieces; p++) {
+      if (rng.chance(rule.missingChance)) continue;
+      const t = p / rule.cellPieces;
+      const x = ax + (bx - ax) * t;
+      const y = ay + (by - ay) * t;
+      if (!inSite(x, y)) tryPlace(kind, x, y);
+    }
+  };
+  for (let r = 0; r < rows; r++) {
+    for (let c = 0; c < cols; c++) {
+      const at = r * cols + c;
+      const [x, y] = [x0 + c * cell, y0 + r * cell];
+      if (c < cols - 1 && east[at] && !rng.chance(rule.loops))
+        wall(x + cell, y, x + cell, y + cell);
+      if (r < rows - 1 && south[at] && !rng.chance(rule.loops))
+        wall(x, y + cell, x + cell, y + cell);
     }
   }
 }

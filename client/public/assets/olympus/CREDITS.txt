@@ -1,16 +1,17 @@
 Character sprite sheets rendered by the OLYMPUS UNBOUND project
 
 These sheets were rendered in Blender by this project (art/blender/ in the repository: the scripts, sources and
-steps) from the following works, all licensed CC-BY 3.0 (https://creativecommons.org/licenses/by/3.0/). They are
+steps) from the following works, licensed CC-BY 3.0 (https://creativecommons.org/licenses/by/3.0/) or CC0. They are
 adaptations: recoloured, combined with other parts and extended with new modelled parts. The game shows these
 credits in Settings -> Credits; the authoritative list is client/src/content/assets.ts.
 
 zeus.png, hades.png, poseidon.png, athena.png, satyr.png, harpy.png, fallen_oracle.png, marble_sentinel.png, ally_warrior.png, ally_maiden.png,
-ally_smith.png, and the rider of centaur_archer.png
+ally_smith.png, shade.png, fury.png, lampad.png, lamia.png, naiad.png, siren.png, triton.png, drowned_sailor.png, scylla.png, curete.png,
+bronze_guardian.png, snake_priestess.png, and the rider of centaur_archer.png
   "Isometric Hero and Heroine" by Clint Bellanger
   https://opengameart.org/content/isometric-hero-and-heroine
 
-cyclops.png
+cyclops.png, asterion.png
   "FLARE Model - Troll" by VWolfdog, made with Clint Bellanger's base human mesh
   https://opengameart.org/content/flare-model-troll
 
@@ -23,3 +24,17 @@ centaur_archer.png (the horse)
 stymphalian_bird.png
   Modelled by this project; lit and framed with the camera and sun of Clint Bellanger's
   "Isometric Hero and Heroine" scene
+
+orthrus.png, cerberus.png, and the hound heads of scylla.png (CC0)
+  "Animated Animals Low Poly" (the wolf) by Quaternius
+  https://opengameart.org/content/animated-animales-low-poly
+
+swamp_serpent.png, hydra.png, and the tentacles of scylla.png (CC0)
+  "Snake low poly animated 3D model" by methodical pixel
+  https://opengameart.org/content/snake-low-poly-animated-3d-model
+
+giant_crab.png (CC0)
+  "Crab low poly animated 3D model" by methodical pixel
+  https://opengameart.org/content/crab-low-poly-animated-3d-model
+
+The CC0 beasts are staged with the camera and sun of the Flare files above.

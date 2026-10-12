@@ -503,3 +503,49 @@ def scaled_tail(points, mats, count, r_start, r_end, name='Tail'):
         segments.append(add('uv_sphere', f'{name}.{i}', mats[i % len(mats)], p, (r, r, r * 0.85),
                             segments=12, ring_count=8, radius=1, smooth=True))
     return segments
+
+
+def labrys_head(ob, wood_prefix, metal, bone='Hand.Right', blade=(0.2, 0.3, 0.02), thin=1.0):
+    """Turns a held club or staff into a labrys, the Minoan double axe: two blades flaring out either side of the
+    shaft near its far end (the vertex of the `wood_prefix` faces farthest from the hand), attached to the hand,
+    and a spike beyond. `blade` is (reach, height along the shaft, thickness); `thin` < 1 slims the shaft (a club
+    becomes a haft). Run outside rest_pose()."""
+    from mathutils import Vector
+
+    arm = armature()
+    with rest_pose(arm):
+        hand = (arm.matrix_world @ arm.pose.bones[bone].matrix).translation
+        names = [s.material.name if s.material else '' for s in ob.material_slots]
+        wood = sorted({i for p in ob.data.polygons if names[p.material_index].startswith(wood_prefix)
+                       for i in p.vertices})
+        mw = ob.matrix_world.copy()
+        points = {i: mw @ ob.data.vertices[i].co for i in wood}
+        tip = max(points.values(), key=lambda p: (p - hand).length)
+        along = (tip - hand).normalized()
+        if thin < 1:
+            axis = sum(points.values(), Vector()) / len(points)
+            inverse = mw.inverted()
+            for i, w in points.items():
+                foot = axis + along * (w - axis).dot(along)
+                ob.data.vertices[i].co = inverse @ (foot + (w - foot) * thin)
+            tip = axis + along * (tip - axis).dot(along)
+        side = along.cross(Vector((0, 0, 1))).normalized()
+        centre = tip - along * (blade[1] * 0.6)
+        parts = []
+        for s in (-1, 1):
+            out = side * s
+            # A flat plate (cone with four sides, flattened), narrow at the shaft and broad at its edge: local Z out
+            # from the shaft, X along it, Y the blade's thickness.
+            b = add('cone', f'Labrys.{s}', metal, centre + out * (blade[0] / 2), (blade[1] / 2, blade[2], blade[0] / 2),
+                    vertices=4, radius1=0.35, radius2=1, depth=2)
+            b.rotation_mode = 'QUATERNION'
+            b.rotation_quaternion = Matrix((along, out.cross(along), out)).transposed().to_quaternion()
+            parts.append(b)
+        spike = add('cone', 'LabrysSpike', metal, tip + along * 0.06, (0.025, 0.025, 0.08),
+                    vertices=6, radius1=1, radius2=0, depth=2)
+        spike.rotation_mode = 'QUATERNION'
+        spike.rotation_quaternion = along.to_track_quat('Z', 'Y')
+        parts.append(spike)
+    for p in parts:
+        attach(p, bone)
+    return parts

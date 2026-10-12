@@ -180,6 +180,42 @@ describe('boss encounter', () => {
     expect(near()).toBeGreaterThan(before);
   });
 
+  it('Asterion calls minotaurs, then goes berserk (spec: realm-labyrinth)', () => {
+    const sim = new RunSimulation(
+      { runId: 'a', godId: 'zeus', realmId: 'labyrinth_of_crete', seed: 4, modifiers: [] },
+      CONTENT,
+    );
+    sim.state.godMode = true;
+    disarm(sim);
+    sim.debug({ type: 'skipTo', seconds: 419.5 });
+    run(sim, 1);
+    const boss = sim.state.enemies.find((e) => e.boss);
+    if (!boss?.boss) throw new Error('no Asterion');
+    expect(boss.def.id).toBe('asterion');
+    const announced: string[] = [];
+    const emit = sim.state.emit.bind(sim.state);
+    sim.state.emit = (event) => {
+      if (event.type === 'announcement') announced.push(event.text);
+      emit(event);
+    };
+    boss.health = boss.maxHealth * 0.55;
+    run(sim, 0.5);
+    expect(boss.boss.phase).toBe(1);
+    boss.boss.attackIndex = 0;
+    boss.boss.attackTimer = 0;
+    const near = () =>
+      sim.state.enemies.filter(
+        (e) => e.def.id === 'minotaur' && Math.hypot(e.x - boss.x, e.y - boss.y) < 220,
+      ).length;
+    const before = near();
+    run(sim, 0.2);
+    expect(near()).toBeGreaterThan(before);
+    boss.health = boss.maxHealth * 0.2;
+    run(sim, 0.5);
+    expect(boss.boss.phase).toBe(2);
+    expect(announced).toContain('Asterion goes berserk!');
+  });
+
   it('Scylla calls the drowned when enraged (spec: realm-aegean)', () => {
     const sim = new RunSimulation(
       { runId: 's', godId: 'zeus', realmId: 'aegean_shore', seed: 4, modifiers: [] },
