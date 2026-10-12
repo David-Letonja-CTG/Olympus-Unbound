@@ -26,6 +26,7 @@ const base: HudSnapshot = {
   enemies: 0,
   waitingFor: [],
   realm: { name: 'Mount Olympus', number: 1 },
+  party: [],
 };
 
 function render(hud: HudSnapshot) {
@@ -36,6 +37,41 @@ function render(hud: HudSnapshot) {
 }
 
 describe('Hud', () => {
+  it('shows every god’s health on the left in co-op, and a fallen god’s revive (spec: hud / party health)', () => {
+    const member = (id: number, name: string, extra: object = {}) => ({
+      id,
+      seat: id,
+      name,
+      god: 'Zeus',
+      sprite: 'zeus',
+      health: 80,
+      maxHealth: 160,
+      alive: true,
+      revive: 0,
+      self: false,
+      ...extra,
+    });
+    expect(render(base).querySelector('[data-testid=hud-party]')).toBeNull();
+    expect(
+      render({ ...base, party: [member(0, 'Ana', { self: true })] }).querySelector(
+        '[data-testid=hud-party]',
+      ),
+    ).toBeNull();
+    const el = render({
+      ...base,
+      party: [
+        member(0, 'Ana', { self: true }),
+        member(1, 'Bo', { alive: false, health: 0, revive: 0.5 }),
+      ],
+    });
+    const rows = el.querySelectorAll('[data-testid=hud-party] li');
+    expect(rows.length).toBe(2);
+    expect(rows[0].textContent).toContain('Ana');
+    expect(rows[0].textContent).toContain('80 / 160');
+    expect(rows[0].querySelector('[role=progressbar]')?.getAttribute('aria-valuenow')).toBe('80');
+    expect(rows[1].textContent).toContain('Fallen');
+  });
+
   it('fills the health amphora to the health fraction and shows the numbers', () => {
     const el = render(base);
     expect(el.querySelector('[data-testid=hud-health]')?.textContent).toContain('60 / 120');

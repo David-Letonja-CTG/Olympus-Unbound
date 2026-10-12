@@ -443,6 +443,20 @@ export class RunSimulation {
       gate: state.gate
         ? { to: state.gate.to.name, closesIn: Math.max(0, state.gate.closesIn) }
         : undefined,
+      party: state.players
+        .filter((p) => !p.left)
+        .map((p) => ({
+          id: p.id,
+          seat: p.slot,
+          name: p.name,
+          god: p.god.name,
+          sprite: p.god.visual.sprite,
+          health: Math.max(0, Math.ceil(p.health)),
+          maxHealth: p.stats.maxHealth,
+          alive: p.alive,
+          revive: p.revive,
+          self: p === player,
+        })),
     };
   }
 

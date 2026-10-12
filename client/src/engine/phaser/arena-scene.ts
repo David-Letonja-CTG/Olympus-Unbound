@@ -150,6 +150,7 @@ export class ArenaScene extends Phaser.Scene {
     if (this.loading !== 'ready' && !this.view) return; // applied when the scene is built
     const profile = QUALITY[settings.quality];
     this.effects.damageNumbers = settings.damageNumbers;
+    this.effects.enemyHealthBars = settings.enemyHealthBars;
     this.effects.particleScale = profile.particles;
     this.view.setQuality(profile);
     this.lightMap.setQuality(profile);

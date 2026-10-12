@@ -381,6 +381,23 @@ export interface HudSnapshot {
   readonly realm: { readonly name: string; readonly number: number };
   /** The open gate: where it leads and the seconds until it takes the party. */
   readonly gate?: { readonly to: string; readonly closesIn: number };
+  /** Every god still in the run, in seat order (spec: hud / party health). */
+  readonly party: readonly HudPartyMember[];
+}
+
+export interface HudPartyMember {
+  readonly id: number;
+  readonly seat: number;
+  readonly name: string;
+  readonly god: string;
+  readonly sprite: string;
+  readonly health: number;
+  readonly maxHealth: number;
+  readonly alive: boolean;
+  /** How far a fallen god's revive has come, 0–1. */
+  readonly revive: number;
+  /** This screen's own god. */
+  readonly self: boolean;
 }
 
 export interface HudItem {

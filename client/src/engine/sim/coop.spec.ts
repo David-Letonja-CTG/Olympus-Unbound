@@ -25,6 +25,21 @@ function party(seats: PartySeat[], content = quietContent()) {
 }
 
 describe('co-op (spec: co-op)', () => {
+  it('reports every god’s health to every screen, marking its own god (spec: hud / party health)', () => {
+    const sim = party([seat('zeus', 'You'), seat('hades', 'Ana')]);
+    const [you, ana] = sim.state.players;
+    ana.health = 30;
+    ana.alive = false;
+    ana.revive = 0.25;
+    const hud = sim.hud(you.id);
+    expect(hud.party.map((m) => [m.name, m.seat, m.self, m.alive])).toEqual([
+      ['You', 0, true, true],
+      ['Ana', 1, false, false],
+    ]);
+    expect(hud.party[1].revive).toBe(0.25);
+    expect(sim.hud(ana.id).party.map((m) => m.self)).toEqual([false, true]);
+  });
+
   it('gives every player their own god, weapon and stats, side by side on the spawn plaza', () => {
     const sim = party([seat('zeus', 'You'), seat('hades', 'Ana'), seat('athena', 'Bo')]);
     const players = sim.state.players;

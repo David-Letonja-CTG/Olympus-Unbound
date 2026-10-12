@@ -55,6 +55,7 @@ export class Effects {
   private readonly freeNumbers: Phaser.GameObjects.Text[] = [];
   private seed = 1;
   damageNumbers = true;
+  enemyHealthBars = true;
   /** Multiplier for burst particle counts (graphics quality). */
   particleScale = 1;
 
@@ -439,6 +440,18 @@ export class Effects {
   private drawBars(state: WorldFrame): void {
     const g = this.bars;
     g.clear();
+    // Common monsters, once hurt: a thin red bar (spec: hud / enemy health bars; hidden in Settings).
+    if (this.enemyHealthBars)
+      for (const e of state.enemies) {
+        if (e.elite || e.boss || e.dead || e.health >= e.maxHealth) continue;
+        const w = Math.max(18, e.radius * 1.8);
+        const x = e.x - w / 2;
+        const y = e.y - e.radius - 12;
+        g.fillStyle(0x000000, 0.65);
+        g.fillRect(x - 1, y - 1, w + 2, 5);
+        g.fillStyle(0xe0453a, 1);
+        g.fillRect(x, y, w * Math.max(0, e.health / e.maxHealth), 3);
+      }
     for (const e of state.enemies) {
       if (!e.elite || e.dead) continue;
       const w = e.radius * 2.2;

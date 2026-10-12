@@ -65,6 +65,7 @@ const hud: HudSnapshot = {
   enemies: 10,
   waitingFor: [],
   realm: { name: 'Mount Olympus', number: 1 },
+  party: [],
 };
 
 const choice: UpgradeChoice = {

@@ -411,3 +411,80 @@
   text-transform: uppercase;
   color: var(--muted);
 }
+
+/* Co-op: every god's health on the left, in their seat's colour (spec: hud / party health). */
+.party {
+  position: absolute;
+  left: 16px;
+  top: 38%;
+  transform: translateY(-50%);
+  margin: 0;
+  padding: 8px 10px;
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  width: 210px;
+  background: rgba(10, 8, 7, 0.72);
+  border: 1px solid rgba(201, 165, 90, 0.35);
+  border-radius: 4px;
+}
+.member {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.member.fallen app-item-icon {
+  opacity: 0.45;
+  filter: grayscale(1);
+}
+.seat {
+  width: 4px;
+  align-self: stretch;
+  border-radius: 2px;
+}
+.who {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  flex: 1;
+  min-width: 0;
+}
+.member-name {
+  font-size: 0.85rem;
+  color: var(--text);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.member.self .member-name {
+  color: var(--gold-2);
+}
+.you {
+  color: var(--muted);
+  font-size: 0.75rem;
+}
+.member-track {
+  display: block;
+  height: 7px;
+  background: rgba(0, 0, 0, 0.7);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  border-radius: 2px;
+  overflow: hidden;
+}
+.member-fill {
+  display: block;
+  height: 100%;
+  background: linear-gradient(180deg, #e0574a, #a0261d);
+}
+.member-fill.low {
+  background: linear-gradient(180deg, #ff7a3a, #c21d10);
+}
+.member-track.revive .member-fill {
+  background: linear-gradient(180deg, #ffe6a8, #c9a55a);
+}
+.member-hp {
+  font-size: 0.72rem;
+  color: var(--muted);
+  font-variant-numeric: tabular-nums;
+}
