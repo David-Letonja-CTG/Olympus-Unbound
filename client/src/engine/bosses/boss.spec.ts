@@ -129,4 +129,30 @@ describe('boss encounter', () => {
       expect.arrayContaining(['charge', 'summon']),
     );
   });
+
+  it('Cerberus guards the Underworld and calls the Orthrus pack when enraged (spec: realm-underworld)', () => {
+    const sim = new RunSimulation(
+      { runId: 'c', godId: 'zeus', realmId: 'the_underworld', seed: 2, modifiers: [] },
+      CONTENT,
+    );
+    sim.state.godMode = true;
+    disarm(sim);
+    sim.debug({ type: 'skipTo', seconds: 419.5 });
+    run(sim, 1);
+    const boss = sim.state.enemies.find((e) => e.boss);
+    if (!boss?.boss) throw new Error('no Cerberus');
+    expect(boss.def.id).toBe('cerberus');
+    sim.events();
+    boss.health = boss.maxHealth * 0.45;
+    run(sim, 0.5);
+    expect(boss.boss.phase).toBe(1);
+    expect(sim.events().some((e) => e.type === 'announcement' && e.text.includes('pack'))).toBe(
+      true,
+    );
+    // Its first enraged attack is the call.
+    boss.boss.attackTimer = 0;
+    const before = sim.state.enemies.filter((e) => e.def.id === 'orthrus').length;
+    run(sim, 0.5);
+    expect(sim.state.enemies.filter((e) => e.def.id === 'orthrus').length).toBeGreaterThan(before);
+  });
 });

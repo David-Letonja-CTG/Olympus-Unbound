@@ -6,7 +6,7 @@ Defines the enemies of a realm, how they behave, and how the spawn timeline rais
 ## Requirements
 
 ### Requirement: Data-driven enemies with reusable behaviors
-Each enemy type SHALL be defined by data (health, speed, damage, size, XP, gold, knockback resistance, behavior). Behaviors SHALL be reusable: chaser, fast chaser, swarm, tank, ranged attacker (keeps distance, fires projectiles), charger (telegraphs, then dashes) and summoner (periodically calls other enemies). Mount Olympus SHALL have eight enemy types.
+Each enemy type SHALL be defined by data (health, speed, damage, size, XP, gold, knockback resistance, behavior). Behaviors SHALL be reusable: chaser, fast chaser, swarm, tank, ranged attacker (keeps distance, fires projectiles, optionally with its own projectile sprite), charger (telegraphs, then dashes) and summoner (periodically calls other enemies). Mount Olympus SHALL have eight enemy types.
 
 #### Scenario: Ranged attacker keeps distance
 - **WHEN** a `centaur_archer` is closer to the player than its preferred range

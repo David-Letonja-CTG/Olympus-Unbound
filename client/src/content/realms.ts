@@ -237,4 +237,237 @@ export const MOUNT_OLYMPUS: RealmDefinition = {
   rewards: { bossGold: 250 },
 };
 
-export const REALMS: readonly RealmDefinition[] = [MOUNT_OLYMPUS];
+/**
+ * The Underworld: the fields of Asphodel under a sunless sky, black marble and obsidian ruins of the hall of Hades,
+ * dead groves and graves. Shades, Furies, Lampads and Orthrus; Cerberus keeps the way onward (spec: realm-underworld).
+ */
+export const THE_UNDERWORLD: RealmDefinition = {
+  id: 'the_underworld',
+  name: 'The Underworld',
+  description:
+    'The fields of Asphodel beneath a sunless sky, where the dead wander and the hounds of Hades keep the gates.',
+  backgroundColor: 0x0d0c12,
+  tips: [
+    'Shades are many but frail. Keep moving and let your weapons thin the crowd.',
+    'The Furies never tire of the hunt. Fast weapons and a ring of lightning keep them off you.',
+    'Lampads hurl violet soul-fire from afar. Break their line of sight behind obsidian columns.',
+    'Orthrus lowers its two heads before it charges. Step aside and strike its flank.',
+    'Cerberus bites all around it, breathes hellfire where you stand and pounces along a line. Watch the red ground.',
+    'When Cerberus is wounded it howls, and the Orthrus pack answers.',
+    'The soul-fires of Hecate light the plazas. The dark between them belongs to the dead.',
+    'Some heroes came down here alive. Few walked back up.',
+  ],
+  // A sunless sky: cold violet light, grey-blue mist, soul-wisps drifting instead of embers.
+  atmosphere: { ambient: 0x5e6090, fog: 0x5c6290, particles: 0x8fdcff, moon: false },
+  map: {
+    widthTiles: 64,
+    heightTiles: 64,
+    tileSize: 64,
+    borderTiles: 3,
+    terrain: {
+      types: [
+        { id: 'ash', color: 0x46413e },
+        { id: 'asphodel', color: 0x575d4b },
+        { id: 'basalt', color: 0x2c2a31 },
+        { id: 'black_marble', color: 0x4f4c5a },
+        { id: 'chasm', color: 0x0f0d14 },
+      ],
+      noiseScale: 9,
+      bands: [
+        { below: 0.34, terrain: 'basalt' },
+        { below: 0.68, terrain: 'ash' },
+        { below: 1.01, terrain: 'asphodel' },
+      ],
+      plaza: 'black_marble',
+      border: 'chasm',
+    },
+    spawnClearRadius: 260,
+    bossArena: { radius: 300, minDistanceFromSpawn: 1300 },
+    minObstacleGap: 46,
+    maxObstacles: 260,
+    obstacles: [
+      { id: 'column', radius: 16, visual: { sprite: 'obsidian_column', color: 0x3e3a48 } },
+      {
+        id: 'broken_column',
+        radius: 18,
+        visual: { sprite: 'broken_obsidian_column', color: 0x36323f },
+      },
+      { id: 'stele', radius: 16, visual: { sprite: 'grave_stele', color: 0x5a5664 } },
+      { id: 'dead_tree', radius: 22, visual: { sprite: 'dead_tree', color: 0x2c2830 } },
+      { id: 'rock', radius: 18, visual: { sprite: 'rock', color: 0x6a6660 } },
+      { id: 'altar', radius: 26, visual: { sprite: 'black_altar', color: 0x423e4b } },
+      { id: 'wall', radius: 20, visual: { sprite: 'underworld_wall', color: 0x403c48 } },
+      {
+        id: 'brazier',
+        radius: 14,
+        visual: { sprite: 'soul_brazier', color: 0x5fc8ff },
+        light: { radius: 270, color: 0x7fd2ff, intensity: 0.95, flicker: 0.35 },
+      },
+    ],
+    roads: { width: 60, wander: 110 },
+    pointsOfInterest: [
+      {
+        type: 'ring',
+        kind: 'column',
+        count: [3, 5],
+        radius: [130, 190],
+        pieces: 10,
+        missingChance: 0.35,
+        plazaTerrain: 'black_marble',
+      },
+      {
+        type: 'temple',
+        column: 'column',
+        fallen: 'broken_column',
+        altar: 'altar',
+        light: 'brazier',
+        size: [560, 340],
+        spacing: 80,
+        fallenChance: 0.3,
+        missingChance: 0.15,
+      },
+      {
+        type: 'walls',
+        kind: 'wall',
+        count: [5, 8],
+        length: [220, 420],
+        spacing: 66,
+        missingChance: 0.25,
+      },
+      { type: 'cluster', kind: 'dead_tree', count: [5, 8], size: [3, 6], spread: 170 },
+      { type: 'cluster', kind: 'stele', count: [4, 6], size: [4, 8], spread: 120 },
+      { type: 'plazaLights', kind: 'brazier', count: 4, offset: 18 },
+    ],
+    scatter: [
+      { kind: 'stele', density: 1.5 },
+      { kind: 'rock', density: 6 },
+      { kind: 'dead_tree', density: 4, terrain: ['ash', 'basalt'] },
+      { kind: 'broken_column', density: 3, terrain: ['basalt', 'black_marble'] },
+    ],
+    decorations: [
+      {
+        id: 'asphodel',
+        terrain: ['asphodel'],
+        density: 110,
+        visual: { sprite: 'asphodel', color: 0xe8e4d8 },
+      },
+      {
+        id: 'bones',
+        terrain: ['ash', 'basalt'],
+        density: 35,
+        visual: { sprite: 'bones', color: 0xd4cdbc },
+      },
+      {
+        id: 'ash_pebbles',
+        terrain: ['ash', 'basalt'],
+        density: 70,
+        visual: { sprite: 'ash_pebbles', color: 0x4c4850 },
+      },
+      {
+        id: 'rubble',
+        terrain: ['basalt', 'black_marble'],
+        density: 40,
+        visual: { sprite: 'rubble', color: 0x8c8578 },
+      },
+    ],
+  },
+  timeline: [
+    { from: 0, rate: 1.4, maxAlive: 45, enemies: [{ id: 'shade', weight: 1 }] },
+    {
+      from: 40,
+      rate: 2,
+      maxAlive: 75,
+      enemies: [
+        { id: 'shade', weight: 3 },
+        { id: 'fury', weight: 1.5 },
+      ],
+    },
+    {
+      from: 90,
+      rate: 2.6,
+      maxAlive: 105,
+      enemies: [
+        { id: 'shade', weight: 2 },
+        { id: 'fury', weight: 2 },
+        { id: 'corrupted_hoplite', weight: 1 },
+      ],
+    },
+    {
+      from: 150,
+      rate: 3.1,
+      maxAlive: 140,
+      enemies: [
+        { id: 'shade', weight: 2 },
+        { id: 'fury', weight: 2 },
+        { id: 'corrupted_hoplite', weight: 1.5 },
+        { id: 'lampad', weight: 1.5 },
+      ],
+    },
+    {
+      from: 210,
+      rate: 3.7,
+      maxAlive: 175,
+      enemies: [
+        { id: 'shade', weight: 1.5 },
+        { id: 'fury', weight: 2 },
+        { id: 'corrupted_hoplite', weight: 2 },
+        { id: 'lampad', weight: 2 },
+        { id: 'orthrus', weight: 1 },
+      ],
+    },
+    {
+      from: 270,
+      rate: 4.3,
+      maxAlive: 215,
+      enemies: [
+        { id: 'shade', weight: 2 },
+        { id: 'fury', weight: 2 },
+        { id: 'corrupted_hoplite', weight: 2 },
+        { id: 'lampad', weight: 2 },
+        { id: 'orthrus', weight: 1.5 },
+      ],
+      groups: [{ id: 'shade', size: [8, 12], every: 14 }],
+    },
+    {
+      from: 330,
+      rate: 5,
+      maxAlive: 255,
+      enemies: [
+        { id: 'fury', weight: 2 },
+        { id: 'corrupted_hoplite', weight: 2 },
+        { id: 'lampad', weight: 2 },
+        { id: 'orthrus', weight: 2 },
+        { id: 'shade', weight: 1 },
+      ],
+      groups: [{ id: 'shade', size: [10, 14], every: 12 }],
+    },
+    {
+      from: 390,
+      rate: 5.6,
+      maxAlive: 290,
+      enemies: [
+        { id: 'fury', weight: 2 },
+        { id: 'corrupted_hoplite', weight: 2 },
+        { id: 'lampad', weight: 2 },
+        { id: 'orthrus', weight: 2 },
+        { id: 'shade', weight: 1 },
+      ],
+    },
+  ],
+  events: [
+    { at: 60, type: 'horde', enemy: 'shade', count: 30 },
+    { at: 120, type: 'elite', enemy: 'fury' },
+    { at: 180, type: 'horde', enemy: 'fury', count: 26 },
+    { at: 240, type: 'elite', enemy: 'orthrus' },
+    { at: 300, type: 'horde', enemy: 'corrupted_hoplite', count: 20 },
+    { at: 330, type: 'elite', enemy: 'lampad' },
+    { at: 375, type: 'elite', enemy: 'orthrus' },
+  ],
+  scaling: { healthPerMinute: 0.12, damagePerMinute: 0.05, max: 2.2 },
+  elite: { health: 12, damage: 1.6, size: 1.5, gold: 15, xp: 10 },
+  boss: { id: 'cerberus', at: 420, spawnRateMultiplier: 0.45 },
+  rewards: { bossGold: 300 },
+};
+
+/** The chain of realms in order (spec: endless-run / chain of realms). */
+export const REALMS: readonly RealmDefinition[] = [MOUNT_OLYMPUS, THE_UNDERWORLD];

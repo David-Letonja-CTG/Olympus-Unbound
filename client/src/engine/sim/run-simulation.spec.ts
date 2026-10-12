@@ -53,7 +53,27 @@ describe('content', () => {
     expect(CONTENT.weapons.length).toBeGreaterThanOrEqual(6);
     expect(CONTENT.armour).toHaveLength(4);
     expect(CONTENT.relics).toHaveLength(6);
-    expect(CONTENT.enemies).toHaveLength(8);
+    // Mount Olympus's own enemy types (spec: enemy-spawning), other realms bring theirs.
+    const olympus = CONTENT.realms.find((r) => r.id === 'mount_olympus');
+    const ids = new Set([
+      ...(olympus?.timeline.flatMap((p) => [
+        ...p.enemies.map((e) => e.id),
+        ...(p.groups ?? []).map((g) => g.id),
+      ]) ?? []),
+      ...(olympus?.events.map((e) => e.enemy) ?? []),
+    ]);
+    expect(ids.size).toBe(8);
+  });
+
+  it('chains Mount Olympus into the Underworld, guarded by Cerberus (spec: realm-underworld)', () => {
+    expect(CONTENT.realms.map((r) => r.id).slice(0, 2)).toEqual([
+      'mount_olympus',
+      'the_underworld',
+    ]);
+    const underworld = CONTENT.realms.find((r) => r.id === 'the_underworld');
+    expect(underworld?.boss.id).toBe('cerberus');
+    const ids = new Set(underworld?.timeline.flatMap((p) => p.enemies.map((e) => e.id)));
+    expect([...ids].sort()).toEqual(['corrupted_hoplite', 'fury', 'lampad', 'orthrus', 'shade']);
   });
 });
 

@@ -22,6 +22,14 @@ const HERO_MODEL = {
   source: 'https://opengameart.org/content/isometric-hero-and-heroine',
 } as const;
 
+/** The beasts Flare has no model for are built on Quaternius's CC0 animated wolf (D15, art/blender/README.md). */
+const QUATERNIUS_WOLF = {
+  name: 'CC0-1.0',
+  author: 'Quaternius',
+  title: 'Animated Animals Low Poly (Animal Pack Vol.2): Wolf',
+  source: 'https://opengameart.org/content/animated-animales-low-poly',
+} as const;
+
 /** A sheet rendered by this project from a CC-BY model; `what` names the character and the parts used. */
 function rendered(
   id: string,
@@ -154,6 +162,27 @@ export const ASSETS: AssetManifest = {
     rendered('ally_warrior', 128, HERO_MODEL, 'Intro warrior: leather armour, shield, longsword'),
     rendered('ally_maiden', 128, HERO_MODEL, 'Intro maiden: the heroine with a staff'),
     rendered('ally_smith', 128, HERO_MODEL, 'Intro smith: the hero in work clothes'),
+    // The Underworld.
+    rendered('shade', 128, HERO_MODEL, 'Shade: the hero as a translucent spirit of the dead'),
+    rendered('fury', 128, HERO_MODEL, 'Fury: the heroine in blood-dark robes with black wings'),
+    rendered(
+      'lampad',
+      128,
+      HERO_MODEL,
+      'Lampad: the heroine in midnight robes with a soul-fire torch',
+    ),
+    rendered(
+      'orthrus',
+      128,
+      QUATERNIUS_WOLF,
+      "Orthrus: the wolf with a second head, on the Flare hero file's stage (camera, sun)",
+    ),
+    rendered(
+      'cerberus',
+      256,
+      QUATERNIUS_WOLF,
+      "Cerberus: the wolf with three heads and a mane of spines, on the Flare troll file's stage",
+    ),
     flareSheet('flare_skeleton', 'skeleton.png', {
       name: 'CC-BY-3.0',
       author: CLINT,
@@ -215,5 +244,23 @@ export const ASSETS: AssetManifest = {
     ally_warrior: character('ally_warrior', 1, 0.5, 0.73, 77, humanoid()),
     ally_maiden: character('ally_maiden', 1, 0.5, 0.73, 77, humanoid()),
     ally_smith: character('ally_smith', 1, 0.5, 0.73, 77, humanoid()),
+    // The Underworld.
+    shade: character('shade', 1, 0.5, 0.73, 77, humanoid()),
+    fury: character('fury', 0.95, 0.52, 0.71, 74, humanoid()),
+    lampad: character('lampad', 1, 0.51, 0.71, 74, humanoid()),
+    // Beasts on the wolf: idle 0–3, walk 4–11 (one stride per cycle), a roll onto the side 12–17.
+    orthrus: character('orthrus', 1, 0.5, 0.71, 70, {
+      idle: run(0, 3, 4),
+      walk: run(4, 11, 10),
+      death: run(12, 17, 10, false),
+    }),
+    cerberus: {
+      ...character('cerberus', 1.55, 0.5, 0.64, 250, {
+        idle: run(0, 3, 4),
+        walk: run(4, 11, 10),
+        death: run(12, 17, 10, false),
+      }),
+      portrait: 0,
+    },
   },
 };

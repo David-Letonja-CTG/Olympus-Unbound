@@ -8,6 +8,9 @@ import { RoomError, RoomListing, RoomNetwork, ROOM_NETWORK } from './room-networ
 import { CODE_ALPHABET, isValidCode, RoomService } from './room-service';
 
 /** Two connected links; messages arrive on the next task, like over a real channel. */
+/** Messages sent on any fake link and not yet delivered. */
+let inFlight = 0;
+
 function linkPair(): [PeerLink, PeerLink] {
   const listeners = [new Set<(m: unknown) => void>(), new Set<(m: unknown) => void>()];
   const closers = [new Set<() => void>(), new Set<() => void>()];
@@ -16,8 +19,10 @@ function linkPair(): [PeerLink, PeerLink] {
     send(message) {
       if (!open) return;
       const copy = structuredClone(message);
+      inFlight++;
       setTimeout(() => {
         if (open) for (const l of listeners[1 - me]) l(copy);
+        inFlight--;
       });
     },
     onMessage(l) {
@@ -53,7 +58,18 @@ class FakeNetwork implements RoomNetwork {
   }
 }
 
-const settle = () => new Promise((r) => setTimeout(r, 40));
+const tick = () => new Promise((r) => setTimeout(r, 5));
+
+/** Waits until every message (and every reply to one) has been delivered, however slow the machine. */
+async function settle(): Promise<void> {
+  for (let i = 0; i < 400; i++) {
+    await tick();
+    if (inFlight === 0) {
+      await tick();
+      if (inFlight === 0) return;
+    }
+  }
+}
 
 function setup(save: object = { version: 2, introSeen: true }) {
   const network = new FakeNetwork();

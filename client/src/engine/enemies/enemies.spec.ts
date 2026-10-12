@@ -26,6 +26,19 @@ describe('enemy behaviors', () => {
     expect(archer.x - sim.state.players[0].x).toBeGreaterThan(150);
   });
 
+  it("fires the enemy's own projectile: a lampad's soul-fire (spec: realm-underworld)", () => {
+    const sim = quietSim();
+    disarm(sim);
+    const lampad = spawnNear(sim, 'lampad', 200, 0);
+    lampad.actionTimer = 0;
+    sim.step(STEP, [NO_INPUT]);
+    expect(sim.state.hostileProjectiles.map((p) => p.sprite)).toEqual(['soul_fire']);
+    const archer = spawnNear(sim, 'centaur_archer', 200, 60);
+    archer.actionTimer = 0;
+    sim.step(STEP, [NO_INPUT]);
+    expect(sim.state.hostileProjectiles.map((p) => p.sprite)).toContain('enemy_arrow');
+  });
+
   it('a charger stops and telegraphs, then dashes in a straight line', () => {
     const sim = quietSim();
     disarm(sim);

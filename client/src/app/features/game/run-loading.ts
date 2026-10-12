@@ -55,10 +55,12 @@ const EMBERS = Array.from({ length: 26 }, (_, i) => ({
   selector: 'app-run-loading',
   imports: [ItemIcon],
   changeDetection: ChangeDetectionStrategy.OnPush,
-  host: { '[class.done]': 'done()' },
+  host: { '[class.done]': 'done()', '[style.--ember]': 'ember()' },
   template: `
     <div class="sky" aria-hidden="true">
-      <div class="moon"></div>
+      @if (realm().atmosphere.moon !== false) {
+        <div class="moon"></div>
+      }
       <svg class="mountain" viewBox="0 0 1600 600" preserveAspectRatio="xMidYMax slice">
         <path
           class="far"
@@ -200,8 +202,8 @@ const EMBERS = Array.from({ length: 26 }, (_, i) => ({
       fill: #0e0c12;
     }
     .fire {
-      fill: #ff9a4a;
-      filter: drop-shadow(0 0 6px #ff7a2e) drop-shadow(0 0 14px rgba(255, 120, 40, 0.7));
+      fill: var(--ember);
+      filter: drop-shadow(0 0 6px var(--ember)) drop-shadow(0 0 14px var(--ember));
       animation: flicker 1.8s ease-in-out infinite alternate;
     }
     .mist {
@@ -226,8 +228,8 @@ const EMBERS = Array.from({ length: 26 }, (_, i) => ({
       position: absolute;
       bottom: -10px;
       border-radius: 50%;
-      background: #ffb36b;
-      box-shadow: 0 0 6px #ff7a2e;
+      background: var(--ember);
+      box-shadow: 0 0 6px var(--ember);
       animation-name: rise;
       animation-timing-function: linear;
       animation-iteration-count: infinite;
@@ -463,6 +465,10 @@ export class RunLoading {
   protected readonly tipIndex = signal(0);
   private best = 0;
 
+  /** Fires and drifting sparks in the realm's own particle colour: embers on Olympus, soul-wisps below. */
+  protected readonly ember = computed(
+    () => '#' + this.realm().atmosphere.particles.toString(16).padStart(6, '0'),
+  );
   protected readonly stageLabel = computed(() => STAGE_LABEL[this.stage() ?? 'art']);
   protected readonly percent = computed(() => {
     const [from, to] = STAGE_SPAN[this.stage() ?? 'art'];
