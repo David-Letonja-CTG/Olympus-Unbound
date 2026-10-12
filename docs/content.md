@@ -22,7 +22,7 @@ All game content is typed TypeScript in `client/src/content/` (decision D4). The
 
 ## Checklists
 
-**New weapon:** choose a behavior (`projectile`, `chain`, `orbit`, `nova`, `sweep`, `strike`) → add the definition with 5 level deltas, each with a `text` → add an icon (and a projectile sprite if it fires one) in `sprites.ts` → optionally an attack sound in `engine/phaser/arena-scene.ts` (`ATTACK_SOUNDS`) → run the tests. A genuinely new way of attacking is a new behavior in `engine/weapons/behaviors.ts` with its own tests and an OpenSpec change.
+**New weapon:** choose a behavior (`projectile`, `chain`, `orbit`, `nova`, `sweep`, `strike`) → add the definition with 5 level deltas, each with a `text` → add an icon (and a projectile sprite if it fires one) in `sprites.ts` → its sound: a cue in `engine/audio/sound-map.ts` (`ATTACK_SOUNDS`), made of recordings in `engine/audio/recorded.ts` (sound files listed in `content/assets.ts`) with a synthesized fallback in `sound-player.ts` → run the tests. A genuinely new way of attacking is a new behavior in `engine/weapons/behaviors.ts` with its own tests and an OpenSpec change.
 
 **New enemy:** pick a behavior (`chaser` with optional `jitter`, `ranged`, `charger`, `summoner`) → add it to `enemies.ts` → add a painter in `sprites.ts` → add it to a realm's timeline or events.
 
@@ -95,7 +95,10 @@ Boss: `cyclops` (two phases; `ground_slam`, `boulder_throw`, `rampage_charge`, `
 | Asset | Source | Licence |
 |---|---|---|
 | All sprites, tiles, icons except the characters below | Drawn in code (`engine/art/sprites.ts`, `engine/phaser/textures.ts`) | Original, project-owned |
-| All sound effects | Synthesized in code (`engine/audio/sound-player.ts`) | Original, project-owned |
+| Synthesized sound effects (interface chimes, fanfares, wind-ups, and every cue until its recordings load) | Synthesized in code (`engine/audio/sound-player.ts`) | Original, project-owned |
+| `client/public/assets/sounds/kenney/*.ogg` (impacts, stone, metal, punches, slices, coins, latch) | [Impact Sounds](https://kenney.nl/assets/impact-sounds) and [RPG Audio](https://kenney.nl/assets/rpg-audio) by Kenney, unmodified, a selection | CC0 (`LICENSE-kenney.txt` alongside) |
+| `client/public/assets/sounds/spells/*.wav` (lightning, fire, ice, water) | [Basic Spell Impacts](https://lentikula.itch.io/freecc0-basic-spell-impacts-sfx) by lentikula; cut, faded, normalized, 22 kHz mono | CC0 |
+| `client/public/assets/sounds/thunder/*.wav` (thunderclap, thunder roll) | [Rain + Long Thunder](https://opengameart.org/content/rain-long-thunder) by WuxiaScrub; the thunder cut out, faded, normalized, 22 kHz mono | CC0 |
 | `client/public/favicon.svg` | Drawn by hand (SVG) | Original, project-owned |
 | `client/public/ui/*.svg` (frame, divider, stone grain) | Drawn by hand (SVG) | Original, project-owned |
 | `client/public/assets/olympus/*.png` (Zeus, Hades, satyr, harpy, Stymphalian bird, centaur archer, fallen oracle, marble sentinel, Cyclops, intro defenders) | Rendered by this project in Blender (`art/blender/`) from [Isometric Hero and Heroine](https://opengameart.org/content/isometric-hero-and-heroine) by Clint Bellanger, [FLARE Model - Troll](https://opengameart.org/content/flare-model-troll) by VWolfdog, [FLARE Model - Horse](https://opengameart.org/content/flare-model-horse) by VWolfdog on [3D Horse](https://opengameart.org/content/3d-horse-rigged-laking-textures) by _canyon | Derivatives of CC-BY 3.0 works — credited in Settings → Credits |

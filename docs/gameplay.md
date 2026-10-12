@@ -215,8 +215,13 @@ The Minotaur, king of the Labyrinth, with a bronze labrys (18,000 health, 380 go
 
 Hit flashes, health bars over hurt monsters and damage numbers (critical hits larger and gold), status tints (burn orange, shock blue, slow violet, stun yellow), particles on hits and deaths, shockwaves, sword arcs, chain lightning, lightning strikes, screen shake (optional), and synthesized sound.
 
-**Sound:**
-- Every weapon and every god's ability has its own sound: the spear's crackle, the bow's twang, the hammer's thump, the bolt's thunder, Hades's Gates of Tartarus booming open, Poseidon's wave crashing, Athena's gaze cracking into stone.
+**Sound** (recorded, CC0):
+- Every weapon and every god's ability sounds like what it is:
+  - Zeus's Wrath of Olympus is a real lightning crack and a rolling thunderstorm; the thunderbolt cracks and claps, and the spear crackles.
+  - Poseidon's Tidal Wave is surging, crashing water; the trident splashes and rings.
+  - Athena's Gorgon's Gaze shimmers like ice, then stone cracks; her spear swishes and rings.
+  - Hades's Gates of Tartarus is a deep fire roar with breaking stone.
+  - The hammer is heavy blows on stone; the flaming sword is a blade swish in a burst of fire.
 - Hits sound by element (a thud, a crackle, a sizzle, a hiss). Kills are punchy, and an elite's or a boss's death is heavy.
 - Your own wounds thud low and clear.
 - Each boss attack has its wind-up: a swell before a slam, a rumble before falling stones, a bellow before a rush, a horn when it summons.

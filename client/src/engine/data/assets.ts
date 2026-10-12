@@ -48,7 +48,7 @@ export interface AssetLicence {
  */
 export interface AssetFile {
   readonly id: string;
-  readonly type: 'image' | 'atlas' | 'spritesheet' | 'font';
+  readonly type: 'image' | 'atlas' | 'spritesheet' | 'font' | 'sound';
   readonly url: string;
   /** Atlas JSON (Phaser/TexturePacker hash or array format), for `atlas`. */
   readonly data?: string;

@@ -1,4 +1,5 @@
 import Phaser from 'phaser';
+import { soundFiles } from '../audio/recorded';
 import { SoundPlayer } from '../audio/sound-player';
 import { ContentIndex } from '../data/content-index';
 import { LocalDriver, RunDriver } from '../net/driver';
@@ -18,6 +19,7 @@ export function startPhaserSession(options: GameSessionOptions): GameSession {
   const listeners = new Set<(event: GameEvent) => void>();
   let settings: GameSettings = options.settings;
   const sound = new SoundPlayer(settings.sfxVolume);
+  sound.load(soundFiles(options.content.assets.files));
   const realm = driver.realm;
   // Events produced before anyone subscribed (e.g. `ready`) are replayed to the first subscriber.
   const backlog: GameEvent[] = [];

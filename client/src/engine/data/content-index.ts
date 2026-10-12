@@ -226,7 +226,8 @@ export function validateManifest(manifest: AssetManifest): string[] {
   for (const [key, sprite] of Object.entries(manifest.sprites)) {
     const file = files.get(sprite.file);
     if (!file) errors.push(`Sprite "${key}" uses unknown asset file "${sprite.file}".`);
-    else if (file.type === 'font') errors.push(`Sprite "${key}" uses font file "${sprite.file}".`);
+    else if (file.type === 'font' || file.type === 'sound')
+      errors.push(`Sprite "${key}" uses ${file.type} file "${sprite.file}".`);
   }
   return errors;
 }
