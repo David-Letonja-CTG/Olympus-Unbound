@@ -6,6 +6,7 @@ OLYMPUS UNBOUND is an original mythological horde-survival roguelite: the player
 - Binding decisions (D1–D11): `docs/decisions.md` — if a task conflicts with one, raise it; do not silently override
 - How it is built (diagrams, boundaries, frame, state ownership, performance): `docs/architecture.md`
 - Rules and formulas: `docs/systems.md`; the game as players see it: `docs/gameplay.md`; content files, packs, cutscenes and checklists: `docs/content.md`; the look: `docs/art-direction.md`
+- Releases and hosting (GitHub Pages): `docs/hosting.md`
 - Specs and changes: `openspec/`
 
 Read the relevant doc before working on a feature.

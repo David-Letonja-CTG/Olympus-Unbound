@@ -1,0 +1,144 @@
+name: Deploy
+
+# Puts a release online on GitHub Pages (docs/hosting.md): when a GitHub Release (not a pre-release) is published, or
+# by hand for an existing version tag. The built game is also attached to the release as a zip. Merges to main only
+# run CI.
+on:
+  release:
+    types: [published]
+  workflow_dispatch:
+    inputs:
+      version:
+        description: Version tag to deploy (e.g. v0.1.0)
+        required: true
+
+permissions:
+  contents: read
+
+# One deploy at a time; a newer one waits instead of cancelling a deploy halfway.
+concurrency:
+  group: deploy-pages
+  cancel-in-progress: false
+
+env:
+  NG_CLI_ANALYTICS: "false"
+
+jobs:
+  build:
+    name: Build the release
+    if: github.event_name == 'workflow_dispatch' || !github.event.release.prerelease
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write # attach the zip to the release
+      actions: read # read the CI run of the release's commit
+    outputs:
+      version: ${{ steps.version.outputs.version }}
+    steps:
+      - name: Version
+        id: version
+        env:
+          VERSION: ${{ github.event.release.tag_name || inputs.version }}
+        run: |
+          if ! [[ "$VERSION" =~ ^v[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
+            echo "::error::'$VERSION' is not a version tag like v1.2.3"
+            exit 1
+          fi
+          echo "version=$VERSION" >> "$GITHUB_OUTPUT"
+
+      - uses: actions/checkout@v7
+        with:
+          ref: refs/tags/${{ steps.version.outputs.version }}
+
+      # Only commits that passed CI on main go live; waits up to 30 minutes for a CI run still in progress.
+      - name: CI passed for this commit
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          sha="$(git rev-parse HEAD)"
+          for _ in $(seq 1 60); do
+            run=$(gh run list --repo "$GITHUB_REPOSITORY" --workflow ci.yml --commit "$sha" --event push \
+              --json status,conclusion --jq 'if length == 0 then "" else (.[0] | "\(.status) \(.conclusion)") end')
+            case "$run" in
+              "completed success") echo "CI passed for $sha"; exit 0 ;;
+              completed*) echo "::error::CI failed for $sha ($run)"; exit 1 ;;
+              "") echo "::error::no CI run on main for $sha; release only commits that are on main"; exit 1 ;;
+            esac
+            echo "CI is $run; waiting"
+            sleep 30
+          done
+          echo "::error::CI did not finish within 30 minutes"
+          exit 1
+
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 24
+          cache: npm
+          cache-dependency-path: client/package-lock.json
+
+      - name: Install
+        working-directory: client
+        run: npm ci
+
+      # For the zip: the game served from the root of any static host.
+      - name: Build for download
+        working-directory: client
+        env:
+          VERSION: ${{ steps.version.outputs.version }}
+        run: |
+          npx ng build --base-href /
+          cp dist/olympus-unbound/browser/index.html dist/olympus-unbound/browser/404.html
+          (cd dist/olympus-unbound/browser && zip -qr "$GITHUB_WORKSPACE/olympus-unbound-$VERSION.zip" .)
+
+      - name: Attach the zip to the release
+        env:
+          GH_TOKEN: ${{ github.token }}
+          VERSION: ${{ steps.version.outputs.version }}
+        run: gh release upload "$VERSION" "olympus-unbound-$VERSION.zip" --clobber --repo "$GITHUB_REPOSITORY"
+
+      # For GitHub Pages: the project site lives under /<repository>/. Pages answers unknown paths with 404.html,
+      # which is the app itself, so deep links such as /play load the game.
+      - name: Build for GitHub Pages
+        working-directory: client
+        env:
+          REPOSITORY: ${{ github.event.repository.name }}
+        run: |
+          npx ng build --base-href "/$REPOSITORY/"
+          cp dist/olympus-unbound/browser/index.html dist/olympus-unbound/browser/404.html
+
+      - uses: actions/upload-pages-artifact@v5
+        with:
+          path: client/dist/olympus-unbound/browser
+
+  deploy:
+    name: Deploy to GitHub Pages
+    needs: build
+    runs-on: ubuntu-latest
+    permissions:
+      pages: write
+      id-token: write
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - name: Deploy
+        id: deployment
+        uses: actions/deploy-pages@v5
+
+      # The site, a deep link and the game's own files answer.
+      - name: Smoke test
+        env:
+          SITE: ${{ steps.deployment.outputs.page_url }}
+        run: |
+          for _ in $(seq 1 24); do
+            if curl -fsS -o /dev/null --max-time 10 "$SITE" \
+              && curl -fsS -o /dev/null --max-time 10 "${SITE}assets/olympus/zeus.png"; then
+              code=$(curl -s -o /dev/null -w '%{http_code}' --max-time 10 "${SITE}play")
+              if curl -s --max-time 10 "${SITE}play" | grep -q '<app-root'; then
+                echo "live at $SITE (deep link answered $code with the app)"
+                exit 0
+              fi
+            fi
+            sleep 5
+          done
+          echo "::error::$SITE did not serve the game within 2 minutes"
+          exit 1
