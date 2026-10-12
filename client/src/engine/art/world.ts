@@ -451,4 +451,62 @@ export const WORLD: Record<string, SpriteSpec> = {
     },
   },
   mud_pebbles: pebbles(['#4a4230', '#5a5038', '#3a3426']),
+
+  // ---------------------------------------------------------------------------------------- The Aegean Shore
+  shipwreck: {
+    size: 72,
+    paint(g, s) {
+      ellipse(g, s * 0.56, s * 0.6, s * 0.44, s * 0.3, 'rgba(0,0,0,0.42)');
+      // A beached hull's keel and broken ribs, sea-grey timber.
+      line(g, [s * 0.12, s * 0.62, s * 0.88, s * 0.42], '#2a2420', 7);
+      line(g, [s * 0.12, s * 0.62, s * 0.88, s * 0.42], '#6e6252', 3.5);
+      for (let i = 0; i < 6; i++) {
+        const t = 0.18 + i * 0.13;
+        const x = s * (0.12 + 0.76 * t);
+        const y = s * (0.62 - 0.2 * t);
+        const len = s * (0.16 + 0.08 * Math.sin(t * Math.PI)) * (i === 4 ? 0.5 : 1);
+        line(g, [x, y, x - len * 0.35, y - len], '#2a2420', 5);
+        line(g, [x, y, x - len * 0.35, y - len], '#7c705e', 2.5);
+        line(g, [x, y, x + len * 0.35, y + len * 0.8], '#2a2420', 5);
+        line(g, [x, y, x + len * 0.35, y + len * 0.8], '#665a4a', 2.5);
+      }
+    },
+  },
+  amphorae: {
+    size: 36,
+    paint(g, s) {
+      groundShadow(g, s, 0.36, 0.26);
+      // Cargo jars spilled from a wreck: terracotta with black bands, one broken.
+      for (const [x, y, r] of [
+        [0.34, 0.44, 0.15],
+        [0.62, 0.38, 0.13],
+        [0.52, 0.66, 0.14],
+      ]) {
+        volume(g, s * x, s * y, s * r, s * r, 0xa25a34, { outline: 1.5, contrast: 1.2 });
+        circle(g, s * x, s * y, s * r * 0.4, '#3a1e12');
+      }
+      line(g, [s * 0.2, s * 0.78, s * 0.34, s * 0.72], '#8a4a2a', 3);
+    },
+  },
+  shells: {
+    size: 16,
+    paint(g, s) {
+      ellipse(g, s * 0.3, s * 0.5, s * 0.12, s * 0.09, '#e8dcc8');
+      ellipse(g, s * 0.66, s * 0.34, s * 0.09, s * 0.07, '#d8b8a8');
+      circle(g, s * 0.62, s * 0.7, s * 0.07, '#f0e8dc');
+    },
+  },
+  seaweed: {
+    size: 22,
+    paint(g, s) {
+      line(
+        g,
+        [s * 0.2, s * 0.6, s * 0.4, s * 0.5, s * 0.55, s * 0.62, s * 0.8, s * 0.5],
+        '#2c4a26',
+        3,
+      );
+      line(g, [s * 0.3, s * 0.36, s * 0.5, s * 0.3, s * 0.68, s * 0.4], '#3a5c2e', 2.5);
+    },
+  },
+  sand_pebbles: pebbles(['#8a7e64', '#9c9074', '#6e6450']),
 };

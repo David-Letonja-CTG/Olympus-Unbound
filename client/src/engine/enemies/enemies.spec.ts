@@ -41,6 +41,10 @@ describe('enemy behaviors', () => {
     naiad.actionTimer = 0;
     sim.step(STEP, [NO_INPUT]);
     expect(sim.state.hostileProjectiles.map((p) => p.sprite)).toContain('venom_spit');
+    const siren = spawnNear(sim, 'siren', 0, 200);
+    siren.actionTimer = 0;
+    sim.step(STEP, [NO_INPUT]);
+    expect(sim.state.hostileProjectiles.map((p) => p.sprite)).toContain('siren_song');
   });
 
   it('a charger stops and telegraphs, then dashes in a straight line', () => {

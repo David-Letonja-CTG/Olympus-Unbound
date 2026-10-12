@@ -485,3 +485,21 @@ def dress_all(mat, keep=('Invis',), only=None):
         for slot in ob.material_slots:
             if slot.material and not slot.material.name.startswith(keep):
                 slot.material = mat
+
+
+def scaled_tail(points, mats, count, r_start, r_end, name='Tail'):
+    """A tail of overlapping scaled segments along `points` (call inside rest_pose and attach the result to the hip):
+    serpent and fish tails for the half-human. `mats` alternate along the tail."""
+    from mathutils import Vector
+
+    path = [Vector(p) for p in points]
+    segments = []
+    for i in range(count):
+        t = i / (count - 1)
+        f = t * (len(path) - 1)
+        k = min(int(f), len(path) - 2)
+        p = path[k].lerp(path[k + 1], f - k)
+        r = r_start * (1 - t) + r_end * t
+        segments.append(add('uv_sphere', f'{name}.{i}', mats[i % len(mats)], p, (r, r, r * 0.85),
+                            segments=12, ring_count=8, radius=1, smooth=True))
+    return segments

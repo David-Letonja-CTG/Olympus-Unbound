@@ -234,3 +234,91 @@ def hydra(neck_count, height, skin_rgb, eye_rgb, body_rgb):
     death_fall(root, 13, 6, tip=radians(70), sink=0.0)
     return root
 
+
+
+# ---------------------------------------------------------------------------------------------------------------
+# The Aegean Shore: Scylla, the heroine with a ring of hound heads at her waist and serpent-tentacles beneath.
+
+
+def hound_heads(count, ring, z, size, fur_rgb, eye_rgb, bone='Hip'):
+    """`count` hound heads (cut from the wolf, unrigged) in a ring of radius `ring` at height `z`, snouts out,
+    attached rigidly to `bone` of the stage's own armature."""
+    stage_arm = armature()
+    mesh, arm, root = stage_creature(source(*WOLF), 'Wolf', 'WolfArmature', height=size * 3, facing='+X')
+    head = copy_by_groups(mesh, NECK, name='HoundHead')
+    head.modifiers.clear()
+    bpy.context.view_layer.update()
+    # Bake its world placement into the mesh, then free it from the wolf.
+    head.data.transform(head.matrix_world)
+    head.parent = None
+    head.matrix_world = Matrix.Identity(4)
+    head.vertex_groups.clear()
+    for ob in (mesh, arm):
+        D.objects.remove(ob)
+    D.objects.remove(root)
+    pts = [v.co for v in head.data.vertices]
+    centre = sum(pts, Vector()) / len(pts)
+    back = max(pts, key=lambda p: p.y).y  # the neck's cut end (the snout faces -Y)
+    head.data.transform(Matrix.Translation(Vector((-centre.x, -back, -centre.z))))
+    fur = material('HoundHeadFur', fur_rgb)
+    for slot in head.material_slots:
+        slot.material = fur
+    for poly in head.data.polygons:
+        poly.use_smooth = True
+    sub = head.modifiers.new('Smooth', 'SUBSURF')
+    sub.levels = sub.render_levels = 1
+    ember = glow('HoundHeadEyes', eye_rgb, 4.0)
+    heads = []
+    for i in range(count):
+        a = (i / count) * pi * 2
+        copy = head.copy() if i else head
+        if i:
+            copy.data = head.data.copy()
+            scene_collection().objects.link(copy)
+        # Snout (-Y) outward along a; a little downward, hungry.
+        copy.rotation_euler = (radians(6), 0, a + pi / 2)
+        copy.location = (cos(a) * ring, sin(a) * ring, z)
+        heads.append(copy)
+        bpy.context.view_layer.update()
+        # Eyes from where the head now is: behind the snout tip (farthest out along a), on top, either side.
+        out = Vector((cos(a), sin(a), 0))
+        side = Vector((-sin(a), cos(a), 0))
+        world = [copy.matrix_world @ v.co for v in copy.data.vertices]
+        snout = max(world, key=lambda p: p.dot(out))
+        middle = sum(world, Vector()) / len(world)
+        top = max(p.z for p in world)
+        for s in (-1, 1):
+            at = middle.lerp(snout, 0.55) + side * (s * size * 0.12)
+            at.z = top - size * 0.08
+            eye = add('uv_sphere', f'HoundEye.{i}.{s}', ember, at, (size * 0.05,) * 3,
+                      segments=8, ring_count=6, radius=1)
+            attach(eye, bone, stage_arm)
+    for copy in heads:
+        attach(copy, bone, stage_arm)
+    return heads
+
+
+def tentacles(count, length, skin_rgb, frames=32):
+    """`count` serpent tentacles lying out from the stage's centre, writhing with the snake's own slither over the
+    stage file's `frames` frames."""
+    roots = []
+    for i in range(count):
+        a = (i / count) * pi * 2 + pi / count
+        mesh, arm, root = stage_creature(source(*SNAKE), 'snake', 'snake armature', height=1.0, facing='-Y')
+        _thicken(arm, mesh, 5.0)
+        bpy.context.view_layer.update()
+        ys = [(mesh.matrix_world @ v.co).y for v in mesh.data.vertices]
+        k = length / (max(ys) - min(ys))
+        root.scale = tuple(c * k for c in root.scale)
+        # The tail end (+Y) at the centre, the head end reaching out along a.
+        root.rotation_euler = (0, 0, a + pi / 2)
+        root.location = (cos(a) * length * 0.45, sin(a) * length * 0.45, 0.02)
+        skin = material(f'Tentacle.{i}', skin_rgb)
+        for slot in mesh.material_slots:
+            slot.material = skin
+        for poly in mesh.data.polygons:
+            poly.use_smooth = True
+        phase = (i * 17) % 80
+        bake_poses(arm, [('walk', (f * 2.5 + phase) % 80 + 1) for f in range(frames)])
+        roots.append(root)
+    return roots

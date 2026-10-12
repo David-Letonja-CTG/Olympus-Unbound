@@ -106,6 +106,20 @@ const projectiles: Record<string, SpriteSpec> = {
       circle(g, s * 0.66, s * 0.44, s * 0.07, '#f2ffb0');
     },
   },
+  // A siren's song: rose rings rippling out from a hot core (clear of XP blue and venom green).
+  siren_song: {
+    size: 28,
+    paint(g, s) {
+      glow(g, s / 2, s / 2, s / 2, 0xff5aa8, 0.55);
+      for (const [r, a] of [
+        [0.44, 0.45],
+        [0.32, 0.7],
+        [0.2, 0.95],
+      ])
+        circle(g, s / 2, s / 2, s * r, 'rgba(0,0,0,0)', `rgba(255,140,200,${a})`, 2);
+      circle(g, s / 2, s / 2, s * 0.1, '#ffe0f0');
+    },
+  },
   xp_small: {
     size: 16,
     paint(g, s) {
