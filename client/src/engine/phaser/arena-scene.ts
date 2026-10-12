@@ -9,6 +9,7 @@ import { Atmosphere, LightMap, QUALITY, viewAround } from './atmosphere';
 import { Effects } from './effects';
 import { GroundBuilder } from './ground-canvas';
 import { InputReader } from './input';
+import { Minimap } from './minimap';
 import { registerTextures } from './textures';
 import { WorldView } from './world-view';
 
@@ -39,6 +40,7 @@ export class ArenaScene extends Phaser.Scene {
   private input$!: InputReader;
   private view!: WorldView;
   private effects!: Effects;
+  private minimap!: Minimap;
   private lightMap!: LightMap;
   private atmosphere!: Atmosphere;
   private failedAssets = new Set<string>();
@@ -114,6 +116,7 @@ export class ArenaScene extends Phaser.Scene {
     const arena = driver.arena;
     this.view = new WorldView(this, this.resolver, arena, realm.map, this.ground.canvas);
     this.effects = new Effects(this);
+    this.minimap = new Minimap(this, arena, this.ground.canvas);
     this.lightMap = new LightMap(this, realm.atmosphere.ambient);
     this.atmosphere = new Atmosphere(this, arena.width, arena.height, realm.atmosphere);
     this.applySettings(this.host.settings());
@@ -191,6 +194,7 @@ export class ArenaScene extends Phaser.Scene {
     const { width, height } = driver.arena;
     const view = viewAround(camera, focus.x, focus.y, width, height);
     this.effects.update(world, driver.phase === 'playing' ? dt : 0, camera, this.lightMap);
+    this.minimap.update(world, driver.localId, camera, this.game.loop.delta);
     this.atmosphere.update(camera, view, dt);
     this.lightMap.render(view);
 
