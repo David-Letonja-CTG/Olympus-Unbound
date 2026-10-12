@@ -4,7 +4,7 @@
 
 An original mythological horde-survival roguelite that runs entirely in the browser. Choose a god, survive ever-larger hordes in procedurally generated realms of Greek myth, combine weapons, armour, relics and skills into synergies, defeat each realm's boss and pass its gate into the next, harder realm. The run goes on until every god has fallen; then spend your rewards on lasting upgrades and go again. Play alone, or with up to three friends in a co-op room joined by code.
 
-![A run in every realm: Mount Olympus, the Underworld, the Lernaean Marsh, the Aegean Shore and the Labyrinth of Crete](docs/images/hero.gif)
+<img src="docs/images/hero.gif" width="100%" alt="A run in every realm: Mount Olympus, the Underworld, the Lernaean Marsh, the Aegean Shore and the Labyrinth of Crete">
 
 - **Four gods:** Zeus, Hades, Poseidon and Athena, each with a starting weapon, a divine ability and a passive.
 - **Five realms, endless runs:** Mount Olympus, the Underworld, the Lernaean Marsh, the Aegean Shore and the Labyrinth of Crete. Each has its own map, monsters and boss: the Cyclops, Cerberus, the Hydra, Scylla and Asterion. After the Labyrinth comes Olympus again, harder.
