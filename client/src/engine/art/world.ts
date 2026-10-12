@@ -388,4 +388,67 @@ export const WORLD: Record<string, SpriteSpec> = {
   },
   asphodel: flowers(['#e8e4d8', '#d8d0a8', '#f0ece0']),
   ash_pebbles: pebbles(['#3e3a40', '#4c4850', '#34303a']),
+
+  // ---------------------------------------------------------------------------------------- The Lernaean Marsh
+  mossy_column: column(0x8c9478, 0xa4ab90, 'rgba(50,80,36,0.45)'),
+  broken_mossy_column: brokenColumn(0x7e8670, '#5e6a48'),
+  marsh_altar: altar(0x5e6650, 0x8c9478, 0x9aff6a, '#22301a', '#d8ffb0'),
+  marsh_wall: ruinedWall(0x6e7660, 0x868e76, 'rgba(70,110,50,0.7)'),
+  // A will-o'-wisp in an old iron bowl: the marsh's pale green light.
+  marsh_light: brazier(0x9aff6a, '#5ac83a', 0xd8ffb0, 'rgba(190,255,150,0.85)'),
+  cypress: {
+    size: 56,
+    paint(g, s) {
+      ellipse(g, s * 0.6, s * 0.62, s * 0.36, s * 0.28, 'rgba(0,0,0,0.45)');
+      // A tall, dark cypress from above: a tight crown of needled tufts, darkest at the edge.
+      const rng = new Rng('cypress');
+      circle(g, s / 2, s / 2, s * 0.3, '#16241a', 'rgba(8,6,10,0.85)', 2.5);
+      for (let i = 0; i < 9; i++) {
+        const a = (i / 9) * Math.PI * 2 + rng.range(-0.2, 0.2);
+        const d = s * rng.range(0.12, 0.2);
+        volume(
+          g,
+          s / 2 + Math.cos(a) * d,
+          s / 2 + Math.sin(a) * d,
+          s * 0.1,
+          s * 0.1,
+          i % 2 ? 0x24402c : 0x2e4e36,
+          { outline: 1, rim: 0.2, contrast: 1.2 },
+        );
+      }
+      volume(g, s / 2, s / 2, s * 0.12, s * 0.12, 0x3a5e40, { outline: 1, rim: 0.3 });
+    },
+  },
+  reeds: {
+    size: 24,
+    paint(g, s) {
+      for (const [x, h] of [
+        [0.22, 0.62],
+        [0.36, 0.8],
+        [0.5, 0.7],
+        [0.64, 0.86],
+        [0.78, 0.58],
+      ]) {
+        line(g, [s * x, s * 0.92, s * (x + 0.04), s * (0.92 - h)], 'rgba(120,130,70,0.9)', 2);
+      }
+      // Cattails.
+      ellipse(g, s * 0.4, s * 0.2, s * 0.04, s * 0.09, '#5a3a22');
+      ellipse(g, s * 0.68, s * 0.1, s * 0.04, s * 0.09, '#5a3a22');
+    },
+  },
+  lily_pads: {
+    size: 22,
+    paint(g, s) {
+      for (const [x, y, r] of [
+        [0.3, 0.4, 0.18],
+        [0.66, 0.62, 0.15],
+        [0.62, 0.28, 0.1],
+      ]) {
+        circle(g, s * x, s * y, s * r, '#3e6a34', 'rgba(8,16,8,0.6)', 1);
+        line(g, [s * x, s * y, s * (x + r), s * y], '#24401e', 1.5);
+      }
+      circle(g, s * 0.32, s * 0.38, s * 0.05, '#e8d8e8');
+    },
+  },
+  mud_pebbles: pebbles(['#4a4230', '#5a5038', '#3a3426']),
 };

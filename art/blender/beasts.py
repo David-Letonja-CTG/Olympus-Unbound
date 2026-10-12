@@ -1,5 +1,5 @@
 # Beasts built from CC0 models on a Flare stage (README.md): the hounds of the Underworld from Quaternius's wolf.
-from math import radians
+from math import cos, radians, sin
 
 from mathutils import Matrix, Vector
 
@@ -86,3 +86,151 @@ def _mane(mesh, arm, height):
         bone = ('Bone.002', 'Bone.001', 'Bone')[min(int(t * 3), 2)]
         attach(spike, bone, arm)
         attach(tip, bone, arm)
+
+
+# ---------------------------------------------------------------------------------------------------------------
+# The Lernaean Marsh: serpents and crabs from methodical pixel's CC0 models.
+
+SNAKE = ('snake', 'snake', 'snake.blend')
+CRAB = ('crab', 'crab', 'crab.blend')
+
+
+def _thicken(arm, mesh, girth):
+    """The snake is a flat ribbon: widen and deepen it about its spine (the armature's Y axis)."""
+    mesh.data.transform(Matrix.Diagonal((girth, 1, girth, 1)))  # bones run along Y: weights stay valid
+
+
+def serpent(length, skin_rgb, belly_rgb, eye_rgb, girth=3.5):
+    """A swamp serpent `length` stage units long, lying on the ground, slithering. Frames: idle 1-4, walk 5-12,
+    death 13-18 (FRAMES = '1-18')."""
+    clear_stage()
+    mesh, arm, root = stage_creature(source(*SNAKE), 'snake', 'snake armature', height=1.0, facing='-Y')
+    _thicken(arm, mesh, girth)
+    # stage_creature scaled by height; rescale by length instead (the snake lies flat).
+    bpy.context.view_layer.update()
+    ys = [(mesh.matrix_world @ v.co).y for v in mesh.data.vertices]
+    k = length / (max(ys) - min(ys))
+    root.scale = tuple(c * k for c in root.scale)
+    root.location = (0, 0, 0)
+    _snake_look(mesh, arm, skin_rgb, belly_rgb, eye_rgb)
+    frames = [('idle', f) for f in (1, 7, 13, 19)] + [('walk', f) for f in range(1, 81, 10)]
+    frames += [('idle', 1)] * 6
+    bake_poses(arm, frames)
+    death_fall(root, 13, 6, tip=radians(150), sink=-0.03 * length)
+    return mesh, arm, root
+
+
+def _snake_look(mesh, arm, skin_rgb, belly_rgb, eye_rgb, eye_scale=1.0, eye_glow=5.0):
+    skin = material(f'{mesh.name}.Scales', skin_rgb)
+    for slot in mesh.material_slots:
+        slot.material = skin
+    for poly in mesh.data.polygons:
+        poly.use_smooth = True
+    sub = mesh.modifiers.new('Smooth', 'SUBSURF')
+    sub.levels = sub.render_levels = 1
+    bpy.context.view_layer.update()
+    eye = glow(f'{mesh.name}.Eyes', eye_rgb, eye_glow)
+    group = mesh.vertex_groups['head'].index if 'head' in mesh.vertex_groups else None
+    pts = [mesh.matrix_world @ v.co for v in mesh.data.vertices
+           if group is None or any(g.group == group and g.weight > 0.5 for g in v.groups)]
+    tip = min(pts, key=lambda p: (p - arm.matrix_world @ arm.data.bones['head'].tail_local).length)
+    top = max(p.z for p in pts)
+    width = max(p.x for p in pts) - min(p.x for p in pts)
+    size = max(width * 0.16, 0.012) * eye_scale
+    head_mid = sum(pts, Vector()) / len(pts)
+    for s in (-1, 1):
+        e = add('uv_sphere', f'Eye.{mesh.name}.{s}', eye,
+                (head_mid.x + s * width * 0.3, head_mid.y + (tip.y - head_mid.y) * 0.3,
+                 head_mid.z + (top - head_mid.z) * 0.7),
+                (size, size, size), segments=8, ring_count=6, radius=1)
+        attach(e, 'head', arm)
+
+
+def _hydra_head(mesh, arm, skin_rgb, height):
+    """A heavier, wedge-shaped serpent head with open jaws on the neck's tip, so each head reads at sprite size."""
+    bpy.context.view_layer.update()
+    bone = arm.data.bones['head']
+    tip = arm.matrix_world @ bone.tail_local
+    base = arm.matrix_world @ bone.head_local
+    direction = (tip - base).normalized()
+    skin = material(f'{mesh.name}.HeadScales', tuple(c * 0.85 for c in skin_rgb))
+    jaw = material(f'{mesh.name}.Maw', (0.5, 0.08, 0.06))
+    rot = direction.to_track_quat('Z', 'Y').to_euler()
+    h = height * 0.07
+    skull = add('cone', f'Skull.{mesh.name}', skin, base + direction * h * 0.6, (h * 0.75, h * 0.55, h * 1.3),
+                rot, vertices=10, radius1=1, radius2=0.25, depth=1, smooth=True)
+    maw = add('cone', f'Maw.{mesh.name}', jaw, base + direction * h * 0.7, (h * 0.45, h * 0.3, h * 1.1),
+              rot, vertices=8, radius1=1, radius2=0.1, depth=1, smooth=True)
+    for ob in (skull, maw):
+        attach(ob, 'head', arm)
+
+
+def crab(height, shell_rgb, claw_rgb, eye_rgb):
+    """A giant crab `height` stage units tall, scuttling. Frames: idle 1-4, walk 5-12, death 13-18."""
+    clear_stage()
+    mesh, arm, root = stage_creature(source(*CRAB), 'crab', 'rig crab', height=height, facing='-Y')
+    shell = material(f'{mesh.name}.Shell', shell_rgb)
+    for slot in mesh.material_slots:
+        slot.material = shell
+    for poly in mesh.data.polygons:
+        poly.use_smooth = True
+    bpy.context.view_layer.update()
+    eye = glow(f'{mesh.name}.Eyes', eye_rgb, 5.0)
+    pts = [mesh.matrix_world @ v.co for v in mesh.data.vertices]
+    top = max(p.z for p in pts)
+    # The shell: the highest part of the body (the claws and legs reach further but lower).
+    shell = [p for p in pts if p.z > top - height * 0.25]
+    front = min(p.y for p in shell)
+    centre_x = sum(p.x for p in shell) / len(shell)
+    w = max(p.x for p in shell) - min(p.x for p in shell)
+    for s in (-1, 1):
+        e = add('uv_sphere', f'Eye.{s}', eye, (centre_x + s * w * 0.12, front + height * 0.04, top + height * 0.03),
+                (height * 0.045,) * 3, segments=8, ring_count=6, radius=1)
+        e.parent = root
+        e.matrix_parent_inverse = root.matrix_world.inverted()
+    frames = [('idle', f) for f in (1, 13, 25, 37)] + [('walk', f) for f in range(1, 25, 3)]
+    frames += [('idle', 1)] * 6
+    bake_poses(arm, frames)
+    death_fall(root, 13, 6, tip=radians(170), sink=-0.25 * height)
+    return mesh, arm, root
+
+
+def hydra(neck_count, height, skin_rgb, eye_rgb, body_rgb):
+    """The Hydra: a mossy mound with `neck_count` serpents rising from it as necks, swaying with their own slither.
+    Frames: idle 1-4, walk 5-12, death 13-18."""
+    clear_stage()
+    platform = D.objects['RenderPlatform']
+    root = D.objects.new('Hydra', None)
+    scene_collection().objects.link(root)
+    root.parent = platform
+    body = add('uv_sphere', 'HydraBody', material('HydraHide', body_rgb), (0, 0, height * 0.14),
+               (height * 0.5, height * 0.42, height * 0.24), segments=24, ring_count=14, radius=1, smooth=True)
+    body.parent = root
+    necks = []
+    for i in range(neck_count):
+        a = (i / neck_count) * pi * 2 + 0.3
+        rim = 0.9 if i % 2 else 0.7
+        mesh, arm, nroot = stage_creature(source(*SNAKE), 'snake', 'snake armature', height=1.0, facing='-Y')
+        _thicken(arm, mesh, 4.0)
+        nroot.parent = root
+        # Stand the snake up: its head (-Y) to the sky, its tail into the body.
+        length = height * (0.95 + 0.25 * ((i * 37) % 5) / 4)
+        bpy.context.view_layer.update()
+        ys = [(mesh.matrix_world @ v.co).y for v in mesh.data.vertices]
+        k = length / (max(ys) - min(ys))
+        nroot.scale = tuple(c * k for c in nroot.scale)
+        lean = 0.7
+        # Head (-Y) up and leaning out from the body.
+        nroot.rotation_euler = (-(pi / 2 - lean), 0, a + pi / 2)
+        nroot.location = (cos(a) * height * 0.32 * rim, sin(a) * height * 0.26 * rim, height * 0.12 + length * 0.42)
+        _snake_look(mesh, arm, skin_rgb, skin_rgb, eye_rgb, eye_scale=0.9, eye_glow=3.0)
+        _hydra_head(mesh, arm, skin_rgb, height)
+        phase = (i * 13) % 80
+        frames = [('idle', (f + phase) % 24 + 1) for f in (0, 6, 12, 18)]
+        frames += [('walk', (f + phase) % 80 + 1) for f in range(0, 80, 10)]
+        frames += [('idle', 1)] * 6
+        bake_poses(arm, frames)
+        necks.append(nroot)
+    death_fall(root, 13, 6, tip=radians(70), sink=0.0)
+    return root
+

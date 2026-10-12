@@ -44,6 +44,12 @@ const CHARACTERS = {
   lampad: [`${HEROINE}/clothes.blend`, "lampad.py", 128],
   orthrus: [`${HERO}/clothes.blend`, "orthrus.py", 128],
   cerberus: ["Troll.blend", "cerberus.py", 256],
+  // The Lernaean Marsh.
+  swamp_serpent: [`${HERO}/clothes.blend`, "swamp_serpent.py", 128],
+  giant_crab: [`${HERO}/clothes.blend`, "giant_crab.py", 128],
+  lamia: [`${HEROINE}/clothes.blend`, "lamia.py", 128],
+  naiad: [`${HEROINE}/clothes.blend`, "naiad.py", 128],
+  hydra: ["Troll.blend", "hydra.py", 256],
 };
 
 mkdirSync(out, { recursive: true });

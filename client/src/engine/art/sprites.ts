@@ -96,6 +96,16 @@ const projectiles: Record<string, SpriteSpec> = {
       circle(g, s * 0.62, s / 2, s * 0.09, '#f4ecff');
     },
   },
+  // A naiad's venom: a sickly green-yellow glob with a dripping tail and a dark rim (not an XP gem's blue).
+  venom_spit: {
+    size: 24,
+    paint(g, s) {
+      glow(g, s / 2, s / 2, s / 2, 0x9adf2a, 0.6);
+      poly(g, [s * 0.05, s / 2, s * 0.45, s * 0.34, s * 0.45, s * 0.66], 'rgba(150,210,40,0.7)');
+      circle(g, s * 0.6, s / 2, s * 0.2, '#b8e83a', 'rgba(40,60,10,0.95)', 1.5);
+      circle(g, s * 0.66, s * 0.44, s * 0.07, '#f2ffb0');
+    },
+  },
   xp_small: {
     size: 16,
     paint(g, s) {

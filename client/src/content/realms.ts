@@ -469,5 +469,232 @@ export const THE_UNDERWORLD: RealmDefinition = {
   rewards: { bossGold: 300 },
 };
 
+/**
+ * The Lernaean Marsh: the poisoned swamp of Lerna, sunken shrines of mossy marble among cypresses and reeds, lit by
+ * will-o'-wisps. Swamp serpents, giant crabs, Lamiae and Naiads; the Hydra waits in its lair (spec: realm-lerna).
+ */
+export const LERNAEAN_MARSH: RealmDefinition = {
+  id: 'lernaean_marsh',
+  name: 'Lernaean Marsh',
+  description:
+    'The poisoned swamp of Lerna, its sunken shrines drowned in reeds, where the many-headed Hydra breeds.',
+  backgroundColor: 0x0d140f,
+  tips: [
+    'Swamp serpents are the Hydra’s brood: weak alone, deadly as a tide. Weapons that pierce cut through them.',
+    'Giant crabs, the brood of Karkinos, shrug off blows. Let them come slowly and strike them from afar.',
+    'A Lamia coils before she lunges. When she stops, step aside.',
+    'Naiads hurl venom from the reeds. Their green spit is slower than an arrow: keep moving.',
+    'The Hydra spits venom where you stand and its many heads bite all around it. Watch the red ground.',
+    'Wound the Hydra deep enough and its brood pours out twice as fast.',
+    'The will-o’-wisps were lit for the old shrines. They still burn for no one.',
+    'Heracles burned the Hydra’s necks to stop them growing back. You will have to make do with what you carry.',
+  ],
+  // Mist on still water: a cold green-grey light, low fog, drifting marsh-lights.
+  atmosphere: { ambient: 0x5c6a5c, fog: 0x6e8070, particles: 0xb8ff8a, moon: false },
+  map: {
+    widthTiles: 64,
+    heightTiles: 64,
+    tileSize: 64,
+    borderTiles: 3,
+    terrain: {
+      types: [
+        { id: 'bog', color: 0x2c3a2e },
+        { id: 'mud', color: 0x4a4232 },
+        { id: 'reedbed', color: 0x4c5a36 },
+        { id: 'mossy_marble', color: 0x7d8470 },
+        { id: 'deep_water', color: 0x10201a },
+      ],
+      noiseScale: 8,
+      bands: [
+        { below: 0.36, terrain: 'bog' },
+        { below: 0.66, terrain: 'mud' },
+        { below: 1.01, terrain: 'reedbed' },
+      ],
+      plaza: 'mossy_marble',
+      border: 'deep_water',
+    },
+    spawnClearRadius: 260,
+    bossArena: { radius: 300, minDistanceFromSpawn: 1300 },
+    minObstacleGap: 46,
+    maxObstacles: 260,
+    obstacles: [
+      { id: 'column', radius: 16, visual: { sprite: 'mossy_column', color: 0x8c9478 } },
+      {
+        id: 'broken_column',
+        radius: 18,
+        visual: { sprite: 'broken_mossy_column', color: 0x7e8670 },
+      },
+      { id: 'cypress', radius: 20, visual: { sprite: 'cypress', color: 0x24402c } },
+      { id: 'rock', radius: 18, visual: { sprite: 'rock', color: 0x6a6660 } },
+      { id: 'altar', radius: 26, visual: { sprite: 'marsh_altar', color: 0x8c9478 } },
+      { id: 'wall', radius: 20, visual: { sprite: 'marsh_wall', color: 0x868e76 } },
+      {
+        id: 'brazier',
+        radius: 14,
+        visual: { sprite: 'marsh_light', color: 0x9aff6a },
+        light: { radius: 250, color: 0xb8ff8a, intensity: 0.9, flicker: 0.45 },
+      },
+    ],
+    roads: { width: 56, wander: 120 },
+    pointsOfInterest: [
+      {
+        type: 'ring',
+        kind: 'column',
+        count: [3, 5],
+        radius: [130, 190],
+        pieces: 10,
+        missingChance: 0.4,
+        plazaTerrain: 'mossy_marble',
+      },
+      {
+        type: 'temple',
+        column: 'column',
+        fallen: 'broken_column',
+        altar: 'altar',
+        light: 'brazier',
+        size: [520, 320],
+        spacing: 80,
+        fallenChance: 0.35,
+        missingChance: 0.2,
+      },
+      {
+        type: 'walls',
+        kind: 'wall',
+        count: [4, 7],
+        length: [200, 380],
+        spacing: 66,
+        missingChance: 0.3,
+      },
+      { type: 'cluster', kind: 'cypress', count: [7, 10], size: [4, 8], spread: 180 },
+      { type: 'plazaLights', kind: 'brazier', count: 4, offset: 18 },
+    ],
+    scatter: [
+      { kind: 'rock', density: 5 },
+      { kind: 'cypress', density: 6, terrain: ['mud', 'reedbed'] },
+      { kind: 'broken_column', density: 3, terrain: ['bog', 'mossy_marble'] },
+    ],
+    decorations: [
+      {
+        id: 'reeds',
+        terrain: ['reedbed', 'bog'],
+        density: 120,
+        visual: { sprite: 'reeds', color: 0x78824a },
+      },
+      {
+        id: 'lily_pads',
+        terrain: ['bog'],
+        density: 60,
+        visual: { sprite: 'lily_pads', color: 0x3e6a34 },
+      },
+      {
+        id: 'mud_pebbles',
+        terrain: ['mud'],
+        density: 60,
+        visual: { sprite: 'mud_pebbles', color: 0x5a5038 },
+      },
+      {
+        id: 'rubble',
+        terrain: ['mud', 'mossy_marble'],
+        density: 35,
+        visual: { sprite: 'rubble', color: 0x8c8578 },
+      },
+    ],
+  },
+  timeline: [
+    { from: 0, rate: 1.6, maxAlive: 50, enemies: [{ id: 'swamp_serpent', weight: 1 }] },
+    {
+      from: 40,
+      rate: 2.1,
+      maxAlive: 80,
+      enemies: [
+        { id: 'swamp_serpent', weight: 3 },
+        { id: 'lamia', weight: 1 },
+      ],
+    },
+    {
+      from: 90,
+      rate: 2.6,
+      maxAlive: 110,
+      enemies: [
+        { id: 'swamp_serpent', weight: 3 },
+        { id: 'lamia', weight: 1.5 },
+        { id: 'giant_crab', weight: 0.7 },
+      ],
+      groups: [{ id: 'swamp_serpent', size: [6, 10], every: 18 }],
+    },
+    {
+      from: 150,
+      rate: 3.1,
+      maxAlive: 145,
+      enemies: [
+        { id: 'swamp_serpent', weight: 2 },
+        { id: 'lamia', weight: 2 },
+        { id: 'giant_crab', weight: 1 },
+        { id: 'naiad', weight: 1.5 },
+      ],
+      groups: [{ id: 'swamp_serpent', size: [8, 12], every: 16 }],
+    },
+    {
+      from: 210,
+      rate: 3.7,
+      maxAlive: 180,
+      enemies: [
+        { id: 'swamp_serpent', weight: 2 },
+        { id: 'lamia', weight: 2 },
+        { id: 'giant_crab', weight: 1.5 },
+        { id: 'naiad', weight: 2 },
+      ],
+    },
+    {
+      from: 270,
+      rate: 4.3,
+      maxAlive: 220,
+      enemies: [
+        { id: 'swamp_serpent', weight: 2 },
+        { id: 'lamia', weight: 2 },
+        { id: 'giant_crab', weight: 2 },
+        { id: 'naiad', weight: 2 },
+      ],
+      groups: [{ id: 'swamp_serpent', size: [10, 14], every: 13 }],
+    },
+    {
+      from: 330,
+      rate: 5,
+      maxAlive: 255,
+      enemies: [
+        { id: 'swamp_serpent', weight: 1.5 },
+        { id: 'lamia', weight: 2 },
+        { id: 'giant_crab', weight: 2 },
+        { id: 'naiad', weight: 2 },
+      ],
+      groups: [{ id: 'swamp_serpent', size: [12, 16], every: 12 }],
+    },
+    {
+      from: 390,
+      rate: 5.6,
+      maxAlive: 290,
+      enemies: [
+        { id: 'swamp_serpent', weight: 1.5 },
+        { id: 'lamia', weight: 2 },
+        { id: 'giant_crab', weight: 2.5 },
+        { id: 'naiad', weight: 2 },
+      ],
+    },
+  ],
+  events: [
+    { at: 60, type: 'horde', enemy: 'swamp_serpent', count: 36 },
+    { at: 120, type: 'elite', enemy: 'lamia' },
+    { at: 180, type: 'horde', enemy: 'lamia', count: 20 },
+    { at: 240, type: 'elite', enemy: 'giant_crab' },
+    { at: 300, type: 'horde', enemy: 'swamp_serpent', count: 48 },
+    { at: 330, type: 'elite', enemy: 'naiad' },
+    { at: 375, type: 'elite', enemy: 'giant_crab' },
+  ],
+  scaling: { healthPerMinute: 0.12, damagePerMinute: 0.05, max: 2.2 },
+  elite: { health: 12, damage: 1.6, size: 1.5, gold: 15, xp: 10 },
+  boss: { id: 'hydra', at: 420, spawnRateMultiplier: 0.45 },
+  rewards: { bossGold: 320 },
+};
+
 /** The chain of realms in order (spec: endless-run / chain of realms). */
-export const REALMS: readonly RealmDefinition[] = [MOUNT_OLYMPUS, THE_UNDERWORLD];
+export const REALMS: readonly RealmDefinition[] = [MOUNT_OLYMPUS, THE_UNDERWORLD, LERNAEAN_MARSH];
