@@ -22,6 +22,14 @@ const HERO_MODEL = {
   source: 'https://opengameart.org/content/isometric-hero-and-heroine',
 } as const;
 
+/** The Cyclops and Asterion: VWolfdog's Flare troll. */
+const TROLL_MODEL = {
+  name: 'CC-BY-3.0',
+  author: "VWolfdog (on Clint Bellanger's base human mesh)",
+  title: 'FLARE Model - Troll',
+  source: 'https://opengameart.org/content/flare-model-troll',
+} as const;
+
 /** The beasts Flare has no model for are built on Quaternius's CC0 animated wolf (D15, art/blender/README.md). */
 const QUATERNIUS_WOLF = {
   name: 'CC0-1.0',
@@ -162,17 +170,7 @@ export const ASSETS: AssetManifest = {
       },
       'Centaur Archer: the horse with the hero as rider, neck and legs removed',
     ),
-    rendered(
-      'cyclops',
-      256,
-      {
-        name: 'CC-BY-3.0',
-        author: "VWolfdog (on Clint Bellanger's base human mesh)",
-        title: 'FLARE Model - Troll',
-        source: 'https://opengameart.org/content/flare-model-troll',
-      },
-      'The Cyclops: the troll with one great eye',
-    ),
+    rendered('cyclops', 256, TROLL_MODEL, 'The Cyclops: the troll with one great eye'),
     rendered('ally_warrior', 128, HERO_MODEL, 'Intro warrior: leather armour, shield, longsword'),
     rendered('ally_maiden', 128, HERO_MODEL, 'Intro maiden: the heroine with a staff'),
     rendered('ally_smith', 128, HERO_MODEL, 'Intro smith: the hero in work clothes'),
@@ -242,6 +240,31 @@ export const ASSETS: AssetManifest = {
       256,
       HERO_MODEL,
       "Scylla: the heroine with hound heads cut from Quaternius's CC0 wolf and tentacles from methodical pixel's CC0 snake",
+    ),
+    // The Labyrinth of Crete.
+    rendered(
+      'curete',
+      128,
+      HERO_MODEL,
+      "Curete: the hero in leather armour, red and bronze, with a boar's-tusk helmet, shield and spear",
+    ),
+    rendered(
+      'bronze_guardian',
+      128,
+      HERO_MODEL,
+      'Bronze Guardian: the hero in steel armour cast all in bronze, with a molten heart',
+    ),
+    rendered(
+      'snake_priestess',
+      128,
+      HERO_MODEL,
+      'Snake priestess: the heroine in a flounced Minoan skirt with a snake on each arm',
+    ),
+    rendered(
+      'asterion',
+      256,
+      TROLL_MODEL,
+      "Asterion: the troll with a modelled bull's head and his club made a labrys",
     ),
     flareSheet('flare_skeleton', 'skeleton.png', {
       name: 'CC-BY-3.0',
@@ -348,5 +371,10 @@ export const ASSETS: AssetManifest = {
     triton: character('triton', 1.05, 0.5, 0.72, 80, humanoid()),
     drowned_sailor: character('drowned_sailor', 1, 0.5, 0.73, 77, humanoid()),
     scylla: { ...character('scylla', 1.6, 0.5, 0.74, 150, humanoid()), portrait: 26 },
+    // The Labyrinth of Crete.
+    curete: character('curete', 1, 0.5, 0.73, 77, humanoid()),
+    bronze_guardian: character('bronze_guardian', 1.3, 0.5, 0.73, 100, humanoid()),
+    snake_priestess: character('snake_priestess', 1, 0.5, 0.72, 74, humanoid()),
+    asterion: { ...character('asterion', 1.7, 0.51, 0.62, 210, humanoid()), portrait: 25 },
   },
 };

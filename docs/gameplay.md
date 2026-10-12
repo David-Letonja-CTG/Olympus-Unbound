@@ -152,6 +152,25 @@ The monster of the strait: a woman with six hounds at her waist and serpent tent
 - **Calm:** her six hounds bite in a circle around her, Charybdis opens four whirlpools under you, and her tentacles lash along a red line.
 - **Below half health:** "The drowned answer Scylla's call!" She calls five drowned sailors, moves faster, bites wider and opens seven whirlpools.
 
+## Labyrinth of Crete
+
+The maze Daedalus built beneath Knossos: dressed stone under warm torchlight, dust and drifting embers, no sky. Its walls run across the whole map in a maze of corridors. They stop gods and monsters alike, but walls are broken here and there and every corridor leads on. Rooms of red Minoan columns, a shrine with the bull altar and its torches, horns of consecration, bones of the tribute, straw and labrys floor tiles. **Ariadne's thread**, a red line on the ground, runs along the road from where you enter to Asterion's arena. It follows the Aegean Shore in the chain of realms (after it comes Mount Olympus again, harder), and you can also start a run here.
+
+| Realm time | What comes |
+|---|---|
+| 00:00 | **Kouretes**: the armed dancers who hid the infant Zeus, now the maze's cursed guard; quick, later in packs |
+| 00:40 | **Snake priestesses**: they keep their distance and hurl a curse of gold coils |
+| 01:30 | **Minotaurs**: they lower their horns, then charge |
+| 02:30 | **Bronze Guardians**: the kin of Talos; slow, very tough, heavy blows |
+| 07:00 | **Asterion** (spawning slows) |
+
+## Asterion
+
+The Minotaur, king of the Labyrinth, with a bronze labrys (18,000 health, 380 gold).
+- **Calm:** his labrys sweeps in a circle around him, he rushes along a red line, and the ceiling's stones fall on five circles under you.
+- **Below 60% health:** "The Labyrinth answers its king!" He calls three minotaurs, moves faster, rushes further, brings down seven stones and sweeps wider.
+- **Below 25% health:** "Asterion goes berserk!" Faster still; he rushes twice in every round of attacks, and nine stones fall.
+
 ## Building a run
 
 - **Weapons** (up to 6, levels 1–6): Thunder Spear, Divine Bow, Trident, Lightning Orb, War Hammer, Flaming Sword, Thunderbolt, Soul Scythe.

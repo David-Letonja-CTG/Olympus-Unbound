@@ -120,6 +120,21 @@ const projectiles: Record<string, SpriteSpec> = {
       circle(g, s / 2, s / 2, s * 0.1, '#ffe0f0');
     },
   },
+  // A snake priestess's curse: a gold serpent coiled in a ring of amber light (clear of XP blue and green).
+  serpent_hex: {
+    size: 26,
+    paint(g, s) {
+      glow(g, s / 2, s / 2, s / 2, 0xffa020, 0.6);
+      circle(g, s / 2, s / 2, s * 0.3, 'rgba(60,30,0,0.55)', 'rgba(255,200,90,0.95)', 2);
+      line(
+        g,
+        [s * 0.36, s * 0.66, s * 0.62, s * 0.56, s * 0.4, s * 0.44, s * 0.64, s * 0.34],
+        '#ffd870',
+        2.5,
+      );
+      circle(g, s * 0.66, s * 0.33, s * 0.06, '#fff2c0');
+    },
+  },
   xp_small: {
     size: 16,
     paint(g, s) {

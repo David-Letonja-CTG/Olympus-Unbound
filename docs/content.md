@@ -30,7 +30,7 @@ All game content is typed TypeScript in `client/src/content/` (decision D4). The
 
 **Co-op balance:** `balance.coop` in `content/index.ts` sets what each extra player adds (enemy health, spawn rate, enemies alive at once, boss health).
 
-**New realm:** a `RealmDefinition` with `atmosphere` (ambient light ≥ 30% brightness, fog and particle colours), loading-screen `tips`, terrain types and bands, obstacle kinds, `roads` (width, wander), points of interest (`ring` ruins, a `temple` landmark with column/fallen/altar/light kinds, `walls`, `cluster` groves, `plazaLights`), scatter and decoration rules, a timeline, events, scaling, elite multipliers, a boss and rewards → painters for its sprites → it appears in realm selection automatically.
+**New realm:** a `RealmDefinition` with `atmosphere` (ambient light ≥ 30% brightness, fog and particle colours), loading-screen `tips`, terrain types and bands, obstacle kinds, `roads` (width, wander), points of interest (`ring` ruins, a `temple` landmark with column/fallen/altar/light kinds, `walls`, `cluster` groves, `plazaLights`, a `maze` of wall blocks — set `minObstacleGap` below a god's width, 28, so its walls block), `roads.thread` for a line along the road to the boss, scatter and decoration rules, a timeline, events, scaling, elite multipliers, a boss and rewards → painters for its sprites → it appears in realm selection automatically.
 
 **New god:** a `GodDefinition` (base stats, starting weapon, ability as a weapon-like definition, passive modifiers, affinities, sprite) → it appears in god selection automatically.
 
@@ -143,3 +143,7 @@ Headless checks (autopilot):
 - **No permanent upgrades:** the kiting bot falls around 01:30–03:00. It is a weak player, so these numbers set a floor, not the real pacing.
 
 Tune with playtests once the new realms exist. Each realm adds its own timeline and scaling on top of these factors.
+
+## Balance notes (2026-10-12, the Labyrinth)
+
+The maze: cells of 5 blocks × 67 (335 units, about a quarter of the screen's width), 35% of the inner walls knocked down, 8% of blocks missing; `minObstacleGap` 18 so wall blocks (radius 24) leave 19 units, less than a god's 28. Enemies walk straight and slide along walls: wider corridors and more loops keep the horde coming; fewer make the realm easier to kite. Asterion: 18,000 health, 380 gold, phases at 60% and 25%.

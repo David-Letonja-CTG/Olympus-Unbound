@@ -45,6 +45,10 @@ describe('enemy behaviors', () => {
     siren.actionTimer = 0;
     sim.step(STEP, [NO_INPUT]);
     expect(sim.state.hostileProjectiles.map((p) => p.sprite)).toContain('siren_song');
+    const priestess = spawnNear(sim, 'snake_priestess', 0, -200);
+    priestess.actionTimer = 0;
+    sim.step(STEP, [NO_INPUT]);
+    expect(sim.state.hostileProjectiles.map((p) => p.sprite)).toContain('serpent_hex');
   });
 
   it('a charger stops and telegraphs, then dashes in a straight line', () => {

@@ -921,10 +921,231 @@ export const AEGEAN_SHORE: RealmDefinition = {
   rewards: { bossGold: 340 },
 };
 
+export const LABYRINTH_OF_CRETE: RealmDefinition = {
+  id: 'labyrinth_of_crete',
+  name: 'Labyrinth of Crete',
+  description:
+    'The maze Daedalus built beneath Knossos: torch-lit corridors, red columns and the bones of the tribute, and at its heart the bull-king Asterion.',
+  backgroundColor: 0x120d0a,
+  tips: [
+    'Follow Ariadne’s red thread: it runs from where you enter to the heart of the Labyrinth.',
+    'The Labyrinth’s walls stop you and the horde alike. Breaches and broken walls are the ways through.',
+    'The Kouretes once clashed spear on shield to hide the infant Zeus. Now they come in packs.',
+    'A Bronze Guardian is slow but hard as its maker’s anvil. Keep moving and wear it down.',
+    'A snake priestess hurls her curse from afar. The gold coils are slower than arrows: step aside.',
+    'When a Minotaur lowers his horns, step out of his path.',
+    'Asterion sweeps his labrys around him, brings the ceiling down on you and rushes along a line.',
+    'Wound Asterion and the Labyrinth sends him its minotaurs. Near the end, he goes berserk.',
+  ],
+  // Underground: warm, low torchlight in dust, embers drifting; no moon.
+  atmosphere: { ambient: 0x6a5a4c, fog: 0x8a7458, particles: 0xffb070, moon: false },
+  map: {
+    widthTiles: 64,
+    heightTiles: 64,
+    tileSize: 64,
+    borderTiles: 3,
+    terrain: {
+      types: [
+        { id: 'flagstone', color: 0x5e5446 },
+        { id: 'packed_earth', color: 0x4e4234 },
+        { id: 'dust', color: 0x6a5c48 },
+        { id: 'mosaic', color: 0x8a7a62 },
+        { id: 'bedrock', color: 0x1a1410 },
+      ],
+      noiseScale: 8,
+      bands: [
+        { below: 0.36, terrain: 'packed_earth' },
+        { below: 0.7, terrain: 'flagstone' },
+        { below: 1.01, terrain: 'dust' },
+      ],
+      plaza: 'mosaic',
+      border: 'bedrock',
+    },
+    spawnClearRadius: 260,
+    bossArena: { radius: 300, minDistanceFromSpawn: 1300 },
+    // Close enough that the Labyrinth's walls are walls: no god or creature fits between two blocks.
+    minObstacleGap: 18,
+    maxObstacles: 700,
+    obstacles: [
+      { id: 'wall', radius: 24, visual: { sprite: 'labyrinth_wall', color: 0x8a7e6a } },
+      { id: 'column', radius: 16, visual: { sprite: 'minoan_column', color: 0x9a3022 } },
+      {
+        id: 'broken_column',
+        radius: 18,
+        visual: { sprite: 'broken_minoan_column', color: 0x8a2c20 },
+      },
+      { id: 'horns', radius: 20, visual: { sprite: 'sacred_horns', color: 0xd8ccb0 } },
+      { id: 'altar', radius: 26, visual: { sprite: 'bull_altar', color: 0x8a7e6a } },
+      {
+        id: 'torch',
+        radius: 14,
+        visual: { sprite: 'labyrinth_torch', color: 0xff7a2a },
+        light: { radius: 280, color: 0xffa050, intensity: 1, flicker: 0.4 },
+      },
+    ],
+    roads: { width: 64, wander: 120, thread: 0xc8281e },
+    pointsOfInterest: [
+      {
+        type: 'ring',
+        kind: 'column',
+        count: [3, 4],
+        radius: [130, 170],
+        pieces: 8,
+        missingChance: 0.25,
+        plazaTerrain: 'mosaic',
+      },
+      {
+        type: 'temple',
+        column: 'column',
+        fallen: 'broken_column',
+        altar: 'altar',
+        light: 'torch',
+        size: [480, 300],
+        spacing: 80,
+        fallenChance: 0.25,
+        missingChance: 0.1,
+      },
+      { type: 'plazaLights', kind: 'torch', count: 4, offset: 18 },
+      {
+        type: 'maze',
+        kind: 'wall',
+        spacing: 67,
+        cellPieces: 5,
+        loops: 0.35,
+        missingChance: 0.08,
+      },
+    ],
+    scatter: [
+      { kind: 'torch', density: 2.2 },
+      { kind: 'horns', density: 0.8, terrain: ['flagstone', 'dust'] },
+      { kind: 'broken_column', density: 1, terrain: ['flagstone'] },
+    ],
+    decorations: [
+      {
+        id: 'bones',
+        terrain: ['packed_earth', 'dust', 'flagstone'],
+        density: 40,
+        visual: { sprite: 'bones', color: 0xd8d2c2 },
+      },
+      {
+        id: 'straw',
+        terrain: ['packed_earth', 'dust'],
+        density: 70,
+        visual: { sprite: 'straw', color: 0xa8904e },
+      },
+      {
+        id: 'labrys_mosaic',
+        terrain: ['mosaic'],
+        density: 50,
+        visual: { sprite: 'labrys_mosaic', color: 0x9a3022 },
+      },
+      {
+        id: 'dust_pebbles',
+        terrain: ['flagstone', 'dust', 'packed_earth'],
+        density: 60,
+        visual: { sprite: 'dust_pebbles', color: 0x5e5446 },
+      },
+    ],
+  },
+  timeline: [
+    { from: 0, rate: 1.4, maxAlive: 45, enemies: [{ id: 'curete', weight: 1 }] },
+    {
+      from: 40,
+      rate: 2,
+      maxAlive: 75,
+      enemies: [
+        { id: 'curete', weight: 3 },
+        { id: 'snake_priestess', weight: 1 },
+      ],
+    },
+    {
+      from: 90,
+      rate: 2.6,
+      maxAlive: 105,
+      enemies: [
+        { id: 'curete', weight: 3 },
+        { id: 'snake_priestess', weight: 1.5 },
+        { id: 'minotaur', weight: 0.6 },
+      ],
+    },
+    {
+      from: 150,
+      rate: 3.1,
+      maxAlive: 140,
+      enemies: [
+        { id: 'curete', weight: 2.5 },
+        { id: 'snake_priestess', weight: 2 },
+        { id: 'minotaur', weight: 1 },
+        { id: 'bronze_guardian', weight: 0.8 },
+      ],
+    },
+    {
+      from: 210,
+      rate: 3.7,
+      maxAlive: 175,
+      enemies: [
+        { id: 'curete', weight: 2 },
+        { id: 'snake_priestess', weight: 2 },
+        { id: 'minotaur', weight: 1.5 },
+        { id: 'bronze_guardian', weight: 1.2 },
+      ],
+      groups: [{ id: 'curete', size: [8, 12], every: 16 }],
+    },
+    {
+      from: 270,
+      rate: 4.3,
+      maxAlive: 215,
+      enemies: [
+        { id: 'curete', weight: 2 },
+        { id: 'snake_priestess', weight: 2 },
+        { id: 'minotaur', weight: 2 },
+        { id: 'bronze_guardian', weight: 1.5 },
+      ],
+      groups: [{ id: 'curete', size: [10, 14], every: 14 }],
+    },
+    {
+      from: 330,
+      rate: 5,
+      maxAlive: 255,
+      enemies: [
+        { id: 'curete', weight: 1.5 },
+        { id: 'snake_priestess', weight: 2 },
+        { id: 'minotaur', weight: 2 },
+        { id: 'bronze_guardian', weight: 2 },
+      ],
+    },
+    {
+      from: 390,
+      rate: 5.6,
+      maxAlive: 290,
+      enemies: [
+        { id: 'curete', weight: 1.5 },
+        { id: 'snake_priestess', weight: 2 },
+        { id: 'minotaur', weight: 2.5 },
+        { id: 'bronze_guardian', weight: 2 },
+      ],
+    },
+  ],
+  events: [
+    { at: 60, type: 'horde', enemy: 'curete', count: 30 },
+    { at: 120, type: 'elite', enemy: 'minotaur' },
+    { at: 180, type: 'horde', enemy: 'snake_priestess', count: 18 },
+    { at: 240, type: 'elite', enemy: 'bronze_guardian' },
+    { at: 300, type: 'horde', enemy: 'curete', count: 40 },
+    { at: 330, type: 'elite', enemy: 'snake_priestess' },
+    { at: 375, type: 'elite', enemy: 'minotaur' },
+  ],
+  scaling: { healthPerMinute: 0.12, damagePerMinute: 0.05, max: 2.2 },
+  elite: { health: 12, damage: 1.6, size: 1.5, gold: 15, xp: 10 },
+  boss: { id: 'asterion', at: 420, spawnRateMultiplier: 0.45 },
+  rewards: { bossGold: 380 },
+};
+
 /** The chain of realms in order (spec: endless-run / chain of realms). */
 export const REALMS: readonly RealmDefinition[] = [
   MOUNT_OLYMPUS,
   THE_UNDERWORLD,
   LERNAEAN_MARSH,
   AEGEAN_SHORE,
+  LABYRINTH_OF_CRETE,
 ];
