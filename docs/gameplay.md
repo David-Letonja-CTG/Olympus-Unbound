@@ -207,4 +207,12 @@ The Minotaur, king of the Labyrinth, with a bronze labrys (18,000 health, 380 go
 
 ## Feedback
 
-Hit flashes and damage numbers (critical hits larger and gold), status tints (burn orange, shock blue, slow violet, stun yellow), particles on hits and deaths, shockwaves, sword arcs, chain lightning, lightning strikes, screen shake (optional), and synthesized sounds for attacks, hits, kills, pickups, level-ups, damage, boss attacks and the end of a run.
+Hit flashes and damage numbers (critical hits larger and gold), status tints (burn orange, shock blue, slow violet, stun yellow), particles on hits and deaths, shockwaves, sword arcs, chain lightning, lightning strikes, screen shake (optional), and synthesized sound.
+
+**Sound:**
+- Every weapon and every god's ability has its own sound: the spear's crackle, the bow's twang, the hammer's thump, the bolt's thunder, Hades's Gates of Tartarus booming open, Poseidon's wave crashing, Athena's gaze cracking into stone.
+- Hits sound by element (a thud, a crackle, a sizzle, a hiss). Kills are punchy, and an elite's or a boss's death is heavy.
+- Your own wounds thud low and clear.
+- Each boss attack has its wind-up: a swell before a slam, a rumble before falling stones, a bellow before a rush, a horn when it summons.
+- Reviving, the gate opening and entering a new realm have their own chords; pickups, level-ups and synergies chime.
+- Sounds are placed: a hit on the right of the screen is heard on the right, and things far off-screen fade out. A limiter keeps the biggest fights from clipping.

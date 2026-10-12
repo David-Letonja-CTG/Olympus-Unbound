@@ -1,5 +1,6 @@
 import Phaser from 'phaser';
-import { SoundCue, SoundPlayer } from '../audio/sound-player';
+import { SoundPlayer } from '../audio/sound-player';
+import { ATTACK_SOUNDS, BOSS_ATTACK_SOUNDS, HIT_SOUNDS } from '../audio/sound-map';
 import { GameEvent, GameSettings } from '../session';
 import { RunDriver } from '../net/driver';
 import { NO_INPUT, SimEvent } from '../sim/types';
@@ -19,16 +20,6 @@ const MAX_FRAME_SECONDS = 0.25;
 const HUD_INTERVAL_MS = 100;
 /** Time per frame spent painting the ground while loading, so the loading screen stays smooth. */
 const GROUND_BUDGET_MS = 10;
-
-const ATTACK_SOUNDS: Record<string, SoundCue> = {
-  thunder_spear: 'spear',
-  divine_bow: 'bow',
-  trident: 'bow',
-  war_hammer: 'hammer',
-  flaming_sword: 'sword',
-  thunderbolt: 'bolt',
-  soul_scythe: 'scythe',
-};
 
 export interface SceneHost {
   /** Where the run comes from: the local simulation, or a room's host (D16). */
@@ -195,6 +186,8 @@ export class ArenaScene extends Phaser.Scene {
     this.view.addArenaLights(this.lightMap, time);
     const focus = driver.focus();
     camera.centerOn(focus.x, focus.y);
+    // Sounds are heard from the view (spec: hud / sound feedback).
+    this.host.sound.setListener(focus.x, focus.y, camera.worldView.width / 2);
     const { width, height } = driver.arena;
     const view = viewAround(camera, focus.x, focus.y, width, height);
     this.effects.update(world, driver.phase === 'playing' ? dt : 0, camera, this.lightMap);
@@ -213,10 +206,10 @@ export class ArenaScene extends Phaser.Scene {
     this.effects.handle(event);
     switch (event.type) {
       case 'hit':
-        sound.play(event.crit ? 'crit' : 'hit');
+        sound.play(event.crit ? 'crit' : HIT_SOUNDS[event.element], event);
         return;
       case 'kill':
-        sound.play('kill');
+        sound.play(event.boss ? 'killBoss' : event.elite ? 'killElite' : 'kill', event);
         if (event.boss) this.shake(600, 0.012);
         return;
       case 'playerHurt':
@@ -226,23 +219,26 @@ export class ArenaScene extends Phaser.Scene {
         this.shake(120, 0.004);
         return;
       case 'playerRevived':
-        sound.play('synergy');
+        sound.play('revive', event);
         return;
       case 'pickup':
-        sound.play(event.kind === 'xp' ? 'xp' : event.kind);
+        sound.play(event.kind === 'xp' ? 'xp' : event.kind, event);
         return;
       case 'attack': {
-        const cue = event.behavior === 'strike' ? 'strike' : ATTACK_SOUNDS[event.weaponId];
-        if (cue) sound.play(cue);
+        const cue =
+          ATTACK_SOUNDS[event.weaponId] ?? (event.behavior === 'strike' ? 'strike' : undefined);
+        if (cue) sound.play(cue, event);
         if (event.behavior === 'strike') this.shake(100, 0.003);
         return;
       }
       case 'enemyShot':
-        sound.play('enemyShot');
+        sound.play('enemyShot', event);
         return;
-      case 'enemyCharge':
-        sound.play('charge');
+      case 'enemyCharge': {
+        const enemy = driver.world.enemies.find((e) => e.id === event.enemyId);
+        sound.play('charge', enemy);
         return;
+      }
       case 'levelUp': {
         // The level is shared: every living god glows.
         for (const p of driver.world.players) if (p.alive) this.effects.levelUpBurst(p.x, p.y);
@@ -269,18 +265,19 @@ export class ArenaScene extends Phaser.Scene {
         this.shake(700, 0.008);
         return;
       case 'bossAttack':
-        sound.play(event.kind === 'charge' ? 'charge' : 'telegraph');
+        sound.play(BOSS_ATTACK_SOUNDS[event.kind], driver.world.boss);
         return;
       case 'hazardResolved':
         if (event.shape === 'circle') {
-          sound.play('impact');
+          sound.play('impact', event);
           this.shake(180, 0.006);
-        }
+        } else sound.play('whoosh', event);
         return;
       case 'gateOpened':
-        sound.play('victory');
+        sound.play('gate');
         return;
       case 'realmEntered':
+        sound.play('realm');
         // A new realm: the scene builds it from scratch through the same loading stages (spec: endless-run).
         emit({ type: 'realmEntered', realmId: event.realmId, depth: event.depth });
         this.scene.restart();
