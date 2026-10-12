@@ -267,7 +267,7 @@ const EMBERS = Array.from({ length: 26 }, (_, i) => ({
       height: 14px;
       margin: 0 auto 12px;
       width: min(420px, 70%);
-      background: url('/ui/divider.svg') center / contain no-repeat;
+      background: url('../../../../public/ui/divider.svg') center / contain no-repeat;
     }
     .description {
       font-family: var(--serif);

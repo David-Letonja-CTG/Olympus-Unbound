@@ -16,6 +16,8 @@ An original mythological horde-survival roguelite that runs entirely in the brow
 |---|---|---|
 | ![The boss of every realm](docs/images/bosses.jpg) | ![A level-up choice](docs/images/level-up.jpg) | ![The gate to the next realm](docs/images/gate.jpg) |
 
+**Play it:** [david-letonja-ctg.github.io/Olympus-Unbound](https://david-letonja-ctg.github.io/Olympus-Unbound/), or download the game from [Releases](https://github.com/David-Letonja-CTG/Olympus-Unbound/releases)
+
 **More:** [Gameplay](docs/gameplay.md) (the loop, gods, realms, bosses, co-op) · [Systems](docs/systems.md) (rules and formulas) · [Architecture](docs/architecture.md) (layers, frame, state) · [Content](docs/content.md) (adding gods, enemies, realms)
 
 ## Play it locally
@@ -38,7 +40,7 @@ npm run check      # format, lint, asset licences, unit tests, production build
 npm run e2e        # plays the game in Chromium, solo and in a co-op room (npx playwright install chromium once)
 ```
 
-`npm run build` produces a static site in `client/dist/olympus-unbound/browser` that any static host can serve.
+`npm run build` produces a static site in `client/dist/olympus-unbound/browser` that any static host can serve. Publishing a GitHub Release puts it live on GitHub Pages and attaches it to the release as a zip ([docs/hosting.md](docs/hosting.md)).
 
 ## Architecture at a glance
 
@@ -85,6 +87,7 @@ openspec/   capability specs and change proposals
 | [docs/content.md](docs/content.md) | Content files, checklists, assets and licences, balance notes |
 | [docs/art-direction.md](docs/art-direction.md) | The look: light, colour, forms, UI, packs, originality |
 | [art/blender/README.md](art/blender/README.md) | How the characters are rendered: sources, licences, scripts |
+| [docs/hosting.md](docs/hosting.md) | Releases, GitHub Pages, hosting the zip elsewhere |
 | [docs/decisions.md](docs/decisions.md) | Binding decisions |
 | [CLAUDE.md](CLAUDE.md) | Rules for the AI development agent |
 
