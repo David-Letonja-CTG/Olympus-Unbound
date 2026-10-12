@@ -1,4 +1,5 @@
 import Phaser from 'phaser';
+import { soundFiles } from '../audio/recorded';
 import { SoundPlayer } from '../audio/sound-player';
 import { CutsceneEvent, CutsceneSession, CutsceneSessionOptions } from '../session';
 import { CutsceneScene } from './cutscene-scene';
@@ -15,6 +16,7 @@ export function startCutsceneSession(options: CutsceneSessionOptions): CutsceneS
     for (const listener of listeners) listener(event);
   };
   const sound = new SoundPlayer(options.settings.sfxVolume);
+  sound.load(soundFiles(options.content.assets.files));
   const scene = new CutsceneScene({
     definition,
     content: options.content,

@@ -1,4 +1,5 @@
 import { CONTENT } from '../testing/content';
+import { RECORDED, recordedIds, soundFiles } from './recorded';
 import { ATTACK_SOUNDS, HIT_SOUNDS } from './sound-map';
 import { CUES, placement, SoundPlayer } from './sound-player';
 
@@ -23,6 +24,21 @@ describe('sound cues (spec: hud / sound feedback)', () => {
         expect(v.gain, cue).toBeLessThanOrEqual(0.4);
       }
     }
+  });
+});
+
+describe('recorded sounds', () => {
+  it('finds every recording a cue uses in the asset manifest, as a sound file', () => {
+    const files = soundFiles(CONTENT.assets.files);
+    for (const id of recordedIds()) expect(files[id], id).toMatch(/^assets.sounds./);
+  });
+
+  it('makes the gods’ abilities from recordings: a storm for Zeus, water for Poseidon', () => {
+    const ids = (cue: keyof typeof RECORDED) => (RECORDED[cue] ?? []).flatMap((l) => l.id);
+    expect(ids('strike')).toContain('thunder_roll');
+    expect(ids('tidal')).toContain('water_crash');
+    expect(ids('gaze')).toContain('ice_crack');
+    expect(ids('tartarus')).toContain('fire_roar');
   });
 });
 

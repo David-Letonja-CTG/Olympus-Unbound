@@ -1,3 +1,5 @@
+import { RECORDED, SampleLayer } from './recorded';
+
 /**
  * Sound effects behind one small interface (D9): gameplay asks for a cue, this module decides how it sounds. Every
  * cue is synthesized with Web Audio (spec: hud / sound feedback), so there are no sound files to license: layered
@@ -538,6 +540,8 @@ export class SoundPlayer {
   private reverb: GainNode | undefined;
   private readonly buses = new Map<Bus, GainNode>();
   private noise: AudioBuffer | undefined;
+  /** Decoded recordings by manifest id. */
+  private readonly samples = new Map<string, AudioBuffer>();
   private readonly curves = new Map<number, Float32Array<ArrayBuffer>>();
   private readonly lastPlayed = new Map<SoundCue, number>();
   private readonly voices = new Map<Bus, number>();
@@ -596,6 +600,22 @@ export class SoundPlayer {
     this.listener = { x, y, halfWidth };
   }
 
+  /**
+   * Fetches and decodes the recordings the cues use (`files`: manifest id → URL). Until a cue's recordings are in,
+   * it plays its synthesized voices; a file that fails to load leaves that cue synthesized.
+   */
+  load(files: Readonly<Record<string, string>>): void {
+    const ctx = this.context;
+    if (!ctx) return;
+    for (const [id, url] of Object.entries(files)) {
+      void fetch(url)
+        .then((response) => (response.ok ? response.arrayBuffer() : Promise.reject(new Error(url))))
+        .then((data) => ctx.decodeAudioData(data))
+        .then((buffer) => this.samples.set(id, buffer))
+        .catch(() => undefined);
+    }
+  }
+
   /** Plays `cue`; with `at`, a world position, it is panned and faded by where that is relative to the view. */
   play(cue: SoundCue, at?: { readonly x: number; readonly y: number }): void {
     const ctx = this.context;
@@ -626,10 +646,21 @@ export class SoundPlayer {
     // Cosmetic variation only; not gameplay randomness (D5).
     const pitch = 1 + (Math.random() * 2 - 1) * (def.vary ?? 0.04);
     let longest = 0;
-    for (const v of def.voices) {
-      const start = now + (v.delay ?? 0);
-      this.voice(ctx, out, v, start, pitch, def.bus);
-      longest = Math.max(longest, (v.delay ?? 0) + v.duration);
+    const layers = RECORDED[cue];
+    const picks = layers?.map((layer) => this.pick(layer));
+    if (layers && picks?.every((b) => b)) {
+      layers.forEach((layer, i) => {
+        const buffer = picks[i] as AudioBuffer;
+        const rate = (layer.rate ?? 1) * pitch;
+        this.sample(ctx, out, buffer, layer, now + (layer.delay ?? 0), rate, def.bus);
+        longest = Math.max(longest, (layer.delay ?? 0) + buffer.duration / rate);
+      });
+    } else {
+      for (const v of def.voices) {
+        const start = now + (v.delay ?? 0);
+        this.voice(ctx, out, v, start, pitch, def.bus);
+        longest = Math.max(longest, (v.delay ?? 0) + v.duration);
+      }
     }
     // Free the chain once its tail (and the reverb's) has rung out.
     setTimeout(
@@ -645,6 +676,39 @@ export class SoundPlayer {
   destroy(): void {
     void this.context?.close().catch(() => undefined);
     this.context = undefined;
+  }
+
+  /** One loaded recording of the layer (a random variant, cosmetic), or undefined while none has loaded. */
+  private pick(layer: SampleLayer): AudioBuffer | undefined {
+    const ids = typeof layer.id === 'string' ? [layer.id] : layer.id;
+    const loaded = ids.filter((id) => this.samples.has(id));
+    return loaded.length
+      ? this.samples.get(loaded[Math.floor(Math.random() * loaded.length)])
+      : undefined;
+  }
+
+  private sample(
+    ctx: AudioContext,
+    out: AudioNode,
+    buffer: AudioBuffer,
+    layer: SampleLayer,
+    start: number,
+    rate: number,
+    bus: Bus,
+  ): void {
+    const source = ctx.createBufferSource();
+    source.buffer = buffer;
+    source.playbackRate.value = rate;
+    const gain = ctx.createGain();
+    gain.gain.value = layer.gain;
+    source.connect(gain);
+    gain.connect(out);
+    this.voices.set(bus, (this.voices.get(bus) ?? 0) + 1);
+    source.onended = () => {
+      this.voices.set(bus, (this.voices.get(bus) ?? 1) - 1);
+      gain.disconnect();
+    };
+    source.start(start);
   }
 
   private voice(

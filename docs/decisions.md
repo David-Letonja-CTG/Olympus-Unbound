@@ -52,6 +52,8 @@ One `localStorage` key (`olympus-unbound/save`) holds a versioned `SaveData` rec
 
 All sprites, tiles and icons are drawn with Canvas 2D at startup (`engine/art/`); all sound effects are synthesized with Web Audio (`engine/audio/sound-player.ts`). No third-party assets, so there are no licences to track yet. Real art plugs in through the asset manifest (D12) without touching gameplay; code-drawn art remains the fallback. Any future asset must be original or properly licensed and recorded in `docs/content.md`.
 
+*Amended 2026-10-12:* the owner found the synthesized sounds unlike what they depict ("Zeus's storm should be the actual storm sound"), so the cues are now made of CC0 recordings (Kenney's impact and RPG packs, lentikula's spell impacts, a thunder recording), listed as `sound` files in the asset manifest with their licences (D12) and layered in `engine/audio/recorded.ts`. The synthesized voices remain for interface sounds and as the fallback while files load.
+
 ## D10 — English-only UI for the vertical slice (Accepted, 2026-10-10)
 
 UI text lives in Angular templates and display names in content. A localization framework is deferred until a second language is planned; content keeps stable IDs so that adding one later does not change saves.

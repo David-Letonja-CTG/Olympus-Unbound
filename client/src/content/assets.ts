@@ -1,4 +1,10 @@
-import type { AssetFile, AssetManifest, SpriteAnimation, SpriteAsset } from '../engine';
+import type {
+  AssetFile,
+  AssetLicence,
+  AssetManifest,
+  SpriteAnimation,
+  SpriteAsset,
+} from '../engine';
 
 /**
  * External art and fonts (D12). Files live under `client/public/assets/<pack>/` and `client/public/fonts/`; every
@@ -117,6 +123,72 @@ const humanoid = (deathFrom = 18, deathTo = 23) => ({
   attack: run(12, 15, 10, false),
   death: run(deathFrom, deathTo, 10, false),
 });
+
+/** Recorded sound effects (CC0): the sound player layers them into the game's cues (spec: hud / sound feedback). */
+const KENNEY_IMPACT = {
+  name: 'CC0-1.0',
+  author: 'Kenney (kenney.nl)',
+  title: 'Impact Sounds',
+  source: 'https://kenney.nl/assets/impact-sounds',
+} as const;
+const KENNEY_RPG = {
+  name: 'CC0-1.0',
+  author: 'Kenney (kenney.nl)',
+  title: 'RPG Audio',
+  source: 'https://kenney.nl/assets/rpg-audio',
+} as const;
+const SPELL_IMPACTS = {
+  name: 'CC0-1.0',
+  author: 'lentikula',
+  title: 'Basic Spell Impacts [Free/CC0]',
+  source: 'https://lentikula.itch.io/freecc0-basic-spell-impacts-sfx',
+  notes: 'Cut, faded, normalized and resampled to 22 kHz mono WAV',
+} as const;
+const RAIN_THUNDER = {
+  name: 'CC0-1.0',
+  author: 'WuxiaScrub',
+  title: 'Rain + Long Thunder',
+  source: 'https://opengameart.org/content/rain-long-thunder',
+  notes: 'The thunder cut out, faded, normalized and resampled to 22 kHz mono WAV',
+} as const;
+
+const variants = (name: string, count: number) =>
+  Array.from({ length: count }, (_, i) => `${name}_${String(i).padStart(3, '0')}`);
+
+/** A sound file; its id (the file name) is what the sound player's cues refer to. */
+function sound(dir: string, name: string, ext: string, licence: AssetLicence): AssetFile {
+  return { id: name, type: 'sound', url: `assets/sounds/${dir}/${name}.${ext}`, licence };
+}
+
+const SOUNDS: AssetFile[] = [
+  ...[
+    ...variants('impactPunch_medium', 5),
+    ...variants('impactPunch_heavy', 5),
+    ...variants('impactSoft_heavy', 3),
+    ...variants('impactSoft_medium', 3),
+    ...variants('impactMining', 5),
+    ...variants('impactMetal_light', 3),
+    ...variants('impactPlate_heavy', 3),
+    ...variants('impactBell_heavy', 2),
+  ].map((name) => sound('kenney', name, 'ogg', KENNEY_IMPACT)),
+  ...['knifeSlice', 'knifeSlice2', 'chop', 'handleCoins', 'handleCoins2', 'metalLatch'].map(
+    (name) => sound('kenney', name, 'ogg', KENNEY_RPG),
+  ),
+  ...[
+    'lightning_crack',
+    'lightning_bolt',
+    'lightning_spark',
+    'fire_burst',
+    'fire_roar',
+    'fire_spark',
+    'ice_shimmer',
+    'ice_crack',
+    'water_crash',
+    'water_surge',
+    'water_splash',
+  ].map((name) => sound('spells', name, 'wav', SPELL_IMPACTS)),
+  ...['thunder_clap', 'thunder_roll'].map((name) => sound('thunder', name, 'wav', RAIN_THUNDER)),
+];
 
 export const ASSETS: AssetManifest = {
   files: [
@@ -291,6 +363,7 @@ export const ASSETS: AssetManifest = {
         notes: 'Variable font, unmodified; Reserved Font Name "Cinzel"',
       },
     },
+    ...SOUNDS,
   ],
   sprites: {
     // His portrait raises the storm sceptre (the cast frames).
