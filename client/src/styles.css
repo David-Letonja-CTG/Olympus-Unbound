@@ -235,3 +235,60 @@ button {
     transition: none !important;
   }
 }
+
+/* Tabs and data tables shared by the Hall of Glory and the statistics screen. */
+.tabs {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+
+.tab {
+  font: inherit;
+  font-size: 0.85rem;
+  padding: 5px 12px;
+  color: var(--muted);
+  background: rgba(0, 0, 0, 0.35);
+  border: 1px solid var(--line);
+  cursor: pointer;
+}
+
+.tab[aria-selected='true'] {
+  color: var(--gold-2);
+  border-color: var(--gold);
+  box-shadow: inset 0 -2px 0 var(--gold);
+}
+
+.data-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.88rem;
+  font-variant-numeric: tabular-nums;
+}
+
+.data-table th {
+  text-align: left;
+  font-family: var(--display);
+  font-size: 0.7rem;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--muted);
+  padding: 6px 8px;
+  border-bottom: 1px solid var(--line);
+}
+
+.data-table td {
+  padding: 6px 8px;
+  border-bottom: 1px solid rgba(201, 165, 90, 0.12);
+}
+
+.data-table td.num,
+.data-table th.num {
+  text-align: right;
+}
+
+.data-table .empty {
+  color: var(--muted);
+  font-style: italic;
+  text-align: center;
+}

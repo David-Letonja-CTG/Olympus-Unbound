@@ -56,10 +56,12 @@ flowchart LR
 ```text
 client/
   src/app/                 Angular
-    core/                  Progression, RunSetup, SaveStore + save model/rewards, injection tokens, debug flag,
+    core/                  Progression, RunSetup, SaveStore + save model/rewards/glory, injection tokens, debug and
+                           admin flags,
                            rooms (RoomService lobby, RoomNetwork: PeerJS or BroadcastChannel)
     features/              main-menu, god-selection, realm-selection, coop (lobby), game (play screen, HUD,
-                           dialogs, loading), run-summary, progression, settings
+                           dialogs, loading), run-summary, progression, glory (Hall of Glory), admin (statistics,
+                           balance report), settings
     shared/                item icons, settings controls
   src/engine/              gameplay
     index.ts               public surface — the only engine import Angular and content may use
@@ -81,7 +83,8 @@ client/
     audio/                 synthesized sound cues (Web Audio)
     phaser/                Phaser games: ArenaScene, CutsceneScene, WorldView, Effects, LightMap + Atmosphere,
                            asset loading + SpriteResolver, InputReader, textures
-    testing/               fixtures and autopilot for engine tests
+    analysis/              the autopilot bot and BalanceReport (admin mode's balance report)
+    testing/               fixtures for engine tests (re-exports the autopilot)
   src/content/             gods, weapons, items (armour/relics/skills/synergies), enemies (+ bosses), realms, balance,
                            assets (external art manifest), cutscenes
   public/ui/               SVG ornaments for the UI (frame, divider, stone grain)
@@ -201,7 +204,7 @@ Application states are routes (`/`, `/gods`, `/realms`, `/coop`, `/play`, `/summ
 
 ## Data flow of a run's end
 
-`RunSimulation.end(outcome)` (once) → `runEnded` event → `PlayScreen` ignores repeats → `Progression.recordRun(result)` → pure `applyRunResult` (skips a run ID already processed) → save written → summary.
+`RunSimulation.end(outcome)` (once) → `runEnded` event → `PlayScreen` ignores repeats → `Progression.recordRun(result)` → pure `applyRunResult` (skips a run ID already processed; applies gold, discoveries, statistics and glory: history, high scores, achievements, daily quests) → save written → summary.
 
 ## Testing
 

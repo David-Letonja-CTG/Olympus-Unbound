@@ -217,6 +217,18 @@ The Minotaur, king of the Labyrinth, with a bronze labrys (18,000 health, 380 go
 - **Permanent upgrades**: Vitality, Might, Swiftness, Greed, Attraction, Resilience.
 - Statistics: runs, realms cleared, total kills, best survival time.
 
+## Glory
+
+Every run earns a **score**: kills + 2 per second survived + 10 per level + 1,000 per realm cleared. The **Hall of Glory** (main menu → Glory) keeps the ten best solo runs and, apart from them, the ten best co-op runs, with a filter per god.
+
+**Achievements** (18) pay gold once: clear a realm, clear 3 or 5 in one run, survive 10 or 20 minutes, slay 1,000 in a run or 1,000 / 10,000 over all runs, reach level 30, two synergies at once, 1,500 gold in a run, 25 runs, two realms with each god, a realm with every god, a realm in co-op.
+
+**Daily quests**: three a day, the same for everyone on that date, at most one for a particular god; progress adds up over the day's runs (or counts the day's best run), each pays gold once, and new ones come at local midnight. The main menu shows how many are done. The run summary lists the score, a new high score, and achievements and quests completed with their gold.
+
+## Admin mode
+
+Open `/admin` directly (nothing links to it) and give the admin password (any build; it stays unlocked for the tab's session; change it with `node scripts/admin-password.mjs "<new password>"`, which stores only its SHA-256 hash; a static game cannot truly hide it, so it keeps players out rather than attackers). The screen shows statistics over this browser's last 100 runs (totals, a table per god, where runs ended, which weapons end up in builds and their share of damage, a chart of the latest scores), export of the history as JSON or CSV, and a **balance report**: the bot plays chosen gods from a fresh start for a chosen number of runs and minutes on a chosen realm, in the page, and tabulates realms cleared, level, kills, time and weapons. Same choices, same report. Nothing is sent anywhere.
+
 ## Feedback
 
 Hit flashes, health bars over hurt monsters and damage numbers (critical hits larger and gold), status tints (burn orange, shock blue, slow violet, stun yellow), particles on hits and deaths, shockwaves, sword arcs, chain lightning, lightning strikes, screen shake (optional), and synthesized sound.

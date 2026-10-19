@@ -6,9 +6,22 @@ import {
   GraphicsQuality,
   Modifier,
 } from '../../../engine';
+import {
+  DailyState,
+  EMPTY_DAILY,
+  EMPTY_HIGH_SCORES,
+  HighScores,
+  parseDaily,
+  parseGodLists,
+  parseHighScores,
+  parseHistory,
+  parseNumbers,
+  parseUnlocked,
+  RunRecord,
+} from './save-records';
 
 /** Current save format version (D8). Bump it and add a migration when the shape changes. */
-export const SAVE_VERSION = 3;
+export const SAVE_VERSION = 4;
 /** How many processed run IDs are remembered to keep rewards idempotent. */
 export const REMEMBERED_RUNS = 20;
 
@@ -37,6 +50,16 @@ export interface SaveData {
   readonly processedRunIds: readonly string[];
   /** The intro has finished or been skipped once (spec: intro-cutscene / plays once on first launch). */
   readonly introSeen: boolean;
+  /** The last finished runs, oldest first (spec: run-statistics / run history). */
+  readonly history: readonly RunRecord[];
+  readonly highScores: HighScores;
+  /** Unlocked achievements: id → ISO date (spec: glory / achievements). */
+  readonly achievements: Readonly<Record<string, string>>;
+  /** Added-up progress of achievements whose goal adds up. */
+  readonly achievementProgress: Readonly<Record<string, number>>;
+  /** Gods that met an every-god achievement's goal. */
+  readonly achievementGods: Readonly<Record<string, readonly string[]>>;
+  readonly daily: DailyState;
 }
 
 export function freshSave(quality: GraphicsQuality = DEFAULT_SETTINGS.quality): SaveData {
@@ -49,6 +72,12 @@ export function freshSave(quality: GraphicsQuality = DEFAULT_SETTINGS.quality): 
     settings: { ...DEFAULT_SETTINGS, quality },
     processedRunIds: [],
     introSeen: false,
+    history: [],
+    highScores: EMPTY_HIGH_SCORES,
+    achievements: {},
+    achievementProgress: {},
+    achievementGods: {},
+    daily: EMPTY_DAILY,
   };
 }
 
@@ -77,6 +106,8 @@ const MIGRATIONS: Record<number, (save: Raw) => Raw> = {
     version: 3,
     settings: { ...((save['settings'] as Raw | undefined) ?? {}), enemyHealthBars: true },
   }),
+  // v4 adds the glory records and run history (spec: meta-progression / save format version 4), empty.
+  3: (save) => ({ ...save, version: 4 }),
 };
 
 /**
@@ -117,6 +148,7 @@ export function parseSave(
     }
   }
 
+  const achievementIds = new Set(content.achievements.map((a) => a.id));
   const discovered = isObject(save['discovered']) ? save['discovered'] : {};
   const stats = isObject(save['stats']) ? save['stats'] : {};
   const settings = isObject(save['settings']) ? save['settings'] : {};
@@ -156,6 +188,12 @@ export function parseSave(
           .slice(-REMEMBERED_RUNS)
       : [],
     introSeen: flag(save['introSeen'], false),
+    history: parseHistory(save['history'], content),
+    highScores: parseHighScores(save['highScores'], content),
+    achievements: parseUnlocked(save['achievements'], content),
+    achievementProgress: parseNumbers(save['achievementProgress'], achievementIds),
+    achievementGods: parseGodLists(save['achievementGods'], achievementIds, content),
+    daily: parseDaily(save['daily'], content),
   };
 }
 

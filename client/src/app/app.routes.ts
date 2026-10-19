@@ -3,7 +3,9 @@ import { CanActivateFn, Router, Routes } from '@angular/router';
 import { Progression } from './core/progression';
 import { RoomService } from './core/rooms/room-service';
 import { RunSetup } from './core/run-setup';
+
 import { CoopScreen } from './features/coop/coop-screen';
+
 import { GodSelection } from './features/god-selection/god-selection';
 import { MainMenu } from './features/main-menu/main-menu';
 import { ProgressionScreen } from './features/progression/progression-screen';
@@ -58,6 +60,17 @@ export const routes: Routes = [
     title: 'Run summary · Olympus Unbound',
   },
   { path: 'progression', component: ProgressionScreen, title: 'Progression · Olympus Unbound' },
+  {
+    path: 'glory',
+    loadComponent: () => import('./features/glory/glory-screen').then((m) => m.GloryScreen),
+    title: 'Hall of Glory · Olympus Unbound',
+  },
+  {
+    // Reached only by its address and behind a password (spec: run-statistics / admin mode); lazy, for the owner.
+    path: 'admin',
+    loadComponent: () => import('./features/admin/admin-screen').then((m) => m.AdminScreen),
+    title: 'Statistics · Olympus Unbound',
+  },
   { path: 'settings', component: SettingsScreen, title: 'Settings · Olympus Unbound' },
   {
     // Development builds only: review the code-drawn art.

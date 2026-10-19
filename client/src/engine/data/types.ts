@@ -572,4 +572,42 @@ export interface GameContent {
   /** External art (D12); empty means everything is code-drawn. */
   readonly assets: AssetManifest;
   readonly cutscenes: readonly CutsceneDefinition[];
+  /** Goals that pay gold once (spec: glory / achievements). */
+  readonly achievements: readonly AchievementDefinition[];
+  /** The pool today's three quests are chosen from (spec: glory / daily quests). */
+  readonly dailyQuests: readonly QuestDefinition[];
+}
+
+// ---------------------------------------------------------------------------------------------------------------
+// Glory (spec: glory). Measured on finished runs by the application; the simulation never reads these.
+
+export type GoalMeasure =
+  'kills' | 'timeSeconds' | 'level' | 'realmsCleared' | 'gold' | 'synergies' | 'runs';
+
+export interface Goal {
+  readonly measure: GoalMeasure;
+  readonly target: number;
+  /** One run's value, or added up (over every run for achievements, over the day for quests). */
+  readonly over: 'run' | 'total';
+  /** Only runs as this god count. */
+  readonly god?: string;
+  readonly mode?: 'solo' | 'coop';
+  /** Achievements only: met once every god has met it. */
+  readonly everyGod?: boolean;
+}
+
+export interface AchievementDefinition {
+  readonly id: string;
+  readonly name: string;
+  readonly description: string;
+  readonly goal: Goal;
+  readonly gold: number;
+  readonly sprite: string;
+}
+
+export interface QuestDefinition {
+  readonly id: string;
+  readonly description: string;
+  readonly goal: Goal;
+  readonly gold: number;
 }

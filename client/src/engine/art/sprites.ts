@@ -623,6 +623,13 @@ const ICONS: Record<string, [string, 'square' | 'round' | 'diamond' | 'hex', num
   synergy_earth: ['hammer', 'hex', 0xd9b27c],
   ambrosia: ['potion', 'round', 0xff7a9a],
   icon_gold: ['coin', 'round', 0xffd34d],
+  // Achievements (spec: glory / achievements): gold hexes.
+  ach_hourglass: ['hourglass', 'hex', 0xe8c46a],
+  ach_skull: ['skull', 'hex', 0xe8c46a],
+  ach_sword: ['sword', 'hex', 0xe8c46a],
+  ach_scythe: ['scythe', 'hex', 0xe8c46a],
+  ach_shield: ['shield', 'hex', 0xe8c46a],
+  ach_owl: ['owl', 'hex', 0xe8c46a],
 };
 
 /**

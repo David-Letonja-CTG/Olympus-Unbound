@@ -295,6 +295,8 @@ export interface RunResult {
   readonly realmsCleared: number;
   /** The realm the run ended in. */
   readonly realmReached: string;
+  /** Gods in the party: 1 for a solo run (spec: glory / high scores). */
+  readonly players: number;
   readonly loadout: LoadoutSummary;
 }
 

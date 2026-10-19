@@ -338,6 +338,7 @@ export class GuestDriver implements RunDriver {
       gold: 0,
       realmsCleared: 0,
       realmReached: this.run.realmId,
+      players: partyOf(this.run).length,
       loadout: { weapons: [], relics: [], skills: [], synergies: [] },
     };
     return {

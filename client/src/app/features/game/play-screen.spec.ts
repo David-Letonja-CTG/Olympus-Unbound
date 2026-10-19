@@ -217,15 +217,19 @@ describe('PlayScreen', () => {
         gold: 350,
         realmsCleared: 1,
         realmReached: 'mount_olympus',
+        players: 1,
         loadout: { weapons: [], relics: [], skills: [], synergies: [] },
       };
       await update({ type: 'runEnded', result });
       await update({ type: 'runEnded', result });
       expect(el.textContent).toContain('You have fallen');
-      expect(TestBed.inject(Progression).gold()).toBe(350);
+      // The run's 350 gold and, once, what its achievements and quests pay (first_gate at least).
+      const rewards = TestBed.inject(RunSetup).lastRun()?.rewards;
+      expect(rewards?.glory.achievements.map((a) => a.id)).toContain('first_gate');
+      expect(TestBed.inject(Progression).gold()).toBe(350 + (rewards?.glory.gold ?? 0));
       vi.advanceTimersByTime(2000);
       expect(navigate).toHaveBeenCalledWith(['/summary']);
-      expect(TestBed.inject(RunSetup).lastRun()?.rewards.totalGold).toBe(350);
+      expect(rewards?.totalGold).toBe(350 + (rewards?.glory.gold ?? 0));
     } finally {
       vi.useRealTimers();
     }

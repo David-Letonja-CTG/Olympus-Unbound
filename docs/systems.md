@@ -141,3 +141,13 @@ Deterministic from `(map config, seed)`: terrain bands from two-octave value noi
 Migrations: v0 (unversioned) → v1 renames nothing; v1 → v2 adds `introSeen: false`; a missing or invalid `quality` takes the detected default (`detectQuality`: software renderer → Low, ≥ 8 cores → High, else Medium).
 
 To change the save format: bump `SAVE_VERSION`, add `MIGRATIONS[oldVersion]`, extend `parseSave`, add tests for the old shape.
+
+**v4** (spec: meta-progression / save format version 4) adds `history` (last 100 `RunRecord`s), `highScores { solo, coop }` (10 each, best first), `achievements` (id → ISO date), `achievementProgress` (added-up goals), `achievementGods` (every-god goals) and `daily { date, progress, done }`; v3 → v4 adds them empty. Records are validated entry by entry (`save-records.ts`).
+
+## Glory — `client/src/app/core/save/glory.ts`
+
+`applyRunResult` applies `applyGlory` once per run ID. Score = kills + 2·seconds + 10·level + 1000·realms. Mode = co-op when `result.players > 1`. A `Goal { measure, target, over: run|total, god?, mode?, everyGod? }` reads `kills`, `timeSeconds`, `level`, `realmsCleared`, `gold`, `synergies` (count) or `runs` (1) from a `RunResult`; a run of another god or mode does not count. Achievements: `run` = this run's value ≥ target; `total` = lifetime sum; `everyGod` = every god has had such a run. Daily quests: `questsFor(date)` shuffles the pool with an LCG seeded by FNV-1a of the local date and takes the first three, skipping a second god-specific quest; `run` keeps the day's best, `total` adds the day's runs; another date starts empty. Gold from both is added to the save and to the run's total.
+
+## Balance report — `engine/analysis/`
+
+`BalanceReport(content, { gods, runsPerGod, minutes, realmId })` queues runs (god × seeds 1…n, no modifiers); `advance(steps)` plays them with `autopilot` and `armsFirst` choices; `rows()` averages realms cleared, level, kills, time, alive-at-end share and per-weapon taken share and damage share. The admin screen calls `advance(900)` per `setTimeout`.

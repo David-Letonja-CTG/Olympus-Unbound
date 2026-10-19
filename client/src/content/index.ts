@@ -1,4 +1,5 @@
 import type { BalanceConfig, GameContent, PermanentUpgradeDefinition } from '../engine';
+import { ACHIEVEMENTS, DAILY_QUESTS } from './achievements';
 import { ASSETS } from './assets';
 import { INTRO } from './cutscenes/intro';
 import { BOSSES, ENEMIES } from './enemies';
@@ -117,4 +118,6 @@ export const CONTENT: GameContent = {
   balance: BALANCE,
   assets: ASSETS,
   cutscenes: [INTRO],
+  achievements: ACHIEVEMENTS,
+  dailyQuests: DAILY_QUESTS,
 };

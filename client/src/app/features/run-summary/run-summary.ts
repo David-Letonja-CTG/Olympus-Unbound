@@ -46,6 +46,46 @@ const TITLES = { defeat: 'You have fallen', abandoned: 'Run abandoned' } as cons
           </div>
         </section>
 
+        @if (!v.rewards.alreadyProcessed) {
+          <section class="panel glory" data-testid="summary-glory">
+            <h2>Glory</h2>
+            <p class="score">
+              Score <strong data-testid="summary-score">{{ fmt(v.rewards.glory.score) }}</strong>
+              @if (v.rewards.glory.highScore; as hs) {
+                <span class="record" data-testid="summary-high-score"
+                  >New {{ hs.mode === 'coop' ? 'co-op ' : '' }}high score · #{{ hs.rank }}</span
+                >
+              }
+            </p>
+            @if (v.rewards.glory.achievements.length) {
+              <h3>Achievements unlocked</h3>
+              <ul class="items">
+                @for (a of v.rewards.glory.achievements; track a.id) {
+                  <li [attr.data-testid]="'summary-achievement-' + a.id">
+                    <app-item-icon [sprite]="a.sprite" [size]="32" />
+                    <span
+                      ><strong>{{ a.name }}</strong> · {{ a.description }}</span
+                    >
+                    <span class="damage">+{{ a.gold }} gold</span>
+                  </li>
+                }
+              </ul>
+            }
+            @if (v.rewards.glory.quests.length) {
+              <h3>Daily quests completed</h3>
+              <ul class="items">
+                @for (q of v.rewards.glory.quests; track q.id) {
+                  <li [attr.data-testid]="'summary-quest-' + q.id">
+                    <span class="check" aria-hidden="true">✔</span>
+                    <span>{{ q.description }}</span>
+                    <span class="damage">+{{ q.gold }} gold</span>
+                  </li>
+                }
+              </ul>
+            }
+          </section>
+        }
+
         <section class="panel rewards">
           <h2>Rewards</h2>
           <p>
@@ -54,6 +94,12 @@ const TITLES = { defeat: 'You have fallen', abandoned: 'Run abandoned' } as cons
               <span class="note">(half, run abandoned)</span>
             }
           </p>
+          @if (v.rewards.glory.gold) {
+            <p>
+              Glory: <span class="gold-amount">{{ v.rewards.glory.gold }}</span>
+              <span class="note">(achievements and quests)</span>
+            </p>
+          }
           <p class="total">
             <app-item-icon sprite="icon_gold" [size]="24" /> +<span
               class="gold-amount"
@@ -188,6 +234,27 @@ const TITLES = { defeat: 'You have fallen', abandoned: 'Run abandoned' } as cons
       margin-top: 12px;
       color: var(--gold-2);
     }
+    .score {
+      display: flex;
+      align-items: baseline;
+      gap: 10px;
+      flex-wrap: wrap;
+    }
+    .score strong {
+      font-size: 1.6rem;
+      color: var(--gold-2);
+      font-variant-numeric: tabular-nums;
+    }
+    .record {
+      color: var(--ok);
+      font-family: var(--display);
+      letter-spacing: 0.08em;
+    }
+    .check {
+      color: var(--gold);
+      width: 32px;
+      text-align: center;
+    }
   `,
 })
 export class RunSummary {
@@ -236,6 +303,10 @@ export class RunSummary {
   });
 
   protected readonly inRoom = computed(() => !!this.setup.lastRun()?.inRoom);
+
+  protected fmt(n: number): string {
+    return Math.floor(n).toLocaleString('en-US');
+  }
 
   protected playAgain(): void {
     this.setup.rerollSeed();

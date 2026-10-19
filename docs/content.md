@@ -32,6 +32,8 @@ All game content is typed TypeScript in `client/src/content/` (decision D4). The
 
 **New realm:** a `RealmDefinition` with `atmosphere` (ambient light ≥ 30% brightness, fog and particle colours), loading-screen `tips`, terrain types and bands, obstacle kinds, `roads` (width, wander), points of interest (`ring` ruins, a `temple` landmark with column/fallen/altar/light kinds, `walls`, `cluster` groves, `plazaLights`, a `maze` of wall blocks — set `minObstacleGap` below a god's width, 28, so its walls block), `roads.thread` for a line along the road to the boss, scatter and decoration rules, a timeline, events, scaling, elite multipliers, a boss and rewards → painters for its sprites → it appears in realm selection automatically.
 
+**New achievement or daily quest:** an entry in `content/achievements.ts` (`ACHIEVEMENTS` or `DAILY_QUESTS`) with a `Goal` (measure, target, `run` or `total`, optional `god`, `mode`, `everyGod` for achievements) and its gold; an achievement also names an icon sprite. Validation checks IDs, gods and targets; quests may not ask for every god, and there must be at least three.
+
 **New god:** a `GodDefinition` (base stats, starting weapon, ability as a weapon-like definition, passive modifiers, affinities, sprite) → it appears in god selection automatically.
 
 ## Adding an asset pack

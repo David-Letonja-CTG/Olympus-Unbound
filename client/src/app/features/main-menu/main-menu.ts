@@ -1,6 +1,7 @@
 import { ChangeDetectionStrategy, Component, inject } from '@angular/core';
 import { RouterLink } from '@angular/router';
-import { Progression } from '../../core/progression';
+
+import { DailyQuestView, Progression } from '../../core/progression';
 import { ItemIcon } from '../../shared/item-icon';
 
 @Component({
@@ -17,9 +18,15 @@ import { ItemIcon } from '../../shared/item-icon';
         <a class="btn btn-primary" routerLink="/gods">Play</a>
         <a class="btn" routerLink="/coop" data-testid="menu-coop">Co-op</a>
         <a class="btn" routerLink="/progression">Progression</a>
+        <a class="btn" routerLink="/glory" data-testid="menu-glory">Glory</a>
         <a class="btn" routerLink="/settings">Settings</a>
         <a class="btn" routerLink="/intro" data-testid="menu-intro">Intro</a>
       </nav>
+
+      @let quests = progression.todayQuests();
+      <a class="daily" routerLink="/glory" data-testid="menu-daily">
+        Daily quests: {{ doneCount(quests) }} / {{ quests.length }} done
+      </a>
 
       <p class="gold">
         <app-item-icon sprite="icon_gold" [size]="22" />
@@ -85,6 +92,12 @@ import { ItemIcon } from '../../shared/item-icon';
       margin: 0;
       color: var(--muted);
     }
+    .daily {
+      color: var(--gold-2);
+      font-size: 0.9rem;
+      text-decoration: none;
+      border-bottom: 1px dotted var(--gold);
+    }
     .hint {
       color: var(--muted);
       font-size: 0.85rem;
@@ -95,4 +108,8 @@ import { ItemIcon } from '../../shared/item-icon';
 })
 export class MainMenu {
   protected readonly progression = inject(Progression);
+
+  protected doneCount(quests: readonly DailyQuestView[]): number {
+    return quests.filter((q) => q.done).length;
+  }
 }

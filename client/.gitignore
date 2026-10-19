@@ -46,3 +46,6 @@ Thumbs.db
 # Playwright
 /playwright-report
 /test-results
+
+# The admin password (only its hash is committed: src/app/features/admin/admin-password.ts)
+/ADMIN-PASSWORD.txt
