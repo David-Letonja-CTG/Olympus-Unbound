@@ -6,15 +6,20 @@ An original mythological horde-survival roguelite that runs entirely in the brow
 
 <img src="docs/images/hero.gif" width="100%" alt="A run in every realm: Mount Olympus, the Underworld, the Lernaean Marsh, the Aegean Shore and the Labyrinth of Crete">
 
-- **Four gods:** Zeus, Hades, Poseidon and Athena, each with a starting weapon, a divine ability and a passive.
+- **Four gods:** Zeus, Hades, Poseidon and Athena, each with a starting weapon, a divine ability, a passive and an arsenal of their own (Thunderbolt is Zeus's alone, the Soul Scythe Hades's).
+- **Sprint and dash:** a stamina bar under your health; sprint away, or dash through an attack untouched.
 - **Five realms, endless runs:** Mount Olympus, the Underworld, the Lernaean Marsh, the Aegean Shore and the Labyrinth of Crete. Each has its own map, monsters and boss: the Cyclops, Cerberus, the Hydra, Scylla and Asterion. After the Labyrinth comes Olympus again, harder.
 - **Build a god:** 10 weapons, 4 armours, 6 relics, 16 skills and 7 synergies; permanent upgrades and a codex between runs.
+- **The Wandering Merchant:** twice a realm, trade the run's gold for companions (an eagle, a hound, a serpent) that fight beside you, whetstones and ambrosia.
+- **Glory:** a score for every run, solo and co-op high scores, 18 achievements and three daily quests.
 - **Co-op:** rooms for up to four players, peer to peer, with difficulty per player; a living ally revives a fallen god by standing beside their spirit.
 - **Night and myth:** dynamic light, fog and torchlight, and a cast rendered in Blender from licensed models (`art/blender/`).
 
 | Every realm's boss | Level up | The gate onward |
 |---|---|---|
 | ![The boss of every realm](docs/images/bosses.jpg) | ![A level-up choice](docs/images/level-up.jpg) | ![The gate to the next realm](docs/images/gate.jpg) |
+| **The Wandering Merchant** | **Companions at your side** | **The Hall of Glory** |
+| ![The merchant's shop](docs/images/shop.jpg) | ![Companions fighting beside Athena, and a dash](docs/images/merchant.gif) | ![High scores, achievements and daily quests](docs/images/glory.jpg) |
 
 **Play it:** [david-letonja-ctg.github.io/Olympus-Unbound](https://david-letonja-ctg.github.io/Olympus-Unbound/), or download the game from [Releases](https://github.com/David-Letonja-CTG/Olympus-Unbound/releases)
 
@@ -30,7 +35,7 @@ npm ci
 npm start          # http://localhost:4200
 ```
 
-WASD/arrows or a gamepad to move, Space (A) for the god's divine ability, Esc (Start) to pause, 1–3 to pick upgrades.
+WASD/arrows or a gamepad to move, Shift (LB) to sprint, E (B) to dash, Space (A) for the god's divine ability, Esc (Start) to pause, 1–3 to pick upgrades.
 
 Checks (CI runs the same on every push and pull request):
 

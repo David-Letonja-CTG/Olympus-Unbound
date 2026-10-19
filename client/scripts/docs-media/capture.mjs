@@ -22,9 +22,48 @@ const VIEW = { width: 1280, height: 720 };
 const GIF = { width: 960, height: 540 };
 /** At most this many GIF frames a second (keeps the files a few megabytes). */
 const FPS = 12;
-/** A save past the intro, at High quality, with some progress to show. */
+/** A finished run for the Hall of Glory's tables (score: kills + 2·seconds + 10·level + 1,000·realms). */
+const entry = (i, godId, realmsCleared, timeSeconds, kills, level, players = 1) => ({
+  runId: `docs-${i}`,
+  endedAt: new Date(2026, 9, 10 + i, 20, 0).toISOString(),
+  godId,
+  realmId: 'mount_olympus',
+  players,
+  score: kills + 2 * timeSeconds + 10 * level + 1000 * realmsCleared,
+  realmsCleared,
+  timeSeconds,
+  kills,
+  level,
+});
+const SOLO = [
+  entry(1, 'zeus', 3, 1810, 3120, 41),
+  entry(2, 'athena', 2, 1290, 2410, 35),
+  entry(3, 'hades', 2, 1180, 2205, 33),
+  entry(4, 'poseidon', 1, 860, 1490, 27),
+  entry(5, 'zeus', 1, 640, 1102, 24),
+  entry(6, 'hades', 0, 390, 640, 16),
+].sort((a, b) => b.score - a.score);
+const COOP = [entry(7, 'athena', 4, 2240, 4890, 46, 3), entry(8, 'hades', 2, 1350, 2780, 36, 2)];
+/** A save past the intro, at High quality, with some progress and glory to show. */
 const SAVE = {
-  version: 2,
+  version: 4,
+  highScores: { solo: SOLO, coop: COOP },
+  achievements: Object.fromEntries(
+    [
+      'first_gate',
+      'deep_delver',
+      'survivor_10',
+      'survivor_20',
+      'massacre',
+      'slayer_1000',
+      'slayer_10000',
+      'ascendant',
+      'storm_lord',
+      'brothers_in_arms',
+    ].map((id) => [id, SOLO[0].endedAt]),
+  ),
+  achievementProgress: { slayer_1000: 18420, slayer_10000: 18420, veteran: 23 },
+  achievementGods: { pantheon: ['zeus', 'hades', 'athena'] },
   introSeen: true,
   gold: 1840,
   permanentUpgrades: { vitality: 2, might: 2, swiftness: 1, wisdom: 1 },
@@ -268,6 +307,71 @@ const scenes = {
     await page.waitForTimeout(1200);
     await page.screenshot({ path: join(out, 'progression.jpg'), quality: 88 });
     await page.close();
+  },
+
+  /** The Hall of Glory: today's quests, the high scores and the achievements (glory.jpg). */
+  async glory(browser) {
+    const page = await newPage(browser);
+    await page.goto(`${base}/glory`);
+    await page.waitForTimeout(1500);
+    await page.screenshot({ path: join(out, 'glory.jpg'), quality: 88 });
+    await page.close();
+  },
+
+  /**
+   * The Wandering Merchant (shop.jpg) and the companions bought from it fighting beside their god, with a dash
+   * (merchant.gif).
+   */
+  async merchant(browser) {
+    const decoder = await browser.newPage();
+    const page = await startRun(browser, { god: 'athena', realm: REALMS[0] });
+    await powerUp(page);
+    await send(page, { type: 'skipTo', seconds: 140 });
+    await page.waitForTimeout(1500);
+    await pickUpgrades(page);
+    await send(page, { type: 'grantGold', amount: 700 });
+    await send(page, { type: 'summonMerchant' });
+    await page.waitForTimeout(800);
+    // Walk into the merchant's ring.
+    const at = await inspect(page);
+    const dx = at.merchant.x - at.player.x;
+    const dy = at.merchant.y - at.player.y;
+    const keys = [
+      ...(Math.abs(dx) > 30 ? [dx > 0 ? 'KeyD' : 'KeyA'] : []),
+      ...(Math.abs(dy) > 30 ? [dy > 0 ? 'KeyS' : 'KeyW'] : []),
+    ];
+    for (const key of keys) await page.keyboard.down(key);
+    const shop = page.getByRole('dialog', { name: 'The Wandering Merchant' });
+    await shop.waitFor({ timeout: 30000 });
+    for (const key of keys) await page.keyboard.up(key);
+    await page.waitForTimeout(700);
+    await page.screenshot({ path: join(out, 'shop.jpg'), quality: 88 });
+    for (const name of [/Hound of the Underworld/, /Eagle of Zeus/, /Temple Serpent/]) {
+      await page.getByRole('button', { name }).click();
+      await page.waitForTimeout(400);
+    }
+    await page.getByRole('button', { name: /Leave/ }).click();
+    // Out among the foes, with a dash on the way.
+    await walk(
+      page,
+      keys.map((k) => ({ KeyD: 'KeyA', KeyA: 'KeyD', KeyS: 'KeyW', KeyW: 'KeyS' })[k]),
+      900,
+    );
+    await send(page, { type: 'skipTo', seconds: 230 });
+    await page.waitForTimeout(2500);
+    await pickUpgrades(page);
+    const clipA = await record(page, decoder, 1500);
+    await page.keyboard.down('KeyD');
+    await page.keyboard.press('KeyE');
+    const clipB = await record(page, decoder, 1500);
+    await page.keyboard.up('KeyD');
+    const clipC = await record(page, decoder, 1500);
+    writeGif('merchant.gif', {
+      frames: [...clipA.frames, ...clipB.frames, ...clipC.frames],
+      delays: [...clipA.delays, ...clipB.delays, ...clipC.delays],
+    });
+    await page.close();
+    await decoder.close();
   },
 
   /** In a run: a level-up choice, the gate after a boss, and the summary at the end. */

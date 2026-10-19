@@ -62,13 +62,13 @@ Runs take place at night. The arena is dark beyond your light; braziers ring the
 
 ## The HUD
 
-Health fills an **amphora** (bottom left), the experience bar and your weapons, armour and relics sit along the bottom, the divine ability waits in an iron slot (bottom right) with a dark cooldown sweep and the seconds left, the run time sits in the top plaque with gold and kills at the top right, active synergies at the top left, and the boss appears in a banner under the timer.
+Health fills an **amphora** (bottom left) with the gold **stamina** bar and the dash pip beneath it, the experience bar and your weapons (each with its own cooldown sweep), armour, relics and companions sit along the bottom, the divine ability waits in an iron slot (bottom right) with a dark cooldown sweep that turns smoothly, the seconds left and a flash when it is ready, the run time sits in the top plaque with gold and kills at the top right, active synergies at the top left, and the boss appears in a banner under the timer.
 
 **Health bars:** every monster that has been hurt shows a thin red bar above it (Settings → *Enemy health bars* hides them); elites keep their gold bar and the boss its banner.
 
 **Party health** (co-op, on the left): every god in the run in their seat's colour (the same as on the minimap), with their god, name, a health bar and the numbers; your own is marked *(you)*, and a fallen god shows how far their revive has come.
 
-**Minimap** (top right, under the gold and kills): the whole realm with its walls and the boss arena; monsters as red dots (elites larger and gold), the boss as a large red mark once it wakes, the open gate as a pale ring, every god in their own colour (yours largest, with a white rim; fallen gods as hollow rings), and the outline of what the screen shows.
+**Minimap** (top right, under the gold and kills): the whole realm with its walls and the boss arena; monsters as red dots (elites larger and gold), the boss as a large red mark once it wakes, the open gate as a pale ring, the merchant as a gold diamond, every god in their own colour (yours largest, with a white rim; fallen gods as hollow rings), and the outline of what the screen shows.
 
 ## Zeus, King of the Sky
 
@@ -212,6 +212,10 @@ The Minotaur, king of the Labyrinth, with a bronze labrys (18,000 health, 380 go
 
 ## The Wandering Merchant
 
+| The shop | Companions fighting, and a dash |
+|---|---|
+| ![The merchant's shop](images/shop.jpg) | ![Companions fighting beside Athena, and a dash](images/merchant.gif) |
+
 Twice in every realm (at 2:30 and 5:30) a merchant arrives a short walk from the party, announced, marked on the minimap and by a gold arrow at the screen's edge, lit by a lantern and standing in a golden ring. A banner counts down the 75 seconds until it leaves. Step into the ring to trade (the run pauses; in a room the others wait). Prices are in the run's gold (in a room, the party's shared purse) and grow by half for every realm cleared; what you spend no longer counts toward the gold you keep. Leave the shop and it opens again only when you step out and back in.
 
 | Ware | Price | What it does |
@@ -232,6 +236,8 @@ Twice in every realm (at 2:30 and 5:30) a merchant arrives a short walk from the
 - Statistics: runs, realms cleared, total kills, best survival time.
 
 ## Glory
+
+![High scores, achievements and daily quests in the Hall of Glory](images/glory.jpg)
 
 Every run earns a **score**: kills + 2 per second survived + 10 per level + 1,000 per realm cleared. The **Hall of Glory** (main menu → Glory) keeps the ten best solo runs and, apart from them, the ten best co-op runs, with a filter per god.
 

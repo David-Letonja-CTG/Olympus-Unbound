@@ -111,7 +111,7 @@ const VESSEL_BOTTOM = 130;
       </div>
     }
 
-    @if (h.gate; as gate) {
+    @if (h.phase === 'playing' && h.gate; as gate) {
       <div class="gate" data-testid="hud-gate" role="status">
         <span class="gate-title">The gate to {{ gate.to }} is open</span>
         <span class="gate-time"
@@ -120,7 +120,7 @@ const VESSEL_BOTTOM = 130;
       </div>
     }
 
-    @if (h.merchant && !h.gate) {
+    @if (h.merchant && !h.gate && h.phase === 'playing') {
       <div class="gate merchant" data-testid="hud-merchant" role="status">
         <span class="gate-title">The Wandering Merchant is near</span>
         <span class="gate-time"
