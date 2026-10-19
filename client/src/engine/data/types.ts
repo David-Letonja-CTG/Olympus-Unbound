@@ -75,6 +75,8 @@ export interface WeaponDefinition {
   readonly id: string;
   readonly name: string;
   readonly description: string;
+  /** The gods this weapon belongs to; absent = common to every god (spec: run-progression / god arsenals). */
+  readonly gods?: readonly string[];
   readonly element: Element;
   readonly behavior: WeaponBehaviorId;
   readonly base: WeaponStats;
@@ -477,6 +479,24 @@ export interface RealmDefinition {
 
 // ---------------------------------------------------------------------------------------------------------------
 
+export interface StaminaBalance {
+  readonly max: number;
+  /** Stamina per second once `regenDelay` seconds have passed without spending any. */
+  readonly regen: number;
+  readonly regenDelay: number;
+  readonly sprintMultiplier: number;
+  /** Stamina per second while sprinting. */
+  readonly sprintDrain: number;
+  readonly dashCost: number;
+  readonly dashDuration: number;
+  /** Units per second while dashing. */
+  readonly dashSpeed: number;
+  /** Seconds after a dash ends before the next may start. */
+  readonly dashRecovery: number;
+  /** Extra invulnerability after the dash, so a hit landing as it ends still misses. */
+  readonly dashGrace: number;
+}
+
 export interface BalanceConfig {
   readonly maxWeapons: number;
   readonly maxRelics: number;
@@ -523,6 +543,8 @@ export interface BalanceConfig {
     readonly bossHealthPerRealm: number;
     readonly bossDamagePerRealm: number;
   };
+  /** Sprinting and dashing (spec: player-control / stamina, sprint and dash). */
+  readonly stamina: StaminaBalance;
   /** Reviving a fallen ally (spec: co-op / reviving allies). */
   readonly revive: {
     /** How close a living ally must stand to the spirit. */

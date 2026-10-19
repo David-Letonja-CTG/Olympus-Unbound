@@ -1,4 +1,5 @@
 import { Rng } from '../core/rng';
+import { wieldableBy } from '../data/content-index';
 import { Element } from '../data/types';
 import { RunState } from '../sim/run-state';
 import { Player, UpgradeOffer } from '../sim/types';
@@ -49,6 +50,7 @@ export function offerCandidates(state: RunState, player: Player): Candidate[] {
 
   if (loadout.weapons.length < balance.maxWeapons) {
     for (const def of index.content.weapons) {
+      if (!wieldableBy(def, player.god.id)) continue;
       if (loadout.weapons.some((held) => held.def.id === def.id)) continue;
       candidates.push({
         weight: w.newWeapon * affinity(def.element),

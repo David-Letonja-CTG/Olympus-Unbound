@@ -20,6 +20,7 @@ const BASE: WeaponStats = {
 export const WEAPONS: readonly WeaponDefinition[] = [
   {
     id: 'thunder_spear',
+    gods: ['zeus', 'poseidon', 'athena'],
     name: 'Thunder Spear',
     description: 'Hurls a crackling spear at the nearest foe. Pierces and may shock.',
     element: 'lightning',
@@ -81,6 +82,7 @@ export const WEAPONS: readonly WeaponDefinition[] = [
   },
   {
     id: 'trident',
+    gods: ['poseidon'],
     name: 'Trident',
     description: 'Throws three prongs in a wide fan that pierce and throw enemies back.',
     element: 'physical',
@@ -110,6 +112,7 @@ export const WEAPONS: readonly WeaponDefinition[] = [
   },
   {
     id: 'lightning_orb',
+    gods: ['zeus', 'athena'],
     name: 'Lightning Orb',
     description: 'Orbs of living lightning circle you, shocking whatever they touch.',
     element: 'lightning',
@@ -179,6 +182,7 @@ export const WEAPONS: readonly WeaponDefinition[] = [
   },
   {
     id: 'thunderbolt',
+    gods: ['zeus'],
     name: 'Thunderbolt',
     description: 'A bolt strikes the nearest foe and leaps from enemy to enemy.',
     element: 'lightning',
@@ -196,6 +200,7 @@ export const WEAPONS: readonly WeaponDefinition[] = [
   },
   {
     id: 'soul_scythe',
+    gods: ['hades'],
     name: 'Soul Scythe',
     description:
       'A full circle of shadow reaps everything around you, slowing foes and feeding your life.',
@@ -219,6 +224,7 @@ export const WEAPONS: readonly WeaponDefinition[] = [
   },
   {
     id: 'bident',
+    gods: ['hades'],
     name: 'Bident of Hades',
     description:
       'The two-pronged spear of the underworld thrusts at the nearest foe, piercing the line and drinking its life.',
@@ -242,6 +248,7 @@ export const WEAPONS: readonly WeaponDefinition[] = [
   },
   {
     id: 'spear_of_athena',
+    gods: ['athena'],
     name: 'Spear of Athena',
     description:
       'A bronze javelin thrown with a strategist’s aim: it pierces the line and finds weak points.',

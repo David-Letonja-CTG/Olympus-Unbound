@@ -29,6 +29,12 @@ Stats are recomputed only when the loadout changes (`refreshPlayer`), together w
 
 A weapon with nothing to hit retries after 0.1 s instead of spending its cooldown. Abilities are weapon definitions fired on demand; `base.cooldown` is the ability cooldown.
 
+A weapon with `gods` is only offered to those gods; without, to every god (`wieldableBy`, spec: run-progression / god arsenals). Content validation requires every god's starting weapon to be theirs and at least four weapons per god.
+
+## Movement and stamina — `engine/sim/movement.ts`
+
+`stepMovement` is shared by the host's players and a guest's prediction (D16). Walking: `moveSpeed`. Sprinting (held, moving): `moveSpeed × sprintMultiplier` while stamina > 0, draining `sprintDrain`/s; holding sprint while moving keeps stamina from refilling even when spent. Dash (held or tapped): needs `dashCost` stamina and no dash recovery left; moves `dashSpeed` for `dashDuration` along the stick (or the facing direction), colliding like walking; the player is invulnerable for `dashDuration + dashGrace` (the usual `invulnerable` timer, so the damage pipeline is unchanged); the next dash waits `dashDuration + dashRecovery`. Stamina refills at `regen`/s once nothing was spent for `regenDelay` s. All values in `balance.stamina` (max 100, regen 32, delay 0.7 s, sprint ×1.55 at 30/s, dash 35 for 0.18 s at 830/s, recovery 0.35 s, grace 0.05 s).
+
 ## Damage — `engine/combat/damage.ts`
 
 ```text
@@ -111,7 +117,7 @@ A run's `party` lists 1–4 seats (god, name, the player's own permanent upgrade
 | HUD | 10 Hz; every 10th also carries the guest's result so far |
 | Guest input | every guest step (60 Hz); the host applies one per step, in order; more than 6 queued → the oldest are dropped down to 3 |
 | Interpolation | drawn at newest − 100 ms; eased toward it, jumps when more than 250 ms off |
-| Prediction | own god only; corrections eased (15% per frame kept), jumps beyond 64 px |
+| Prediction | own god only, walking, sprinting and dashing by the host's rule (`stepMovement`); position and stamina corrected by the host's error at the acknowledged input; corrections eased (15% per frame kept), jumps beyond 64 px |
 | Snapshot | positions i16 at ¼ px, IDs u32, flags and health ratio in bytes; under 20 bytes per entity (test) |
 | Loading | the host starts when every guest has loaded, at most 60 s |
 | Room code | 5 characters from `ABCDEFGHJKLMNPQRSTUVWXYZ23456789`; up to 4 members |

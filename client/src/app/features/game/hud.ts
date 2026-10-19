@@ -180,6 +180,34 @@ const VESSEL_BOTTOM = 130;
       <span class="vessel-text" data-testid="hud-health"
         >{{ round(h.health) }} / {{ round(h.maxHealth) }}</span
       >
+      <div class="stamina" title="Stamina: hold Shift to sprint, E to dash">
+        <div
+          class="stamina-track"
+          role="progressbar"
+          aria-label="Stamina"
+          [attr.aria-valuenow]="round(h.stamina.value)"
+          aria-valuemin="0"
+          [attr.aria-valuemax]="h.stamina.max"
+        >
+          <div
+            class="stamina-fill"
+            data-testid="stamina-fill"
+            [style.width.%]="staminaPercent()"
+          ></div>
+          <div class="stamina-cost" [style.left.%]="dashCostPercent()"></div>
+        </div>
+        <div
+          class="dash"
+          data-testid="dash-pip"
+          [class.tired]="h.stamina.value < h.stamina.dashCost"
+          [class.ready]="h.stamina.dashRemaining <= 0 && h.stamina.value >= h.stamina.dashCost"
+          title="Dash (E)"
+        >
+          <span class="dash-glyph" aria-hidden="true">»</span>
+          <div class="sweep" [style.--share]="dashSweep()"></div>
+          <span class="dash-key">E</span>
+        </div>
+      </div>
     </div>
 
     <div class="bottom">
@@ -192,6 +220,13 @@ const VESSEL_BOTTOM = 130;
               [attr.data-testid]="'hud-weapon-' + w.id"
             >
               <app-item-icon [sprite]="w.sprite" [size]="38" [label]="w.name" />
+              @if (w.cooldown) {
+                <div
+                  class="sweep"
+                  [attr.data-testid]="'weapon-sweep-' + w.id"
+                  [style.--share]="share(w.remaining ?? 0, w.cooldown)"
+                ></div>
+              }
               <span class="lvl">{{ w.level === w.maxLevel ? 'MAX' : w.level }}</span>
             </li>
           }
@@ -225,8 +260,9 @@ const VESSEL_BOTTOM = 130;
 
     <div class="ability" [class.ready]="h.ability.remaining <= 0" [title]="h.ability.name">
       <app-item-icon [sprite]="h.ability.sprite" [size]="52" />
+      <!-- Always present, so the sweep's transition can run it down smoothly (spec: hud / cooldowns and stamina). -->
+      <div class="sweep" data-testid="ability-sweep" [style.--share]="sweep()"></div>
       @if (h.ability.remaining > 0) {
-        <div class="sweep" data-testid="ability-sweep" [style.--share]="sweep()"></div>
         <span class="seconds" data-testid="ability-seconds">{{ ceil(h.ability.remaining) }}</span>
       }
       <span class="key">Space</span>
@@ -258,9 +294,27 @@ export class Hud {
   /** A dark sweep covering the remaining share of the cooldown (spec: hud / ability slot). */
   protected readonly sweep = computed(() => {
     const { cooldown, remaining } = this.hud().ability;
-    const share = cooldown > 0 ? Math.min(1, remaining / cooldown) : 0;
-    return `${(share * 100).toFixed(1)}%`;
+    return this.share(remaining, cooldown);
   });
+  protected readonly staminaPercent = computed(() => {
+    const { value, max } = this.hud().stamina;
+    return max > 0 ? Math.max(0, Math.min(100, (value / max) * 100)) : 0;
+  });
+  /** Where on the bar a dash becomes affordable. */
+  protected readonly dashCostPercent = computed(() => {
+    const { dashCost, max } = this.hud().stamina;
+    return max > 0 ? Math.min(100, (dashCost / max) * 100) : 0;
+  });
+  protected readonly dashSweep = computed(() => {
+    const { dashRemaining, dashCooldown } = this.hud().stamina;
+    return this.share(dashRemaining, dashCooldown);
+  });
+
+  /** The share of a cooldown still to run, as the sweep's CSS percentage. */
+  protected share(remaining: number, cooldown: number): string {
+    const share = cooldown > 0 ? Math.max(0, Math.min(1, remaining / cooldown)) : 0;
+    return `${(share * 100).toFixed(1)}%`;
+  }
 
   protected seatColor(m: HudPartyMember): string {
     return '#' + SEAT_COLORS[m.seat % SEAT_COLORS.length].toString(16).padStart(6, '0');

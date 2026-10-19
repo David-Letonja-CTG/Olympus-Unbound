@@ -50,6 +50,7 @@ const hud: HudSnapshot = {
   gold: 12,
   kills: 34,
   ability: { name: 'Wrath of Olympus', sprite: 'wrath_of_olympus', cooldown: 25, remaining: 3 },
+  stamina: { value: 100, max: 100, dashCost: 35, dashRemaining: 0, dashCooldown: 0.53 },
   weapons: [
     {
       id: 'thunder_spear',

@@ -61,6 +61,14 @@ export class ContentIndex {
   }
 }
 
+/** Every god finds at least this many weapons in a run (spec: run-progression / god arsenals). */
+const MIN_ARSENAL = 4;
+
+/** A weapon without `gods` is common to all (spec: run-progression / god arsenals). */
+export function wieldableBy(weapon: WeaponDefinition, godId: string): boolean {
+  return !weapon.gods || weapon.gods.includes(godId);
+}
+
 /**
  * Checks cross-references and invariants the type system cannot express. Returns every problem found
  * (empty when valid), so one test run lists all content mistakes at once.
@@ -92,11 +100,20 @@ export function validateContent(content: GameContent): string[] {
   }
 
   for (const god of content.gods) {
-    if (!index.weapons.has(god.startingWeapon)) {
+    const start = index.weapons.get(god.startingWeapon);
+    if (!start) {
       errors.push(`God "${god.id}" starts with unknown weapon "${god.startingWeapon}".`);
+    } else if (!wieldableBy(start, god.id)) {
+      errors.push(`God "${god.id}" starts with "${start.id}", which is not theirs.`);
     }
+    const arsenal = content.weapons.filter((w) => wieldableBy(w, god.id)).length;
+    if (arsenal < MIN_ARSENAL)
+      errors.push(`God "${god.id}" can find only ${arsenal} weapons; needs ${MIN_ARSENAL}.`);
   }
   for (const weapon of content.weapons) {
+    for (const godId of weapon.gods ?? [])
+      if (!index.gods.has(godId))
+        errors.push(`Weapon "${weapon.id}" belongs to unknown god "${godId}".`);
     if (weapon.base.cooldown <= 0) errors.push(`Weapon "${weapon.id}" needs a positive cooldown.`);
   }
   for (const armour of content.armour) {

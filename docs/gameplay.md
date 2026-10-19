@@ -29,11 +29,17 @@ The game as the player experiences it. Numbers live in `client/src/content/` and
 | Action | Keyboard | Gamepad |
 |---|---|---|
 | Move | WASD / arrow keys | left stick / d-pad |
-| Divine ability | Space or Shift | A (south) or right trigger |
+| Divine ability | Space | A (south) or right trigger |
+| Sprint (uses stamina) | hold Shift | hold left bumper or left trigger |
+| Dash (uses stamina, untouchable while dashing) | E | B (east) |
 | Pause / resume | Esc or P | Start |
 | Choose an upgrade | 1–3, or arrows/W/S + Enter/Space, or mouse | d-pad + A |
 
 The game pauses by itself when the window loses focus or the tab is hidden (not in a room's run).
+
+**Stamina** is the gold bar under the health amphora. Sprinting drains it while you run; a dash costs about a third of it and carries you some 150 units in the blink of an eye, through any attack. It refills once you stop spending it for a moment; running on with Shift held while spent keeps it empty, so let go to catch your breath. The small pip at its end shows when a dash is ready; the mark on the bar shows how much a dash costs.
+
+**Each god has an arsenal.** Some weapons belong to one god (Thunderbolt to Zeus, the Soul Scythe to Hades), some to a few (the Thunder Spear to Zeus, Poseidon and Athena), and the Divine Bow, War Hammer and Flaming Sword to all. You are only ever offered your own god's weapons.
 
 ## Co-op rooms
 

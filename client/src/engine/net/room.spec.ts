@@ -81,6 +81,30 @@ describe('rooms (spec: rooms)', () => {
     expect(Math.abs(r.guest.focus().x - hostSide.x)).toBeLessThan(1);
   });
 
+  it('dashes and sprints the guest’s god on the host and on every screen (spec: player-control / dash in a room)', () => {
+    const r = room();
+    r.host.markLoaded();
+    r.guest.markLoaded();
+    r.play(80); // past the start's invulnerability
+    const hostSide = r.sim.state.players[1];
+    const startX = hostSide.x;
+    const guestStart = r.guest.focus().x;
+    r.play(1, NO_INPUT, { ...RIGHT, dash: true });
+    r.play(30);
+    expect(hostSide.x - startX).toBeGreaterThan(140);
+    expect(hostSide.stamina).toBeLessThan(r.sim.state.balance.stamina.max);
+    expect(r.hostEvents.some((e) => e.type === 'dash' && e.playerId === hostSide.id)).toBe(true);
+    expect(r.guestEvents.some((e) => e.type === 'dash')).toBe(true);
+    expect(Math.abs(r.guest.focus().x - hostSide.x)).toBeLessThan(2);
+    expect(r.guest.focus().x - guestStart).toBeGreaterThan(140);
+
+    const sprintStart = hostSide.x;
+    r.play(60, NO_INPUT, { ...RIGHT, sprint: true });
+    r.play(30);
+    expect(hostSide.x - sprintStart).toBeGreaterThan(hostSide.stats.moveSpeed * 1.3);
+    expect(Math.abs(r.guest.focus().x - hostSide.x)).toBeLessThan(2);
+  });
+
   it('gives each player their own choice and tells who the run waits for', () => {
     const r = room();
     r.host.markLoaded();

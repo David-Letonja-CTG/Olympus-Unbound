@@ -226,6 +226,9 @@ export class ArenaScene extends Phaser.Scene {
       case 'playerRevived':
         sound.play('revive', event);
         return;
+      case 'dash':
+        sound.play('whoosh', event);
+        return;
       case 'pickup':
         sound.play(event.kind === 'xp' ? 'xp' : event.kind, event);
         return;

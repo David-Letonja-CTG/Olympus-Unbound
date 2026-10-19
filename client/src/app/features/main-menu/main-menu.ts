@@ -26,7 +26,8 @@ import { ItemIcon } from '../../shared/item-icon';
         <span class="gold-amount" data-testid="menu-gold">{{ progression.gold() }}</span> gold
       </p>
       <p class="hint">
-        WASD / arrows or gamepad to move · Space to unleash your ability · Esc to pause
+        WASD / arrows or gamepad to move · Shift to sprint · E to dash · Space to unleash your
+        ability · Esc to pause
       </p>
     </main>
   `,

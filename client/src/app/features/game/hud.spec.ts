@@ -14,6 +14,7 @@ const base: HudSnapshot = {
   gold: 5,
   kills: 9,
   ability: { name: 'Wrath of Olympus', sprite: 'wrath_of_olympus', cooldown: 25, remaining: 10 },
+  stamina: { value: 40, max: 100, dashCost: 35, dashRemaining: 0, dashCooldown: 0.53 },
   weapons: [],
   relics: [],
   synergies: [],
@@ -85,7 +86,51 @@ describe('Hud', () => {
     expect(sweep?.style.getPropertyValue('--share')).toBe('40.0%');
     expect(el.querySelector('[data-testid=ability-seconds]')?.textContent).toBe('10');
     const ready = render({ ...base, ability: { ...base.ability, remaining: 0 } });
-    expect(ready.querySelector('[data-testid=ability-sweep]')).toBeNull();
+    expect(
+      ready
+        .querySelector<HTMLElement>('[data-testid=ability-sweep]')
+        ?.style.getPropertyValue('--share'),
+    ).toBe('0.0%');
+    expect(ready.querySelector('[data-testid=ability-seconds]')).toBeNull();
+    expect(ready.querySelector('.ability')?.classList).toContain('ready');
+  });
+
+  it('fills the stamina bar to the stamina share (spec: hud / cooldowns and stamina)', () => {
+    const el = render(base);
+    expect(el.querySelector<HTMLElement>('[data-testid=stamina-fill]')?.style.width).toBe('40%');
+    expect(el.querySelector('[data-testid=dash-pip]')?.classList).toContain('ready');
+    const tired = render({ ...base, stamina: { ...base.stamina, value: 20 } });
+    expect(tired.querySelector('[data-testid=dash-pip]')?.classList).toContain('tired');
+  });
+
+  it('sweeps a weapon slot by the share of its cooldown still to run', () => {
+    const el = render({
+      ...base,
+      weapons: [
+        {
+          id: 'thunder_spear',
+          name: 'Thunder Spear',
+          level: 1,
+          maxLevel: 8,
+          sprite: 'thunder_spear',
+          color: 0,
+          cooldown: 2,
+          remaining: 1.5,
+        },
+        {
+          id: 'lightning_orb',
+          name: 'Lightning Orbs',
+          level: 1,
+          maxLevel: 8,
+          sprite: 'lightning_orb',
+          color: 0,
+        },
+      ],
+    });
+    const sweep = el.querySelector<HTMLElement>('[data-testid=weapon-sweep-thunder_spear]');
+    expect(sweep?.style.getPropertyValue('--share')).toBe('75.0%');
+    // Orbs are always at work: no sweep.
+    expect(el.querySelector('[data-testid=weapon-sweep-lightning_orb]')).toBeNull();
   });
 
   it('shows the boss banner with a full bar on arrival', () => {

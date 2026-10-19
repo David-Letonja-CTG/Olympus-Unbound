@@ -30,6 +30,16 @@ test('the vertical slice: menu → Zeus → Olympus → level-up → elite → b
   expect(speed).toBeGreaterThan(190);
   expect(speed).toBeLessThan(215);
 
+  // Dash: E carries Zeus well beyond a step the way he faces (spec: player-control / stamina, sprint and dash).
+  const beforeDash = await inspect(page);
+  await page.keyboard.press('e');
+  await expect
+    .poll(async () => ((await inspect(page))?.player.x ?? 0) - (beforeDash?.player.x ?? 0), {
+      timeout: 20_000,
+    })
+    .toBeGreaterThan(100);
+  await expect(page.getByTestId('dash-pip')).toBeVisible();
+
   // Enemies spawn and are fought.
   await expect.poll(async () => (await inspect(page))?.enemies ?? 0).toBeGreaterThan(0);
   await expect

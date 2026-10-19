@@ -109,7 +109,16 @@ export class RoomHost {
             seat.loadedDepth = Math.max(seat.loadedDepth, m.depth);
             break;
           case 'input':
-            seat.queue.push({ seq: m.seq, input: { moveX: m.x, moveY: m.y, ability: m.ability } });
+            seat.queue.push({
+              seq: m.seq,
+              input: {
+                moveX: m.x,
+                moveY: m.y,
+                ability: m.ability,
+                sprint: m.sprint,
+                dash: m.dash,
+              },
+            });
             if (seat.queue.length > MAX_QUEUED_INPUTS)
               seat.queue.splice(0, seat.queue.length - KEEP_QUEUED_INPUTS);
             break;

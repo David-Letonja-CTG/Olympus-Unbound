@@ -22,7 +22,15 @@ import { SettingsControls } from '../../shared/settings-controls';
           </div>
           <div>
             <dt>Divine ability</dt>
-            <dd>Space or Shift · A / Cross</dd>
+            <dd>Space · A / Cross or right trigger</dd>
+          </div>
+          <div>
+            <dt>Sprint</dt>
+            <dd>hold Shift · hold left bumper / trigger</dd>
+          </div>
+          <div>
+            <dt>Dash</dt>
+            <dd>E · B / Circle</dd>
           </div>
           <div>
             <dt>Pause</dt>

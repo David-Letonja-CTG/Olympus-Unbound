@@ -1,5 +1,5 @@
 import { CONTENT } from '../testing/content';
-import { playRun } from '../testing/autopilot';
+import { armsFirst, playRun } from '../testing/autopilot';
 import { disarm, quietSim } from '../testing/fixtures';
 import { validateContent } from '../data/content-index';
 import { normaliseMove } from './players';
@@ -193,7 +193,8 @@ describe('full runs (autopilot)', () => {
       { stat: 'armor', flat: 8 },
       { stat: 'regen', flat: 20 },
     ]);
-    playRun(sim, 9 * 60);
+    // Picks like a player building an arsenal; the first offer alone may leave weapon slots empty.
+    playRun(sim, 9 * 60, armsFirst);
     expect(sim.state.depth).toBeGreaterThanOrEqual(1);
     expect(sim.state.time).toBeGreaterThan(420);
     expect(sim.state.level).toBeGreaterThan(10);

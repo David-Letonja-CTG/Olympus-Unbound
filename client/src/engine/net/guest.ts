@@ -2,7 +2,7 @@ import { WorldCollision } from '../core/collision';
 import { ContentIndex } from '../data/content-index';
 import { RealmDefinition } from '../data/types';
 import { ArenaData, generateArena } from '../maps/generate-arena';
-import { normaliseMove } from '../sim/players';
+import { Mover, stepMovement } from '../sim/movement';
 import { DebugAction } from '../sim/run-simulation';
 import { realmAt, realmSeed } from '../sim/realms';
 import { partyOf, RunConfig, STEP } from '../sim/run-state';
@@ -35,15 +35,10 @@ interface BufferedFrame {
   released: boolean;
 }
 
-interface Predicted {
+interface Predicted extends Mover {
   active: boolean;
-  x: number;
-  y: number;
   px: number;
   py: number;
-  radius: number;
-  moving: boolean;
-  facingX: number;
   /** Visual correction still being eased out. */
   ox: number;
   oy: number;
@@ -96,7 +91,7 @@ export class GuestDriver implements RunDriver {
   private interpolation = 1;
   private accumulator = 0;
   private seq = 0;
-  private history: { seq: number; x: number; y: number }[] = [];
+  private history: { seq: number; x: number; y: number; stamina: number }[] = [];
   private readonly me: Predicted = {
     active: false,
     x: 0,
@@ -106,6 +101,13 @@ export class GuestDriver implements RunDriver {
     radius: 0,
     moving: false,
     facingX: 1,
+    facingY: 0,
+    stamina: 0,
+    staminaRest: 0,
+    dashTime: 0,
+    dashCooldown: 0,
+    dashX: 1,
+    dashY: 0,
     ox: 0,
     oy: 0,
   };
@@ -358,21 +360,23 @@ export class GuestDriver implements RunDriver {
       x: input.moveX,
       y: input.moveY,
       ability: input.ability,
+      sprint: !!input.sprint,
+      dash: !!input.dash,
     });
     const me = this.me;
     if (!me.active) return;
-    // The same movement rule as the host's players (sim/players.ts), against the same obstacles.
-    const move = normaliseMove(input);
+    // The same movement rule as the host's players (sim/movement.ts), against the same obstacles.
     me.px = me.x;
     me.py = me.y;
-    me.moving = move.x !== 0 || move.y !== 0;
-    if (me.moving) {
-      me.facingX = move.x / Math.hypot(move.x, move.y);
-      me.x += move.x * this.moveSpeed * STEP;
-      me.y += move.y * this.moveSpeed * STEP;
-      this.collision.resolve(me);
-    }
-    this.history.push({ seq: this.seq, x: me.x, y: me.y });
+    stepMovement(
+      me,
+      input,
+      this.moveSpeed,
+      this.index.content.balance.stamina,
+      this.collision,
+      STEP,
+    );
+    this.history.push({ seq: this.seq, x: me.x, y: me.y, stamina: me.stamina });
     if (this.history.length > 120) this.history.shift();
   }
 
@@ -397,6 +401,8 @@ export class GuestDriver implements RunDriver {
         py: host.y,
         ox: 0,
         oy: 0,
+        stamina: host.stamina,
+        dashTime: 0,
       });
       me.facingX = host.facingX;
       this.history = [];
@@ -409,6 +415,13 @@ export class GuestDriver implements RunDriver {
     const ex = host.x - base.x;
     const ey = host.y - base.y;
     if (at >= 0) this.history.splice(0, at + 1);
+    // Stamina is corrected like position, by the host's error at the acknowledged input (finer than the snapshot's
+    // rounding is noise).
+    const es = host.stamina - base.stamina;
+    if (Math.abs(es) > 1) {
+      for (const h of this.history) h.stamina += es;
+      me.stamina = Math.max(0, me.stamina + es);
+    }
     if (ex === 0 && ey === 0) return;
     for (const h of this.history) {
       h.x += ex;
