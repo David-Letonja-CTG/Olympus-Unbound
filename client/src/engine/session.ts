@@ -92,6 +92,8 @@ export interface DebugSnapshot {
   readonly bossAlive: boolean;
   /** Where the living boss is (solo runs and a room's host), for scripts that wait for it to come into view. */
   readonly boss?: { readonly x: number; readonly y: number };
+  /** Where the merchant stands while it is in the realm (spec: merchant). */
+  readonly merchant?: { readonly x: number; readonly y: number };
   /** Players still in the run (not left). */
   readonly players: number;
   /** Every player's position, in seat order. */

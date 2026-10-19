@@ -1,7 +1,7 @@
 import { ContentIndex } from '../data/content-index';
 import { GameContent } from '../data/types';
 import { RunSimulation, STEP } from '../sim/run-simulation';
-import { armsFirst, autopilot } from './autopilot';
+import { answer, armsFirst, autopilot } from './autopilot';
 
 export interface BalanceOptions {
   readonly gods: readonly string[];
@@ -81,7 +81,7 @@ export class BalanceReport {
       if (!run) break;
       const sim = run.sim;
       while (budget > 0 && run.steps < this.stepsPerRun && sim.phase !== 'ended') {
-        while (sim.phase === 'choosing') sim.choose(armsFirst(sim));
+        while (sim.phase === 'choosing') sim.choose(answer(sim, armsFirst));
         sim.step(STEP, [autopilot(sim)]);
         run.steps++;
         this.stepsDone++;

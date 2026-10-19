@@ -3,6 +3,7 @@ import { RunSimulation, STEP } from '../sim/run-simulation';
 import { autopilot } from '../testing/autopilot';
 import { CONTENT } from '../testing/content';
 import { NO_INPUT } from '../sim/types';
+import { addCompanion } from '../sim/companions';
 import { decodeSnapshot, encodeSnapshot } from './snapshot';
 
 const index = new ContentIndex(CONTENT);
@@ -95,6 +96,21 @@ describe('snapshots (spec: rooms / one authoritative game)', () => {
       expect(1 - snap.hazards[0].timer / snap.hazards[0].warn).toBeCloseTo(progress, 1);
       expect(snap.hazards[0].radius).toBeCloseTo(h.radius, 3);
     }
+  });
+
+  it('carry the merchant and companions (spec: merchant)', () => {
+    const sim = busyRun(1);
+    const [host, guest] = sim.state.players;
+    addCompanion(sim.state, guest, sim.state.index.companions.get('temple_serpent'));
+    sim.state.merchant = { x: 1200.5, y: 900.25, radius: 60, leavesIn: 41.5, inside: new Set() };
+    void host;
+    const snap = decodeSnapshot(encodeSnapshot(sim.state, sim.phase), index);
+    expect(snap.merchant).toEqual({ x: 1200.5, y: 900.25, radius: 60, leavesIn: 41.5 });
+    const c = sim.state.companions[0];
+    expect(snap.companions).toHaveLength(1);
+    expect(snap.companions[0]).toMatchObject({ id: c.id, ownerId: guest.id });
+    expect(snap.companions[0].def.id).toBe('temple_serpent');
+    expect(snap.companions[0].x).toBeCloseTo(c.x, 0);
   });
 
   it('stay small: under 20 bytes per enemy (design: bandwidth)', () => {

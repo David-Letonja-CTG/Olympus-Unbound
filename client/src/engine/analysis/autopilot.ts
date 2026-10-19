@@ -67,9 +67,16 @@ export function playRun(
 ): void {
   const steps = Math.round(maxSeconds / STEP);
   for (let i = 0; i < steps && sim.phase !== 'ended'; i++) {
-    while (sim.phase === 'choosing') sim.choose(choose(sim));
+    while (sim.phase === 'choosing') sim.choose(answer(sim, choose));
     sim.step(STEP, [autopilot(sim)]);
   }
+}
+
+/** The bot's answer to an open choice: it walks out of the merchant's shop without buying (spec: merchant). */
+export function answer(sim: RunSimulation, choose: (sim: RunSimulation) => number): number {
+  const choice = sim.currentChoice;
+  if (choice?.source === 'shop') return choice.offers.findIndex((o) => o.kind === 'leave');
+  return choose(sim);
 }
 
 /** Picks like a player building an arsenal: a new weapon first, then a weapon level, else the first offer. */

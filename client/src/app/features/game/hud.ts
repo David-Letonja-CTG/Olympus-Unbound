@@ -120,6 +120,15 @@ const VESSEL_BOTTOM = 130;
       </div>
     }
 
+    @if (h.merchant && !h.gate) {
+      <div class="gate merchant" data-testid="hud-merchant" role="status">
+        <span class="gate-title">The Wandering Merchant is near</span>
+        <span class="gate-time"
+          >Step into the golden ring to trade · leaves in {{ ceil(h.merchant.leavesIn) }} s</span
+        >
+      </div>
+    }
+
     <div class="announcements" aria-live="polite">
       @for (a of announcements(); track a.id) {
         <!-- Kinds are prefixed: a bare "boss" class would take the boss banner's styles. -->
@@ -241,6 +250,15 @@ const VESSEL_BOTTOM = 130;
           @for (r of h.relics; track r.id) {
             <li class="slot small" [title]="r.name">
               <app-item-icon [sprite]="r.sprite" [size]="30" [label]="r.name" />
+            </li>
+          }
+          @for (c of h.companions; track c.id) {
+            <li
+              class="slot small companion"
+              [title]="c.name"
+              [attr.data-testid]="'hud-companion-' + c.id"
+            >
+              <app-item-icon [sprite]="c.sprite" [size]="30" [label]="c.name" />
             </li>
           }
         </ul>

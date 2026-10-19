@@ -11,6 +11,12 @@ import { DETAIL_TEXTURE, SHADOW_TEXTURE, shade } from './textures';
  * Depth bands. The y-sorted world (obstacles, enemies) sits around 0–5000; fog and the light map cover it; the
  * readability layer above the darkness keeps threats and pickups clear (spec: visual-atmosphere / readability).
  */
+/** The merchant is the intro's smith, a friendly figure of the cast, a little warmed (D15). */
+const MERCHANT_SPRITE = 'ally_smith';
+const MERCHANT_TINT = 0xfff2dc;
+/** Pool key of the merchant: entity IDs start at 1. */
+const MERCHANT_ID = -1;
+
 export const DEPTH = {
   ground: -40000,
   decoration: -30000,
@@ -92,7 +98,9 @@ export class WorldView {
     | 'aura'
     | 'projectile'
     | 'hostile'
-    | 'pickup',
+    | 'pickup'
+    | 'companion'
+    | 'npc',
     SpritePool
   >;
   private readonly staticLights: StaticLight[] = [];
@@ -117,6 +125,8 @@ export class WorldView {
       projectile: pool(),
       hostile: pool(),
       pickup: pool(),
+      companion: pool(),
+      npc: pool(),
     };
   }
 
@@ -293,6 +303,49 @@ export class WorldView {
       applySprite(sprite, this.resolver.resolve(key), 1, false);
       sprite.setPosition(pk.x, pk.y + bob).setDepth(DEPTH.pickup);
       if (pk.kind === 'chest') lights.add(pk.x, pk.y, 120, 0xffd27a, 0.7, 3);
+    }
+
+    // Companions: an existing sheet in a warm tint, so they read as allies (spec: merchant / companions, D15).
+    for (const c of state.companions) {
+      const x = lerp(c.px, c.x, alpha);
+      const y = lerp(c.py, c.y, alpha);
+      const r = this.resolver.resolve(c.def.visual.sprite);
+      const sprite = p.companion.get(c.id);
+      const speed = Math.hypot(c.x - c.px, c.y - c.py) / state.span;
+      applySprite(sprite, r, c.def.visual.scale, c.facingX < 0, c.moving ? 'walk' : 'idle', speed);
+      sprite
+        .setPosition(x, y)
+        .setDepth(y)
+        .setRotation(0)
+        .setTint(c.def.visual.tint)
+        .setTintMode(multiply);
+      p.shadow
+        .get(c.id)
+        .setPosition(x, y + c.def.radius * 0.7)
+        .setDepth(DEPTH.shadow)
+        .setScale((c.def.radius * 2.6) / 64);
+      lights.add(x, y, 90, c.def.visual.color, 0.45, 2);
+    }
+
+    // The Wandering Merchant: lit by its own lantern so it stays readable at night (D13).
+    const m = state.merchant;
+    if (m) {
+      const r = this.resolver.resolve(MERCHANT_SPRITE);
+      const sprite = p.npc.get(MERCHANT_ID);
+      applySprite(sprite, r, 1.1, true, 'idle', 0);
+      sprite
+        .setPosition(m.x, m.y - 4)
+        .setDepth(m.y)
+        .setRotation(0)
+        .setTint(MERCHANT_TINT)
+        .setTintMode(multiply);
+      p.shadow
+        .get(MERCHANT_ID)
+        .setPosition(m.x, m.y + 18)
+        .setDepth(DEPTH.shadow)
+        .setScale(1);
+      const flicker = 0.9 + Math.sin(time / 130) * 0.06 + Math.sin(time / 47) * 0.04;
+      lights.add(m.x, m.y, 240 * flicker, 0xffc870, 0.95, 8);
     }
 
     for (const pool of Object.values(p)) pool.end();

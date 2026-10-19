@@ -13,6 +13,8 @@ import {
   updateProjectiles,
   updateWeapons,
 } from '../weapons/weapon-system';
+import { placeCompanions, updateCompanions } from './companions';
+import { arriveMerchant, buyWare, shopOffers, updateMerchant } from './merchant';
 import { collect, updatePickups } from './pickups';
 import { createPlayer, updatePlayers } from './players';
 import { GATE_OPEN_SECONDS, GATE_RADIUS, GATE_STAND_SECONDS, realmAt, realmSeed } from './realms';
@@ -21,12 +23,14 @@ import { RunConfig, RunState } from './run-state';
 import {
   HudSnapshot,
   HudItem,
+  Player,
   PlayerInput,
   RunOutcome,
   RunPhase,
   RunResult,
   SimEvent,
   UpgradeChoice,
+  UpgradeOffer,
 } from './types';
 
 export { STEP } from './run-state';
@@ -40,6 +44,9 @@ export type DebugAction =
   | { type: 'killPlayer'; slot?: number }
   | { type: 'godMode'; enabled: boolean }
   | { type: 'spawnStress'; count: number }
+  /** The merchant arrives now (spec: merchant). */
+  | { type: 'summonMerchant' }
+  | { type: 'grantGold'; amount: number }
   | { type: 'travel' };
 
 /**
@@ -123,10 +130,12 @@ export class RunSimulation {
     this.director.update(dt);
     updateEnemies(state, dt);
     updateWeapons(state, dt);
+    updateCompanions(state, dt);
     updateProjectiles(state, dt);
     updateHostileProjectiles(state, dt);
     updateHazards(state, dt);
     updatePickups(state, dt);
+    updateMerchant(state, dt);
     this.removeDead();
 
     // The boss's gold counts even if the party falls in the same step (spec: run-outcome / run endings).
@@ -198,6 +207,7 @@ export class RunSimulation {
       p.invulnerable = Math.max(p.invulnerable, state.balance.revive.invulnerable);
     }
     this.placeParty();
+    placeCompanions(state);
     this.director = new SpawnDirector(state);
     state.emit({ type: 'realmEntered', realmId: realm.id, depth });
     state.emit({
@@ -231,11 +241,40 @@ export class RunSimulation {
     if (!choice || !offer) return false;
     const player = this.state.players.find((p) => p.id === choice.playerId);
     if (!player) return false;
+    if (choice.source === 'shop') return this.shop(choice, player, offer);
     applyOffer(this.state, player, offer);
     this.choices.delete(choice.playerId);
     this.state.emit({ type: 'choiceResolved', offer, playerId: choice.playerId });
     if (this.choices.size === 0) this.closeRound(choice.source);
     return true;
+  }
+
+  /**
+   * An answer in the shop (spec: merchant / the shop): Leave closes it; a ware is bought only if the party can
+   * afford it, and the shop is shown again.
+   */
+  private shop(choice: UpgradeChoice, player: Player, offer: UpgradeOffer): boolean {
+    if (offer.kind !== 'leave' && !buyWare(this.state, player, offer)) return false;
+    this.choices.delete(choice.playerId);
+    this.state.emit({ type: 'choiceResolved', offer, playerId: choice.playerId });
+    if (offer.kind === 'leave' || !this.state.merchant) this.closeRound('shop');
+    else this.openShop(player);
+    return true;
+  }
+
+  private openShop(player: Player): void {
+    const state = this.state;
+    const choice: UpgradeChoice = {
+      id: ++this.choiceCount,
+      playerId: player.id,
+      source: 'shop',
+      level: state.level,
+      offers: shopOffers(state, player),
+      gold: Math.floor(state.gold),
+    };
+    this.choices.set(player.id, choice);
+    state.emit({ type: 'choice', choice });
+    this.currentPhase = 'choosing';
   }
 
   /**
@@ -261,7 +300,7 @@ export class RunSimulation {
   /** Every player of a round has chosen (or left): the run continues, or the next round opens. */
   private closeRound(source: UpgradeChoice['source']): void {
     if (source === 'level') this.state.pendingLevels--;
-    else this.state.pendingChests--;
+    else if (source === 'chest') this.state.pendingChests--;
     this.currentPhase = 'playing';
     this.openChoiceIfPending();
   }
@@ -359,6 +398,12 @@ export class RunSimulation {
       case 'godMode':
         state.godMode = action.enabled;
         return;
+      case 'grantGold':
+        state.gold += action.amount;
+        return;
+      case 'summonMerchant':
+        if (!state.merchant) arriveMerchant(state);
+        return;
       case 'spawnStress':
         for (let i = 0; i < action.count; i++) {
           const pos = this.director.spawnPosition(14);
@@ -419,6 +464,17 @@ export class RunSimulation {
         dashCooldown: stamina.dashDuration + stamina.dashRecovery,
       },
       weapons,
+      companions: state.companions
+        .filter((c) => c.ownerId === player.id)
+        .map((c) => ({
+          id: c.def.id,
+          name: c.def.name,
+          level: 1,
+          maxLevel: 1,
+          sprite: c.def.icon,
+          color: c.def.visual.color,
+        })),
+      merchant: state.merchant ? { leavesIn: Math.max(0, state.merchant.leavesIn) } : undefined,
       armour: armour
         ? {
             id: armour.def.id,
@@ -476,7 +532,16 @@ export class RunSimulation {
   /** Opens a round of choices: one per living player, each with their own offers (spec: co-op). */
   private openChoiceIfPending(): void {
     const state = this.state;
-    if (this.choices.size > 0 || (state.pendingLevels <= 0 && state.pendingChests <= 0)) return;
+    if (this.choices.size > 0) return;
+    if (state.pendingLevels <= 0 && state.pendingChests <= 0) {
+      // Level-ups and treasure come first; then whoever stepped into the merchant's ring.
+      while (state.shopQueue.length > 0 && state.merchant) {
+        const shopper = state.players.find((p) => p.id === state.shopQueue[0] && p.alive);
+        state.shopQueue.shift();
+        if (shopper) return this.openShop(shopper);
+      }
+      return;
+    }
     const living = state.players.filter((p) => p.alive);
     if (living.length === 0) return;
     const source = state.pendingLevels > 0 ? 'level' : 'chest';

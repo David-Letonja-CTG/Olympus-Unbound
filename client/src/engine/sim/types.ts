@@ -1,5 +1,6 @@
 import { StatBlock } from '../core/stats';
 import {
+  CompanionDefinition,
   GodDefinition,
   ArmourDefinition,
   BossAttack,
@@ -93,6 +94,33 @@ export interface Player {
   dashCooldown: number;
   dashX: number;
   dashY: number;
+}
+
+/** An animal fighting beside its god (spec: merchant / companions). */
+export interface Companion {
+  readonly id: number;
+  readonly def: CompanionDefinition;
+  readonly ownerId: number;
+  x: number;
+  y: number;
+  px: number;
+  py: number;
+  radius: number;
+  facingX: number;
+  moving: boolean;
+  /** Its attack, resolved against its god's stats when it fires. */
+  weapon: WeaponInstance;
+}
+
+/** The Wandering Merchant while it is in the realm (spec: merchant / the merchant's visits). */
+export interface Merchant {
+  readonly x: number;
+  readonly y: number;
+  readonly radius: number;
+  /** Seconds until it leaves. */
+  leavesIn: number;
+  /** Players standing in its ring: the shop opens only on stepping in. */
+  readonly inside: Set<number>;
 }
 
 export interface StatusState {
@@ -236,7 +264,17 @@ export interface Pickup {
 // Upgrades
 
 export type UpgradeKind =
-  'newWeapon' | 'weaponLevel' | 'armour' | 'armourLevel' | 'relic' | 'skill' | 'heal' | 'gold';
+  | 'newWeapon'
+  | 'weaponLevel'
+  | 'armour'
+  | 'armourLevel'
+  | 'relic'
+  | 'skill'
+  | 'heal'
+  | 'gold'
+  /** A merchant's ware, and leaving the shop (spec: merchant / the shop). */
+  | 'ware'
+  | 'leave';
 
 export interface UpgradeOffer {
   readonly kind: UpgradeKind;
@@ -250,6 +288,10 @@ export interface UpgradeOffer {
   readonly element?: Element;
   readonly sprite: string;
   readonly color: number;
+  /** A ware's price in the run's gold. */
+  readonly price?: number;
+  /** What a ware applies to, e.g. the weapon a whetstone levels. */
+  readonly target?: string;
 }
 
 export interface UpgradeChoice {
@@ -257,7 +299,9 @@ export interface UpgradeChoice {
   readonly id: number;
   /** The player who chooses (each player picks their own upgrade, spec: co-op). */
   readonly playerId: number;
-  readonly source: 'level' | 'chest';
+  readonly source: 'level' | 'chest' | 'shop';
+  /** The party's gold when a shop opens. */
+  readonly gold?: number;
   readonly level: number;
   readonly offers: readonly UpgradeOffer[];
 }
@@ -326,6 +370,9 @@ export type SimEvent =
   | { type: 'playerHealed'; playerId: number; amount: number }
   | { type: 'playerRevived'; playerId: number; x: number; y: number }
   | { type: 'dash'; playerId: number; x: number; y: number; dx: number; dy: number }
+  | { type: 'merchantArrived'; x: number; y: number }
+  | { type: 'merchantLeft' }
+  | { type: 'purchase'; playerId: number; wareId: string; price: number }
   | { type: 'pickup'; kind: PickupKind; x: number; y: number; value: number }
   | {
       type: 'attack';
@@ -390,6 +437,10 @@ export interface HudSnapshot {
     readonly dashCooldown: number;
   };
   readonly weapons: readonly HudItem[];
+  /** This god's companions (spec: hud / the merchant on the hud). */
+  readonly companions: readonly HudItem[];
+  /** The merchant while it is in the realm. */
+  readonly merchant?: { readonly leavesIn: number };
   readonly armour?: HudItem;
   readonly relics: readonly HudItem[];
   readonly synergies: readonly {

@@ -630,6 +630,12 @@ const ICONS: Record<string, [string, 'square' | 'round' | 'diamond' | 'hex', num
   ach_scythe: ['scythe', 'hex', 0xe8c46a],
   ach_shield: ['shield', 'hex', 0xe8c46a],
   ach_owl: ['owl', 'hex', 0xe8c46a],
+  // The merchant's wares and companions (spec: merchant).
+  ware_eagle: ['wing', 'round', 0xffe066],
+  ware_hound: ['flame', 'round', 0xff8a3d],
+  ware_serpent: ['fork', 'round', 0x9be88a],
+  ware_whetstone: ['sword', 'round', 0xc9d4e0],
+  merchant: ['coin', 'hex', 0xffd27a],
 };
 
 /**

@@ -1,6 +1,7 @@
 import {
   ArmourDefinition,
   BossDefinition,
+  CompanionDefinition,
   EnemyDefinition,
   GameContent,
   GodDefinition,
@@ -8,6 +9,7 @@ import {
   RealmDefinition,
   RelicDefinition,
   SkillDefinition,
+  WareDefinition,
   WeaponDefinition,
 } from './types';
 import { ALLOWED_LICENCES, AssetManifest } from './assets';
@@ -33,6 +35,8 @@ export class ContentIndex {
   readonly enemies: ReadonlyMap<string, EnemyDefinition>;
   readonly bosses: ReadonlyMap<string, BossDefinition>;
   readonly realms: ReadonlyMap<string, RealmDefinition>;
+  readonly wares: ReadonlyMap<string, WareDefinition>;
+  readonly companions: ReadonlyMap<string, CompanionDefinition>;
 
   constructor(readonly content: GameContent) {
     this.gods = byId(content.gods);
@@ -43,6 +47,8 @@ export class ContentIndex {
     this.enemies = byId(content.enemies);
     this.bosses = byId(content.bosses);
     this.realms = byId(content.realms);
+    this.wares = byId(content.wares);
+    this.companions = byId(content.companions);
   }
 
   god(id: string): GodDefinition {
@@ -135,6 +141,19 @@ export function validateContent(content: GameContent): string[] {
     }
   }
   if (content.dailyQuests.length < 3) errors.push('Content needs at least three daily quests.');
+
+  // The merchant (spec: merchant).
+  const companionIds = new Set(content.companions.map((c) => c.id));
+  for (const ware of content.wares) {
+    if (!(ware.price > 0)) errors.push(`Ware "${ware.id}" needs a price.`);
+    if (ware.effect.type === 'companion' && !companionIds.has(ware.effect.companion))
+      errors.push(`Ware "${ware.id}" sells unknown companion "${ware.effect.companion}".`);
+  }
+  for (const c of content.companions) {
+    if (c.attack.behavior === 'orbit')
+      errors.push(`Companion "${c.id}" cannot attack with orbs (they circle the god).`);
+    if (!(c.attack.base.cooldown > 0)) errors.push(`Companion "${c.id}" needs a cooldown.`);
+  }
   for (const quest of content.dailyQuests)
     if (quest.goal.everyGod) errors.push(`Daily quest "${quest.id}" cannot ask for every god.`);
 

@@ -137,6 +137,19 @@ export class Effects {
         });
         this.burst(this.sparks, event.x, event.y, 40, 0xff8a3d);
         return;
+      case 'merchantArrived':
+        this.add({
+          kind: 'burst',
+          x: event.x,
+          y: event.y,
+          radius: 120,
+          angle: 0,
+          arc: 0,
+          color: 0xffc870,
+          ttl: 0.7,
+        });
+        this.burst(this.sparks, event.x, event.y, 30, 0xffc870);
+        return;
       case 'dash':
         // A pale streak along the dash and dust where it began (spec: player-control / stamina, sprint and dash).
         this.add({
@@ -197,6 +210,7 @@ export class Effects {
       const boss = state.boss;
       if (boss && !boss.dead) this.drawPointer(boss, 0xff3a1a, camera);
       if (state.gate) this.drawPointer(state.gate, 0xffd27a, camera);
+      if (state.merchant) this.drawPointer(state.merchant, 0xffb347, camera);
     }
     for (let i = this.numbers.length - 1; i >= 0; i--) {
       const n = this.numbers[i];
@@ -529,6 +543,17 @@ export class Effects {
         g.strokePath();
       }
       lights.add(gate.x, gate.y, 320 + Math.sin(t * 3) * 20, 0xffe0a0, 1, 9);
+    }
+    // The merchant's ring, above the darkness (spec: merchant / the shop, D13): a slow golden pulse.
+    const m = state.merchant;
+    if (m) {
+      const pulse = 0.55 + Math.sin(this.clock * 2.4) * 0.2;
+      g.fillStyle(0xffc870, 0.08);
+      g.fillCircle(m.x, m.y, m.radius);
+      g.lineStyle(3, 0xffc870, pulse + 0.2);
+      g.strokeCircle(m.x, m.y, m.radius);
+      g.lineStyle(1.5, 0xfff0c8, pulse);
+      g.strokeCircle(m.x, m.y, m.radius - 7);
     }
     if (state.players.length < 2) return;
     for (const p of state.players) {

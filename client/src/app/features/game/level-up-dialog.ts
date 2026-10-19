@@ -21,6 +21,8 @@ const KIND_LABEL: Record<UpgradeOffer['kind'], string> = {
   skill: 'Skill',
   heal: 'Blessing',
   gold: 'Blessing',
+  ware: 'For sale',
+  leave: 'Leave',
 };
 
 /**
@@ -36,15 +38,23 @@ const KIND_LABEL: Record<UpgradeOffer['kind'], string> = {
     <div class="backdrop">
       <section class="dialog" role="dialog" aria-modal="true" aria-labelledby="levelup-title">
         <h2 id="levelup-title">
-          {{ choice().source === 'chest' ? 'Divine treasure' : 'Level ' + choice().level + '!' }}
+          {{ title() }}
         </h2>
-        <p class="subtitle">Choose a blessing</p>
-        <div class="offers">
+        @if (shop()) {
+          <p class="subtitle" data-testid="shop-gold">
+            The party's gold: <span class="gold-amount">{{ choice().gold ?? 0 }}</span>
+          </p>
+        } @else {
+          <p class="subtitle">Choose a blessing</p>
+        }
+        <div class="offers" [class.shop]="shop()">
           @for (offer of choice().offers; track $index) {
             <button
               #option
               class="offer"
               [class.active]="$index === selected()"
+              [class.leave]="offer.kind === 'leave'"
+              [disabled]="!affordable(offer)"
               [attr.data-testid]="'offer-' + $index"
               (click)="pick($index)"
               (focus)="selected.set($index)"
@@ -65,6 +75,13 @@ const KIND_LABEL: Record<UpgradeOffer['kind'], string> = {
                 </span>
                 <span class="description">{{ offer.description }}</span>
               </span>
+              @if (offer.price !== undefined) {
+                <span class="price"
+                  ><app-item-icon sprite="icon_gold" [size]="18" /><span class="gold-amount">{{
+                    offer.price
+                  }}</span></span
+                >
+              }
             </button>
           }
         </div>
@@ -184,6 +201,31 @@ const KIND_LABEL: Record<UpgradeOffer['kind'], string> = {
       color: #d6ccb8;
       font-size: 0.92rem;
     }
+    /* The merchant's shop (spec: merchant / the shop): more offers, so smaller, and scrolling if need be. */
+    .offers.shop {
+      max-height: min(66vh, 620px);
+      overflow: auto;
+      gap: 6px;
+      padding: 2px 6px 2px 2px;
+    }
+    .offers.shop .offer {
+      padding: 8px 14px;
+    }
+    .offer:disabled {
+      opacity: 0.45;
+      cursor: not-allowed;
+      transform: none;
+    }
+    .offer.leave .name {
+      color: var(--text);
+    }
+    .price {
+      margin-left: auto;
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      font-weight: 700;
+    }
     @keyframes rise {
       from {
         opacity: 0;
@@ -214,6 +256,21 @@ export class LevelUpDialog {
         void choice;
       });
     });
+  }
+
+  protected shop(): boolean {
+    return this.choice().source === 'shop';
+  }
+
+  protected title(): string {
+    const choice = this.choice();
+    if (choice.source === 'shop') return 'The Wandering Merchant';
+    return choice.source === 'chest' ? 'Divine treasure' : `Level ${choice.level}!`;
+  }
+
+  /** A ware the party cannot pay for is shown but cannot be picked. */
+  protected affordable(offer: UpgradeOffer): boolean {
+    return offer.price === undefined || offer.price <= (this.choice().gold ?? 0);
   }
 
   protected kindLabel(offer: UpgradeOffer): string {
@@ -260,6 +317,8 @@ export class LevelUpDialog {
   protected pick(index: number): void {
     // One answer per choice, even if a click and a key arrive together.
     if (this.answered === this.choice().id) return;
+    const offer = this.choice().offers[index];
+    if (!offer || !this.affordable(offer)) return;
     this.answered = this.choice().id;
     this.chosen.emit(index);
   }
@@ -272,6 +331,7 @@ export class LevelUpDialog {
     const count = this.choice().offers.length;
     const next = (this.selected() + delta + count) % count;
     this.selected.set(next);
-    this.options()[next]?.nativeElement.focus({ preventScroll: true });
+    // The shop's list may scroll: keep the selected ware in view.
+    this.options()[next]?.nativeElement.focus({ preventScroll: !this.shop() });
   }
 }

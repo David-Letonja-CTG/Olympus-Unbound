@@ -210,6 +210,20 @@ The Minotaur, king of the Labyrinth, with a bronze labrys (18,000 health, 380 go
 - **Synergies** activate automatically and are announced: **Storm**, **Tempest**, **Inferno**, **Soul Reaper**, **Divine Bulwark**, **Wrath of the Sky**, **Earthshaker** (requirements in [content.md](content.md)).
 - When nothing is left to offer: **Ambrosia** (heal 30%) or **Tribute** (25 gold).
 
+## The Wandering Merchant
+
+Twice in every realm (at 2:30 and 5:30) a merchant arrives a short walk from the party, announced, marked on the minimap and by a gold arrow at the screen's edge, lit by a lantern and standing in a golden ring. A banner counts down the 75 seconds until it leaves. Step into the ring to trade (the run pauses; in a room the others wait). Prices are in the run's gold (in a room, the party's shared purse) and grow by half for every realm cleared; what you spend no longer counts toward the gold you keep. Leave the shop and it opens again only when you step out and back in.
+
+| Ware | Price | What it does |
+|---|---|---|
+| Eagle of Zeus | 150 | a companion that dives onto foes in a lightning blast (shock) |
+| Hound of the Underworld | 170 | a companion that runs foes down and bites in a burning arc |
+| Temple Serpent | 190 | a companion that spits slowing venom from afar and heals you 1.5 per second |
+| Whetstone | 120 | one more level for a weapon you choose (one offer per weapon below its maximum) |
+| Ambrosia | 60 | heals 40% of your health (only offered when hurt) |
+
+**Companions** hunt foes near their god, cannot be hurt, follow you through gates and wait where you fall. Their hits count as yours (your might, critical chance and element bonuses apply). Up to three, one of each.
+
 ## Rewards and progression
 
 - Gold collected in the run is kept when you fall, including each boss's gold (**+250** for the Cyclops); **half** (rounded down) when abandoned.

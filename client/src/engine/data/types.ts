@@ -545,6 +545,8 @@ export interface BalanceConfig {
   };
   /** Sprinting and dashing (spec: player-control / stamina, sprint and dash). */
   readonly stamina: StaminaBalance;
+  /** The Wandering Merchant (spec: merchant). */
+  readonly merchant: MerchantBalance;
   /** Reviving a fallen ally (spec: co-op / reviving allies). */
   readonly revive: {
     /** How close a living ally must stand to the spirit. */
@@ -576,6 +578,64 @@ export interface GameContent {
   readonly achievements: readonly AchievementDefinition[];
   /** The pool today's three quests are chosen from (spec: glory / daily quests). */
   readonly dailyQuests: readonly QuestDefinition[];
+  /** What the Wandering Merchant sells (spec: merchant / wares). */
+  readonly wares: readonly WareDefinition[];
+  readonly companions: readonly CompanionDefinition[];
+}
+
+// ---------------------------------------------------------------------------------------------------------------
+// The merchant (spec: merchant)
+
+/** What buying a ware does; each type is one reusable rule in `sim/merchant.ts` (`WARE_EFFECTS`). */
+export type WareEffect =
+  | { readonly type: 'companion'; readonly companion: string }
+  /** One more level for a weapon; offered once per held weapon below its maximum. */
+  | { readonly type: 'weaponLevel' }
+  /** Heals this fraction of maximum health; offered while hurt. */
+  | { readonly type: 'heal'; readonly fraction: number };
+
+export interface WareDefinition {
+  readonly id: string;
+  readonly name: string;
+  readonly description: string;
+  /** In the run's gold, before growth per realm cleared. */
+  readonly price: number;
+  readonly effect: WareEffect;
+  readonly visual: Visual;
+}
+
+export interface CompanionDefinition {
+  readonly id: string;
+  readonly name: string;
+  readonly description: string;
+  /** An existing rendered sheet (D15), tinted and scaled to read as an ally. */
+  readonly visual: Visual & { readonly tint: number; readonly scale: number };
+  /** Its code-drawn icon for the HUD and the shop. */
+  readonly icon: string;
+  readonly radius: number;
+  readonly speed: number;
+  /** Hunts enemies within this distance of its god. */
+  readonly hunt: number;
+  /** Stops this far from its target to attack: small for biters, large for shooters. */
+  readonly reach: number;
+  /** Fired through the weapon behaviors (not `orbit`); `base.cooldown` is its attack interval. */
+  readonly attack: AbilityDefinition;
+  /** Health per second it gives its god. */
+  readonly heal?: number;
+}
+
+export interface MerchantBalance {
+  /** Realm times (seconds) the merchant arrives at. */
+  readonly arrivals: readonly number[];
+  /** Seconds it stays. */
+  readonly stays: number;
+  /** Radius of its ring; stepping in opens the shop. */
+  readonly radius: number;
+  /** How far from a god it appears. */
+  readonly distance: number;
+  /** Prices × (1 + priceGrowth × realms cleared). */
+  readonly priceGrowth: number;
+  readonly maxCompanions: number;
 }
 
 // ---------------------------------------------------------------------------------------------------------------
