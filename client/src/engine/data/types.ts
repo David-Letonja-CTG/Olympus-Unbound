@@ -582,13 +582,7 @@ export interface GameContent {
 // Glory (spec: glory). Measured on finished runs by the application; the simulation never reads these.
 
 export type GoalMeasure =
-  | 'kills'
-  | 'timeSeconds'
-  | 'level'
-  | 'realmsCleared'
-  | 'gold'
-  | 'synergies'
-  | 'runs';
+  'kills' | 'timeSeconds' | 'level' | 'realmsCleared' | 'gold' | 'synergies' | 'runs';
 
 export interface Goal {
   readonly measure: GoalMeasure;

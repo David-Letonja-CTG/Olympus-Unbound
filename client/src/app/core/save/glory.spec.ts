@@ -35,7 +35,8 @@ const only = (changes: Partial<GameContent>): GameContent => ({
 });
 const achievement = (id: string) => CONTENT.achievements.find((a) => a.id === id)!;
 const quest = (id: string) => CONTENT.dailyQuests.find((q) => q.id === id)!;
-const QUESTS = () => only({ dailyQuests: [quest('slay_600'), quest('three_runs'), quest('level_20')] });
+const QUESTS = () =>
+  only({ dailyQuests: [quest('slay_600'), quest('three_runs'), quest('level_20')] });
 
 let counter = 0;
 function play(save: SaveData, content: GameContent, r: Partial<RunResult>, now = NOW) {
@@ -111,9 +112,7 @@ describe('achievements (spec: glory / achievements)', () => {
 
   it('only counts co-op runs for a co-op goal', () => {
     const content = only({ achievements: [achievement('brothers_in_arms')] });
-    expect(play(freshSave(), content, { realmsCleared: 1 }).rewards.glory.achievements).toEqual(
-      [],
-    );
+    expect(play(freshSave(), content, { realmsCleared: 1 }).rewards.glory.achievements).toEqual([]);
     expect(
       play(freshSave(), content, { realmsCleared: 1, players: 3 }).rewards.glory.achievements,
     ).toHaveLength(1);

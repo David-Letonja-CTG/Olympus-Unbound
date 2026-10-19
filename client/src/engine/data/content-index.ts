@@ -113,7 +113,8 @@ export function validateContent(content: GameContent): string[] {
   }
   const goalProblems = (where: string, goal: Goal) => {
     if (!(goal.target > 0)) errors.push(`${where} needs a positive target.`);
-    if (goal.god && !index.gods.has(goal.god)) errors.push(`${where} names unknown god "${goal.god}".`);
+    if (goal.god && !index.gods.has(goal.god))
+      errors.push(`${where} names unknown god "${goal.god}".`);
     if (goal.everyGod && goal.god) errors.push(`${where} cannot ask for one god and every god.`);
     if (goal.measure === 'runs' && goal.over === 'run')
       errors.push(`${where} counts runs within one run.`);
@@ -125,7 +126,8 @@ export function validateContent(content: GameContent): string[] {
   for (const [kind, items] of glory) {
     const seen = new Set<string>();
     for (const item of items) {
-      if (!/^[a-z][a-z0-9_]*$/.test(item.id)) errors.push(`${kind} id "${item.id}" is not snake_case.`);
+      if (!/^[a-z][a-z0-9_]*$/.test(item.id))
+        errors.push(`${kind} id "${item.id}" is not snake_case.`);
       if (seen.has(item.id)) errors.push(`Duplicate ${kind} id "${item.id}".`);
       seen.add(item.id);
       goalProblems(`${kind} "${item.id}"`, item.goal);

@@ -312,20 +312,6 @@ interface CodexGroup {
       display: flex;
       gap: 4px;
     }
-    .tab {
-      font: inherit;
-      font-size: 0.85rem;
-      padding: 5px 12px;
-      color: var(--muted);
-      background: rgba(0, 0, 0, 0.35);
-      border: 1px solid var(--line);
-      cursor: pointer;
-    }
-    .tab[aria-selected='true'] {
-      color: var(--gold-2);
-      border-color: var(--gold);
-      box-shadow: inset 0 -2px 0 var(--gold);
-    }
     .codex {
       list-style: none;
       padding: 0;

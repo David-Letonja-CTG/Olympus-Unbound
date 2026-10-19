@@ -3,7 +3,9 @@ import { CanActivateFn, Router, Routes } from '@angular/router';
 import { Progression } from './core/progression';
 import { RoomService } from './core/rooms/room-service';
 import { RunSetup } from './core/run-setup';
+import { adminEnabled } from './core/admin-mode';
 import { CoopScreen } from './features/coop/coop-screen';
+import { GloryScreen } from './features/glory/glory-screen';
 import { GodSelection } from './features/god-selection/god-selection';
 import { MainMenu } from './features/main-menu/main-menu';
 import { ProgressionScreen } from './features/progression/progression-screen';
@@ -58,6 +60,14 @@ export const routes: Routes = [
     title: 'Run summary · Olympus Unbound',
   },
   { path: 'progression', component: ProgressionScreen, title: 'Progression · Olympus Unbound' },
+  { path: 'glory', component: GloryScreen, title: 'Hall of Glory · Olympus Unbound' },
+  {
+    // Admin mode only (spec: run-statistics / admin mode); lazy, it is for the owner rather than players.
+    path: 'admin',
+    canActivate: [() => adminEnabled() || inject(Router).createUrlTree(['/'])],
+    loadComponent: () => import('./features/admin/admin-screen').then((m) => m.AdminScreen),
+    title: 'Statistics · Olympus Unbound',
+  },
   { path: 'settings', component: SettingsScreen, title: 'Settings · Olympus Unbound' },
   {
     // Development builds only: review the code-drawn art.

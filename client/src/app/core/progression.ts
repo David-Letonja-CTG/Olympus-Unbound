@@ -4,12 +4,20 @@ import {
   GameSettings,
   Modifier,
   PermanentUpgradeDefinition,
+  QuestDefinition,
   RunResult,
 } from '../../engine';
 import { GAME_CONTENT } from './game-content';
+import { dailyOf, questsFor } from './save/glory';
 import { applyRunResult, RunRewards } from './save/rewards';
 import { permanentModifiers, SaveData } from './save/save-data';
 import { SaveStore } from './save/save-store';
+
+export interface DailyQuestView {
+  readonly def: QuestDefinition;
+  readonly progress: number;
+  readonly done: boolean;
+}
 
 /** Persistent progression (gold, permanent upgrades, codex, statistics, settings) as signals over the save. */
 @Injectable({ providedIn: 'root' })
@@ -65,6 +73,16 @@ export class Progression {
   markIntroSeen(): void {
     const save = this.state();
     if (!save.introSeen) this.commit({ ...save, introSeen: true });
+  }
+
+  /** Today's three quests with their progress (spec: glory / daily quests). */
+  todayQuests(now = new Date()): DailyQuestView[] {
+    const day = dailyOf(this.state(), now);
+    return questsFor(day.date, this.content.dailyQuests).map((def) => ({
+      def,
+      progress: Math.min(def.goal.target, day.progress[def.id] ?? 0),
+      done: day.done.includes(def.id),
+    }));
   }
 
   /** Modifiers from permanent upgrades, for the next run. */

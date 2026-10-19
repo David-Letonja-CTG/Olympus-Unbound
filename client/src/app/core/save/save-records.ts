@@ -22,7 +22,11 @@ export interface RunRecord {
   readonly gold: number;
   readonly realmsCleared: number;
   readonly score: number;
-  readonly weapons: readonly { readonly id: string; readonly level: number; readonly damage: number }[];
+  readonly weapons: readonly {
+    readonly id: string;
+    readonly level: number;
+    readonly damage: number;
+  }[];
   readonly relics: readonly string[];
   readonly synergies: readonly string[];
 }
@@ -96,7 +100,8 @@ function parseEntry(raw: Raw, content: GameContent): ScoreEntry | undefined {
 
 function parseRecord(raw: Raw, content: GameContent): RunRecord | undefined {
   const entry = parseEntry(raw, content);
-  if (!entry || !str(raw['realmReached']) || !num(raw['seed']) || !num(raw['gold'])) return undefined;
+  if (!entry || !str(raw['realmReached']) || !num(raw['seed']) || !num(raw['gold']))
+    return undefined;
   if (!OUTCOMES.includes(raw['outcome'] as RunOutcome)) return undefined;
   const weapons = Array.isArray(raw['weapons'])
     ? raw['weapons'].filter(
