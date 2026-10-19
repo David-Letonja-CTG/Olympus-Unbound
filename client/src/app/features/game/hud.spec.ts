@@ -16,6 +16,7 @@ const base: HudSnapshot = {
   ability: { name: 'Wrath of Olympus', sprite: 'wrath_of_olympus', cooldown: 25, remaining: 10 },
   stamina: { value: 40, max: 100, dashCost: 35, dashRemaining: 0, dashCooldown: 0.53 },
   weapons: [],
+  companions: [],
   relics: [],
   synergies: [],
   boss: {

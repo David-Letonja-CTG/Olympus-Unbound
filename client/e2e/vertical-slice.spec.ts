@@ -169,3 +169,34 @@ test('permanent upgrades are bought with gold and kept', async ({ page }) => {
   await page.reload();
   await expect(page.getByTestId('progression-gold')).toHaveText('50');
 });
+
+test('the wandering merchant sells a companion (spec: merchant)', async ({ page }) => {
+  await startRun(page, '4242');
+  await debug(page, { type: 'godMode', enabled: true });
+  await debug(page, { type: 'grantGold', amount: 400 });
+  await debug(page, { type: 'summonMerchant' });
+  await expect(page.getByTestId('hud-merchant')).toBeVisible({ timeout: 10_000 });
+
+  // Walk into the merchant's ring.
+  const at = await inspect(page);
+  const merchant = at?.merchant;
+  expect(merchant).toBeDefined();
+  const dx = (merchant?.x ?? 0) - (at?.player.x ?? 0);
+  const dy = (merchant?.y ?? 0) - (at?.player.y ?? 0);
+  const keys = [
+    ...(Math.abs(dx) > 30 ? [dx > 0 ? 'd' : 'a'] : []),
+    ...(Math.abs(dy) > 30 ? [dy > 0 ? 's' : 'w'] : []),
+  ];
+  for (const k of keys) await page.keyboard.down(k);
+  await expect(page.getByRole('dialog', { name: 'The Wandering Merchant' })).toBeVisible({
+    timeout: 30_000,
+  });
+  for (const k of keys) await page.keyboard.up(k);
+
+  await page.waitForTimeout(350);
+  await page.getByRole('button', { name: /Eagle of Zeus/ }).click();
+  await expect(page.getByTestId('shop-gold')).toContainText('250');
+  await page.getByRole('button', { name: /Leave/ }).click();
+  await expect(page.getByRole('dialog', { name: 'The Wandering Merchant' })).toHaveCount(0);
+  await expect(page.getByTestId('hud-companion-eagle_of_zeus')).toBeVisible();
+});

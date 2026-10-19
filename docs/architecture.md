@@ -69,7 +69,8 @@ client/
     core/                  Rng, vectors, stats/modifiers, spatial hash, collision
     data/                  content schema (types, asset manifest, cutscenes) + ContentIndex + validateContent
     maps/                  value noise + generateArena
-    sim/                   RunSimulation, RunState, players, pickups, types/events, WorldFrame
+    sim/                   RunSimulation, RunState, players, movement, pickups, merchant (shop, wares), companions,
+                           types/events, WorldFrame
     net/                   rooms (D16): PeerLink, protocol, binary snapshots, RunDriver (LocalDriver, GuestDriver),
                            RoomHost
     combat/                damage pipeline, status effects

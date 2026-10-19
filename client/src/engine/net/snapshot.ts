@@ -7,6 +7,7 @@ import { PickupKind, RunPhase } from '../sim/types';
 import {
   FrameEnemy,
   FrameHazard,
+  FrameCompanion,
   FrameHostile,
   FramePickup,
   FramePlayer,
@@ -64,6 +65,13 @@ export interface Snapshot {
   /** The host is waiting for every member to load (the start, or a new realm). */
   readonly waiting: boolean;
   readonly gate: { x: number; y: number; radius: number; standing: number } | undefined;
+  readonly companions: SnapCompanion[];
+  readonly merchant: { x: number; y: number; radius: number; leavesIn: number } | undefined;
+}
+
+export interface SnapCompanion extends FrameCompanion {
+  px: number;
+  py: number;
 }
 
 const FLAG = {
@@ -84,7 +92,7 @@ const FLAG = {
   gone: 4,
 } as const;
 
-const HEADER = { waiting: 1, gate: 2 } as const;
+const HEADER = { waiting: 1, gate: 2, merchant: 4 } as const;
 
 /**
  * The host's world as guests see it (D16, design: Snapshot): a compact binary picture of everything the views draw,
@@ -103,6 +111,7 @@ export function encodeSnapshot(state: RunState, phase: RunPhase, waiting = false
   for (const e of state.enemies) name(e.def.id);
   for (const p of state.projectiles) name(p.sprite);
   for (const h of state.hostileProjectiles) name(h.sprite);
+  for (const c of state.companions) name(c.def.id);
 
   const w = new Writer();
   w.u8(SNAPSHOT_FORMAT);
@@ -111,12 +120,21 @@ export function encodeSnapshot(state: RunState, phase: RunPhase, waiting = false
   w.u32(state.boss && !state.boss.dead ? state.boss.id : 0);
   w.u16(state.depth);
   const gate = state.gate;
-  w.u8((waiting ? HEADER.waiting : 0) | (gate ? HEADER.gate : 0));
+  const merchant = state.merchant;
+  w.u8(
+    (waiting ? HEADER.waiting : 0) | (gate ? HEADER.gate : 0) | (merchant ? HEADER.merchant : 0),
+  );
   if (gate) {
     w.f32(gate.x);
     w.f32(gate.y);
     w.f32(gate.radius);
     w.f32(gate.standing);
+  }
+  if (merchant) {
+    w.f32(merchant.x);
+    w.f32(merchant.y);
+    w.f32(merchant.radius);
+    w.f32(merchant.leavesIn);
   }
   w.u8(names.size);
   for (const s of names.keys()) w.str(s);
@@ -203,6 +221,17 @@ export function encodeSnapshot(state: RunState, phase: RunPhase, waiting = false
     w.f32(h.width);
     w.u8(Math.round(Math.max(0, Math.min(1, 1 - Math.max(0, h.timer) / h.warn)) * 255));
   }
+
+  w.u16(state.companions.length);
+  for (const c of state.companions) {
+    w.u32(c.id);
+    w.u32(c.ownerId);
+    w.u8(name(c.def.id));
+    w.pos(c.x);
+    w.pos(c.y);
+    w.i8(Math.round(c.facingX * 127));
+    w.u8(c.moving ? FLAG.moving : 0);
+  }
   return w.finish();
 }
 
@@ -219,6 +248,10 @@ export function decodeSnapshot(buffer: ArrayBuffer, index: ContentIndex): Snapsh
   const gate =
     header & HEADER.gate
       ? { x: r.f32(), y: r.f32(), radius: r.f32(), standing: r.f32() }
+      : undefined;
+  const merchant =
+    header & HEADER.merchant
+      ? { x: r.f32(), y: r.f32(), radius: r.f32(), leavesIn: r.f32() }
       : undefined;
   const names: string[] = [];
   for (let n = r.u8(); n > 0; n--) names.push(r.str());
@@ -349,7 +382,21 @@ export function decodeSnapshot(buffer: ArrayBuffer, index: ContentIndex): Snapsh
     hazards.push({ shape, x, y, x2, y2, radius, width, warn: 1, timer: 1 - r.u8() / 255 });
   }
 
+  const companions: SnapCompanion[] = [];
+  for (let n = r.u16(); n > 0; n--) {
+    const id = r.u32();
+    const ownerId = r.u32();
+    const def = index.companions.get(names[r.u8()]);
+    const x = r.pos();
+    const y = r.pos();
+    const facingX = r.i8() / 127;
+    const moving = (r.u8() & FLAG.moving) !== 0;
+    if (def) companions.push({ id, ownerId, def, x, y, px: x, py: y, facingX, moving });
+  }
+
   return {
+    companions,
+    merchant,
     time,
     phase,
     players,

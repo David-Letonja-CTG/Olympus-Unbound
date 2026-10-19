@@ -8,10 +8,7 @@ import { CoopScreen } from './features/coop/coop-screen';
 
 import { GodSelection } from './features/god-selection/god-selection';
 import { MainMenu } from './features/main-menu/main-menu';
-import { ProgressionScreen } from './features/progression/progression-screen';
 import { RealmSelection } from './features/realm-selection/realm-selection';
-import { RunSummary } from './features/run-summary/run-summary';
-import { SettingsScreen } from './features/settings/settings-screen';
 
 /** A run needs a chosen god and realm, or a room's started run; otherwise start at god selection (spec: run-setup). */
 const runIsSetUp: CanActivateFn = () =>
@@ -55,11 +52,16 @@ export const routes: Routes = [
   },
   {
     path: 'summary',
-    component: RunSummary,
+    loadComponent: () => import('./features/run-summary/run-summary').then((m) => m.RunSummary),
     canActivate: [runHasEnded],
     title: 'Run summary · Olympus Unbound',
   },
-  { path: 'progression', component: ProgressionScreen, title: 'Progression · Olympus Unbound' },
+  {
+    path: 'progression',
+    loadComponent: () =>
+      import('./features/progression/progression-screen').then((m) => m.ProgressionScreen),
+    title: 'Progression · Olympus Unbound',
+  },
   {
     path: 'glory',
     loadComponent: () => import('./features/glory/glory-screen').then((m) => m.GloryScreen),
@@ -71,7 +73,12 @@ export const routes: Routes = [
     loadComponent: () => import('./features/admin/admin-screen').then((m) => m.AdminScreen),
     title: 'Statistics · Olympus Unbound',
   },
-  { path: 'settings', component: SettingsScreen, title: 'Settings · Olympus Unbound' },
+  {
+    path: 'settings',
+    loadComponent: () =>
+      import('./features/settings/settings-screen').then((m) => m.SettingsScreen),
+    title: 'Settings · Olympus Unbound',
+  },
   {
     // Development builds only: review the code-drawn art.
     path: 'dev/art',

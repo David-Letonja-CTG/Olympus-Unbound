@@ -87,6 +87,12 @@ Excess XP carries over; each threshold crossed queues one choice. Chests queue a
 
 Synergies are checked after every change; each activates once, is announced, and adds its modifiers.
 
+## Merchant and companions — `engine/sim/merchant.ts`, `companions.ts`
+
+`balance.merchant`: arrivals at realm time 150 s and 330 s, stays 75 s, ring radius 60, appears 340 from a random living god (the `merchant` RNG stream; clamped into bounds, pushed out of obstacles). A god entering the ring joins `shopQueue`; when no level-up or chest round is due, a `shop` round opens for the first in the queue (`UpgradeChoice.source = 'shop'`, `gold`). Offers: per ware, one per target from `WARE_RULES[effect.type].targets` (companion: not owned and fewer than `maxCompanions` 3; weaponLevel: each weapon below max; heal: while hurt), price = round(price × (1 + 0.5 × depth)); then `leave`. Buying checks the gold now, applies the rule (whetstone = the level-up rule), and reopens the shop; Leave closes it. Passing a gate or the merchant leaving clears it and the queue.
+
+Companions: follow at 46 behind their god (fanned by slot); hunt the nearest enemy within `hunt` of the god, stop at `reach` + its radius; fire `attack` through `WEAPON_BEHAVIORS` from a shallow copy of the god at the companion's position (stats resolved against the god's when firing; retry 0.1 s when nothing to hit); `heal` per second to the god; snap beside the god beyond 900; placed beside their god after travel; removed when their player leaves.
+
 ## Run phases — `engine/sim/run-simulation.ts`
 
 `playing` → `choosing` (choice open) → `playing`; `pause()` from playing/choosing, `resume()` returns to the previous phase; `end(outcome)` once, from any phase (later calls are ignored). Choices carry an ID; answers for another ID or an invalid index are ignored. A run ends only in `defeat` (every god down) or `abandoned`; a boss that falls in the same step still counts (its gold, a realm cleared).

@@ -13,6 +13,7 @@ import { PeerLink } from './link';
 import { GuestMessage, isHostMessage } from './protocol';
 import {
   decodeSnapshot,
+  SnapCompanion,
   SnapEnemy,
   SnapHostile,
   SnapPlayer,
@@ -54,6 +55,8 @@ interface ReplicaFrame {
   hazards: FrameHazard[];
   boss: { x: number; y: number; dead: boolean } | undefined;
   gate: Snapshot['gate'];
+  companions: SnapCompanion[];
+  merchant: Snapshot['merchant'];
   depth: number;
   span: number;
 }
@@ -82,6 +85,8 @@ export class GuestDriver implements RunDriver {
     hazards: [],
     boss: undefined,
     gate: undefined,
+    companions: [],
+    merchant: undefined,
     depth: 0,
     span: STEP,
   };
@@ -248,6 +253,7 @@ export class GuestDriver implements RunDriver {
       player: { x: self.x, y: self.y, health: this.latestHud?.health ?? 0 },
       enemies: snap?.enemies.length ?? 0,
       bossAlive: !!snap?.bossId,
+      merchant: snap?.merchant ? { x: snap.merchant.x, y: snap.merchant.y } : undefined,
       players: snap?.players.length ?? 0,
       party: (snap?.players ?? []).map((p) => ({ x: p.x, y: p.y, alive: p.alive })),
       depth: this.depth,
@@ -543,6 +549,8 @@ export class GuestDriver implements RunDriver {
       hazards: b.hazards,
       boss: boss && { x: boss.x, y: boss.y, dead: boss.dead },
       gate: b.gate,
+      companions: from(a.companions, b.companions),
+      merchant: b.merchant,
       depth: b.depth,
       span: b.time > a.time ? b.time - a.time : STEP,
     };

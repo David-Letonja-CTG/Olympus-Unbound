@@ -8,9 +8,11 @@ import { BalanceConfig, EnemyDefinition, GodDefinition, RealmDefinition } from '
 import { ArenaData } from '../maps/generate-arena';
 import {
   BossRuntime,
+  Companion,
   Enemy,
   Hazard,
   HostileProjectile,
+  Merchant,
   Pickup,
   PickupKind,
   Player,
@@ -103,6 +105,8 @@ export class RunState implements WorldFrame {
   readonly combatRng: Rng;
   readonly lootRng: Rng;
   readonly offerRng: Rng;
+  /** Where the merchant appears (spec: merchant): its own stream, so it never shifts spawns or loot (D5). */
+  readonly merchantRng: Rng;
 
   /** The run's clock (HUD, results). */
   time = 0;
@@ -130,6 +134,11 @@ export class RunState implements WorldFrame {
   readonly hostileProjectiles: HostileProjectile[] = [];
   readonly hazards: Hazard[] = [];
   readonly pickups: Pickup[] = [];
+  readonly companions: Companion[] = [];
+  /** The Wandering Merchant while it is in the realm (spec: merchant). */
+  merchant: Merchant | undefined;
+  /** Players who stepped into the merchant's ring and wait for their shop, in order. */
+  readonly shopQueue: number[] = [];
   readonly enemyGrid = new SpatialHash<Enemy>(96);
   readonly events: SimEvent[] = [];
 
@@ -160,6 +169,7 @@ export class RunState implements WorldFrame {
     this.combatRng = rng.fork('combat');
     this.lootRng = rng.fork('loot');
     this.offerRng = rng.fork('offers');
+    this.merchantRng = rng.fork('merchant');
   }
 
   id(): number {
@@ -286,6 +296,9 @@ export class RunState implements WorldFrame {
     this.hazards.length = 0;
     this.pickups.length = 0;
     this.enemyGrid.clear();
+    // The merchant stays in its realm; companions follow their gods (placed with the party).
+    this.merchant = undefined;
+    this.shopQueue.length = 0;
   }
 
   /** Spawns an enemy unless the global cap is reached (bosses ignore the cap). */

@@ -34,6 +34,8 @@ All game content is typed TypeScript in `client/src/content/` (decision D4). The
 
 **New achievement or daily quest:** an entry in `content/achievements.ts` (`ACHIEVEMENTS` or `DAILY_QUESTS`) with a `Goal` (measure, target, `run` or `total`, optional `god`, `mode`, `everyGod` for achievements) and its gold; an achievement also names an icon sprite. Validation checks IDs, gods and targets; quests may not ask for every god, and there must be at least three.
 
+**New ware or companion:** `content/merchant.ts`. A ware of an existing kind (`companion`, `weaponLevel`, `heal`) is data: name, description, price, effect, icon. A companion is an existing rendered sheet with a warm `tint` and `scale` (D15), an `icon`, speed, `hunt`, `reach` and an `attack` (a weapon-like definition of any behavior but `orbit`; give its id a voice in `ATTACK_SOUNDS`), optionally `heal`. A new kind of ware (an armour upgrade, a relic, a reroll…) is one entry in `WARE_RULES` (`sim/merchant.ts`: its targets and how it applies) plus its effect type, with tests.
+
 **New god:** a `GodDefinition` (base stats, starting weapon, ability as a weapon-like definition, passive modifiers, affinities, sprite) → it appears in god selection automatically.
 
 ## Adding an asset pack

@@ -6,7 +6,9 @@ type DebugAction =
   | { type: 'damageBoss'; fraction: number }
   | { type: 'killPlayer'; slot?: number }
   | { type: 'travel' }
-  | { type: 'godMode'; enabled: boolean };
+  | { type: 'godMode'; enabled: boolean }
+  | { type: 'summonMerchant' }
+  | { type: 'grantGold'; amount: number };
 
 export interface Snapshot {
   phase: string;
@@ -14,6 +16,7 @@ export interface Snapshot {
   player: { x: number; y: number; health: number };
   enemies: number;
   bossAlive: boolean;
+  merchant?: { x: number; y: number };
   players: number;
   party: { x: number; y: number; alive: boolean }[];
   depth: number;

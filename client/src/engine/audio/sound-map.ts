@@ -17,6 +17,10 @@ export const ATTACK_SOUNDS: Record<string, SoundCue> = {
   gates_of_tartarus: 'tartarus',
   tidal_wave: 'tidal',
   gorgons_gaze: 'gaze',
+  // Companions (spec: merchant / companions) borrow the voices of their kind of attack.
+  eagle_dive: 'strike',
+  hound_bite: 'sword',
+  serpent_venom: 'bow',
 };
 
 export const HIT_SOUNDS: Record<Element, SoundCue> = {

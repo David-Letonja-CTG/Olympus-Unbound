@@ -1,5 +1,14 @@
-import { Element, EnemyDefinition } from '../data/types';
-import { Enemy, Hazard, HostileProjectile, Pickup, Player, Projectile, StatusState } from './types';
+import { CompanionDefinition, Element, EnemyDefinition } from '../data/types';
+import {
+  Companion,
+  Enemy,
+  Hazard,
+  HostileProjectile,
+  Pickup,
+  Player,
+  Projectile,
+  StatusState,
+} from './types';
 
 /**
  * What the views draw of a run (D2): the run state itself in solo runs and on a room's host, a replica of the host's
@@ -12,6 +21,11 @@ export interface WorldFrame {
   readonly hostileProjectiles: readonly FrameHostile[];
   readonly pickups: readonly FramePickup[];
   readonly hazards: readonly FrameHazard[];
+  readonly companions: readonly FrameCompanion[];
+  /** The merchant while it is in the realm (spec: merchant). */
+  readonly merchant:
+    | { readonly x: number; readonly y: number; readonly radius: number; readonly leavesIn: number }
+    | undefined;
   readonly boss: { readonly x: number; readonly y: number; readonly dead: boolean } | undefined;
   /** The open gate to the next realm; `standing` is the seconds a god has stood in it (spec: endless-run). */
   readonly gate:
@@ -77,6 +91,11 @@ export type FrameHostile = Readonly<
 >;
 
 export type FramePickup = Readonly<Pick<Pickup, 'id' | 'kind' | 'value' | 'x' | 'y'>>;
+
+/** A companion as drawn: where it is and which way it faces (spec: merchant / companions). */
+export type FrameCompanion = Readonly<
+  Pick<Companion, 'id' | 'ownerId' | 'x' | 'y' | 'px' | 'py' | 'facingX' | 'moving'>
+> & { readonly def: Pick<CompanionDefinition, 'id' | 'visual' | 'radius'> };
 
 export type FrameHazard = Readonly<
   Pick<Hazard, 'x' | 'y' | 'x2' | 'y2' | 'radius' | 'shape' | 'timer' | 'warn' | 'width'>

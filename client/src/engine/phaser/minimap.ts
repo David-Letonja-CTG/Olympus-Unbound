@@ -116,6 +116,12 @@ export class Minimap {
           g.lineStyle(2, 0x9fdcff, 1);
           g.strokeCircle(x, y, 5);
           break;
+        case 'merchant':
+          // A gold diamond: the Wandering Merchant (spec: hud / the merchant on the hud).
+          g.fillStyle(0xffc870, 1);
+          g.fillTriangle(x, y - 5, x + 4, y, x - 4, y);
+          g.fillTriangle(x, y + 5, x + 4, y, x - 4, y);
+          break;
         case 'boss':
           g.fillStyle(0xff3b1f, 1);
           g.fillCircle(x, y, 5);

@@ -105,6 +105,38 @@ describe('rooms (spec: rooms)', () => {
     expect(Math.abs(r.guest.focus().x - hostSide.x)).toBeLessThan(2);
   });
 
+  it('lets a guest shop while the host waits (spec: merchant / shopping in a room)', () => {
+    const r = room();
+    r.host.markLoaded();
+    r.guest.markLoaded();
+    r.play(10);
+    r.sim.state.realmTime = r.sim.state.balance.merchant.arrivals[0] - 0.01;
+    r.play(12); // the guest draws the world a little behind the host
+    const merchant = r.sim.state.merchant;
+    expect(merchant).toBeDefined();
+    expect(r.guest.world.merchant?.x).toBeCloseTo(merchant?.x ?? 0, 0);
+    const guestPlayer = r.sim.state.players[1];
+    r.sim.state.gold = 500;
+    guestPlayer.x = guestPlayer.px = merchant?.x ?? 0;
+    guestPlayer.y = guestPlayer.py = merchant?.y ?? 0;
+    r.play(6);
+    const shop = [...r.guestEvents].reverse().find((e) => e.type === 'choice');
+    expect(shop?.type === 'choice' && shop.choice.source).toBe('shop');
+    expect(r.host.hud().waitingFor).toEqual(['Guest']);
+    const choice = shop?.type === 'choice' ? shop.choice : undefined;
+    const hound = choice?.offers.findIndex((o) => o.itemId === 'hound_of_the_underworld') ?? -1;
+    r.guest.choose(choice?.id ?? -1, hound);
+    r.play(6);
+    expect(r.sim.state.companions.map((c) => c.ownerId)).toEqual([guestPlayer.id]);
+    expect(r.sim.state.gold).toBe(330);
+    const again = [...r.guestEvents].reverse().find((e) => e.type === 'choice');
+    const next = again?.type === 'choice' ? again.choice : undefined;
+    r.guest.choose(next?.id ?? -1, next?.offers.findIndex((o) => o.kind === 'leave') ?? -1);
+    r.play(6);
+    expect(r.sim.phase).toBe('playing');
+    expect(r.guest.world.companions).toHaveLength(1);
+  });
+
   it('gives each player their own choice and tells who the run waits for', () => {
     const r = room();
     r.host.markLoaded();

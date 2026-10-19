@@ -2,7 +2,8 @@ import { ArenaData } from '../maps/generate-arena';
 import { WorldFrame } from '../sim/world-frame';
 
 /** What the minimap shows at a world position (spec: hud / minimap). */
-export type MinimapMarkKind = 'enemy' | 'elite' | 'boss' | 'gate' | 'player' | 'self' | 'fallen';
+export type MinimapMarkKind =
+  'enemy' | 'elite' | 'boss' | 'gate' | 'merchant' | 'player' | 'self' | 'fallen';
 
 export interface MinimapMark {
   readonly kind: MinimapMarkKind;
@@ -27,6 +28,7 @@ export function minimapMarks(world: WorldFrame, localId: number): MinimapMark[] 
   }
   marks.sort((a, b) => (a.kind === b.kind ? 0 : a.kind === 'enemy' ? -1 : 1));
   if (world.gate) marks.push({ kind: 'gate', x: world.gate.x, y: world.gate.y });
+  if (world.merchant) marks.push({ kind: 'merchant', x: world.merchant.x, y: world.merchant.y });
   if (world.boss && !world.boss.dead)
     marks.push({ kind: 'boss', x: world.boss.x, y: world.boss.y });
   const players = world.players.map((p, seat) => ({ p, seat })).filter(({ p }) => !p.left);

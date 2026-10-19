@@ -1,6 +1,7 @@
 import type { BalanceConfig, GameContent, PermanentUpgradeDefinition } from '../engine';
 import { ACHIEVEMENTS, DAILY_QUESTS } from './achievements';
 import { ASSETS } from './assets';
+import { COMPANIONS, MERCHANT, WARES } from './merchant';
 import { INTRO } from './cutscenes/intro';
 import { BOSSES, ENEMIES } from './enemies';
 import { GODS } from './gods';
@@ -56,6 +57,7 @@ export const BALANCE: BalanceConfig = {
     dashRecovery: 0.35,
     dashGrace: 0.05,
   },
+  merchant: MERCHANT,
 };
 
 export const PERMANENT_UPGRADES: readonly PermanentUpgradeDefinition[] = [
@@ -120,4 +122,6 @@ export const CONTENT: GameContent = {
   cutscenes: [INTRO],
   achievements: ACHIEVEMENTS,
   dailyQuests: DAILY_QUESTS,
+  wares: WARES,
+  companions: COMPANIONS,
 };
