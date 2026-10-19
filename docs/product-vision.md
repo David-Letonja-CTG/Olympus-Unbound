@@ -34,6 +34,8 @@ Choose a god (Zeus, Hades, …) → choose a realm (Olympus, Atlantis, Egyptian 
 | 0–5 Vertical slice | Zeus, Mount Olympus, 8 weapons, 4 armour, 6 relics, 16 skills, 7 synergies, 8 enemies, elites, the Cyclops, run summary, permanent upgrades, codex, settings | **Done** (`add-vertical-slice`) |
 | 6 Content and polish | More weapons/relics, music, richer effects and animation, UI refinement, balance passes | Next |
 | 6b Gods, realm and co-op | Hades, Poseidon, Athena; a painted realm and loading screen; co-op parties (difficulty per player) and online rooms by code | **Done** (`add-hades` … `add-coop-rooms`) |
-| 7 Expansion | Atlantis and further realms and bosses; unlockable gods/realms; achievements; controller refinement; reviving allies, host migration; local co-op; mobile controls if prioritized | Later |
+| 6c Endless realms | The chain of realms through gates, reviving allies; the Underworld, Lernaean Marsh, Aegean Shore and Labyrinth of Crete with their bosses; minimap, health bars, recorded sound, GitHub Pages releases | **Done** (`add-endless-runs` … `record-sounds`) |
+| 6d Mechanics and goals | Stamina, sprint and dash; each god's own arsenal; glory score, solo and co-op high scores, achievements, daily quests; admin statistics and balance report; the Wandering Merchant and companions | **Done** (`add-stamina-dash-and-god-arsenals`, `add-glory-records-and-quests`, `add-merchants-and-companions`) |
+| 7 Expansion | Atlantis and further realms and bosses; unlockable gods/realms; more wares and companion upgrades; controller refinement; host migration; local co-op; mobile controls if prioritized | Later |
 
 Each step is an OpenSpec change (see `CLAUDE.md`).
