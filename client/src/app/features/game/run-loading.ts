@@ -18,6 +18,8 @@ export interface PartyMember {
   /** In a room: this browser's player, and the room's host. */
   readonly you?: boolean;
   readonly host?: boolean;
+  /** A bot ally (spec: bot-allies), with its difficulty. */
+  readonly bot?: string;
 }
 
 const STAGE_LABEL: Record<LoadStage, string> = {
@@ -128,6 +130,9 @@ const EMBERS = Array.from({ length: 26 }, (_, i) => ({
                   }
                   @if (m.you) {
                     <span class="tag you-tag">You</span>
+                  }
+                  @if (m.bot) {
+                    <span class="tag bot-tag">Bot · {{ m.bot }}</span>
                   }
                 </span>
                 <span class="god">{{ m.godName }}</span>
@@ -313,6 +318,9 @@ const EMBERS = Array.from({ length: 26 }, (_, i) => ({
     }
     .you-tag {
       background: #8fb7e8;
+    }
+    .bot-tag {
+      background: #b9a888;
     }
     .party li.you .name {
       color: #fff2c8;

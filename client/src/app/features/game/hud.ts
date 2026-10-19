@@ -63,6 +63,9 @@ const VESSEL_BOTTOM = 130;
                 @if (m.self) {
                   <span class="you"> (you)</span>
                 }
+                @if (m.bot) {
+                  <span class="you"> (bot)</span>
+                }
               </span>
               @if (m.alive) {
                 <span

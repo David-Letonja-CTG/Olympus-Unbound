@@ -81,6 +81,8 @@ export interface Player {
   alive: boolean;
   /** Left a room's run (spec: rooms / leaving); never revived. */
   left?: boolean;
+  /** Played by the machine at this difficulty (spec: bot-allies). */
+  readonly bot?: 'easy' | 'normal' | 'hard';
   /** A fallen god's revival progress, 0–1 (spec: co-op / reviving allies). */
   revive: number;
   revivalsUsed: number;
@@ -341,6 +343,8 @@ export interface RunResult {
   readonly realmReached: string;
   /** Gods in the party: 1 for a solo run (spec: glory / high scores). */
   readonly players: number;
+  /** How many of them were bots (spec: bot-allies). */
+  readonly bots: number;
   readonly loadout: LoadoutSummary;
 }
 
@@ -478,6 +482,8 @@ export interface HudPartyMember {
   readonly revive: number;
   /** This screen's own god. */
   readonly self: boolean;
+  /** Played by the machine (spec: bot-allies). */
+  readonly bot?: boolean;
 }
 
 export interface HudItem {

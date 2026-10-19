@@ -2,7 +2,7 @@ import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@a
 import { Router, RouterLink } from '@angular/router';
 import { ContentIndex, Element, GameContent, GodDefinition, computeStats } from '../../../engine';
 import { GAME_CONTENT } from '../../core/game-content';
-import { RunSetup } from '../../core/run-setup';
+import { ALLY_SKILLS, MAX_ALLIES, RunSetup } from '../../core/run-setup';
 import { ItemIcon } from '../../shared/item-icon';
 
 /** The passive's emblem: the skill icon of the god's first affinity. */
@@ -81,6 +81,73 @@ const PASSIVE_ICON: Record<Element, string> = {
           </dl>
         </section>
       }
+
+      <!-- Bot allies for a solo run (spec: bot-allies / adding allies). -->
+      <section class="panel allies" aria-labelledby="allies-title" data-testid="allies">
+        <div class="allies-head">
+          <h2 id="allies-title">Allies</h2>
+          <p class="hint">
+            Gods played by the machine fight beside you. The horde grows with every god, as in
+            co-op.
+          </p>
+        </div>
+        @if (allies().length) {
+          <ul class="ally-list">
+            @for (a of allies(); track $index; let i = $index) {
+              <li [attr.data-testid]="'ally-' + i">
+                <app-item-icon [sprite]="godSprite(a.godId)" [size]="40" />
+                <span class="ally-name">{{ godName(a.godId) }}</span>
+                <span
+                  class="skills"
+                  role="radiogroup"
+                  [attr.aria-label]="godName(a.godId) + ' difficulty'"
+                >
+                  @for (s of skills; track s.id) {
+                    <button
+                      class="tab"
+                      role="radio"
+                      [attr.aria-checked]="a.skill === s.id"
+                      [attr.aria-selected]="a.skill === s.id"
+                      [attr.data-testid]="'ally-' + i + '-' + s.id"
+                      (click)="setup.setAllySkill(i, s.id)"
+                    >
+                      {{ s.label }}
+                    </button>
+                  }
+                </span>
+                <button
+                  class="remove"
+                  [attr.aria-label]="'Remove ' + godName(a.godId)"
+                  [attr.data-testid]="'ally-' + i + '-remove'"
+                  (click)="setup.removeAlly(i)"
+                >
+                  ✕
+                </button>
+              </li>
+            }
+          </ul>
+        }
+        @if (allies().length < maxAllies) {
+          @if (picking()) {
+            <div class="pick" role="group" aria-label="Choose an ally">
+              @for (god of gods; track god.id) {
+                <button
+                  class="btn pick-god"
+                  [attr.data-testid]="'add-ally-' + god.id"
+                  (click)="addAlly(god.id)"
+                >
+                  <app-item-icon [sprite]="god.visual.sprite" [size]="28" /> {{ god.name }}
+                </button>
+              }
+              <button class="btn" (click)="picking.set(false)">Cancel</button>
+            </div>
+          } @else {
+            <button class="btn" data-testid="add-ally" (click)="picking.set(true)">
+              + Add an ally
+            </button>
+          }
+        }
+      </section>
 
       <div class="actions">
         <a class="btn" routerLink="/">Back</a>
@@ -171,11 +238,78 @@ const PASSIVE_ICON: Record<Element, string> = {
       font-size: 1.2rem;
       font-weight: 700;
     }
+    .allies {
+      width: min(760px, 100%);
+      padding: 16px 22px;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+    .allies-head h2 {
+      margin: 0;
+      font-size: 1.1rem;
+      color: var(--gold-2);
+    }
+    .allies .hint {
+      margin: 2px 0 0;
+      color: var(--muted);
+      font-size: 0.9rem;
+    }
+    .ally-list {
+      list-style: none;
+      margin: 0;
+      padding: 0;
+      display: grid;
+      gap: 8px;
+    }
+    .ally-list li {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      flex-wrap: wrap;
+    }
+    .ally-name {
+      font-family: var(--serif);
+      font-size: 1.15rem;
+      color: var(--gold-2);
+      min-width: 90px;
+    }
+    .skills {
+      display: flex;
+      gap: 6px;
+    }
+    .remove {
+      margin-left: auto;
+      background: none;
+      border: 1px solid var(--line);
+      color: var(--muted);
+      font: inherit;
+      padding: 2px 10px;
+      cursor: pointer;
+    }
+    .remove:hover {
+      color: var(--text);
+    }
+    .pick {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+    .pick-god {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      padding: 6px 14px;
+    }
   `,
 })
 export class GodSelection {
   private readonly content: GameContent = inject(GAME_CONTENT);
-  private readonly setup = inject(RunSetup);
+  protected readonly setup = inject(RunSetup);
+  protected readonly allies = this.setup.allies;
+  protected readonly maxAllies = MAX_ALLIES;
+  protected readonly skills = ALLY_SKILLS;
+  protected readonly picking = signal(false);
   private readonly router = inject(Router);
   private readonly index = new ContentIndex(this.content);
 
@@ -196,6 +330,19 @@ export class GodSelection {
       passiveIcon: PASSIVE_ICON[god.affinities[0] ?? 'lightning'],
     };
   });
+
+  protected addAlly(godId: string): void {
+    this.setup.addAlly(godId);
+    this.picking.set(false);
+  }
+
+  protected godName(id: string): string {
+    return this.content.gods.find((g) => g.id === id)?.name ?? id;
+  }
+
+  protected godSprite(id: string): string {
+    return this.content.gods.find((g) => g.id === id)?.visual.sprite ?? id;
+  }
 
   protected continue(): void {
     const id = this.selected();

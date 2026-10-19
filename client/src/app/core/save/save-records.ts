@@ -14,6 +14,8 @@ export interface RunRecord {
   readonly realmId: string;
   readonly realmReached: string;
   readonly players: number;
+  /** Bots in the party (spec: bot-allies). */
+  readonly bots: number;
   readonly outcome: RunOutcome;
   readonly seed: number;
   readonly timeSeconds: number;
@@ -37,6 +39,8 @@ export interface ScoreEntry {
   readonly godId: string;
   readonly realmId: string;
   readonly players: number;
+  /** How many of the party were bots (spec: bot-allies); 0 in records from before them. */
+  readonly bots: number;
   readonly score: number;
   readonly realmsCleared: number;
   readonly timeSeconds: number;
@@ -47,6 +51,8 @@ export interface ScoreEntry {
 export interface HighScores {
   readonly solo: readonly ScoreEntry[];
   readonly coop: readonly ScoreEntry[];
+  /** Solo runs with bot allies (spec: glory / runs with allies). */
+  readonly allies: readonly ScoreEntry[];
 }
 
 /** The day's quests: progress per quest and the ones already paid (spec: glory / daily quests). */
@@ -57,7 +63,7 @@ export interface DailyState {
   readonly done: readonly string[];
 }
 
-export const EMPTY_HIGH_SCORES: HighScores = { solo: [], coop: [] };
+export const EMPTY_HIGH_SCORES: HighScores = { solo: [], coop: [], allies: [] };
 export const EMPTY_DAILY: DailyState = { date: '', progress: {}, done: [] };
 
 type Raw = Record<string, unknown>;
@@ -90,6 +96,7 @@ function parseEntry(raw: Raw, content: GameContent): ScoreEntry | undefined {
     godId: raw['godId'] as string,
     realmId: raw['realmId'] as string,
     players: n('players'),
+    bots: num(raw['bots']) ? (raw['bots'] as number) : 0,
     score: n('score'),
     realmsCleared: n('realmsCleared'),
     timeSeconds: n('timeSeconds'),
@@ -130,7 +137,7 @@ export function parseHighScores(v: unknown, content: GameContent): HighScores {
   const raw = isObject(v) ? v : {};
   const table = (t: unknown) =>
     entries(t, (e) => parseEntry(e, content), HIGH_SCORES).sort((a, b) => b.score - a.score);
-  return { solo: table(raw['solo']), coop: table(raw['coop']) };
+  return { solo: table(raw['solo']), coop: table(raw['coop']), allies: table(raw['allies']) };
 }
 
 /** Unlocked achievements (id → date), known IDs only. */

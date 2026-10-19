@@ -103,7 +103,8 @@ export function updateMerchant(state: RunState, dt: number): void {
     const inside = p.alive && (p.x - merchant.x) ** 2 + (p.y - merchant.y) ** 2 <= r2;
     if (inside && !merchant.inside.has(p.id)) {
       merchant.inside.add(p.id);
-      if (!state.shopQueue.includes(p.id)) state.shopQueue.push(p.id);
+      // Bots leave the merchant to the player (spec: bot-allies / how bots play).
+      if (!p.bot && !state.shopQueue.includes(p.id)) state.shopQueue.push(p.id);
     } else if (!inside) merchant.inside.delete(p.id);
   }
 }

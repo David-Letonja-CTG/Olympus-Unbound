@@ -4,9 +4,10 @@ import { ArenaData } from '../maps/generate-arena';
 import { WorldFrame } from '../sim/world-frame';
 import { ATMOSPHERE_DEPTH } from './atmosphere';
 
-/** On-screen size in CSS pixels, its distance below the top edge (under the gold and kills) and from the right. */
+/** On-screen size in CSS pixels and distance from the right edge. */
 const SIZE = 172;
-const TOP = 96;
+/** The minimap sits at the top right; the gold and kills plaque sits under it (hud.css). */
+const TOP = 12;
 const MARGIN = 16;
 /** The picture is drawn at twice its on-screen size, for sharp high-density screens. */
 const RESOLUTION = 2;

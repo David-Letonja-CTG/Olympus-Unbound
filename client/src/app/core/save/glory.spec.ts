@@ -2,7 +2,7 @@ import { CONTENT } from '../../../content';
 import { GameContent, RunResult, spriteKeys } from '../../../engine';
 import { localDate, questsFor, scoreOf } from './glory';
 import { applyRunResult } from './rewards';
-import { freshSave, parseSave, SaveData } from './save-data';
+import { freshSave, parseSave, SAVE_VERSION, SaveData } from './save-data';
 
 const NOW = new Date(2026, 9, 19, 12, 0, 0);
 const run = (overrides: Partial<RunResult> = {}): RunResult => ({
@@ -18,6 +18,7 @@ const run = (overrides: Partial<RunResult> = {}): RunResult => ({
   realmsCleared: 0,
   realmReached: 'mount_olympus',
   players: 1,
+  bots: 0,
   loadout: {
     weapons: [{ id: 'thunder_spear', level: 2, damage: 500 }],
     relics: [],
@@ -76,6 +77,14 @@ describe('high scores (spec: glory / high scores)', () => {
     expect(low.save.highScores.solo).toEqual(save.highScores.solo);
   });
 
+  it('puts a run with bot allies in its own table, never co-op (spec: glory / runs with allies)', () => {
+    const { save, rewards } = play(freshSave(), content, { players: 3, bots: 2 });
+    expect(rewards.glory.highScore?.mode).toBe('allies');
+    expect(save.highScores.allies).toHaveLength(1);
+    expect(save.highScores.solo).toEqual([]);
+    expect(save.highScores.coop).toEqual([]);
+  });
+
   it('counts a party of two as co-op', () => {
     const { save, rewards } = play(freshSave(), content, { players: 2 });
     expect(rewards.glory.highScore?.mode).toBe('coop');
@@ -115,6 +124,14 @@ describe('achievements (spec: glory / achievements)', () => {
     expect(save.achievements['pantheon']).toBeUndefined();
     const last = play(save, content, { godId: 'athena', realmsCleared: 1 });
     expect(last.rewards.glory.achievements.map((a) => a.id)).toEqual(['pantheon']);
+  });
+
+  it('does not count a run with allies as co-op', () => {
+    const content = only({
+      achievements: [achievement('brothers_in_arms'), achievement('first_gate')],
+    });
+    const r = play(freshSave(), content, { realmsCleared: 1, players: 2, bots: 1 });
+    expect(r.rewards.glory.achievements.map((a) => a.id)).toEqual(['first_gate']);
   });
 
   it('only counts co-op runs for a co-op goal', () => {
@@ -181,10 +198,10 @@ describe('daily quests (spec: glory / daily quests)', () => {
 describe('save format version 4 (spec: meta-progression / save format version 4)', () => {
   it('migrates a version 3 save with empty records', () => {
     const save = parseSave(JSON.stringify({ version: 3, gold: 800 }), CONTENT);
-    expect(save.version).toBe(4);
+    expect(save.version).toBe(SAVE_VERSION);
     expect(save.gold).toBe(800);
     expect(save.history).toEqual([]);
-    expect(save.highScores).toEqual({ solo: [], coop: [] });
+    expect(save.highScores).toEqual({ solo: [], coop: [], allies: [] });
     expect(save.achievements).toEqual({});
   });
 
@@ -206,6 +223,18 @@ describe('save format version 4 (spec: meta-progression / save format version 4)
     expect(loaded.daily).toEqual(save.daily);
     expect(loaded.achievements['first_gate']).toBeDefined();
     expect(loaded.achievements['removed_one']).toBeUndefined();
+  });
+
+  it('migrates a version 4 save to 5 with an empty With allies table (spec: meta-progression / save format version 5)', () => {
+    const { save } = play(freshSave(), only({}), { kills: 50 });
+    const { bots: _bots, ...v4Entry } = save.highScores.solo[0];
+    void _bots;
+    const v4 = { ...save, version: 4, highScores: { solo: [v4Entry, v4Entry, v4Entry], coop: [] } };
+    const loaded = parseSave(JSON.stringify(v4), CONTENT);
+    expect(loaded.version).toBe(5);
+    expect(loaded.highScores.solo).toHaveLength(3);
+    expect(loaded.highScores.solo[0].bots).toBe(0);
+    expect(loaded.highScores.allies).toEqual([]);
   });
 
   it('keeps the last 100 runs', () => {

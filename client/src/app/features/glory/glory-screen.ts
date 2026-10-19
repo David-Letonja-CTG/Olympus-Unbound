@@ -13,7 +13,7 @@ import { Progression } from '../../core/progression';
 import { ScoreEntry } from '../../core/save/save-records';
 import { formatTime, ItemIcon } from '../../shared/item-icon';
 
-type Mode = 'solo' | 'coop';
+type Mode = 'solo' | 'allies' | 'coop';
 
 interface AchievementView {
   readonly def: AchievementDefinition;
@@ -123,7 +123,11 @@ interface AchievementView {
                   <td class="god">
                     <app-item-icon [sprite]="godSprite(e.godId)" [size]="20" />
                     {{ godName(e.godId) }}
-                    @if (e.players > 1) {
+                    @if (e.bots > 0) {
+                      <span class="party"
+                        >+{{ e.bots }} {{ e.bots === 1 ? 'ally' : 'allies' }}</span
+                      >
+                    } @else if (e.players > 1) {
                       <span class="party">×{{ e.players }}</span>
                     }
                   </td>
@@ -138,7 +142,10 @@ interface AchievementView {
               } @empty {
                 <tr>
                   <td colspan="9" class="empty">
-                    No {{ mode() === 'coop' ? 'co-op ' : '' }}runs here yet. Glory awaits.
+                    No {{ mode() === 'coop' ? 'co-op ' : '' }}runs{{
+                      mode() === 'allies' ? ' with allies' : ''
+                    }}
+                    here yet. Glory awaits.
                   </td>
                 </tr>
               }
@@ -335,6 +342,7 @@ export class GloryScreen {
   protected readonly content: GameContent = inject(GAME_CONTENT);
   protected readonly modes: readonly { id: Mode; label: string }[] = [
     { id: 'solo', label: 'Solo' },
+    { id: 'allies', label: 'With allies' },
     { id: 'coop', label: 'Co-op' },
   ];
   protected readonly mode = signal<Mode>('solo');

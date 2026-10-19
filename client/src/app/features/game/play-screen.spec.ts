@@ -219,6 +219,7 @@ describe('PlayScreen', () => {
         realmsCleared: 1,
         realmReached: 'mount_olympus',
         players: 1,
+        bots: 0,
         loadout: { weapons: [], relics: [], skills: [], synergies: [] },
       };
       await update({ type: 'runEnded', result });

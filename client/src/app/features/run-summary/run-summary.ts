@@ -25,6 +25,11 @@ const TITLES = { defeat: 'You have fallen', abandoned: 'Run abandoned' } as cons
         </h1>
         <p class="screen-subtitle">
           {{ v.god }} from {{ v.realm }} to {{ v.reached }} · seed {{ v.result.seed }}
+          @if (v.result.bots) {
+            <span data-testid="summary-allies"
+              >· with {{ v.result.bots }} {{ v.result.bots === 1 ? 'ally' : 'allies' }}</span
+            >
+          }
         </p>
 
         <section class="panel stats">
@@ -53,7 +58,10 @@ const TITLES = { defeat: 'You have fallen', abandoned: 'Run abandoned' } as cons
               Score <strong data-testid="summary-score">{{ fmt(v.rewards.glory.score) }}</strong>
               @if (v.rewards.glory.highScore; as hs) {
                 <span class="record" data-testid="summary-high-score"
-                  >New {{ hs.mode === 'coop' ? 'co-op ' : '' }}high score · #{{ hs.rank }}</span
+                  >New {{ hs.mode === 'coop' ? 'co-op ' : '' }}high score{{
+                    hs.mode === 'allies' ? ' with allies' : ''
+                  }}
+                  · #{{ hs.rank }}</span
                 >
               }
             </p>

@@ -1,3 +1,4 @@
+import type { BotSkill } from './bots';
 import { WorldFrame } from './world-frame';
 import { WorldCollision } from '../core/collision';
 import { Rng } from '../core/rng';
@@ -26,6 +27,8 @@ export interface PartySeat {
   readonly godId: string;
   readonly name: string;
   readonly modifiers: readonly Modifier[];
+  /** A god played by the machine, and how well (spec: bot-allies). */
+  readonly bot?: { readonly skill: BotSkill };
 }
 
 export interface RunConfig {

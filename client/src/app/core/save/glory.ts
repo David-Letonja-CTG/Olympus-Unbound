@@ -12,7 +12,7 @@ import { HIGH_SCORES, HISTORY_SIZE, RunRecord, ScoreEntry } from './save-records
 export interface GloryOutcome {
   readonly score: number;
   /** The run's place in its table, if it entered one. */
-  readonly highScore?: { readonly mode: 'solo' | 'coop'; readonly rank: number };
+  readonly highScore?: { readonly mode: GloryMode; readonly rank: number };
   readonly achievements: readonly AchievementDefinition[];
   readonly quests: readonly QuestDefinition[];
   /** Gold from achievements and quests. */
@@ -26,7 +26,16 @@ export function scoreOf(r: Pick<RunResult, 'kills' | 'timeSeconds' | 'level' | '
   return r.kills + 2 * r.timeSeconds + 10 * r.level + 1000 * r.realmsCleared;
 }
 
-export const modeOf = (players: number): 'solo' | 'coop' => (players > 1 ? 'coop' : 'solo');
+export type GloryMode = 'solo' | 'coop' | 'allies';
+
+/**
+ * Co-op needs two or more players; a solo run with bot allies is its own mode and never co-op (spec: glory / runs with
+ * allies).
+ */
+export function modeOf(players: number, bots = 0): GloryMode {
+  if (players - bots > 1) return 'coop';
+  return bots > 0 ? 'allies' : 'solo';
+}
 
 /** The local calendar date, `YYYY-MM-DD`: daily quests change at local midnight. */
 export function localDate(now: Date): string {
@@ -63,7 +72,7 @@ export function questsFor(date: string, quests: readonly QuestDefinition[]): Que
 /** A run's value for a goal, or undefined when the run does not count for it (another god or mode). */
 export function measure(goal: Goal, r: RunResult): number | undefined {
   if (goal.god && goal.god !== r.godId) return undefined;
-  if (goal.mode && goal.mode !== modeOf(r.players)) return undefined;
+  if (goal.mode && goal.mode !== modeOf(r.players, r.bots)) return undefined;
   switch (goal.measure) {
     case 'runs':
       return 1;
@@ -92,7 +101,7 @@ export function applyGlory(
 ): { save: SaveData; glory: GloryOutcome } {
   const endedAt = now.toISOString();
   const score = scoreOf(r);
-  const mode = modeOf(r.players);
+  const mode = modeOf(r.players, r.bots);
 
   const entry: ScoreEntry = {
     runId: r.runId,
@@ -100,6 +109,7 @@ export function applyGlory(
     godId: r.godId,
     realmId: r.realmId,
     players: r.players,
+    bots: r.bots,
     score,
     realmsCleared: r.realmsCleared,
     timeSeconds: r.timeSeconds,
