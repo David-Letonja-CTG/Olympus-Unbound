@@ -46,12 +46,18 @@ export function questsFor(date: string, quests: readonly QuestDefinition[]): Que
     return seed / 2 ** 32;
   };
   const pool = [...quests];
-  const count = Math.min(3, pool.length);
-  for (let i = 0; i < count; i++) {
+  for (let i = 0; i < pool.length - 1; i++) {
     const j = i + Math.floor(next() * (pool.length - i));
     [pool[i], pool[j]] = [pool[j], pool[i]];
   }
-  return pool.slice(0, count);
+  // At most one quest for a particular god a day, so a day never asks for two gods the player may not play.
+  const picked: QuestDefinition[] = [];
+  for (const q of pool) {
+    if (picked.length === 3) break;
+    if (q.goal.god && picked.some((p) => p.goal.god)) continue;
+    picked.push(q);
+  }
+  return picked;
 }
 
 /** A run's value for a goal, or undefined when the run does not count for it (another god or mode). */

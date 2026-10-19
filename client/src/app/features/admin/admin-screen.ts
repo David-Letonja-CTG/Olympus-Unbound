@@ -9,6 +9,7 @@ import {
 import { FormsModule } from '@angular/forms';
 import { RouterLink } from '@angular/router';
 import { BalanceReport, BalanceRow, GameContent } from '../../../engine';
+import { adminUnlocked, unlockAdmin } from '../../core/admin-mode';
 import { GAME_CONTENT } from '../../core/game-content';
 import { Progression } from '../../core/progression';
 import { formatTime, ItemIcon } from '../../shared/item-icon';
@@ -32,244 +33,279 @@ const CHART_RUNS = 40;
       <h1 class="screen-title">Statistics</h1>
       <p class="screen-subtitle">Admin mode · the runs played in this browser</p>
 
-      @let s = stats();
-      @if (s.totals.runs === 0) {
-        <section class="panel wide">
-          <p class="empty" data-testid="admin-empty">No runs to report yet. Play a run first.</p>
-        </section>
+      @if (!unlocked()) {
+        <form class="panel lock" (submit)="unlock($event)" data-testid="admin-lock">
+          <label for="admin-password">Password</label>
+          <input
+            id="admin-password"
+            type="password"
+            autocomplete="current-password"
+            [(ngModel)]="password"
+            name="password"
+            data-testid="admin-password"
+          />
+          <button class="btn btn-primary" type="submit" data-testid="admin-unlock">Unlock</button>
+          @if (wrong()) {
+            <p class="wrong" role="alert" data-testid="admin-wrong">Wrong password.</p>
+          }
+        </form>
       } @else {
-        <section class="panel wide totals" aria-label="Totals" data-testid="admin-totals">
-          <div>
-            <span>Runs</span><strong>{{ s.totals.runs }}</strong>
-          </div>
-          <div>
-            <span>Time played</span><strong>{{ hours(s.totals.seconds) }}</strong>
-          </div>
-          <div>
-            <span>Kills</span><strong>{{ fmt(s.totals.kills) }}</strong>
-          </div>
-          <div>
-            <span>Realms cleared</span><strong>{{ s.totals.realmsCleared }}</strong>
-          </div>
-          <div>
-            <span>Solo / co-op</span><strong>{{ s.totals.solo }} / {{ s.totals.coop }}</strong>
-          </div>
-          <div class="exports">
-            <button class="btn" data-testid="export-json" (click)="exportJson()">JSON</button>
-            <button class="btn" data-testid="export-csv" (click)="exportCsv()">CSV</button>
-          </div>
-        </section>
-
-        <section class="panel wide">
-          <h2>Gods</h2>
-          <table class="data-table" data-testid="admin-gods">
-            <thead>
-              <tr>
-                <th>God</th>
-                <th class="num">Runs</th>
-                <th class="num">Avg realms</th>
-                <th class="num">Best realms</th>
-                <th class="num">Avg time</th>
-                <th class="num">Avg kills</th>
-                <th class="num">Avg level</th>
-                <th class="num">Best score</th>
-              </tr>
-            </thead>
-            <tbody>
-              @for (g of s.gods; track g.godId) {
-                <tr [attr.data-testid]="'admin-god-' + g.godId">
-                  <td class="name">
-                    <app-item-icon [sprite]="godSprite(g.godId)" [size]="20" />
-                    {{ godName(g.godId) }}
-                  </td>
-                  <td class="num">{{ g.runs }}</td>
-                  <td class="num">{{ g.avgRealms.toFixed(1) }}</td>
-                  <td class="num">{{ g.bestRealms }}</td>
-                  <td class="num">{{ time(g.avgSeconds) }}</td>
-                  <td class="num">{{ fmt(g.avgKills) }}</td>
-                  <td class="num">{{ g.avgLevel.toFixed(1) }}</td>
-                  <td class="num">{{ fmt(g.bestScore) }}</td>
-                </tr>
-              }
-            </tbody>
-          </table>
-        </section>
-
-        <section class="panel wide" aria-labelledby="chart-title">
-          <h2 id="chart-title">Score of the last {{ chart().bars.length }} runs</h2>
-          <svg
-            class="chart"
-            [attr.viewBox]="'0 0 ' + chart().width + ' 160'"
-            role="img"
-            [attr.aria-label]="'Scores of the last ' + chart().bars.length + ' runs'"
-            data-testid="admin-chart"
-          >
-            <line x1="0" [attr.x2]="chart().width" y1="140" y2="140" class="axis" />
-            <text x="0" y="12" class="tick">{{ fmt(chart().max) }}</text>
-            @for (b of chart().bars; track $index) {
-              <rect
-                class="bar"
-                [attr.x]="b.x"
-                [attr.y]="b.y"
-                [attr.width]="b.w"
-                [attr.height]="b.h"
-                rx="2"
-              >
-                <title>{{ b.label }}</title>
-              </rect>
-            }
-          </svg>
-        </section>
-
-        <div class="columns wide">
-          <section class="panel">
-            <h2>Where runs ended</h2>
-            <table class="data-table" data-testid="admin-endings">
-              <tbody>
-                @for (e of s.endings; track e.realmId) {
-                  <tr>
-                    <td>{{ realmName(e.realmId) }}</td>
-                    <td class="num">{{ e.runs }}</td>
-                    <td class="num">{{ pct(e.runs / s.totals.runs) }}</td>
-                  </tr>
-                }
-              </tbody>
-            </table>
+        @let s = stats();
+        @if (s.totals.runs === 0) {
+          <section class="panel wide">
+            <p class="empty" data-testid="admin-empty">No runs to report yet. Play a run first.</p>
           </section>
-          <section class="panel">
-            <h2>Weapons</h2>
-            <table class="data-table" data-testid="admin-weapons">
+        } @else {
+          <section class="panel wide totals" aria-label="Totals" data-testid="admin-totals">
+            <div>
+              <span>Runs</span><strong>{{ s.totals.runs }}</strong>
+            </div>
+            <div>
+              <span>Time played</span><strong>{{ hours(s.totals.seconds) }}</strong>
+            </div>
+            <div>
+              <span>Kills</span><strong>{{ fmt(s.totals.kills) }}</strong>
+            </div>
+            <div>
+              <span>Realms cleared</span><strong>{{ s.totals.realmsCleared }}</strong>
+            </div>
+            <div>
+              <span>Solo / co-op</span><strong>{{ s.totals.solo }} / {{ s.totals.coop }}</strong>
+            </div>
+            <div class="exports">
+              <button class="btn" data-testid="export-json" (click)="exportJson()">JSON</button>
+              <button class="btn" data-testid="export-csv" (click)="exportCsv()">CSV</button>
+            </div>
+          </section>
+
+          <section class="panel wide">
+            <h2>Gods</h2>
+            <table class="data-table" data-testid="admin-gods">
               <thead>
                 <tr>
-                  <th>Weapon</th>
-                  <th class="num">In builds</th>
+                  <th>God</th>
+                  <th class="num">Runs</th>
+                  <th class="num">Avg realms</th>
+                  <th class="num">Best realms</th>
+                  <th class="num">Avg time</th>
+                  <th class="num">Avg kills</th>
                   <th class="num">Avg level</th>
-                  <th class="num">Damage</th>
+                  <th class="num">Best score</th>
                 </tr>
               </thead>
               <tbody>
-                @for (w of s.weapons; track w.id) {
-                  <tr>
-                    <td>{{ weaponName(w.id) }}</td>
-                    <td class="num">{{ pct(w.pickRate) }}</td>
-                    <td class="num">{{ w.avgLevel.toFixed(1) }}</td>
-                    <td class="num">{{ pct(w.damageShare) }}</td>
+                @for (g of s.gods; track g.godId) {
+                  <tr [attr.data-testid]="'admin-god-' + g.godId">
+                    <td class="name">
+                      <app-item-icon [sprite]="godSprite(g.godId)" [size]="20" />
+                      {{ godName(g.godId) }}
+                    </td>
+                    <td class="num">{{ g.runs }}</td>
+                    <td class="num">{{ g.avgRealms.toFixed(1) }}</td>
+                    <td class="num">{{ g.bestRealms }}</td>
+                    <td class="num">{{ time(g.avgSeconds) }}</td>
+                    <td class="num">{{ fmt(g.avgKills) }}</td>
+                    <td class="num">{{ g.avgLevel.toFixed(1) }}</td>
+                    <td class="num">{{ fmt(g.bestScore) }}</td>
                   </tr>
                 }
               </tbody>
             </table>
           </section>
-        </div>
-      }
 
-      <section class="panel wide balance" aria-labelledby="balance-title">
-        <h2 id="balance-title">Balance report</h2>
-        <p class="hint">
-          The bot plays each chosen god from a fresh start (no permanent upgrades), always taking
-          new weapons first. The same choices always give the same report.
-        </p>
-        <div class="controls">
-          <div class="tabs" role="group" aria-label="Gods">
-            @for (g of content.gods; track g.id) {
+          <section class="panel wide" aria-labelledby="chart-title">
+            <h2 id="chart-title">Scores of the latest runs</h2>
+            <svg
+              class="chart"
+              [attr.viewBox]="'0 0 ' + chart().width + ' 160'"
+              role="img"
+              [attr.aria-label]="'Scores of the last ' + chart().bars.length + ' runs'"
+              data-testid="admin-chart"
+            >
+              <line x1="0" [attr.x2]="chart().width" y1="140" y2="140" class="axis" />
+              <text x="0" y="12" class="tick">{{ fmt(chart().max) }}</text>
+              @for (b of chart().bars; track $index) {
+                <rect
+                  class="bar"
+                  [attr.x]="b.x"
+                  [attr.y]="b.y"
+                  [attr.width]="b.w"
+                  [attr.height]="b.h"
+                  rx="2"
+                >
+                  <title>{{ b.label }}</title>
+                </rect>
+              }
+            </svg>
+          </section>
+
+          <div class="columns wide">
+            <section class="panel">
+              <h2>Where runs ended</h2>
+              <table class="data-table" data-testid="admin-endings">
+                <tbody>
+                  @for (e of s.endings; track e.realmId) {
+                    <tr>
+                      <td>{{ realmName(e.realmId) }}</td>
+                      <td class="num">{{ e.runs }}</td>
+                      <td class="num">{{ pct(e.runs / s.totals.runs) }}</td>
+                    </tr>
+                  }
+                </tbody>
+              </table>
+            </section>
+            <section class="panel">
+              <h2>Weapons</h2>
+              <table class="data-table" data-testid="admin-weapons">
+                <thead>
+                  <tr>
+                    <th>Weapon</th>
+                    <th class="num">In builds</th>
+                    <th class="num">Avg level</th>
+                    <th class="num">Damage</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  @for (w of s.weapons; track w.id) {
+                    <tr>
+                      <td>{{ weaponName(w.id) }}</td>
+                      <td class="num">{{ pct(w.pickRate) }}</td>
+                      <td class="num">{{ w.avgLevel.toFixed(1) }}</td>
+                      <td class="num">{{ pct(w.damageShare) }}</td>
+                    </tr>
+                  }
+                </tbody>
+              </table>
+            </section>
+          </div>
+        }
+
+        <section class="panel wide balance" aria-labelledby="balance-title">
+          <h2 id="balance-title">Balance report</h2>
+          <p class="hint">
+            The bot plays each chosen god from a fresh start (no permanent upgrades), always taking
+            new weapons first. The same choices always give the same report.
+          </p>
+          <div class="controls">
+            <div class="tabs" role="group" aria-label="Gods">
+              @for (g of content.gods; track g.id) {
+                <button
+                  class="tab"
+                  [attr.aria-pressed]="chosen().includes(g.id)"
+                  [attr.aria-selected]="chosen().includes(g.id)"
+                  [attr.data-testid]="'balance-god-' + g.id"
+                  (click)="toggle(g.id)"
+                >
+                  {{ g.name }}
+                </button>
+              }
+            </div>
+            <label
+              >Runs each
+              <input type="number" min="1" max="10" [(ngModel)]="runs" data-testid="balance-runs"
+            /></label>
+            <label
+              >Minutes
+              <input
+                type="number"
+                min="1"
+                max="20"
+                [(ngModel)]="minutes"
+                data-testid="balance-minutes"
+            /></label>
+            <label
+              >Realm
+              <select [(ngModel)]="realmId" data-testid="balance-realm">
+                @for (r of content.realms; track r.id) {
+                  <option [value]="r.id">{{ r.name }}</option>
+                }
+              </select>
+            </label>
+            @if (running()) {
+              <button class="btn" (click)="stop()" data-testid="balance-stop">Stop</button>
+            } @else {
               <button
-                class="tab"
-                [attr.aria-pressed]="chosen().includes(g.id)"
-                [attr.aria-selected]="chosen().includes(g.id)"
-                [attr.data-testid]="'balance-god-' + g.id"
-                (click)="toggle(g.id)"
+                class="btn btn-primary"
+                [disabled]="!chosen().length"
+                (click)="start()"
+                data-testid="balance-run"
               >
-                {{ g.name }}
+                Run
               </button>
             }
           </div>
-          <label
-            >Runs each
-            <input type="number" min="1" max="10" [(ngModel)]="runs" data-testid="balance-runs"
-          /></label>
-          <label
-            >Minutes
-            <input
-              type="number"
-              min="1"
-              max="20"
-              [(ngModel)]="minutes"
-              data-testid="balance-minutes"
-          /></label>
-          <label
-            >Realm
-            <select [(ngModel)]="realmId" data-testid="balance-realm">
-              @for (r of content.realms; track r.id) {
-                <option [value]="r.id">{{ r.name }}</option>
-              }
-            </select>
-          </label>
           @if (running()) {
-            <button class="btn" (click)="stop()" data-testid="balance-stop">Stop</button>
-          } @else {
-            <button
-              class="btn btn-primary"
-              [disabled]="!chosen().length"
-              (click)="start()"
-              data-testid="balance-run"
+            <div
+              class="progress"
+              role="progressbar"
+              aria-label="Balance report"
+              [attr.aria-valuenow]="round(progress() * 100)"
+              aria-valuemin="0"
+              aria-valuemax="100"
             >
-              Run
-            </button>
+              <span [style.width.%]="progress() * 100"></span>
+            </div>
           }
-        </div>
-        @if (running()) {
-          <div
-            class="progress"
-            role="progressbar"
-            aria-label="Balance report"
-            [attr.aria-valuenow]="round(progress() * 100)"
-            aria-valuemin="0"
-            aria-valuemax="100"
-          >
-            <span [style.width.%]="progress() * 100"></span>
-          </div>
-        }
-        @if (rows().length) {
-          <table class="data-table" data-testid="balance-table">
-            <thead>
-              <tr>
-                <th>God</th>
-                <th class="num">Runs</th>
-                <th class="num">Realms</th>
-                <th class="num">Level</th>
-                <th class="num">Kills</th>
-                <th class="num">Survived</th>
-                <th class="num">Alive at end</th>
-                <th>Weapons (taken · damage)</th>
-              </tr>
-            </thead>
-            <tbody>
-              @for (r of rows(); track r.godId) {
-                <tr [attr.data-testid]="'balance-row-' + r.godId">
-                  <td>{{ godName(r.godId) }}</td>
-                  <td class="num">{{ r.runs }}</td>
-                  <td class="num">{{ r.realmsCleared.toFixed(2) }}</td>
-                  <td class="num">{{ r.level.toFixed(1) }}</td>
-                  <td class="num">{{ fmt(r.kills) }}</td>
-                  <td class="num">{{ time(r.timeSeconds) }}</td>
-                  <td class="num">{{ pct(r.survived) }}</td>
-                  <td class="weapons">
-                    @for (w of r.weapons; track w.id) {
-                      <span
-                        >{{ weaponName(w.id) }} {{ pct(w.taken) }} · {{ pct(w.damageShare) }}</span
-                      >
-                    }
-                  </td>
+          @if (rows().length) {
+            <table class="data-table" data-testid="balance-table">
+              <thead>
+                <tr>
+                  <th>God</th>
+                  <th class="num">Runs</th>
+                  <th class="num">Realms</th>
+                  <th class="num">Level</th>
+                  <th class="num">Kills</th>
+                  <th class="num">Avg time</th>
+                  <th class="num">Alive at end</th>
+                  <th>Weapons (taken · damage)</th>
                 </tr>
-              }
-            </tbody>
-          </table>
-        }
-      </section>
+              </thead>
+              <tbody>
+                @for (r of rows(); track r.godId) {
+                  <tr [attr.data-testid]="'balance-row-' + r.godId">
+                    <td>{{ godName(r.godId) }}</td>
+                    <td class="num">{{ r.runs }}</td>
+                    <td class="num">{{ r.realmsCleared.toFixed(2) }}</td>
+                    <td class="num">{{ r.level.toFixed(1) }}</td>
+                    <td class="num">{{ fmt(r.kills) }}</td>
+                    <td class="num">{{ time(r.timeSeconds) }}</td>
+                    <td class="num">{{ pct(r.survived) }}</td>
+                    <td class="weapons">
+                      @for (w of r.weapons; track w.id) {
+                        <span
+                          >{{ weaponName(w.id) }} {{ pct(w.taken) }} ·
+                          {{ pct(w.damageShare) }}</span
+                        >
+                      }
+                    </td>
+                  </tr>
+                }
+              </tbody>
+            </table>
+          }
+        </section>
+      }
 
       <a class="btn" routerLink="/">Back</a>
     </main>
   `,
   styles: `
+    .lock {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      flex-wrap: wrap;
+      justify-content: center;
+    }
+    .lock input {
+      width: 16em;
+    }
+    .wrong {
+      width: 100%;
+      text-align: center;
+      color: #ff8a70;
+      margin: 0;
+    }
     .admin {
       gap: 16px;
       padding-top: 28px;
@@ -394,6 +430,17 @@ const CHART_RUNS = 40;
 })
 export class AdminScreen {
   private readonly progression = inject(Progression);
+  protected readonly unlocked = signal(adminUnlocked());
+  protected readonly wrong = signal(false);
+  protected password = '';
+
+  protected async unlock(event: Event): Promise<void> {
+    event.preventDefault();
+    const ok = await unlockAdmin(this.password);
+    this.password = '';
+    this.wrong.set(!ok);
+    this.unlocked.set(ok);
+  }
   protected readonly content: GameContent = inject(GAME_CONTENT);
 
   protected readonly stats = computed(() => runStatistics(this.progression.save().history));

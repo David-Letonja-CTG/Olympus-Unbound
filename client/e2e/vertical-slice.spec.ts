@@ -1,5 +1,5 @@
 import { expect, test } from '@playwright/test';
-import { debug, inspect, startRun } from './run';
+import { debug, inspect, openAsReturningPlayer, startRun } from './run';
 
 test('the vertical slice: menu → Zeus → Olympus → level-up → elite → boss → gate → realm 2 → death → summary → menu', async ({
   page,
@@ -82,6 +82,9 @@ test('the vertical slice: menu → Zeus → Olympus → level-up → elite → b
   await expect(page.getByTestId('summary-realms')).toHaveText('1');
   const earned = Number(await page.getByTestId('summary-gold').textContent());
   expect(earned).toBeGreaterThanOrEqual(250);
+  // Glory: the first realm cleared unlocks an achievement and tops the solo table (spec: glory).
+  await expect(page.getByTestId('summary-high-score')).toContainText('#1');
+  await expect(page.getByTestId('summary-achievement-first_gate')).toBeVisible();
 
   // Back to the menu; the gold persists across a reload.
   await page.getByTestId('to-menu').click();
@@ -89,7 +92,37 @@ test('the vertical slice: menu → Zeus → Olympus → level-up → elite → b
   await page.reload();
   await expect(page.getByTestId('menu-gold')).toHaveText(String(earned));
 
+  // The Hall of Glory keeps the run and the achievement.
+  await page.getByTestId('menu-glory').click();
+  await expect(page.getByTestId('scores-table')).toContainText('Zeus');
+  await expect(page.getByTestId('achievement-first_gate')).toHaveAttribute('data-unlocked', 'true');
+
   expect(errors).toEqual([]);
+});
+
+test('admin mode shows statistics and plays a balance report', async ({ page }) => {
+  await openAsReturningPlayer(page);
+  // No way in from the menu; the address asks for the password (spec: run-statistics / admin mode).
+  await expect(page.getByRole('link', { name: 'Admin' })).toHaveCount(0);
+  await page.goto('/admin');
+  await expect(page.getByTestId('admin-lock')).toBeVisible();
+  await expect(page.getByTestId('admin-totals')).toHaveCount(0);
+  await page.getByTestId('admin-password').fill('not the password');
+  await page.getByTestId('admin-unlock').click();
+  await expect(page.getByTestId('admin-wrong')).toBeVisible();
+  // The real password is not in the repository: stand in for a successful unlock of this tab's session.
+  await page.evaluate(() => sessionStorage.setItem('olympus-unbound/admin', '1'));
+  await page.reload();
+  await expect(page.getByTestId('admin-empty')).toBeVisible();
+  for (const god of ['hades', 'poseidon', 'athena'])
+    await page.getByTestId(`balance-god-${god}`).click();
+  await page.getByTestId('balance-runs').fill('1');
+  await page.getByTestId('balance-minutes').fill('1');
+  await page.getByTestId('balance-run').click();
+  await expect(page.getByTestId('balance-row-zeus')).toContainText('Thunder Spear', {
+    timeout: 30_000,
+  });
+  await expect(page.getByTestId('balance-run')).toBeVisible();
 });
 
 test('defeat ends the run and shows the summary', async ({ page }) => {

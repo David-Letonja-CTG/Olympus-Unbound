@@ -10,7 +10,7 @@
 | Score, high scores, achievements, quests, history | `app/core/save/glory.ts` (pure functions) | meta-progression is the app's, like `rewards.ts`; no gameplay rule moves out of the simulation |
 | Applying them | `applyRunResult(save, result, content, now)` | one pure, idempotent step per run ID (D8); `now` is passed in so tests fix the date |
 | Hall of Glory | `features/glory/glory-screen.ts`, route `/glory` | |
-| Admin | `core/admin-mode.ts` (`?admin` → sessionStorage), `features/admin/admin-screen.ts`, route `/admin` with a guard | works in production builds: it only reads this browser's save |
+| Admin | `core/admin-mode.ts` (SHA-256 of the typed password against `features/admin/admin-password.ts`, unlocked flag in sessionStorage), `features/admin/admin-screen.ts`, route `/admin`, linked from nowhere | a static game cannot keep a secret (D1): the hash keeps players out, not attackers; the screen only reads this browser's save. `scripts/admin-password.mjs` writes a new hash |
 | Statistics | `features/admin/run-statistics.ts` (pure) | testable without a component |
 | Bot and balance report | `engine/analysis/autopilot.ts` (moved from `engine/testing/`, which re-exports it) and `engine/analysis/balance-report.ts`, exported from `engine/index.ts` | the report runs the real simulation; Angular reaches it only through the engine's public surface (D3) |
 
@@ -44,7 +44,7 @@ Migration 3 → 4 adds the empty records. Parsing validates entries one by one a
 
 ## Daily quests
 
-`questsFor(date, quests)`: FNV-1a of the date string seeds a small LCG; a partial Fisher–Yates over the quest list picks three. Not gameplay randomness, so not the simulation's `Rng` (D5 applies to the simulation). The local date is formatted from `now` (`YYYY-MM-DD`); a different stored date resets progress.
+`questsFor(date, quests)`: FNV-1a of the date string seeds a small LCG; a Fisher–Yates shuffle of the quest list, then the first three, skipping a second quest for a particular god. Not gameplay randomness, so not the simulation's `Rng` (D5 applies to the simulation). The local date is formatted from `now` (`YYYY-MM-DD`); a different stored date resets progress.
 
 ## Balance report
 

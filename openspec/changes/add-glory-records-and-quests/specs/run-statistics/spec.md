@@ -1,15 +1,19 @@
 ## ADDED Requirements
 
 ### Requirement: Admin mode
-Opening any page with `?admin` SHALL enable admin mode for the browser tab's session, in development and production builds alike; the main menu SHALL then show an Admin button leading to the statistics screen. Without admin mode, neither the button nor the screen SHALL be reachable. Admin mode SHALL only read this browser's data and SHALL send nothing anywhere (D1).
+The statistics screen SHALL be reached only by its address, `/admin`; no menu or screen SHALL link to it. It SHALL ask for a password and show nothing else until the right one is given; once unlocked it SHALL stay unlocked for the browser tab's session. Only a hash of the password SHALL be stored in the game. Admin mode SHALL work in development and production builds alike, SHALL only read this browser's data and SHALL send nothing anywhere (D1).
 
-#### Scenario: Entering admin mode
-- **WHEN** the player opens the game with `?admin`
-- **THEN** the main menu shows Admin, and it leads to the statistics screen
+#### Scenario: No way in from the menu
+- **WHEN** a player looks through the main menu and every screen
+- **THEN** nothing leads to the statistics screen
 
-#### Scenario: Without admin mode
-- **WHEN** a player opens `/admin` without having opened `?admin` in this session
-- **THEN** they are sent to the main menu
+#### Scenario: Wrong password
+- **WHEN** someone opens `/admin` and gives a wrong password
+- **THEN** they are told it is wrong and see no statistics
+
+#### Scenario: Right password
+- **WHEN** the owner opens `/admin` and gives the right password
+- **THEN** the statistics screen is shown, and stays unlocked when the tab is reloaded
 
 ### Requirement: Run history
 The save SHALL remember the last 100 finished runs: when the run ended, god, starting realm and the realm it ended in, party size, outcome, seed, time, level, kills, gold, realms cleared, score, and the final weapons (with level and damage dealt), relics and synergies.

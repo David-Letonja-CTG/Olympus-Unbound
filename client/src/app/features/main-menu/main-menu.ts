@@ -1,6 +1,6 @@
 import { ChangeDetectionStrategy, Component, inject } from '@angular/core';
 import { RouterLink } from '@angular/router';
-import { adminEnabled } from '../../core/admin-mode';
+
 import { DailyQuestView, Progression } from '../../core/progression';
 import { ItemIcon } from '../../shared/item-icon';
 
@@ -21,9 +21,6 @@ import { ItemIcon } from '../../shared/item-icon';
         <a class="btn" routerLink="/glory" data-testid="menu-glory">Glory</a>
         <a class="btn" routerLink="/settings">Settings</a>
         <a class="btn" routerLink="/intro" data-testid="menu-intro">Intro</a>
-        @if (admin) {
-          <a class="btn" routerLink="/admin" data-testid="menu-admin">Admin</a>
-        }
       </nav>
 
       @let quests = progression.todayQuests();
@@ -111,7 +108,6 @@ import { ItemIcon } from '../../shared/item-icon';
 })
 export class MainMenu {
   protected readonly progression = inject(Progression);
-  protected readonly admin = adminEnabled();
 
   protected doneCount(quests: readonly DailyQuestView[]): number {
     return quests.filter((q) => q.done).length;

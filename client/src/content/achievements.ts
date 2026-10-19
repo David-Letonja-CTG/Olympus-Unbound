@@ -32,7 +32,7 @@ export const ACHIEVEMENTS: readonly AchievementDefinition[] = [
     description: 'Survive 10 minutes in one run.',
     goal: { measure: 'timeSeconds', target: 600, over: 'run' },
     gold: 150,
-    sprite: 'hourglass',
+    sprite: 'ach_hourglass',
   },
   {
     id: 'survivor_20',
@@ -48,7 +48,7 @@ export const ACHIEVEMENTS: readonly AchievementDefinition[] = [
     description: 'Slay 1,000 foes in one run.',
     goal: { measure: 'kills', target: 1000, over: 'run' },
     gold: 250,
-    sprite: 'skull',
+    sprite: 'ach_skull',
   },
   {
     id: 'slayer_1000',
@@ -56,7 +56,7 @@ export const ACHIEVEMENTS: readonly AchievementDefinition[] = [
     description: 'Slay 1,000 foes over all your runs.',
     goal: { measure: 'kills', target: 1000, over: 'total' },
     gold: 100,
-    sprite: 'sword',
+    sprite: 'ach_sword',
   },
   {
     id: 'slayer_10000',
@@ -64,7 +64,7 @@ export const ACHIEVEMENTS: readonly AchievementDefinition[] = [
     description: 'Slay 10,000 foes over all your runs.',
     goal: { measure: 'kills', target: 10000, over: 'total' },
     gold: 500,
-    sprite: 'scythe',
+    sprite: 'ach_scythe',
   },
   {
     id: 'ascendant',
@@ -96,7 +96,7 @@ export const ACHIEVEMENTS: readonly AchievementDefinition[] = [
     description: 'Play 25 runs.',
     goal: { measure: 'runs', target: 25, over: 'total' },
     gold: 200,
-    sprite: 'shield',
+    sprite: 'ach_shield',
   },
   {
     id: 'storm_lord',
@@ -144,7 +144,7 @@ export const ACHIEVEMENTS: readonly AchievementDefinition[] = [
     description: 'Clear a realm in co-op.',
     goal: { measure: 'realmsCleared', target: 1, over: 'run', mode: 'coop' },
     gold: 300,
-    sprite: 'owl',
+    sprite: 'ach_owl',
   },
 ];
 

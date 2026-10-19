@@ -1,5 +1,5 @@
 import { CONTENT } from '../../../content';
-import { GameContent, RunResult } from '../../../engine';
+import { GameContent, RunResult, spriteKeys } from '../../../engine';
 import { localDate, questsFor, scoreOf } from './glory';
 import { applyRunResult } from './rewards';
 import { freshSave, parseSave, SaveData } from './save-data';
@@ -42,6 +42,13 @@ let counter = 0;
 function play(save: SaveData, content: GameContent, r: Partial<RunResult>, now = NOW) {
   return applyRunResult(save, run({ runId: `g-${++counter}`, ...r }), content, now);
 }
+
+describe('achievement content', () => {
+  it('draws every achievement with a known icon', () => {
+    const keys = new Set(spriteKeys());
+    for (const a of CONTENT.achievements) expect(keys.has(a.sprite), a.id).toBe(true);
+  });
+});
 
 describe('glory score (spec: glory / glory score)', () => {
   it('is kills + 2 per second + 10 per level + 1,000 per realm', () => {
@@ -132,6 +139,15 @@ describe('daily quests (spec: glory / daily quests)', () => {
       ),
     );
     expect(days.size).toBeGreaterThan(1);
+  });
+
+  it('asks for at most one particular god a day', () => {
+    for (let day = 1; day <= 28; day++) {
+      const date = `2026-11-${String(day).padStart(2, '0')}`;
+      const quests = questsFor(date, CONTENT.dailyQuests);
+      expect(quests).toHaveLength(3);
+      expect(quests.filter((q) => q.goal.god).length).toBeLessThanOrEqual(1);
+    }
   });
 
   it('adds the day’s kills up and pays once', () => {

@@ -46,7 +46,7 @@ Achievements SHALL be content data: a name, a description, a goal and a gold rew
 - **THEN** no gold is paid again
 
 ### Requirement: Daily quests
-Each local calendar day SHALL have three different quests, chosen from the quest content by the date alone, so the same date always gives the same quests. Quest goals SHALL use the achievement goal vocabulary; within-run goals count the best run of the day, added-up goals add the day's runs. A completed quest SHALL pay its gold once. At local midnight the next day's quests SHALL replace them with no progress. The Hall SHALL show the day's quests with progress and the time until new quests; the main menu SHALL show how many of today's quests are done.
+Each local calendar day SHALL have three different quests, chosen from the quest content by the date alone, so the same date always gives the same quests, and at most one of them SHALL ask for a particular god. Quest goals SHALL use the achievement goal vocabulary; within-run goals count the best run of the day, added-up goals add the day's runs. A completed quest SHALL pay its gold once. At local midnight the next day's quests SHALL replace them with no progress. The Hall SHALL show the day's quests with progress and the time until new quests; the main menu SHALL show how many of today's quests are done.
 
 #### Scenario: Same date, same quests
 - **WHEN** the quests of 2026-10-19 are chosen twice
