@@ -20,6 +20,7 @@ const result = (overrides: Partial<RunResult> = {}): RunResult => ({
   gold: 430,
   realmsCleared: 1,
   realmReached: 'mount_olympus',
+  players: 1,
   loadout: {
     weapons: [{ id: 'war_hammer', level: 3, damage: 1000 }],
     relics: ['zeus_eye'],
@@ -85,33 +86,39 @@ describe('parseSave', () => {
   });
 });
 
+/** Rewards without achievements or quests, so gold is the run's own. */
+const plain = { ...CONTENT, achievements: [], dailyQuests: [] };
+const NOW = new Date(2026, 9, 19, 12, 0, 0);
+const apply = (save: ReturnType<typeof freshSave>, r: RunResult) =>
+  applyRunResult(save, r, plain, NOW);
+
 describe('applyRunResult', () => {
   it('grants the collected gold, boss gold included, and counts realms cleared', () => {
-    const { save, rewards } = applyRunResult(freshSave(), result());
+    const { save, rewards } = apply(freshSave(), result());
     expect(rewards.totalGold).toBe(430);
     expect(save.gold).toBe(430);
     expect(save.stats).toEqual({ runs: 1, victories: 1, kills: 900, bestTimeSeconds: 450 });
   });
 
   it('grants half the gold, rounded down, for an abandoned run', () => {
-    const { rewards } = applyRunResult(freshSave(), result({ outcome: 'abandoned', gold: 75 }));
+    const { rewards } = apply(freshSave(), result({ outcome: 'abandoned', gold: 75 }));
     expect(rewards.totalGold).toBe(37);
   });
 
   it('grants nothing for the same run twice', () => {
-    const once = applyRunResult(freshSave(), result()).save;
-    const twice = applyRunResult(once, result());
+    const once = apply(freshSave(), result()).save;
+    const twice = apply(once, result());
     expect(twice.rewards.alreadyProcessed).toBe(true);
     expect(twice.save.gold).toBe(430);
   });
 
   it('discovers held items once', () => {
-    const { save, rewards } = applyRunResult(freshSave(), result());
+    const { save, rewards } = apply(freshSave(), result());
     expect(rewards.newlyDiscovered).toEqual([
       { kind: 'weapons', id: 'war_hammer' },
       { kind: 'relics', id: 'zeus_eye' },
     ]);
-    const again = applyRunResult(save, result({ runId: 'run-2' }));
+    const again = apply(save, result({ runId: 'run-2' }));
     expect(again.rewards.newlyDiscovered).toEqual([]);
   });
 });
@@ -140,9 +147,11 @@ describe('SaveStore and Progression', () => {
         throw new Error('blocked');
       },
     });
-    progression.recordRun(result());
-    expect(progression.gold()).toBe(430);
-    expect(store.load().gold).toBe(430);
+    // The run's 430 gold, plus what its achievements and quests pay.
+    const rewards = progression.recordRun(result(), NOW);
+    expect(rewards.totalGold).toBeGreaterThanOrEqual(430);
+    expect(progression.gold()).toBe(rewards.totalGold);
+    expect(store.load().gold).toBe(rewards.totalGold);
   });
 
   it('buys a permanent upgrade, saves it, and applies it to the next run', () => {
@@ -185,7 +194,7 @@ describe('save format v2', () => {
       CONTENT,
       'high',
     );
-    expect(save.version).toBe(3);
+    expect(save.version).toBe(SAVE_VERSION);
     expect(save.gold).toBe(300);
     expect(save.permanentUpgrades).toEqual({ vitality: 2 });
     expect(save.introSeen).toBe(false);
@@ -220,7 +229,7 @@ describe('save format v3', () => {
       }),
       CONTENT,
     );
-    expect(save.version).toBe(3);
+    expect(save.version).toBe(SAVE_VERSION);
     expect(save.settings.enemyHealthBars).toBe(true);
     expect(save.settings.damageNumbers).toBe(false);
     expect(save.settings.quality).toBe('low');

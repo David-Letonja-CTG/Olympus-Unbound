@@ -301,6 +301,7 @@ export class RunSimulation {
       gold: Math.floor(state.gold),
       realmsCleared,
       realmReached: state.realm.id,
+      players: state.party.length,
       loadout: {
         weapons: loadout.weapons.map((w) => ({
           id: w.def.id,

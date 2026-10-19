@@ -50,8 +50,8 @@ export class Progression {
   }
 
   /** Grants a finished run's rewards once (spec: run-outcome / rewards granted once). */
-  recordRun(result: RunResult): RunRewards {
-    const { save, rewards } = applyRunResult(this.state(), result);
+  recordRun(result: RunResult, now = new Date()): RunRewards {
+    const { save, rewards } = applyRunResult(this.state(), result, this.content, now);
     if (!rewards.alreadyProcessed) this.commit(save);
     return rewards;
   }
