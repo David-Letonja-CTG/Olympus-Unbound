@@ -28,7 +28,7 @@ The player and enemies SHALL NOT pass through obstacles or leave the map bounds;
 - **THEN** the player stops at the playable bounds
 
 ### Requirement: Divine ability
-Each god SHALL have one active ability triggered by Space or the gamepad's south button. The ability SHALL only fire when its cooldown is ready, and its remaining cooldown SHALL be shown.
+Each god SHALL have one active ability triggered by Space or the gamepad's south button (or right trigger). The ability SHALL only fire when its cooldown is ready, and its remaining cooldown SHALL be shown.
 
 #### Scenario: Zeus's ability
 - **WHEN** `zeus` uses `wrath_of_olympus` with enemies nearby
@@ -54,6 +54,10 @@ Each god SHALL have one active ability triggered by Space or the gamepad's south
 - **WHEN** the player taps Space so briefly that it is released before the next frame
 - **THEN** the ability still fires (if ready) on the next simulation step
 
+#### Scenario: Shift sprints, not the ability
+- **WHEN** the player holds Shift
+- **THEN** the ability does not fire
+
 ### Requirement: Camera
 The camera SHALL keep the player centred while moving and SHALL show a similar amount of the world regardless of window size, so the window size gives no large advantage.
 
@@ -71,3 +75,30 @@ Escape, P or the gamepad's Start button SHALL pause the run; the simulation, tim
 #### Scenario: Losing focus
 - **WHEN** the window loses focus during play
 - **THEN** the run is paused and the pause menu is shown
+
+### Requirement: Stamina, sprint and dash
+Every god SHALL have stamina (maximum 100) that refills at a steady rate once no stamina has been spent for a short pause. Holding Shift (gamepad: left bumper or left trigger) while moving SHALL sprint: the god moves faster and stamina drains while sprinting; with no stamina left the god walks. Pressing E (gamepad: east button) SHALL dash: a short, fast move in the direction of movement, or the facing direction when standing still, during which the god takes no damage. A dash SHALL cost a fixed share of stamina, SHALL NOT start without enough stamina, and SHALL need a brief recovery before the next one. A dash SHALL collide with the world like walking. A quick tap of the dash key SHALL count like a quick tap of the ability key.
+
+#### Scenario: Sprinting is faster
+- **WHEN** the player sprints for one second with movement speed 200 and full stamina
+- **THEN** the player travels about 310 units and has less stamina than before
+
+#### Scenario: Sprinting without stamina
+- **WHEN** the player holds Shift with no stamina left
+- **THEN** the player moves at walking speed
+
+#### Scenario: Dash through an attack
+- **WHEN** the player dashes while an enemy attack lands on them
+- **THEN** the player takes no damage, moves about 150 units in the dash's direction, and loses 35 stamina
+
+#### Scenario: Not enough stamina to dash
+- **WHEN** the player presses E with less stamina than a dash costs
+- **THEN** no dash happens
+
+#### Scenario: Stamina refills
+- **WHEN** the player has spent stamina and spends none for a few seconds
+- **THEN** stamina rises back to full
+
+#### Scenario: Dash in a room
+- **WHEN** a guest in a room dashes
+- **THEN** the guest's god dashes on the host's game and on every screen

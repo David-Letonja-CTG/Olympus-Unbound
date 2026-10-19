@@ -10,13 +10,14 @@ const STICK_UI_THRESHOLD = 0.6;
  */
 export class InputReader {
   private readonly keys: Record<
-    'up' | 'down' | 'left' | 'right' | 'w' | 'a' | 's' | 'd' | 'space' | 'shift',
+    'up' | 'down' | 'left' | 'right' | 'w' | 'a' | 's' | 'd' | 'space' | 'shift' | 'e',
     Phaser.Input.Keyboard.Key
   >;
   private readonly previous = new Map<UiInput, boolean>();
   private pauseRequested = false;
   /** A tap of the ability key between two frames still counts (it may be shorter than a frame at low fps). */
   private abilityTapped = false;
+  private dashTapped = false;
 
   constructor(private readonly scene: Phaser.Scene) {
     const keyboard = scene.input.keyboard as Phaser.Input.Keyboard.KeyboardPlugin;
@@ -34,15 +35,16 @@ export class InputReader {
       d: add(K.D),
       space: add(K.SPACE),
       shift: add(K.SHIFT),
+      e: add(K.E),
     };
     keyboard.clearCaptures();
     const requestPause = (event: KeyboardEvent) => {
       // Angular marks the event when an open menu already handled it (e.g. Escape closing the pause menu).
       if (!event.defaultPrevented) this.pauseRequested = true;
     };
-    const tapAbility = () => (this.abilityTapped = true);
-    keyboard.on('keydown-SPACE', tapAbility);
-    keyboard.on('keydown-SHIFT', tapAbility);
+    // Shift sprints and E dashes (spec: player-control / stamina, sprint and dash); Space is the ability alone.
+    keyboard.on('keydown-SPACE', () => (this.abilityTapped = true));
+    keyboard.on('keydown-E', () => (this.dashTapped = true));
     keyboard.on('keydown-ESC', requestPause);
     keyboard.on('keydown-P', requestPause);
   }
@@ -52,7 +54,9 @@ export class InputReader {
     const k = this.keys;
     let x = (k.right.isDown || k.d.isDown ? 1 : 0) - (k.left.isDown || k.a.isDown ? 1 : 0);
     let y = (k.down.isDown || k.s.isDown ? 1 : 0) - (k.up.isDown || k.w.isDown ? 1 : 0);
-    let ability = k.space.isDown || k.shift.isDown || this.abilityTapped;
+    let ability = k.space.isDown || this.abilityTapped;
+    let sprint = k.shift.isDown;
+    let dash = k.e.isDown || this.dashTapped;
     const pad = this.pad();
     if (pad) {
       const stickX = pad.leftStick.x;
@@ -66,13 +70,16 @@ export class InputReader {
       if (pad.up) y = -1;
       if (pad.down) y = 1;
       ability ||= pad.A || pad.R2 > 0.5;
+      sprint ||= pad.L1 > 0.5 || pad.L2 > 0.5;
+      dash ||= pad.B;
     }
-    return { moveX: x, moveY: y, ability };
+    return { moveX: x, moveY: y, ability, sprint, dash };
   }
 
-  /** The simulation has stepped with the current input: a latched ability tap is used up. */
+  /** The simulation has stepped with the current input: latched taps are used up. */
   consumeTaps(): void {
     this.abilityTapped = false;
+    this.dashTapped = false;
   }
 
   /** True once per key/button press of pause (Escape, P, gamepad Start). */
@@ -105,6 +112,7 @@ export class InputReader {
     for (const key of Object.values(this.keys)) key.reset();
     this.pauseRequested = false;
     this.abilityTapped = false;
+    this.dashTapped = false;
   }
 
   private pad(): Phaser.Input.Gamepad.Gamepad | undefined {

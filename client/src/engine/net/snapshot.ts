@@ -23,6 +23,8 @@ const PICKUPS: readonly PickupKind[] = ['xp', 'gold', 'heal', 'chest'];
 export interface SnapPlayer extends FramePlayer {
   readonly god: GodDefinition;
   readonly moveSpeed: number;
+  /** Stamina, to the snapshot's precision (a guest corrects its prediction by it). */
+  readonly stamina: number;
   // Writable: a guest draws its own god where it predicts it (net/guest.ts).
   x: number;
   y: number;
@@ -119,6 +121,7 @@ export function encodeSnapshot(state: RunState, phase: RunPhase, waiting = false
   w.u8(names.size);
   for (const s of names.keys()) w.str(s);
 
+  const staminaMax = state.balance.stamina.max;
   w.u16(state.players.length);
   for (const p of state.players) {
     w.u32(p.id);
@@ -132,6 +135,7 @@ export function encodeSnapshot(state: RunState, phase: RunPhase, waiting = false
     w.u8(timer(p.hurtFlash));
     w.u8(timer(p.invulnerable));
     w.u8(Math.round(Math.max(0, Math.min(1, p.revive)) * 255));
+    w.u8(Math.round(Math.max(0, Math.min(1, p.stamina / staminaMax)) * 255));
   }
 
   w.u16(state.enemies.length);
@@ -244,6 +248,7 @@ export function decodeSnapshot(buffer: ArrayBuffer, index: ContentIndex): Snapsh
       hurtFlash: r.u8() / TIMER,
       invulnerable: r.u8() / TIMER,
       revive: r.u8() / 255,
+      stamina: (r.u8() / 255) * index.content.balance.stamina.max,
     });
   }
 

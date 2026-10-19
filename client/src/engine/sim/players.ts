@@ -1,12 +1,11 @@
 import { computeStats } from '../core/stats';
-import { clampLength } from '../core/vector';
 import { createWeapon, evaluateSynergies, refreshPlayer } from '../progression/loadout';
 import { useAbility } from '../weapons/weapon-system';
+import { stepMovement } from './movement';
 import { RunState } from './run-state';
 import { NO_INPUT, Player, PlayerInput } from './types';
 
-/** Stick input shorter than this is ignored (spec: player-control / movement input). */
-export const DEAD_ZONE = 0.2;
+export { DEAD_ZONE, normaliseMove } from './movement';
 
 export function createPlayer(state: RunState, slot: number, x: number, y: number): Player {
   const seat = state.party[slot] ?? state.party[0];
@@ -35,19 +34,18 @@ export function createPlayer(state: RunState, slot: number, x: number, y: number
     abilityTimer: 0,
     ability: createWeapon(god.ability, stats),
     loadout: { weapons: [], relics: [], skills: new Map(), synergies: [] },
+    stamina: state.balance.stamina.max,
+    staminaRest: 0,
+    dashTime: 0,
+    dashCooldown: 0,
+    dashX: 1,
+    dashY: 0,
   };
   player.loadout.weapons.push(createWeapon(state.index.weapon(god.startingWeapon), stats));
   refreshPlayer(state, player);
   player.health = player.stats.maxHealth;
   evaluateSynergies(state, player);
   return player;
-}
-
-/** Normalises raw input: dead zone, and diagonal movement no faster than straight movement. */
-export function normaliseMove(input: PlayerInput): { x: number; y: number } {
-  const length = Math.hypot(input.moveX, input.moveY);
-  if (length < DEAD_ZONE) return { x: 0, y: 0 };
-  return clampLength(input.moveX, input.moveY, 1);
 }
 
 export function updatePlayers(state: RunState, inputs: readonly PlayerInput[], dt: number): void {
@@ -57,15 +55,13 @@ export function updatePlayers(state: RunState, inputs: readonly PlayerInput[], d
     if (!player.alive) continue;
     // A slot without input stands still; it never copies another player's (D16).
     const input = inputs[player.slot] ?? NO_INPUT;
-    const move = input ? normaliseMove(input) : { x: 0, y: 0 };
-    player.moving = move.x !== 0 || move.y !== 0;
-    if (player.moving) {
-      const length = Math.hypot(move.x, move.y);
-      player.facingX = move.x / length;
-      player.facingY = move.y / length;
-      player.x += move.x * player.stats.moveSpeed * dt;
-      player.y += move.y * player.stats.moveSpeed * dt;
-      state.collision.resolve(player);
+    const rules = state.balance.stamina;
+    const x = player.x;
+    const y = player.y;
+    if (stepMovement(player, input, player.stats.moveSpeed, rules, state.collision, dt)) {
+      // Untouchable for the dash (spec: player-control / dash through an attack); the one damage check is unchanged.
+      player.invulnerable = Math.max(player.invulnerable, rules.dashDuration + rules.dashGrace);
+      state.emit({ type: 'dash', playerId: player.id, x, y, dx: player.dashX, dy: player.dashY });
     }
     if (player.invulnerable > 0) player.invulnerable -= dt;
     if (player.hurtFlash > 0) player.hurtFlash -= dt;

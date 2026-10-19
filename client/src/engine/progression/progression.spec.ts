@@ -193,3 +193,30 @@ describe('treasure chests', () => {
     expect(sim.phase).toBe('playing');
   });
 });
+
+describe('god arsenals (spec: run-progression / god arsenals)', () => {
+  const newWeapons = (godId: string) => {
+    const sim = quietSim({ godId });
+    return offerCandidates(sim.state, player(sim))
+      .filter((c) => c.offer.kind === 'newWeapon')
+      .map((c) => c.offer.itemId);
+  };
+
+  it('never offers Zeus’s thunderbolt to Hades', () => {
+    expect(newWeapons('hades')).not.toContain('thunderbolt');
+    expect(newWeapons('zeus')).toContain('thunderbolt');
+  });
+
+  it('offers the common weapons to every god', () => {
+    for (const god of ['zeus', 'hades', 'poseidon', 'athena'])
+      expect(newWeapons(god)).toEqual(
+        expect.arrayContaining(['divine_bow', 'war_hammer', 'flaming_sword']),
+      );
+  });
+
+  it('shares the Lightning Orbs between Zeus and Athena, the Soul Scythe with no one', () => {
+    expect(newWeapons('athena')).toContain('lightning_orb');
+    expect(newWeapons('athena')).not.toContain('soul_scythe');
+    expect(newWeapons('hades')).toContain('soul_scythe');
+  });
+});

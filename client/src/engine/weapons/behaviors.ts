@@ -19,6 +19,8 @@ export interface WeaponBehavior {
   fire(ctx: WeaponContext): boolean;
   /** Runs every step, before cooldowns (e.g. keeps orbs alive). */
   maintain?(ctx: WeaponContext): void;
+  /** Always at work (orbs): there is no cooldown to show on the HUD. */
+  readonly continuous?: boolean;
 }
 
 export function hitSource(player: Player, weapon: WeaponInstance): HitSource {
@@ -127,6 +129,7 @@ const chain: WeaponBehavior = {
 
 /** Keeps `amount` orbs circling the player; each orb hits an enemy at most once per `cooldown`. */
 const orbit: WeaponBehavior = {
+  continuous: true,
   fire() {
     return true;
   },

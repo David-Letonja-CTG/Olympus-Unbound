@@ -14,7 +14,7 @@ const ELEMENT_COLOR: Record<Element, number> = {
 };
 
 interface Transient {
-  kind: 'nova' | 'sweep' | 'chain' | 'strike' | 'impact' | 'burst';
+  kind: 'nova' | 'sweep' | 'chain' | 'strike' | 'impact' | 'burst' | 'streak';
   x: number;
   y: number;
   radius: number;
@@ -35,6 +35,8 @@ interface FloatingNumber {
 }
 
 const MAX_NUMBERS = 60;
+/** Length of the dash streak: about a dash's reach. */
+const DASH_STREAK = 150;
 
 /**
  * Everything that is feedback rather than state (D7, spec: hud / combat readability): attack visuals, telegraphs,
@@ -134,6 +136,20 @@ export class Effects {
           ttl: 0.6,
         });
         this.burst(this.sparks, event.x, event.y, 40, 0xff8a3d);
+        return;
+      case 'dash':
+        // A pale streak along the dash and dust where it began (spec: player-control / stamina, sprint and dash).
+        this.add({
+          kind: 'streak',
+          x: event.x,
+          y: event.y,
+          radius: DASH_STREAK,
+          angle: Math.atan2(event.dy, event.dx),
+          arc: 0,
+          color: 0xe8dcb4,
+          ttl: 0.32,
+        });
+        this.burst(this.puffs, event.x, event.y, 8, 0xb9ab92);
         return;
       case 'hazardResolved':
         if (event.shape === 'circle') {
@@ -388,6 +404,24 @@ export class Effects {
           g.beginPath();
           g.arc(t.x, t.y, t.radius * 0.95, start, end, false);
           g.strokePath();
+          break;
+        }
+        case 'streak': {
+          // Tapered: wide and bright at the god's end, fading toward where the dash began.
+          const dx = Math.cos(t.angle);
+          const dy = Math.sin(t.angle);
+          const reach = t.radius * Math.min(1, k * 4);
+          for (let s = 0; s < 4; s++) {
+            const a = s / 4;
+            const b = (s + 1) / 4;
+            g.lineStyle(4 + 14 * b * fade, t.color, 0.12 + 0.4 * b * fade);
+            g.lineBetween(
+              t.x + dx * reach * a,
+              t.y + dy * reach * a,
+              t.x + dx * reach * b,
+              t.y + dy * reach * b,
+            );
+          }
           break;
         }
         case 'chain':

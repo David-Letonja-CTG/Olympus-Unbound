@@ -43,6 +43,18 @@ export const BALANCE: BalanceConfig = {
     bossDamagePerRealm: 0.25,
   },
   revive: { radius: 70, seconds: 3, health: 0.5, invulnerable: 2 },
+  stamina: {
+    max: 100,
+    regen: 32,
+    regenDelay: 0.7,
+    sprintMultiplier: 1.55,
+    sprintDrain: 30,
+    dashCost: 35,
+    dashDuration: 0.18,
+    dashSpeed: 830,
+    dashRecovery: 0.35,
+    dashGrace: 0.05,
+  },
 };
 
 export const PERMANENT_UPGRADES: readonly PermanentUpgradeDefinition[] = [

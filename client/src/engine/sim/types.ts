@@ -21,9 +21,19 @@ export interface PlayerInput {
   moveY: number;
   /** True while the ability button is held. */
   ability: boolean;
+  /** True while the sprint button is held (spec: player-control / stamina, sprint and dash). */
+  sprint?: boolean;
+  /** True if the dash button was held or tapped during the step. */
+  dash?: boolean;
 }
 
-export const NO_INPUT: PlayerInput = { moveX: 0, moveY: 0, ability: false };
+export const NO_INPUT: PlayerInput = {
+  moveX: 0,
+  moveY: 0,
+  ability: false,
+  sprint: false,
+  dash: false,
+};
 
 // ---------------------------------------------------------------------------------------------------------------
 // Entities. Positions are world units; `px`/`py` are the previous step's positions (for render interpolation).
@@ -76,6 +86,13 @@ export interface Player {
   abilityTimer: number;
   ability: WeaponInstance;
   loadout: Loadout;
+  /** Stamina for sprinting and dashing (spec: player-control / stamina, sprint and dash). */
+  stamina: number;
+  staminaRest: number;
+  dashTime: number;
+  dashCooldown: number;
+  dashX: number;
+  dashY: number;
 }
 
 export interface StatusState {
@@ -306,6 +323,7 @@ export type SimEvent =
   | { type: 'playerHurt'; playerId: number; amount: number; x: number; y: number }
   | { type: 'playerHealed'; playerId: number; amount: number }
   | { type: 'playerRevived'; playerId: number; x: number; y: number }
+  | { type: 'dash'; playerId: number; x: number; y: number; dx: number; dy: number }
   | { type: 'pickup'; kind: PickupKind; x: number; y: number; value: number }
   | {
       type: 'attack';
@@ -360,6 +378,15 @@ export interface HudSnapshot {
     readonly cooldown: number;
     readonly remaining: number;
   };
+  /** Stamina and the dash's state (spec: hud / cooldowns and stamina). */
+  readonly stamina: {
+    readonly value: number;
+    readonly max: number;
+    readonly dashCost: number;
+    /** Seconds until a dash may start again, and the whole recovery. */
+    readonly dashRemaining: number;
+    readonly dashCooldown: number;
+  };
   readonly weapons: readonly HudItem[];
   readonly armour?: HudItem;
   readonly relics: readonly HudItem[];
@@ -407,4 +434,7 @@ export interface HudItem {
   readonly maxLevel: number;
   readonly sprite: string;
   readonly color: number;
+  /** A weapon's cooldown and the seconds of it left (spec: hud / cooldowns and stamina). */
+  readonly cooldown?: number;
+  readonly remaining?: number;
 }

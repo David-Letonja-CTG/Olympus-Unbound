@@ -22,7 +22,7 @@ All game content is typed TypeScript in `client/src/content/` (decision D4). The
 
 ## Checklists
 
-**New weapon:** choose a behavior (`projectile`, `chain`, `orbit`, `nova`, `sweep`, `strike`) → add the definition with 5 level deltas, each with a `text` → add an icon (and a projectile sprite if it fires one) in `sprites.ts` → its sound: a cue in `engine/audio/sound-map.ts` (`ATTACK_SOUNDS`), made of recordings in `engine/audio/recorded.ts` (sound files listed in `content/assets.ts`) with a synthesized fallback in `sound-player.ts` → run the tests. A genuinely new way of attacking is a new behavior in `engine/weapons/behaviors.ts` with its own tests and an OpenSpec change.
+**New weapon:** decide whose it is (`gods`: absent = every god; otherwise the IDs of the gods who may find it) → choose a behavior (`projectile`, `chain`, `orbit`, `nova`, `sweep`, `strike`) → add the definition with 5 level deltas, each with a `text` → add an icon (and a projectile sprite if it fires one) in `sprites.ts` → its sound: a cue in `engine/audio/sound-map.ts` (`ATTACK_SOUNDS`), made of recordings in `engine/audio/recorded.ts` (sound files listed in `content/assets.ts`) with a synthesized fallback in `sound-player.ts` → run the tests. A genuinely new way of attacking is a new behavior in `engine/weapons/behaviors.ts` with its own tests and an OpenSpec change.
 
 **New enemy:** pick a behavior (`chaser` with optional `jitter`, `ranged`, `charger`, `summoner`) → add it to `enemies.ts` → add a painter in `sprites.ts` → add it to a realm's timeline or events.
 
@@ -50,18 +50,18 @@ A `CutsceneDefinition` names its realm, arena seed, duration (the intro is 45–
 
 ### Weapons
 
-| ID | Behavior | Element | Notes |
-|---|---|---|---|
-| `thunder_spear` | projectile | lightning | Zeus's start; pierces, may shock |
-| `divine_bow` | projectile | physical | volleys, homing, high crit |
-| `trident` | projectile | physical | Poseidon's start; 3-prong fan, pierce, heavy knockback |
-| `lightning_orb` | orbit | lightning | circling orbs, shock |
-| `war_hammer` | nova | physical | shockwave when enemies are close, stun |
-| `flaming_sword` | sweep | fire | arc toward the nearest foe, burn |
-| `thunderbolt` | chain | lightning | jumps between enemies, shock |
-| `soul_scythe` | sweep (360°) | shadow | slow, 3% lifesteal |
-| `bident` | sweep (narrow thrust) | shadow | Hades's start; long reach, slow, 3% lifesteal |
-| `spear_of_athena` | projectile | physical | Athena's start; piercing javelin, high crit |
+| ID | Gods | Behavior | Element | Notes |
+|---|---|---|---|---|
+| `thunder_spear` | Zeus, Poseidon, Athena | projectile | lightning | Zeus's start; pierces, may shock |
+| `divine_bow` | all | projectile | physical | volleys, homing, high crit |
+| `trident` | Poseidon | projectile | physical | Poseidon's start; 3-prong fan, pierce, heavy knockback |
+| `lightning_orb` | Zeus, Athena | orbit | lightning | circling orbs, shock |
+| `war_hammer` | all | nova | physical | shockwave when enemies are close, stun |
+| `flaming_sword` | all | sweep | fire | arc toward the nearest foe, burn |
+| `thunderbolt` | Zeus | chain | lightning | jumps between enemies, shock |
+| `soul_scythe` | Hades | sweep (360°) | shadow | slow, 3% lifesteal |
+| `bident` | Hades | sweep (narrow thrust) | shadow | Hades's start; long reach, slow, 3% lifesteal |
+| `spear_of_athena` | Athena | projectile | physical | Athena's start; piercing javelin, high crit |
 
 ### Synergies
 

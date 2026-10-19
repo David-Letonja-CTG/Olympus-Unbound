@@ -7,6 +7,7 @@ import { ArenaData, generateArena } from '../maps/generate-arena';
 import { applyOffer } from '../progression/loadout';
 import { generateOffers } from '../progression/offers';
 import { SpawnDirector } from '../spawning/director';
+import { WEAPON_BEHAVIORS } from '../weapons/behaviors';
 import {
   updateHostileProjectiles,
   updateProjectiles,
@@ -380,7 +381,11 @@ export class RunSimulation {
       maxLevel: w.def.levels.length + 1,
       sprite: w.def.visual.sprite,
       color: w.def.visual.color,
+      ...(WEAPON_BEHAVIORS[w.def.behavior].continuous
+        ? {}
+        : { cooldown: w.stats.cooldown, remaining: Math.max(0, w.timer) }),
     }));
+    const stamina = state.balance.stamina;
     const armour = loadout.armour;
     let enemies = 0;
     for (const e of state.enemies) if (!e.dead) enemies++;
@@ -404,6 +409,13 @@ export class RunSimulation {
         sprite: player.ability.def.visual.sprite,
         cooldown: player.ability.stats.cooldown,
         remaining: player.abilityTimer,
+      },
+      stamina: {
+        value: player.stamina,
+        max: stamina.max,
+        dashCost: stamina.dashCost,
+        dashRemaining: player.dashCooldown,
+        dashCooldown: stamina.dashDuration + stamina.dashRecovery,
       },
       weapons,
       armour: armour

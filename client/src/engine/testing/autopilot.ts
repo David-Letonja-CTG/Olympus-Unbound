@@ -71,3 +71,12 @@ export function playRun(
     sim.step(STEP, [autopilot(sim)]);
   }
 }
+
+/** Picks like a player building an arsenal: a new weapon first, then a weapon level, else the first offer. */
+export function armsFirst(sim: RunSimulation): number {
+  const offers = sim.currentChoice?.offers ?? [];
+  const at = (kind: string) => offers.findIndex((o) => o.kind === kind);
+  const weapon = at('newWeapon');
+  if (weapon >= 0) return weapon;
+  return Math.max(0, at('weaponLevel'));
+}
