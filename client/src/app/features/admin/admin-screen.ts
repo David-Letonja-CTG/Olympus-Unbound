@@ -70,7 +70,8 @@ const CHART_RUNS = 40;
               <span>Realms cleared</span><strong>{{ s.totals.realmsCleared }}</strong>
             </div>
             <div>
-              <span>Solo / co-op</span><strong>{{ s.totals.solo }} / {{ s.totals.coop }}</strong>
+              <span>Solo / allies / co-op</span
+              ><strong>{{ s.totals.solo }} / {{ s.totals.allies }} / {{ s.totals.coop }}</strong>
             </div>
             <div class="exports">
               <button class="btn" data-testid="export-json" (click)="exportJson()">JSON</button>

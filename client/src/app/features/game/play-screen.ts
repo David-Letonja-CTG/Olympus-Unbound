@@ -18,6 +18,7 @@ import {
   GameSession,
   HudSnapshot,
   LoadStage,
+  RunConfig,
   RunOutcome,
   UiInput,
   UpgradeChoice,
@@ -26,7 +27,7 @@ import { debugEnabled } from '../../core/debug-mode';
 import { GAME_CONTENT, GAME_SESSION_FACTORY } from '../../core/game-content';
 import { Progression } from '../../core/progression';
 import { RoomService } from '../../core/rooms/room-service';
-import { RunSetup } from '../../core/run-setup';
+import { ALLY_SKILLS, RunSetup } from '../../core/run-setup';
 import { Announcement, Hud } from './hud';
 import { LevelUpDialog } from './level-up-dialog';
 import { PauseMenu } from './pause-menu';
@@ -222,12 +223,26 @@ export class PlayScreen {
       });
     }
     const god = godOf(this.setup.godId() ?? '');
-    return god ? [{ name: 'You', godName: god.name, sprite: god.visual.sprite }] : [];
+    if (!god) return [];
+    const allies = this.setup.allies().map((a) => {
+      const ally = godOf(a.godId);
+      return {
+        name: ally?.name ?? a.godId,
+        godName: ally?.name ?? a.godId,
+        sprite: ally?.visual.sprite ?? a.godId,
+        bot: ALLY_SKILLS.find((s) => s.id === a.skill)?.label ?? a.skill,
+      };
+    });
+    return [
+      { name: 'You', godName: god.name, sprite: god.visual.sprite, you: allies.length > 0 },
+      ...allies,
+    ];
   });
   /** In a room, this player's god is down but the run goes on (spec: co-op / reviving allies). */
   protected readonly fallen = computed(() => {
     const hud = this.hud();
-    return !!this.room && !!hud && hud.health <= 0 && !this.ended();
+    const party = !!this.room || this.setup.allies().length > 0;
+    return party && !!hud && hud.health <= 0 && !this.ended();
   });
   /** In a room, who the open round of choices still waits for once this player has chosen. */
   protected readonly waitingFor = computed(() => {
@@ -272,6 +287,30 @@ export class PlayScreen {
     void this.router.navigate(['/']);
   }
 
+  /** A solo run: the player alone, or with bot allies as a party (spec: bot-allies / a party like co-op). */
+  private soloRun(godId: string, realmId: string): RunConfig {
+    const modifiers = this.progression.runModifiers();
+    const allies = this.setup.allies();
+    return {
+      runId: this.setup.newRunId(),
+      godId,
+      realmId,
+      seed: this.setup.seed(),
+      modifiers,
+      party: allies.length
+        ? [
+            { godId, name: 'You', modifiers },
+            ...allies.map((a) => ({
+              godId: a.godId,
+              name: this.content.gods.find((g) => g.id === a.godId)?.name ?? a.godId,
+              modifiers: [],
+              bot: { skill: a.skill },
+            })),
+          ]
+        : undefined,
+    };
+  }
+
   private async start(): Promise<void> {
     const godId = this.setup.godId();
     const realmId = this.setup.realmId();
@@ -284,13 +323,7 @@ export class PlayScreen {
       const session = await this.createSession({
         parent: this.host().nativeElement,
         content: this.content,
-        run: this.room?.config ?? {
-          runId: this.setup.newRunId(),
-          godId: godId ?? '',
-          realmId: realmId ?? '',
-          seed: this.setup.seed(),
-          modifiers: this.progression.runModifiers(),
-        },
+        run: this.room?.config ?? this.soloRun(godId ?? '', realmId ?? ''),
         settings: this.progression.settings(),
         debug,
         room: this.room?.seat,

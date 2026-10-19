@@ -13,6 +13,7 @@ An original mythological horde-survival roguelite that runs entirely in the brow
 - **The Wandering Merchant:** twice a realm, trade the run's gold for companions (an eagle, a hound, a serpent) that fight beside you, whetstones and ambrosia.
 - **Glory:** a score for every run, solo and co-op high scores, 18 achievements and three daily quests.
 - **Co-op:** rooms for up to four players, peer to peer, with difficulty per player; a living ally revives a fallen god by standing beside their spirit.
+- **Allies:** no friends online? Add up to three gods played by the machine (Easy, Normal or Hard) to a solo run.
 - **Night and myth:** dynamic light, fog and torchlight, and a cast rendered in Blender from licensed models (`art/blender/`).
 
 | Every realm's boss | Level up | The gate onward |

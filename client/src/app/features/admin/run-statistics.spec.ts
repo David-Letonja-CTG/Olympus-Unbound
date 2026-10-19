@@ -8,6 +8,7 @@ const record = (overrides: Partial<RunRecord> = {}): RunRecord => ({
   realmId: 'mount_olympus',
   realmReached: 'mount_olympus',
   players: 1,
+  bots: 0,
   outcome: 'defeat',
   seed: 1,
   timeSeconds: 300,

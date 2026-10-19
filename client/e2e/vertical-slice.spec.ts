@@ -170,6 +170,33 @@ test('permanent upgrades are bought with gold and kept', async ({ page }) => {
   await expect(page.getByTestId('progression-gold')).toHaveText('50');
 });
 
+test('a solo run with bot allies plays as a party (spec: bot-allies)', async ({ page }) => {
+  await openAsReturningPlayer(page);
+  await page.getByRole('link', { name: 'Play' }).click();
+  await page.getByTestId('god-zeus').click();
+  await page.getByTestId('add-ally').click();
+  await page.getByTestId('add-ally-hades').click();
+  await page.getByTestId('ally-0-hard').click();
+  await page.getByRole('button', { name: 'Continue' }).click();
+  await page.getByTestId('seed-input').fill('777');
+  await page.getByTestId('begin').click();
+  await expect(page.getByTestId('party-member')).toHaveCount(2, { timeout: 30_000 });
+  await expect(page.getByTestId('run-loading')).toHaveCount(0, { timeout: 120_000 });
+  await expect(page.getByTestId('hud-party')).toContainText('(bot)', { timeout: 20_000 });
+  await expect.poll(async () => (await inspect(page))?.players ?? 0).toBe(2);
+  // The ally moves on its own.
+  const at = (await inspect(page))?.party[1];
+  await expect
+    .poll(
+      async () => {
+        const now = (await inspect(page))?.party[1];
+        return Math.hypot((now?.x ?? 0) - (at?.x ?? 0), (now?.y ?? 0) - (at?.y ?? 0));
+      },
+      { timeout: 30_000 },
+    )
+    .toBeGreaterThan(20);
+});
+
 test('the wandering merchant sells a companion (spec: merchant)', async ({ page }) => {
   await startRun(page, '4242');
   await debug(page, { type: 'godMode', enabled: true });

@@ -1,3 +1,4 @@
+import { modeOf } from '../../core/save/glory';
 import { RunRecord } from '../../core/save/save-records';
 
 /** Statistics over the run history (spec: run-statistics / statistics). Pure, so it is tested without a screen. */
@@ -9,6 +10,8 @@ export interface RunStatistics {
     readonly realmsCleared: number;
     readonly solo: number;
     readonly coop: number;
+    /** Solo runs with bot allies (spec: bot-allies). */
+    readonly allies: number;
   };
   readonly gods: readonly {
     readonly godId: string;
@@ -69,8 +72,9 @@ export function runStatistics(history: readonly RunRecord[]): RunStatistics {
       seconds: sum((r) => r.timeSeconds),
       kills: sum((r) => r.kills),
       realmsCleared: sum((r) => r.realmsCleared),
-      solo: history.filter((r) => r.players <= 1).length,
-      coop: history.filter((r) => r.players > 1).length,
+      solo: history.filter((r) => modeOf(r.players, r.bots) === 'solo').length,
+      coop: history.filter((r) => modeOf(r.players, r.bots) === 'coop').length,
+      allies: history.filter((r) => modeOf(r.players, r.bots) === 'allies').length,
     },
     gods: gods.sort((a, b) => b.runs - a.runs),
     endings: [...endings]
@@ -93,6 +97,7 @@ const CSV_COLUMNS = [
   'realmId',
   'realmReached',
   'players',
+  'bots',
   'outcome',
   'seed',
   'timeSeconds',

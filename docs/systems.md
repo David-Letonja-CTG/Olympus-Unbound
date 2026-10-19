@@ -87,6 +87,10 @@ Excess XP carries over; each threshold crossed queues one choice. Chests queue a
 
 Synergies are checked after every change; each activates once, is announced, and adds its modifiers.
 
+## Bot allies — `engine/sim/bots.ts`
+
+A `PartySeat` with `bot: { skill }` is played by `botInput` (its input replaces the slot's each step) and answers its choices at once with `botPick` (rounds wait only for players). Deterministic: it reads only the run's state (D5). Every `rethink` steps (Easy 24, Normal 12, Hard 4) a bot sums pulls: away from enemies within 210 (260/d² × size, bosses ×5), toward the nearest enemy within 700 when beyond its weapons' mean reach (140–420), back to the player beyond 260 (strongly beyond 520), out of warned hazards (Normal margin 10, Hard 40; Easy ignores them), toward pickups within 260 (heals only below 70%), toward fallen gods within 700, toward the open gate. Dash (Normal, Hard): an enemy in contact or a hazard landing within 0.45 s. Ability: Easy whenever foes are near; Normal with 3 within 220; Hard with 5, or below 40% health with any near. Picks: Easy the first offer; Normal new weapons then weapon levels; Hard scores offers (held weapons by level and damage share, affinities, synergy parts, healing when hurt). Bots never join the merchant's queue. Glory mode: `coop` when players − bots > 1, `allies` when bots > 0, else `solo`.
+
 ## Merchant and companions — `engine/sim/merchant.ts`, `companions.ts`
 
 `balance.merchant`: arrivals at realm time 150 s and 330 s, stays 75 s, ring radius 60, appears 340 from a random living god (the `merchant` RNG stream; clamped into bounds, pushed out of obstacles). A god entering the ring joins `shopQueue`; when no level-up or chest round is due, a `shop` round opens for the first in the queue (`UpgradeChoice.source = 'shop'`, `gold`). Offers: per ware, one per target from `WARE_RULES[effect.type].targets` (companion: not owned and fewer than `maxCompanions` 3; weaponLevel: each weapon below max; heal: while hurt), price = round(price × (1 + 0.5 × depth)); then `leave`. Buying checks the gold now, applies the rule (whetstone = the level-up rule), and reopens the shop; Leave closes it. Passing a gate or the merchant leaving clears it and the queue.
@@ -148,7 +152,7 @@ Migrations: v0 (unversioned) → v1 renames nothing; v1 → v2 adds `introSeen: 
 
 To change the save format: bump `SAVE_VERSION`, add `MIGRATIONS[oldVersion]`, extend `parseSave`, add tests for the old shape.
 
-**v4** (spec: meta-progression / save format version 4) adds `history` (last 100 `RunRecord`s), `highScores { solo, coop }` (10 each, best first), `achievements` (id → ISO date), `achievementProgress` (added-up goals), `achievementGods` (every-god goals) and `daily { date, progress, done }`; v3 → v4 adds them empty. Records are validated entry by entry (`save-records.ts`).
+**v5** adds `highScores.allies` and `bots` in score entries and run records (0 for older ones). **v4** (spec: meta-progression / save format version 4) adds `history` (last 100 `RunRecord`s), `highScores { solo, coop }` (10 each, best first), `achievements` (id → ISO date), `achievementProgress` (added-up goals), `achievementGods` (every-god goals) and `daily { date, progress, done }`; v3 → v4 adds them empty. Records are validated entry by entry (`save-records.ts`).
 
 ## Glory — `client/src/app/core/save/glory.ts`
 

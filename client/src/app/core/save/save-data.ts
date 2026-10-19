@@ -21,7 +21,7 @@ import {
 } from './save-records';
 
 /** Current save format version (D8). Bump it and add a migration when the shape changes. */
-export const SAVE_VERSION = 4;
+export const SAVE_VERSION = 5;
 /** How many processed run IDs are remembered to keep rewards idempotent. */
 export const REMEMBERED_RUNS = 20;
 
@@ -108,6 +108,8 @@ const MIGRATIONS: Record<number, (save: Raw) => Raw> = {
   }),
   // v4 adds the glory records and run history (spec: meta-progression / save format version 4), empty.
   3: (save) => ({ ...save, version: 4 }),
+  // v5 adds the With allies high scores and bots in records (spec: meta-progression / save format version 5).
+  4: (save) => ({ ...save, version: 5 }),
 };
 
 /**

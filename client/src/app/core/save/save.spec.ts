@@ -21,6 +21,7 @@ const result = (overrides: Partial<RunResult> = {}): RunResult => ({
   realmsCleared: 1,
   realmReached: 'mount_olympus',
   players: 1,
+  bots: 0,
   loadout: {
     weapons: [{ id: 'war_hammer', level: 3, damage: 1000 }],
     relics: ['zeus_eye'],

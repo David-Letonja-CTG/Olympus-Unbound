@@ -297,8 +297,14 @@ const scenes = {
     await page.screenshot({ path: join(out, 'menu.jpg'), quality: 88 });
     await page.getByRole('link', { name: 'Play' }).click();
     await page.getByTestId('god-zeus').click();
+    // Two allies played by the machine (spec: bot-allies).
+    for (const god of ['hades', 'athena']) {
+      await page.getByTestId('add-ally').click();
+      await page.getByTestId(`add-ally-${god}`).click();
+    }
+    await page.getByTestId('ally-0-hard').click();
     await page.waitForTimeout(800);
-    await page.screenshot({ path: join(out, 'gods.jpg'), quality: 88 });
+    await page.screenshot({ path: join(out, 'gods.jpg'), quality: 88, fullPage: true });
     await page.getByRole('button', { name: 'Continue' }).click();
     await page.getByTestId('realm-labyrinth_of_crete').click();
     await page.waitForTimeout(800);

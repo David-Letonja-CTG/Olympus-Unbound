@@ -13,6 +13,7 @@ import {
   updateProjectiles,
   updateWeapons,
 } from '../weapons/weapon-system';
+import { BotBrain, botInput, botPick, newBrain } from './bots';
 import { placeCompanions, updateCompanions } from './companions';
 import { arriveMerchant, buyWare, shopOffers, updateMerchant } from './merchant';
 import { collect, updatePickups } from './pickups';
@@ -22,6 +23,7 @@ import { updateRevives } from './revive';
 import { RunConfig, RunState } from './run-state';
 import {
   HudSnapshot,
+  NO_INPUT,
   HudItem,
   Player,
   PlayerInput,
@@ -63,6 +65,9 @@ export class RunSimulation {
   private choiceCount = 0;
   private outcome: RunResult | undefined;
   private endedAs: RunOutcome | undefined;
+  /** The bots' brains by player ID (spec: bot-allies), and the step's inputs with theirs filled in. */
+  private readonly brains = new Map<number, BotBrain>();
+  private readonly stepInputs: PlayerInput[] = [];
 
   constructor(config: RunConfig, content: GameContent | ContentIndex, arena?: ArenaData) {
     const index = content instanceof ContentIndex ? content : new ContentIndex(content);
@@ -72,6 +77,7 @@ export class RunSimulation {
       this.state.players.push(createPlayer(this.state, slot, 0, 0));
     this.placeParty();
     this.director = new SpawnDirector(this.state);
+    for (const p of this.state.players) if (p.bot) this.brains.set(p.id, newBrain(p.bot, p.slot));
   }
 
   /** The current realm's arena; a new one after every gate (spec: endless-run). */
@@ -125,7 +131,7 @@ export class RunSimulation {
     state.time += dt;
     state.realmTime += dt;
 
-    updatePlayers(state, inputs, dt);
+    updatePlayers(state, this.withBots(inputs), dt);
     updateRevives(state, dt);
     this.director.update(dt);
     updateEnemies(state, dt);
@@ -146,6 +152,18 @@ export class RunSimulation {
     }
     if (state.gate) this.updateGate(dt);
     this.openChoiceIfPending();
+  }
+
+  /** The step's inputs: every bot seat's from its brain, the others as given (spec: bot-allies). */
+  private withBots(inputs: readonly PlayerInput[]): readonly PlayerInput[] {
+    if (this.brains.size === 0) return inputs;
+    const out = this.stepInputs;
+    out.length = 0;
+    for (const p of this.state.players) {
+      const brain = this.brains.get(p.id);
+      out[p.slot] = brain ? botInput(this.state, p, brain) : (inputs[p.slot] ?? NO_INPUT);
+    }
+    return out;
   }
 
   /** The boss has fallen: its gold, and the gate to the next realm where it stood (spec: endless-run / the gate). */
@@ -341,6 +359,7 @@ export class RunSimulation {
       realmsCleared,
       realmReached: state.realm.id,
       players: state.party.length,
+      bots: state.party.filter((s) => s.bot).length,
       loadout: {
         weapons: loadout.weapons.map((w) => ({
           id: w.def.id,
@@ -525,6 +544,7 @@ export class RunSimulation {
           alive: p.alive,
           revive: p.revive,
           self: p === player,
+          bot: !!p.bot || undefined,
         })),
     };
   }
@@ -559,6 +579,12 @@ export class RunSimulation {
       state.emit({ type: 'choice', choice });
     }
     this.currentPhase = 'choosing';
+    // Bots answer at once; the round waits only for the players (spec: bot-allies / allies choose at once).
+    for (const player of living) {
+      const choice = this.choices.get(player.id);
+      if (player.bot && choice && this.currentPhase === 'choosing')
+        this.choose(botPick(state, player, choice, player.bot), choice.id);
+    }
   }
 
   private removeDead(): void {

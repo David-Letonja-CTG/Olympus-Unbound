@@ -1,6 +1,8 @@
 :host {
   position: absolute;
   inset: 0;
+  /* For the plaque under the minimap, whose size follows the window's width (phaser/minimap.ts). */
+  container-type: size;
   pointer-events: none;
   font-family: var(--sans);
   color: var(--text);
@@ -114,9 +116,14 @@
   }
 }
 
+/*
+ * Gold and kills under the minimap (top right). The minimap is 172 px wide at 1280 px and wider windows, scaled
+ * down to 70% on narrower ones, and placed 12 px from the top with a 5 px frame.
+ */
 .plaque.small {
-  grid-column: 3;
-  justify-self: end;
+  position: absolute;
+  top: calc(clamp(120.4px, 13.4375cqw, 172px) + 12px);
+  right: 0;
   display: flex;
   gap: 16px;
   padding: 6px 20px;
