@@ -17,6 +17,7 @@ export interface Snapshot {
   enemies: number;
   bossAlive: boolean;
   merchant?: { x: number; y: number };
+  musicTier?: number;
   players: number;
   party: { x: number; y: number; alive: boolean }[];
   depth: number;

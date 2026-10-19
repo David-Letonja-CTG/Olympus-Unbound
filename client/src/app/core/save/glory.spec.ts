@@ -231,10 +231,20 @@ describe('save format version 4 (spec: meta-progression / save format version 4)
     void _bots;
     const v4 = { ...save, version: 4, highScores: { solo: [v4Entry, v4Entry, v4Entry], coop: [] } };
     const loaded = parseSave(JSON.stringify(v4), CONTENT);
-    expect(loaded.version).toBe(5);
+    expect(loaded.version).toBe(SAVE_VERSION);
     expect(loaded.highScores.solo).toHaveLength(3);
     expect(loaded.highScores.solo[0].bots).toBe(0);
     expect(loaded.highScores.allies).toEqual([]);
+  });
+
+  it('migrates a version 5 save to 6 with the music at its default (spec: meta-progression / save format version 6)', () => {
+    const raw = JSON.stringify({ version: 5, gold: 10, settings: { sfxVolume: 0.3 } });
+    const loaded = parseSave(raw, CONTENT);
+    expect(loaded.version).toBe(6);
+    expect(loaded.settings.sfxVolume).toBe(0.3);
+    expect(loaded.settings.musicVolume).toBe(0.5);
+    const broken = parseSave(JSON.stringify({ version: 6, settings: { musicVolume: 7 } }), CONTENT);
+    expect(broken.settings.musicVolume).toBe(0.5);
   });
 
   it('keeps the last 100 runs', () => {

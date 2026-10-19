@@ -1,5 +1,7 @@
 import Phaser from 'phaser';
 import { soundFiles } from '../audio/recorded';
+import { MusicPlayer } from '../audio/music-player';
+import { TierTracker } from '../audio/music-intensity';
 import { SoundPlayer } from '../audio/sound-player';
 import { ContentIndex } from '../data/content-index';
 import { LocalDriver, RunDriver } from '../net/driver';
@@ -20,6 +22,11 @@ export function startPhaserSession(options: GameSessionOptions): GameSession {
   let settings: GameSettings = options.settings;
   const sound = new SoundPlayer(settings.sfxVolume);
   sound.load(soundFiles(options.content.assets.files));
+  // The battle music, on the same audio context with its own volume (spec: music / music volume).
+  const music = {
+    player: new MusicPlayer(sound.audioContext, settings.musicVolume),
+    tracker: new TierTracker(),
+  };
   const realm = driver.realm;
   // Events produced before anyone subscribed (e.g. `ready`) are replayed to the first subscriber.
   const backlog: GameEvent[] = [];
@@ -33,6 +40,7 @@ export function startPhaserSession(options: GameSessionOptions): GameSession {
     settings: () => settings,
     emit,
     sound,
+    music,
     backgroundColor: realm.backgroundColor,
   });
   const game = new Phaser.Game({
@@ -67,6 +75,7 @@ export function startPhaserSession(options: GameSessionOptions): GameSession {
         case 'updateSettings':
           settings = command.settings;
           sound.setVolume(settings.sfxVolume);
+          music.player.setVolume(settings.musicVolume);
           scene.applySettings(settings);
           return;
         case 'debug':
@@ -80,13 +89,14 @@ export function startPhaserSession(options: GameSessionOptions): GameSession {
       return () => listeners.delete(listener);
     },
     inspect() {
-      return options.debug ? driver.inspect() : undefined;
+      return options.debug ? { ...driver.inspect(), musicTier: music.tracker.tier } : undefined;
     },
     destroy(): void {
       if (destroyed) return;
       destroyed = true;
       listeners.clear();
       driver.destroy();
+      music.player.destroy();
       sound.destroy();
       game.destroy(true);
     },

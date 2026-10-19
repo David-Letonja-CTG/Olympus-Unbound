@@ -61,9 +61,14 @@ test('the vertical slice: menu → Zeus → Olympus → level-up → elite → b
   await debug(page, { type: 'skipTo', seconds: 119 });
   await expect(page.getByText(/An elite .* approaches!/)).toBeVisible({ timeout: 10_000 });
 
+  // The music has risen with the realm's time (spec: music / what drives the music).
+  expect((await inspect(page))?.musicTier ?? 0).toBeLessThan(4);
+
   // The boss at 07:00.
   await debug(page, { type: 'skipTo', seconds: 419 });
   await expect(page.getByTestId('boss-bar')).toContainText('The Cyclops', { timeout: 10_000 });
+  // A boss is awake: the Titan tier.
+  await expect.poll(async () => (await inspect(page))?.musicTier, { timeout: 15_000 }).toBe(4);
 
   // Defeat the boss → its gold and the gate → the next realm (spec: endless-run).
   await debug(page, { type: 'damageBoss', fraction: 1 });
@@ -137,6 +142,9 @@ test('pausing stops time; abandoning needs a confirmation', async ({ page }) => 
   await debug(page, { type: 'godMode', enabled: true });
   await page.keyboard.press('Escape');
   await expect(page.getByRole('dialog', { name: 'Paused' })).toBeVisible();
+  // The music has its own volume beside the sound effects (spec: music / music volume).
+  await expect(page.getByTestId('music-volume')).toBeVisible();
+  await expect(page.getByTestId('sfx-volume')).toBeVisible();
   const paused = (await inspect(page))?.time ?? 0;
   await page.waitForTimeout(800);
   expect((await inspect(page))?.time).toBe(paused);

@@ -81,7 +81,7 @@ client/
     progression/           loadout, stat refresh, synergies, level-up offers
     art/                   code-drawn art (Canvas 2D): canvas helpers, characters, world objects, icons
     cutscene/              CutsceneTimeline (pure timing of cutscenes)
-    audio/                 synthesized sound cues (Web Audio)
+    audio/                 sound cues (recordings and Web Audio synthesis) and the adaptive battle music
     phaser/                Phaser games: ArenaScene, CutsceneScene, WorldView, Effects, LightMap + Atmosphere,
                            asset loading + SpriteResolver, InputReader, textures
     analysis/              the autopilot bot and BalanceReport (admin mode's balance report)

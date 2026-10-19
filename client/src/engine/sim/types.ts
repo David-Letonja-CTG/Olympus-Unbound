@@ -417,6 +417,8 @@ export type SimEvent =
 /** Low-frequency summary of a run for the HUD (D7). */
 export interface HudSnapshot {
   readonly time: number;
+  /** Seconds in the current realm (spec: music / what drives the music). */
+  readonly realmTime: number;
   readonly phase: RunPhase;
   readonly health: number;
   readonly maxHealth: number;

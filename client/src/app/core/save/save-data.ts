@@ -21,7 +21,7 @@ import {
 } from './save-records';
 
 /** Current save format version (D8). Bump it and add a migration when the shape changes. */
-export const SAVE_VERSION = 5;
+export const SAVE_VERSION = 6;
 /** How many processed run IDs are remembered to keep rewards idempotent. */
 export const REMEMBERED_RUNS = 20;
 
@@ -110,6 +110,8 @@ const MIGRATIONS: Record<number, (save: Raw) => Raw> = {
   3: (save) => ({ ...save, version: 4 }),
   // v5 adds the With allies high scores and bots in records (spec: meta-progression / save format version 5).
   4: (save) => ({ ...save, version: 5 }),
+  // v6 adds the music volume (spec: meta-progression / save format version 6), at its default.
+  5: (save) => ({ ...save, version: 6 }),
 };
 
 /**
@@ -155,6 +157,7 @@ export function parseSave(
   const stats = isObject(save['stats']) ? save['stats'] : {};
   const settings = isObject(save['settings']) ? save['settings'] : {};
   const volume = settings['sfxVolume'];
+  const music = settings['musicVolume'];
   const quality = settings['quality'];
 
   return {
@@ -177,6 +180,10 @@ export function parseSave(
         typeof volume === 'number' && volume >= 0 && volume <= 1
           ? volume
           : DEFAULT_SETTINGS.sfxVolume,
+      musicVolume:
+        typeof music === 'number' && music >= 0 && music <= 1
+          ? music
+          : DEFAULT_SETTINGS.musicVolume,
       screenShake: flag(settings['screenShake'], DEFAULT_SETTINGS.screenShake),
       damageNumbers: flag(settings['damageNumbers'], DEFAULT_SETTINGS.damageNumbers),
       enemyHealthBars: flag(settings['enemyHealthBars'], DEFAULT_SETTINGS.enemyHealthBars),

@@ -1,9 +1,11 @@
 import Phaser from 'phaser';
+import { musicIntensity, NEAR, TierTracker } from '../audio/music-intensity';
+import { MusicPlayer } from '../audio/music-player';
 import { SoundPlayer } from '../audio/sound-player';
 import { ATTACK_SOUNDS, BOSS_ATTACK_SOUNDS, HIT_SOUNDS } from '../audio/sound-map';
 import { GameEvent, GameSettings } from '../session';
 import { RunDriver } from '../net/driver';
-import { NO_INPUT, SimEvent } from '../sim/types';
+import { HudSnapshot, NO_INPUT, SimEvent } from '../sim/types';
 import { queueAssets, SpriteResolver } from './assets';
 import { Atmosphere, LightMap, QUALITY, viewAround } from './atmosphere';
 import { Effects } from './effects';
@@ -28,6 +30,8 @@ export interface SceneHost {
   readonly settings: () => GameSettings;
   readonly emit: (event: GameEvent) => void;
   readonly sound: SoundPlayer;
+  /** The battle music and the tier it follows; kept by the session, so they carry on across realms (spec: music). */
+  readonly music: { readonly player: MusicPlayer; readonly tracker: TierTracker };
   readonly backgroundColor: number;
 }
 
@@ -140,9 +144,10 @@ export class ArenaScene extends Phaser.Scene {
     this.emitHud();
   }
 
-  private emitHud(): void {
+  private emitHud(): HudSnapshot | undefined {
     const hud = this.host.driver.hud();
     if (hud) this.host.emit({ type: 'hud', hud });
+    return hud;
   }
 
   /** Settings apply live, including graphics quality (spec: visual-atmosphere / graphics quality levels). */
@@ -202,8 +207,33 @@ export class ArenaScene extends Phaser.Scene {
     this.hudTimer += this.game.loop.rawDelta;
     if (this.hudTimer >= HUD_INTERVAL_MS) {
       this.hudTimer = 0;
-      this.emitHud();
+      const hud = this.emitHud();
+      this.updateMusic(hud, HUD_INTERVAL_MS / 1000);
     }
+  }
+
+  /**
+   * The music follows the realm's time toward its boss, the realms cleared, the foes around this player's own god and
+   * the boss (spec: music / what drives the music). It ducks while paused.
+   */
+  private updateMusic(hud: HudSnapshot | undefined, dt: number): void {
+    const { driver, music } = this.host;
+    music.player.setPaused(driver.paused);
+    if (driver.phase === 'ended') return;
+    const world = driver.world;
+    const me = world.players.find((p) => p.id === driver.localId);
+    const at = me?.alive ? me : driver.focus();
+    let near = 0;
+    for (const e of world.enemies)
+      if (!e.dead && (e.x - at.x) ** 2 + (e.y - at.y) ** 2 <= NEAR * NEAR) near++;
+    const intensity = musicIntensity({
+      realmTime: hud?.realmTime ?? 0,
+      bossAt: driver.realm.boss.at,
+      depth: world.depth,
+      enemiesNear: near,
+      bossAwake: !!world.boss && !world.boss.dead,
+    });
+    music.player.setTier(music.tracker.update(intensity, dt));
   }
 
   private handle(event: SimEvent): void {
@@ -298,6 +328,7 @@ export class ArenaScene extends Phaser.Scene {
         return;
       case 'runEnded':
         sound.play('defeat');
+        this.host.music.player.end();
         this.emitHud();
         emit({ type: 'runEnded', result: event.result });
         return;
