@@ -243,7 +243,7 @@ const EMBERS = Array.from({ length: 26 }, (_, i) => ({
       position: relative;
       height: 100%;
       display: grid;
-      grid-template-rows: auto 1fr auto;
+      grid-template-rows: auto minmax(0, 1fr) auto;
       padding: 7vh 6vw 5vh;
       gap: 24px;
     }
@@ -478,6 +478,24 @@ const EMBERS = Array.from({ length: 26 }, (_, i) => ({
       }
       .seed {
         display: none;
+      }
+    }
+    /* Safari sideways with its toolbars (about 300 px): the realm, the party and the bar, nothing more. */
+    @media (max-height: 380px) {
+      .kicker,
+      .divider,
+      .description,
+      .tip {
+        display: none;
+      }
+      h1 {
+        font-size: 1.4rem;
+      }
+      .party {
+        zoom: 0.5;
+      }
+      .boss {
+        zoom: 0.45;
       }
     }
     @media (prefers-reduced-motion: reduce) {

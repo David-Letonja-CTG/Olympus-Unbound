@@ -178,6 +178,9 @@ export class ArenaScene extends Phaser.Scene {
       this.continueLoading();
       return;
     }
+    const size = this.scale.gameSize;
+    if (this.cameras.main.width !== size.width || this.cameras.main.height !== size.height)
+      this.fitCamera();
     // Real elapsed time, not Phaser's smoothed delta: Phaser clamps the delta to one 60 fps frame while the page
     // lacks focus and for its first frames, which would run the game in slow motion below 60 fps (D5: the
     // simulation must follow real time through fixed steps).
@@ -387,6 +390,9 @@ export class ArenaScene extends Phaser.Scene {
   private fitCamera(): void {
     const camera = this.cameras.main;
     const { width, height } = this.scale.gameSize;
+    // Phaser resizes a camera only if it still had the previous size. Turning an iPhone sends several sizes in a row,
+    // and one missed leaves the camera at the old size, its centre (the god) off screen (spec: phone-play).
+    if (camera.width !== width || camera.height !== height) camera.setSize(width, height);
     this.baseZoom = Math.max(0.35, Math.min(width / VIEW_WIDTH, height / VIEW_HEIGHT));
     camera.setZoom(this.baseZoom * this.partyZoom);
     this.lightMap?.resize();

@@ -1,5 +1,5 @@
 import { CDPSession, expect, Page, test } from '@playwright/test';
-import { debug, inspect, startRun } from './run';
+import { debug, inspect, openAsReturningPlayer, startRun } from './run';
 
 /** One finger on the screen, through Chromium's touch input (so the page sees real touch pointer events). */
 async function touch(cdp: CDPSession, type: 'touchStart' | 'touchMove' | 'touchEnd', x = 0, y = 0) {
@@ -85,4 +85,35 @@ test('a run on a phone: moving, dashing and pausing by touch (spec: phone-play)'
   await expect(offer).toHaveCount(0);
 
   expect(errors).toEqual([]);
+});
+
+test('begun upright and turned sideways while loading, the god stays in view (spec: phone-play)', async ({
+  page,
+}) => {
+  // As on an iPhone: Safari has no element fullscreen, so the window keeps its size.
+  await page.addInitScript(() => {
+    (Element.prototype as { requestFullscreen?: unknown }).requestFullscreen = undefined;
+  });
+  await page.setViewportSize({ width: 412, height: 839 });
+  await openAsReturningPlayer(page);
+  await page.getByRole('link', { name: 'Play' }).tap();
+  await page.getByTestId('god-zeus').tap();
+  await page.getByRole('button', { name: 'Continue' }).tap();
+  await page.getByTestId('begin').tap();
+  await expect(page.locator('[data-testid=game-host] canvas')).toBeAttached({ timeout: 30_000 });
+  await page.setViewportSize({ width: 863, height: 360 });
+  await expect(page.getByTestId('run-loading')).toHaveCount(0, { timeout: 120_000 });
+  // Upright when the run became ready: it paused under the rotate overlay.
+  const resume = page.getByTestId('resume');
+  if (await resume.count()) await resume.tap();
+  await expect
+    .poll(async () => (await inspect(page))?.time ?? 0, { timeout: 30_000 })
+    .toBeGreaterThan(0.5);
+  // The camera draws the whole canvas, so the god it follows is in the middle of the screen.
+  await expect
+    .poll(async () => {
+      const view = (await inspect(page))?.view;
+      return view && view.camera.join('x') === view.canvas.join('x') ? view.canvas.join('x') : '';
+    })
+    .toBe('863x360');
 });

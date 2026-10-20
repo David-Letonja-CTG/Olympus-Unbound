@@ -210,6 +210,9 @@ import { ItemIcon } from '../../shared/item-icon';
       color: #ffb4a8;
     }
     @media (max-width: 760px) {
+      .realm-screen {
+        padding-bottom: 0;
+      }
       .layout {
         flex-direction: column;
         align-items: stretch;
@@ -217,12 +220,23 @@ import { ItemIcon } from '../../shared/item-icon';
       .realms {
         flex-basis: auto;
       }
+      /* One column on a phone: Back and Begin stay on the bottom edge while the details scroll (spec: phone-play). */
+      .actions {
+        position: sticky;
+        bottom: 0;
+        z-index: 5;
+        padding: 14px 0 max(16px, env(safe-area-inset-bottom));
+        background: linear-gradient(180deg, transparent, rgba(11, 10, 12, 0.92) 40%);
+      }
     }
     /*
      * A phone held sideways (spec: phone-play / phone menus): the list beside the details again, compact, with Begin
      * kept at the bottom of the screen.
      */
     @media (max-height: 500px) and (min-width: 560px) {
+      .realm-screen {
+        padding-bottom: 0;
+      }
       .layout {
         flex-direction: row;
         align-items: flex-start;

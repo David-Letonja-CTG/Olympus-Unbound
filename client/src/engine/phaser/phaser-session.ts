@@ -56,6 +56,16 @@ export function startPhaserSession(options: GameSessionOptions): GameSession {
     scene,
   });
 
+  // Re-measure as soon as the game's box changes (an iPhone turned sideways, Safari's toolbars), rather than at
+  // Phaser's next half-second check (spec: phone-play / the phone screen).
+  const remeasure = () => {
+    if (game.isBooted) game.scale.refresh();
+  };
+  const observer =
+    typeof ResizeObserver === 'undefined' ? undefined : new ResizeObserver(remeasure);
+  observer?.observe(options.parent);
+  window.visualViewport?.addEventListener('resize', remeasure);
+
   let destroyed = false;
   return {
     send(command: GameCommand): void {
@@ -90,11 +100,22 @@ export function startPhaserSession(options: GameSessionOptions): GameSession {
       return () => listeners.delete(listener);
     },
     inspect() {
-      return options.debug ? { ...driver.inspect(), musicTier: music.tracker.tier } : undefined;
+      if (!options.debug) return undefined;
+      const camera = game.isBooted ? scene.cameras?.main : undefined;
+      return {
+        ...driver.inspect(),
+        musicTier: music.tracker.tier,
+        view: camera && {
+          canvas: [game.scale.gameSize.width, game.scale.gameSize.height],
+          camera: [camera.width, camera.height],
+        },
+      };
     },
     destroy(): void {
       if (destroyed) return;
       destroyed = true;
+      observer?.disconnect();
+      window.visualViewport?.removeEventListener('resize', remeasure);
       listeners.clear();
       driver.destroy();
       music.player.destroy();
