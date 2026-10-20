@@ -90,6 +90,7 @@ const LABELS = {
       background: rgba(5, 4, 10, 0.72);
       backdrop-filter: blur(2px);
       padding: 16px;
+      overflow-y: auto;
     }
     .menu {
       width: min(460px, 100%);
@@ -107,6 +108,26 @@ const LABELS = {
       margin: 0;
       color: var(--muted);
       text-align: center;
+    }
+    /* Fingers (spec: phone-play / touch menus during a run). */
+    @media (pointer: coarse) {
+      .btn {
+        min-height: 48px;
+      }
+    }
+    /* A phone in landscape: tighter, scrolling inside the backdrop rather than the page. */
+    @media (max-height: 500px) {
+      .backdrop {
+        place-items: start center;
+        padding: max(8px, env(safe-area-inset-top)) 12px 8px;
+      }
+      .menu {
+        padding: 14px 18px;
+        gap: 10px;
+      }
+      h2 {
+        font-size: 1.4rem;
+      }
     }
   `,
 })

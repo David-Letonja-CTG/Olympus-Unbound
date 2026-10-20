@@ -193,6 +193,11 @@ app-hud {
     top: 154px;
   }
 
+  /* Under the touch pause button. */
+  &.touch .side {
+    top: calc(62px + env(safe-area-inset-top, 0px));
+  }
+
   .medallions,
   .synergies {
     list-style: none;

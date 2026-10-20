@@ -42,6 +42,7 @@ export interface LocalPlayer {
 
 export const CONTROL_LABELS: Record<ControlScheme, string> = {
   keyboard: 'Keyboard',
+  touch: 'Touch',
   'keys-left': 'Keyboard left · WASD',
   'keys-right': 'Keyboard right · arrows',
   'pad-1': 'Gamepad 1',

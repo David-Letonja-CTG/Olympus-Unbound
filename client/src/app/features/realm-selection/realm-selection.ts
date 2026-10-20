@@ -3,6 +3,7 @@ import { Router, RouterLink } from '@angular/router';
 import { GameContent, RealmDefinition } from '../../../engine';
 import { GAME_CONTENT } from '../../core/game-content';
 import { MAX_SEED, parseSeed, RunSetup } from '../../core/run-setup';
+import { TouchScreen } from '../../core/touch-screen';
 import { ItemIcon } from '../../shared/item-icon';
 
 @Component({
@@ -223,6 +224,7 @@ export class RealmSelection {
   private readonly content: GameContent = inject(GAME_CONTENT);
   private readonly setup = inject(RunSetup);
   private readonly router = inject(Router);
+  private readonly touchScreen = inject(TouchScreen);
 
   protected readonly maxSeed = MAX_SEED;
   protected readonly realms: readonly RealmDefinition[] = this.content.realms;
@@ -262,6 +264,8 @@ export class RealmSelection {
     if (seed === undefined || !realm || !this.canStart()) return;
     this.setup.realmId.set(realm);
     this.setup.seed.set(seed);
+    // Spec: phone-play / the phone screen — from the tap, as browsers require.
+    this.touchScreen.enterFullscreen();
     void this.router.navigate(['/play']);
   }
 }

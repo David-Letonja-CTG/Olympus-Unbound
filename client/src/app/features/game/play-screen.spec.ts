@@ -1,3 +1,4 @@
+import { signal } from '@angular/core';
 import { TestBed } from '@angular/core/testing';
 import { provideRouter, Router } from '@angular/router';
 import {
@@ -14,6 +15,7 @@ import { Progression } from '../../core/progression';
 import { RoomRun, RoomService } from '../../core/rooms/room-service';
 import { RunSetup } from '../../core/run-setup';
 import { SAVE_STORAGE } from '../../core/save/save-store';
+import { TouchScreen } from '../../core/touch-screen';
 import { PlayScreen } from './play-screen';
 
 class StubSession implements GameSession {
@@ -111,12 +113,27 @@ const choice: UpgradeChoice = {
   ],
 };
 
-async function setup(room?: RoomRun, prepare?: (run: RunSetup) => void) {
+/** A phone: a touch screen, held sideways unless `portrait` (spec: phone-play). */
+function phone(portrait = false) {
+  return {
+    touch: signal(true).asReadonly(),
+    portrait: signal(portrait),
+    touchOnly: () => true,
+    enterFullscreen: vi.fn(),
+  };
+}
+
+async function setup(
+  room?: RoomRun,
+  prepare?: (run: RunSetup) => void,
+  screen?: ReturnType<typeof phone>,
+) {
   const session = new StubSession();
   const data: Record<string, string> = {};
   TestBed.configureTestingModule({
     providers: [
       provideRouter([]),
+      ...(screen ? [{ provide: TouchScreen, useValue: screen }] : []),
       {
         provide: SAVE_STORAGE,
         useValue: {
@@ -353,5 +370,61 @@ describe('PlayScreen', () => {
     } finally {
       vi.useRealTimers();
     }
+  });
+});
+
+describe('PlayScreen on a phone (spec: phone-play)', () => {
+  it('plays with the touch controls and pauses from the on-screen button', async () => {
+    const { el, update, session } = await setup(undefined, undefined, phone());
+    expect(session.options?.local).toEqual(['touch']);
+    await update({ type: 'hud', hud });
+    const pause = el.querySelector<HTMLButtonElement>('[data-testid=touch-pause]');
+    expect(pause).toBeTruthy();
+    // No keyboard hints on the HUD.
+    expect(el.querySelector('.solo-ability .key')).toBeNull();
+    pause?.click();
+    expect(session.sent).toContainEqual({ type: 'pause' });
+    await update({ type: 'paused' });
+    expect(el.querySelector('[data-testid=touch-pause]')).toBeNull();
+  });
+
+  it('has no touch controls or pause button on a computer', async () => {
+    const { el, update, session } = await setup();
+    expect(session.options?.local).toBeUndefined();
+    await update({ type: 'hud', hud });
+    expect(el.querySelector('[data-testid=touch-pause]')).toBeNull();
+    expect(el.querySelector('.solo-ability .key')?.textContent).toBe('Space');
+  });
+
+  it('asks to turn the phone and pauses while it is held upright', async () => {
+    const screen = phone(true);
+    const { el, update, session } = await setup(undefined, undefined, screen);
+    await update({ type: 'ready' });
+    expect(el.querySelector('[data-testid=rotate-phone]')?.textContent).toContain(
+      'Turn your phone',
+    );
+    expect(session.sent).toContainEqual({ type: 'pause' });
+    screen.portrait.set(false);
+    await update();
+    expect(el.querySelector('[data-testid=rotate-phone]')).toBeNull();
+    session.sent.length = 0;
+    screen.portrait.set(true);
+    await update();
+    expect(session.sent).toContainEqual({ type: 'pause' });
+  });
+
+  it('asks for fullscreen on the first touch of a run', async () => {
+    const screen = phone();
+    const { el } = await setup(undefined, undefined, screen);
+    const touch = (type: string) => {
+      const event = new MouseEvent('pointerdown', { bubbles: true });
+      Object.defineProperty(event, 'pointerType', { value: type });
+      el.dispatchEvent(event);
+    };
+    touch('mouse');
+    expect(screen.enterFullscreen).not.toHaveBeenCalled();
+    touch('touch');
+    touch('touch');
+    expect(screen.enterFullscreen).toHaveBeenCalledTimes(1);
   });
 });

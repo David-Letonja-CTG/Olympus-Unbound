@@ -32,6 +32,8 @@ export function share(remaining: number, cooldown: number): string {
 
 /** The keys a player's ability and dash answer to, as labels (spec: player-control / controls per local player). */
 export function keysFor(scheme: ControlScheme | undefined): { ability: string; dash: string } {
+  // The touch controls have their own buttons (spec: phone-play / touch controls): no key to name.
+  if (scheme === 'touch') return { ability: '', dash: '' };
   if (scheme === 'keys-right') return { ability: 'Enter', dash: 'R-Ctrl' };
   if (scheme?.startsWith('pad')) return { ability: 'A', dash: 'B' };
   return { ability: 'Space', dash: 'E' };
@@ -352,11 +354,13 @@ export class StaminaVessel {
       [attr.data-testid]="'dash-pip' + suffix()"
       [class.tired]="s.value < s.dashCost"
       [class.ready]="s.dashRemaining <= 0 && s.value >= s.dashCost"
-      [title]="'Dash (' + key() + ')'"
+      [title]="key() ? 'Dash (' + key() + ')' : 'Dash'"
     >
       <span class="dash-glyph" aria-hidden="true">»</span>
       <div class="sweep" [style.--share]="sweep()"></div>
-      <span class="dash-key">{{ key() }}</span>
+      @if (key()) {
+        <span class="dash-key">{{ key() }}</span>
+      }
     </div>
   `,
 })
@@ -390,7 +394,9 @@ export class DashPip {
           ceil(a.remaining)
         }}</span>
       }
-      <span class="key">{{ key() }}</span>
+      @if (key()) {
+        <span class="key">{{ key() }}</span>
+      }
     </div>
   `,
 })

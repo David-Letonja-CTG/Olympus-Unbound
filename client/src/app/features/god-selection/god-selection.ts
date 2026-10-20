@@ -9,6 +9,7 @@ import {
   GodDefinition,
   computeStats,
 } from '../../../engine';
+import { TouchScreen } from '../../core/touch-screen';
 import { GAME_CONTENT } from '../../core/game-content';
 import { ALLY_SKILLS, CONTROL_LABELS, RunSetup } from '../../core/run-setup';
 import { ItemIcon } from '../../shared/item-icon';
@@ -93,82 +94,84 @@ const PASSIVE_ICON: Record<Element, string> = {
         }
 
         <div class="party-col">
-          <!-- Players at this screen (spec: co-op / local co-op on one screen). -->
-          <section class="panel allies" aria-labelledby="players-title" data-testid="players">
-            <div class="allies-head">
-              <h2 id="players-title">Players</h2>
-              <p class="hint">
-                Friends on this machine play with you on one screen: one on the other side of the
-                keyboard, more with gamepads.
-              </p>
-            </div>
-            @if (players().length) {
-              <ul class="ally-list">
-                <li data-testid="player-0">
-                  <app-item-icon [sprite]="godSprite(selected() ?? '')" [size]="40" />
-                  <span class="ally-name">Player 1</span>
-                  <span class="seat-god">{{ godName(selected() ?? '') }}</span>
-                  <select
-                    aria-label="Player 1 controls"
-                    data-testid="player-0-controls"
-                    (change)="setControls(0, $event)"
-                  >
-                    @for (c of schemes; track c) {
-                      <option [value]="c" [selected]="c === setup.firstControls()">
-                        {{ controlLabels[c] }}
-                      </option>
-                    }
-                  </select>
-                </li>
-                @for (p of players(); track $index; let i = $index) {
-                  <li [attr.data-testid]="'player-' + (i + 1)">
-                    <app-item-icon [sprite]="godSprite(p.godId)" [size]="40" />
-                    <span class="ally-name">Player {{ i + 2 }}</span>
-                    <span class="seat-god">{{ godName(p.godId) }}</span>
+          <!-- Players at this screen (spec: co-op / local co-op on one screen); not on a phone (spec: phone-play). -->
+          @if (!touchOnly) {
+            <section class="panel allies" aria-labelledby="players-title" data-testid="players">
+              <div class="allies-head">
+                <h2 id="players-title">Players</h2>
+                <p class="hint">
+                  Friends on this machine play with you on one screen: one on the other side of the
+                  keyboard, more with gamepads.
+                </p>
+              </div>
+              @if (players().length) {
+                <ul class="ally-list">
+                  <li data-testid="player-0">
+                    <app-item-icon [sprite]="godSprite(selected() ?? '')" [size]="40" />
+                    <span class="ally-name">Player 1</span>
+                    <span class="seat-god">{{ godName(selected() ?? '') }}</span>
                     <select
-                      [attr.aria-label]="'Player ' + (i + 2) + ' controls'"
-                      [attr.data-testid]="'player-' + (i + 1) + '-controls'"
-                      (change)="setControls(i + 1, $event)"
+                      aria-label="Player 1 controls"
+                      data-testid="player-0-controls"
+                      (change)="setControls(0, $event)"
                     >
                       @for (c of schemes; track c) {
-                        <option [value]="c" [selected]="c === p.controls">
+                        <option [value]="c" [selected]="c === setup.firstControls()">
                           {{ controlLabels[c] }}
                         </option>
                       }
                     </select>
-                    <button
-                      class="remove"
-                      [attr.aria-label]="'Remove player ' + (i + 2)"
-                      [attr.data-testid]="'player-' + (i + 1) + '-remove'"
-                      (click)="setup.removePlayer(i)"
-                    >
-                      ✕
-                    </button>
                   </li>
-                }
-              </ul>
-            }
-            @if (setup.seatsLeft() > 0) {
-              @if (picking() === 'player') {
-                <div class="pick" role="group" aria-label="Choose the new player's god">
-                  @for (god of gods; track god.id) {
-                    <button
-                      class="btn pick-god"
-                      [attr.data-testid]="'add-player-' + god.id"
-                      (click)="addPlayer(god.id)"
-                    >
-                      <app-item-icon [sprite]="god.visual.sprite" [size]="28" /> {{ god.name }}
-                    </button>
+                  @for (p of players(); track $index; let i = $index) {
+                    <li [attr.data-testid]="'player-' + (i + 1)">
+                      <app-item-icon [sprite]="godSprite(p.godId)" [size]="40" />
+                      <span class="ally-name">Player {{ i + 2 }}</span>
+                      <span class="seat-god">{{ godName(p.godId) }}</span>
+                      <select
+                        [attr.aria-label]="'Player ' + (i + 2) + ' controls'"
+                        [attr.data-testid]="'player-' + (i + 1) + '-controls'"
+                        (change)="setControls(i + 1, $event)"
+                      >
+                        @for (c of schemes; track c) {
+                          <option [value]="c" [selected]="c === p.controls">
+                            {{ controlLabels[c] }}
+                          </option>
+                        }
+                      </select>
+                      <button
+                        class="remove"
+                        [attr.aria-label]="'Remove player ' + (i + 2)"
+                        [attr.data-testid]="'player-' + (i + 1) + '-remove'"
+                        (click)="setup.removePlayer(i)"
+                      >
+                        ✕
+                      </button>
+                    </li>
                   }
-                  <button class="btn" (click)="picking.set(undefined)">Cancel</button>
-                </div>
-              } @else {
-                <button class="btn" data-testid="add-player" (click)="picking.set('player')">
-                  + Add a player
-                </button>
+                </ul>
               }
-            }
-          </section>
+              @if (setup.seatsLeft() > 0) {
+                @if (picking() === 'player') {
+                  <div class="pick" role="group" aria-label="Choose the new player's god">
+                    @for (god of gods; track god.id) {
+                      <button
+                        class="btn pick-god"
+                        [attr.data-testid]="'add-player-' + god.id"
+                        (click)="addPlayer(god.id)"
+                      >
+                        <app-item-icon [sprite]="god.visual.sprite" [size]="28" /> {{ god.name }}
+                      </button>
+                    }
+                    <button class="btn" (click)="picking.set(undefined)">Cancel</button>
+                  </div>
+                } @else {
+                  <button class="btn" data-testid="add-player" (click)="picking.set('player')">
+                    + Add a player
+                  </button>
+                }
+              }
+            </section>
+          }
 
           <!-- Bot allies for a run at this screen (spec: bot-allies / adding allies). -->
           <section class="panel allies" aria-labelledby="allies-title" data-testid="allies">
@@ -437,6 +440,8 @@ const PASSIVE_ICON: Record<Element, string> = {
 export class GodSelection {
   private readonly content: GameContent = inject(GAME_CONTENT);
   protected readonly setup = inject(RunSetup);
+  /** Several people on one phone is not offered (spec: phone-play / co-op on a phone). */
+  protected readonly touchOnly = inject(TouchScreen).touchOnly();
   protected readonly allies = this.setup.allies;
   protected readonly players = this.setup.players;
   protected readonly skills = ALLY_SKILLS;

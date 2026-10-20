@@ -59,6 +59,21 @@ describe('god selection', () => {
   });
 });
 
+describe('god selection on a phone (spec: phone-play / co-op on a phone)', () => {
+  afterEach(() => vi.unstubAllGlobals());
+
+  it('offers bot allies but no players at this screen', async () => {
+    vi.stubGlobal('matchMedia', (query: string) => ({
+      matches: query === '(pointer: coarse)',
+      addEventListener: () => undefined,
+      removeEventListener: () => undefined,
+    }));
+    const h = await open('/gods');
+    expect(q(h, '[data-testid=players]')).toBeNull();
+    expect(q(h, '[data-testid=allies]')).toBeTruthy();
+  });
+});
+
 describe('realm selection', () => {
   it('starts a run with the chosen seed', async () => {
     const h = await open('/gods');

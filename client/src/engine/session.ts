@@ -56,10 +56,11 @@ export interface GameSessionOptions {
 
 /**
  * One local player's controls (spec: player-control / controls per local player): the whole keyboard (a player
- * alone), its left side (WASD) or its right side (arrows), or one gamepad.
+ * alone), its left side (WASD) or its right side (arrows), or one gamepad; or, on a touch device, the touch controls
+ * with the whole keyboard and the first gamepad (spec: phone-play / touch controls). `touch` is never a co-op seat's.
  */
 export type ControlScheme =
-  'keyboard' | 'keys-left' | 'keys-right' | 'pad-1' | 'pad-2' | 'pad-3' | 'pad-4';
+  'keyboard' | 'touch' | 'keys-left' | 'keys-right' | 'pad-1' | 'pad-2' | 'pad-3' | 'pad-4';
 
 export const CONTROL_SCHEMES: readonly ControlScheme[] = [
   'keys-left',

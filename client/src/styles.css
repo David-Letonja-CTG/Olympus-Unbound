@@ -53,6 +53,8 @@ html {
     radial-gradient(ellipse at 50% -20%, rgba(120, 130, 170, 0.14), transparent 60%), var(--stone),
     var(--bg);
   background-attachment: fixed;
+  /* No pull to refresh or bounce on phones (spec: phone-play / the phone screen). */
+  overscroll-behavior: none;
 }
 
 body {
@@ -61,6 +63,9 @@ body {
   color: var(--text);
   font-family: var(--sans);
   -webkit-font-smoothing: antialiased;
+  overscroll-behavior: none;
+  -webkit-text-size-adjust: 100%;
+  text-size-adjust: 100%;
 }
 
 h1,

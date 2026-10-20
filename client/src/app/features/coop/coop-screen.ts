@@ -16,6 +16,7 @@ import {
   RoomService,
 } from '../../core/rooms/room-service';
 import { RunSetup } from '../../core/run-setup';
+import { TouchScreen } from '../../core/touch-screen';
 import { ItemIcon } from '../../shared/item-icon';
 
 /**
@@ -129,7 +130,7 @@ import { ItemIcon } from '../../shared/item-icon';
               class="btn btn-primary"
               data-testid="start-room"
               [disabled]="!rooms.canStart()"
-              (click)="rooms.start()"
+              (click)="startRun()"
             >
               Start the run
             </button>
@@ -388,6 +389,7 @@ export class CoopScreen {
   private readonly content = inject(GAME_CONTENT);
   private readonly setup = inject(RunSetup);
   private readonly router = inject(Router);
+  private readonly touchScreen = inject(TouchScreen);
 
   protected readonly maxMembers = MAX_MEMBERS;
   protected readonly gods = this.content.gods;
@@ -429,6 +431,12 @@ export class CoopScreen {
       // Leaving the screen any other way than into the run leaves the room.
       if (this.rooms.status() !== 'playing') this.rooms.leave();
     });
+  }
+
+  /** The host starts everyone's run; fullscreen from the tap on a phone (spec: phone-play / the phone screen). */
+  protected startRun(): void {
+    this.touchScreen.enterFullscreen();
+    this.rooms.start();
   }
 
   protected create(): void {

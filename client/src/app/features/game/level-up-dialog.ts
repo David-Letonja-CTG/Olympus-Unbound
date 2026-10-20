@@ -226,6 +226,68 @@ const KIND_LABEL: Record<UpgradeOffer['kind'], string> = {
       gap: 4px;
       font-weight: 700;
     }
+    /* Fingers (spec: phone-play / touch menus during a run): no key numbers, and targets a thumb can hit. */
+    @media (pointer: coarse) {
+      .key {
+        display: none;
+      }
+      .offer {
+        min-height: 56px;
+      }
+    }
+    /* A phone in landscape: the offers side by side, so a choice fits without scrolling the page. */
+    @media (max-height: 500px) {
+      .backdrop {
+        padding: max(8px, env(safe-area-inset-top)) max(12px, env(safe-area-inset-right)) 8px
+          max(12px, env(safe-area-inset-left));
+      }
+      .dialog {
+        width: min(920px, 100%);
+        max-height: 100%;
+        gap: 6px;
+      }
+      h2 {
+        font-size: 1.3rem;
+      }
+      .subtitle {
+        margin: -4px 0 2px;
+        font-size: 0.85rem;
+      }
+      .offers:not(.shop) {
+        flex-direction: row;
+        min-height: 0;
+      }
+      .offers:not(.shop) .offer {
+        flex: 1 1 0;
+        min-width: 0;
+        flex-direction: column;
+        align-items: center;
+        text-align: center;
+        gap: 6px;
+        padding: 10px;
+      }
+      .offers:not(.shop) .offer.active,
+      .offers:not(.shop) .offer:hover {
+        transform: translateY(-3px);
+      }
+      .offers:not(.shop) .text {
+        align-items: center;
+      }
+      .offers:not(.shop) .name {
+        flex-wrap: wrap;
+        justify-content: center;
+        font-size: 1rem;
+      }
+      .description {
+        font-size: 0.8rem;
+      }
+      .offers.shop {
+        max-height: calc(100dvh - 96px);
+      }
+      .offers:not(.shop) .price {
+        margin-left: 0;
+      }
+    }
     @keyframes rise {
       from {
         opacity: 0;

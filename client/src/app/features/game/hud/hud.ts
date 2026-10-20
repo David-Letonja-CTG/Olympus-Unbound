@@ -40,7 +40,7 @@ export type HudLayout = 'frieze' | 'duo' | 'corners';
   ],
   changeDetection: ChangeDetectionStrategy.OnPush,
   encapsulation: ViewEncapsulation.None,
-  host: { '[class]': 'layout()' },
+  host: { '[class]': 'layout()', '[class.touch]': 'touch()' },
   template: `
     @let h = hud();
     <div class="top">
@@ -133,7 +133,7 @@ export type HudLayout = 'frieze' | 'duo' | 'corners';
       <app-ability-slot class="solo-ability" [ability]="h.ability" [key]="keys.ability" />
       <div
         class="solo-stamina"
-        [title]="'Stamina: hold Shift to sprint, ' + keys.dash + ' to dash'"
+        [title]="keys.dash ? 'Stamina: hold Shift to sprint, ' + keys.dash + ' to dash' : 'Stamina'"
       >
         <app-stamina-vessel [stamina]="h.stamina" />
         <app-dash-pip [stamina]="h.stamina" [key]="keys.dash" />
@@ -179,6 +179,8 @@ export class Hud {
   /** Every local player's controls, for the key labels. */
   readonly controls = input<readonly ControlScheme[]>();
   readonly announcements = input<readonly Announcement[]>([]);
+  /** Played by touch: the play screen's pause button sits in the top-left corner (spec: phone-play). */
+  protected readonly touch = computed(() => this.controls()?.[0] === 'touch');
 
   /** The players at this screen. */
   protected readonly players = computed(() =>

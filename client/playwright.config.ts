@@ -22,8 +22,14 @@ export default defineConfig({
   projects: [
     {
       name: 'chromium',
-      testIgnore: /coop\.spec\.ts/,
+      testIgnore: /(coop|phone)\.spec\.ts/,
       use: { ...devices['Desktop Chrome'], viewport, launchOptions },
+    },
+    {
+      // A phone held sideways: touch, a small landscape screen (spec: phone-play).
+      name: 'phone',
+      testMatch: /phone\.spec\.ts/,
+      use: { ...devices['Pixel 7 landscape'], launchOptions },
     },
     {
       // A room runs two games in one browser: it plays after the other tests, alone, so neither starves the other.
