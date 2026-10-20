@@ -2,6 +2,7 @@ import type { BalanceConfig, GameContent, PermanentUpgradeDefinition } from '../
 import { ACHIEVEMENTS, DAILY_QUESTS } from './achievements';
 import { ASSETS } from './assets';
 import { COMPANIONS, MERCHANT, WARES } from './merchant';
+import { TWISTS } from './daily';
 import { INTRO } from './cutscenes/intro';
 import { BOSSES } from './bosses';
 import { ENEMIES } from './enemies';
@@ -126,4 +127,5 @@ export const CONTENT: GameContent = {
   dailyQuests: DAILY_QUESTS,
   wares: WARES,
   companions: COMPANIONS,
+  twists: TWISTS,
 };

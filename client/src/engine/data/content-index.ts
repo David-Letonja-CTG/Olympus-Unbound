@@ -13,6 +13,7 @@ import {
   WareDefinition,
   WeaponDefinition,
 } from './types';
+import { STAT_IDS } from '../core/stats';
 import { ALLOWED_LICENCES, AssetManifest } from './assets';
 import { CutsceneDefinition } from './cutscene';
 
@@ -120,6 +121,7 @@ export function validateContent(content: GameContent): string[] {
     ['boss', content.bosses],
     ['realm', content.realms],
     ['permanent upgrade', content.permanentUpgrades],
+    ['twist', content.twists],
   ];
   for (const [kind, items] of groups) {
     const seen = new Set<string>();
@@ -298,6 +300,18 @@ export function validateContent(content: GameContent): string[] {
         if (!terrainIds.has(t)) errors.push(`${where} decorates unknown terrain "${t}".`);
       }
     }
+  }
+
+  // Twists (spec: daily-trial / twists): known stats, positive multipliers, no pace of their own.
+  for (const twist of content.twists) {
+    const where = `Twist "${twist.id}"`;
+    for (const m of twist.rules.modifiers ?? [])
+      if (!(STAT_IDS as readonly string[]).includes(m.stat))
+        errors.push(`${where} changes unknown stat "${m.stat}".`);
+    for (const [key, value] of Object.entries(twist.rules.enemies ?? {}))
+      if (!(typeof value === 'number' && value > 0))
+        errors.push(`${where} has a non-positive enemy ${key} multiplier.`);
+    if ('pace' in twist.rules) errors.push(`${where} must not change the pace.`);
   }
 
   errors.push(...validateManifest(content.assets));

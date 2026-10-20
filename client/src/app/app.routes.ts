@@ -36,6 +36,18 @@ export const routes: Routes = [
   },
   { path: 'coop', component: CoopScreen, title: 'Co-op · Olympus Unbound' },
   {
+    path: 'daily',
+    loadComponent: () =>
+      import('./features/daily-trial/daily-trial-screen').then((m) => m.DailyTrialScreen),
+    title: 'Daily Trial · Olympus Unbound',
+  },
+  {
+    path: 'challenge',
+    loadComponent: () =>
+      import('./features/daily-trial/challenge-screen').then((m) => m.ChallengeScreen),
+    title: 'A challenge · Olympus Unbound',
+  },
+  {
     path: 'gods',
     loadComponent: () =>
       import('./features/god-selection/god-selection').then((m) => m.GodSelection),

@@ -34,6 +34,29 @@ interface AchievementView {
     <main class="screen glory">
       <h1 class="screen-title">Hall of Glory</h1>
 
+      <!-- Today's Daily Trial and the best so far (spec: glory / hall of glory, daily-trial). -->
+      @let t = trial();
+      <section class="panel trial" aria-labelledby="trial-title" data-testid="glory-trial">
+        <div class="head">
+          <h2 id="trial-title">Daily Trial</h2>
+          <a class="btn" routerLink="/daily">{{ t.playedToday ? 'Try again' : 'Play' }}</a>
+        </div>
+        <p class="trial-line">
+          <app-item-icon [sprite]="godSprite(t.trial.godId)" [size]="28" />
+          {{ godName(t.trial.godId) }} in {{ realmName(t.trial.realmId) }} ·
+          <strong>{{ t.trial.twist.name }}</strong>
+        </p>
+        <p class="trial-best" data-testid="glory-trial-best">
+          @if (t.best; as b) {
+            Best today <strong>{{ fmt(b.score) }}</strong> · {{ time(b.timeSeconds) }} ·
+            {{ fmt(b.kills) }} kills · {{ t.attempts }}
+            {{ t.attempts === 1 ? 'attempt' : 'attempts' }}
+          } @else {
+            Not played yet today.
+          }
+        </p>
+      </section>
+
       <section class="panel quests" aria-labelledby="quests-title" data-testid="glory-quests">
         <div class="head">
           <h2 id="quests-title">Today's quests</h2>
@@ -219,8 +242,21 @@ interface AchievementView {
     .hint {
       margin: 8px 0 0;
     }
-    .quests {
+    .quests,
+    .trial {
       width: min(1180px, 100%);
+    }
+    .trial-line,
+    .trial-best {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      gap: 6px;
+      margin: 4px 0 0;
+    }
+    .trial-line strong,
+    .trial-best strong {
+      color: var(--gold-2);
     }
     .quests ul {
       list-style: none;
@@ -355,6 +391,10 @@ interface AchievementView {
 export class GloryScreen {
   protected readonly progression = inject(Progression);
   protected readonly content: GameContent = inject(GAME_CONTENT);
+  protected readonly trial = computed(() => {
+    this.progression.save();
+    return this.progression.trialToday();
+  });
   protected readonly modes: readonly { id: Mode; label: string }[] = [
     { id: 'solo', label: 'Solo' },
     { id: 'allies', label: 'With allies' },

@@ -16,6 +16,8 @@ import { RoomRun, RoomService } from '../../core/rooms/room-service';
 import { RunSetup } from '../../core/run-setup';
 import { SAVE_STORAGE } from '../../core/save/save-store';
 import { TouchScreen } from '../../core/touch-screen';
+import { CONTENT } from '../../../content';
+import { dailyTrialFor } from '../../core/daily-trial';
 import { PlayScreen } from './play-screen';
 
 class StubSession implements GameSession {
@@ -178,6 +180,22 @@ describe('PlayScreen', () => {
       modifiers: [],
     });
     expect(session.options?.debug).toBe(false);
+  });
+
+  it("plays today's Daily Trial solo, by its twist (spec: daily-trial)", async () => {
+    const trial = dailyTrialFor('2026-10-21', CONTENT);
+    const { session } = await setup(undefined, (run) => {
+      run.addAlly('hades');
+      run.special.set({ kind: 'daily', trial });
+    });
+    expect(session.options?.run).toMatchObject({
+      godId: trial.godId,
+      realmId: trial.realmId,
+      seed: trial.seed,
+      rules: trial.twist.rules,
+      variant: { kind: 'daily', date: '2026-10-21', twistId: trial.twist.id },
+    });
+    expect(session.options?.run.party).toBeUndefined();
   });
 
   it('starts a quick run with the realm clock at double speed (spec: quick-runs)', async () => {

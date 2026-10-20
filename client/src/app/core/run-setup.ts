@@ -1,6 +1,16 @@
 import { computed, Injectable, signal } from '@angular/core';
 import { CONTROL_SCHEMES, ControlScheme, RunResult } from '../../engine';
+import type { Challenge } from './challenge';
+import type { DailyTrial } from './daily-trial';
 import { RunRewards } from './save/rewards';
+
+/**
+ * A run set up by something other than the menus: today's Daily Trial or a challenge from a link (spec:
+ * daily-trial). Always solo; it brings its own god, realm, seed and rules.
+ */
+export type SpecialRun =
+  | { readonly kind: 'daily'; readonly trial: DailyTrial }
+  | { readonly kind: 'challenge'; readonly challenge: Challenge };
 
 export const MAX_SEED = 4294967295;
 
@@ -66,6 +76,8 @@ export class RunSetup {
   readonly seed = signal<number>(randomSeed());
   /** A quick run: realms at twice the pace (spec: quick-runs), remembered for the visit. */
   readonly quick = signal(false);
+  /** The Daily Trial or a challenge, until the player sets up a run of their own again. */
+  readonly special = signal<SpecialRun | undefined>(undefined);
   /** Bot allies for the next run at this screen, in the order added. */
   readonly allies = signal<readonly Ally[]>([]);
   /** Players 2–4 at this screen, in the order added. */

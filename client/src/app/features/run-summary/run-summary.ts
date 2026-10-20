@@ -1,11 +1,14 @@
-import { ChangeDetectionStrategy, Component, computed, inject } from '@angular/core';
+import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@angular/core';
 import { Router, RouterLink } from '@angular/router';
-import { ContentIndex, GameContent } from '../../../engine';
+import { ContentIndex, GameContent, RunResult } from '../../../engine';
+import { challengeLink } from '../../core/challenge';
+import { scoreOf } from '../../core/save/glory';
+import { drawShareCard, shareRun } from '../../core/share-card';
 import { GAME_CONTENT } from '../../core/game-content';
 import { Progression } from '../../core/progression';
 import { RunSetup } from '../../core/run-setup';
 import { TouchScreen } from '../../core/touch-screen';
-import { formatTime, ItemIcon } from '../../shared/item-icon';
+import { formatTime, ItemIcon, spriteImageUrl } from '../../shared/item-icon';
 
 const TITLES = { defeat: 'You have fallen', abandoned: 'Run abandoned' } as const;
 
@@ -24,6 +27,9 @@ const TITLES = { defeat: 'You have fallen', abandoned: 'Run abandoned' } as cons
         >
           {{ v.title }}
         </h1>
+        @if (v.kind) {
+          <p class="kind" data-testid="summary-kind">{{ v.kind }}</p>
+        }
         <p class="screen-subtitle">
           {{ v.god }} from {{ v.realm }} to {{ v.reached }} · seed {{ v.result.seed }}
           @if (v.result.bots) {
@@ -64,6 +70,27 @@ const TITLES = { defeat: 'You have fallen', abandoned: 'Run abandoned' } as cons
                 >
               }
             </p>
+            <!-- The day's trial and challenges (spec: daily-trial). -->
+            @if (v.rewards.glory.trial; as t) {
+              <p class="trial" data-testid="summary-trial">
+                @if (t.newBest) {
+                  <span class="record">New best today</span>
+                } @else {
+                  Best today <strong>{{ fmt(t.best) }}</strong>
+                }
+                · attempt {{ t.attempts }}
+              </p>
+            }
+            @if (toBeat(); as target) {
+              <p class="trial" data-testid="summary-to-beat">
+                Score to beat {{ fmt(target) }} ·
+                @if (v.rewards.glory.score > target) {
+                  <span class="record">Beaten!</span>
+                } @else {
+                  not this time
+                }
+              </p>
+            }
             @if (v.rewards.glory.achievements.length) {
               <h3>Achievements unlocked</h3>
               <ul class="items">
@@ -153,6 +180,9 @@ const TITLES = { defeat: 'You have fallen', abandoned: 'Run abandoned' } as cons
 
         <div class="actions sticky">
           <a class="btn" routerLink="/" data-testid="to-menu">Main menu</a>
+          <button class="btn" data-testid="share" [disabled]="sharing()" (click)="share()">
+            Share
+          </button>
           @if (inRoom()) {
             <a class="btn btn-primary" routerLink="/coop" data-testid="to-coop">Co-op</a>
           } @else {
@@ -162,6 +192,9 @@ const TITLES = { defeat: 'You have fallen', abandoned: 'Run abandoned' } as cons
           }
         </div>
       </main>
+      @if (shareStatus(); as status) {
+        <p class="share-status" role="status" data-testid="share-status">{{ status }}</p>
+      }
     } @else {
       <main class="screen">
         <p>No run to show.</p>
@@ -172,6 +205,29 @@ const TITLES = { defeat: 'You have fallen', abandoned: 'Run abandoned' } as cons
   styles: `
     .screen-title.defeat {
       color: #ff8a70;
+    }
+    .kind {
+      margin: -6px 0 0;
+      font-family: var(--display);
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
+      color: var(--gold-2);
+    }
+    .trial {
+      margin: 6px 0 0;
+    }
+    .share-status {
+      position: fixed;
+      left: 50%;
+      bottom: calc(96px + env(safe-area-inset-bottom, 0px));
+      transform: translateX(-50%);
+      z-index: 6;
+      margin: 0;
+      padding: 8px 16px;
+      max-width: calc(100% - 32px);
+      text-align: center;
+      background: rgba(12, 10, 14, 0.94);
+      border: 1px solid var(--line);
     }
     .panel {
       width: min(640px, 100%);
@@ -307,13 +363,92 @@ export class RunSummary {
         (id) => this.content.synergies.find((s) => s.id === id)?.name ?? id,
       ),
       discovered: rewards.newlyDiscovered.map((d) => item(d.kind, d.id)),
+      kind: this.kindOf(result),
     };
   });
+
+  /** The challenge's score to beat, when this run was one (spec: daily-trial / challenge links). */
+  protected readonly toBeat = computed(() => {
+    const special = this.setup.special();
+    const kind = this.setup.lastRun()?.result.variant?.kind;
+    return kind === 'challenge' && special?.kind === 'challenge'
+      ? special.challenge.toBeat
+      : undefined;
+  });
+  protected readonly sharing = signal(false);
+  protected readonly shareStatus = signal<string | undefined>(undefined);
 
   protected readonly inRoom = computed(() => !!this.setup.lastRun()?.inRoom);
 
   protected fmt(n: number): string {
     return Math.floor(n).toLocaleString('en-US');
+  }
+
+  /** "Daily Trial · Tuesday 21 October · Swift Foes", "Quick run", "Challenge · …", or nothing. */
+  private kindOf(result: RunResult): string {
+    const v = result.variant;
+    const twist = (id?: string) => this.content.twists.find((t) => t.id === id)?.name;
+    if (v?.kind === 'quick') return 'Quick run';
+    if (v?.kind === 'daily') {
+      const [y, m, d] = v.date.split('-').map(Number);
+      const date = new Date(y, m - 1, d).toLocaleDateString('en-GB', {
+        weekday: 'long',
+        day: 'numeric',
+        month: 'long',
+      });
+      return ['Daily Trial', date, twist(v.twistId)].filter(Boolean).join(' · ');
+    }
+    if (v?.kind === 'challenge')
+      return ['Challenge', v.quick ? 'quick run' : '', twist(v.twistId)]
+        .filter(Boolean)
+        .join(' · ');
+    return '';
+  }
+
+  /**
+   * Shares a picture of the run and a challenge link (spec: daily-trial / sharing a run): the share sheet where the
+   * browser can share files, otherwise the picture is saved and the link copied.
+   */
+  protected async share(): Promise<void> {
+    const v = this.view();
+    if (!v || this.sharing()) return;
+    this.sharing.set(true);
+    this.shareStatus.set(undefined);
+    try {
+      const god = this.index.gods.get(v.result.godId);
+      const site = new URL(document.baseURI);
+      const blob = await drawShareCard({
+        god: v.god,
+        godImage: god
+          ? await spriteImageUrl(this.content.assets, god.visual.sprite, 360)
+          : undefined,
+        realm: v.realm,
+        kind: v.kind,
+        time: v.time,
+        kills: v.result.kills,
+        level: v.result.level,
+        realmsCleared: v.result.realmsCleared,
+        score: scoreOf(v.result),
+        site: (site.host + site.pathname).replace(/\/$/, ''),
+      });
+      if (!blob) throw new Error('no picture');
+      const link = challengeLink(document.baseURI, v.result);
+      const text = `I scored ${this.fmt(scoreOf(v.result))} as ${v.god} in Olympus Unbound. Can you beat it?`;
+      const { outcome, copied } = await shareRun(blob, link, text);
+      this.shareStatus.set(
+        outcome === 'shared'
+          ? 'Shared.'
+          : outcome === 'cancelled'
+            ? undefined
+            : copied
+              ? 'Picture saved, and the challenge link copied.'
+              : 'Picture saved. Challenge link: ' + link,
+      );
+    } catch {
+      this.shareStatus.set('Sharing is not available here.');
+    } finally {
+      this.sharing.set(false);
+    }
   }
 
   protected playAgain(): void {

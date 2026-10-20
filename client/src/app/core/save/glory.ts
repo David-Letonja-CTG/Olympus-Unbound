@@ -6,7 +6,18 @@ import {
   RunResult,
 } from '../../../engine';
 import { SaveData } from './save-data';
-import { HIGH_SCORES, HISTORY_SIZE, RunRecord, ScoreEntry } from './save-records';
+import { HIGH_SCORES, HISTORY_SIZE, RunRecord, ScoreEntry, TrialRecord } from './save-records';
+
+/**
+ * The high-score table a run belongs in, or none (spec: quick-runs, daily-trial): quick runs have their own; Daily
+ * Trials and challenges with a twist play by other rules and enter none.
+ */
+export function tableOf(r: RunResult): GloryMode | undefined {
+  const v = r.variant;
+  if (v?.kind === 'daily' || (v?.kind === 'challenge' && v.twistId)) return undefined;
+  if (v?.kind === 'quick' || (v?.kind === 'challenge' && v.quick)) return 'quick';
+  return modeOf(r.players, r.bots);
+}
 
 /** What a run earned in glory (spec: glory, run-outcome / glory in the run summary). */
 export interface GloryOutcome {
@@ -17,6 +28,8 @@ export interface GloryOutcome {
   readonly quests: readonly QuestDefinition[];
   /** Gold from achievements and quests. */
   readonly gold: number;
+  /** A Daily Trial run: the day's best so far and whether this run set it (spec: daily-trial / daily best). */
+  readonly trial?: { readonly best: number; readonly newBest: boolean; readonly attempts: number };
 }
 
 export const NO_GLORY: GloryOutcome = { score: 0, achievements: [], quests: [], gold: 0 };
@@ -101,8 +114,7 @@ export function applyGlory(
 ): { save: SaveData; glory: GloryOutcome } {
   const endedAt = now.toISOString();
   const score = scoreOf(r);
-  // Quick runs have their own table, whatever the party (spec: quick-runs / quick runs are remembered).
-  const mode: GloryMode = r.variant?.kind === 'quick' ? 'quick' : modeOf(r.players, r.bots);
+  const mode = tableOf(r);
 
   const entry: ScoreEntry = {
     runId: r.runId,
@@ -117,10 +129,32 @@ export function applyGlory(
     kills: r.kills,
     level: r.level,
   };
-  const table = [...save.highScores[mode].filter((e) => e.runId !== r.runId), entry]
-    .sort((a, b) => b.score - a.score)
-    .slice(0, HIGH_SCORES);
+  const table = mode
+    ? [...save.highScores[mode].filter((e) => e.runId !== r.runId), entry]
+        .sort((a, b) => b.score - a.score)
+        .slice(0, HIGH_SCORES)
+    : [];
   const rank = table.indexOf(entry) + 1;
+
+  // The day's trial: every attempt counts, the best is kept (spec: daily-trial / daily best).
+  let dailyTrial: TrialRecord = save.dailyTrial;
+  let trial: GloryOutcome['trial'];
+  const v = r.variant;
+  if (v?.kind === 'daily' && v.date >= dailyTrial.date) {
+    const before = v.date === dailyTrial.date ? dailyTrial : { date: v.date, attempts: 0 };
+    const newBest = !before.best || score > before.best.score;
+    const best = newBest
+      ? {
+          score,
+          timeSeconds: r.timeSeconds,
+          kills: r.kills,
+          level: r.level,
+          realmsCleared: r.realmsCleared,
+        }
+      : before.best;
+    dailyTrial = { date: v.date, attempts: before.attempts + 1, best };
+    trial = { best: best?.score ?? score, newBest, attempts: dailyTrial.attempts };
+  }
 
   const record: RunRecord = {
     ...entry,
@@ -181,7 +215,8 @@ export function applyGlory(
       ...save,
       gold: save.gold + gold,
       history: [...save.history, record].slice(-HISTORY_SIZE),
-      highScores: { ...save.highScores, [mode]: table },
+      highScores: mode ? { ...save.highScores, [mode]: table } : save.highScores,
+      dailyTrial,
       achievements,
       achievementProgress: progress,
       achievementGods: godsMet,
@@ -189,7 +224,8 @@ export function applyGlory(
     },
     glory: {
       score,
-      highScore: rank > 0 ? { mode, rank } : undefined,
+      highScore: mode && rank > 0 ? { mode, rank } : undefined,
+      trial,
       achievements: unlocked,
       quests: completed,
       gold,

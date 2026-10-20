@@ -5,7 +5,15 @@ import { Rng } from '../core/rng';
 import { SpatialHash } from '../core/spatial-hash';
 import { Modifier } from '../core/stats';
 import { ContentIndex } from '../data/content-index';
-import { BalanceConfig, EnemyDefinition, GodDefinition, RealmDefinition } from '../data/types';
+import {
+  BalanceConfig,
+  EnemyDefinition,
+  GodDefinition,
+  RealmDefinition,
+  RunRules,
+} from '../data/types';
+
+export type { RunRules } from '../data/types';
 import { ArenaData } from '../maps/generate-arena';
 import {
   BossRuntime,
@@ -55,14 +63,6 @@ export interface RunConfig {
   readonly rules?: RunRules;
   /** What kind of run this is, for the application's records; the simulation only echoes it in the result. */
   readonly variant?: RunVariant;
-}
-
-/** Rules a run plays by on top of the content (spec: quick-runs, daily-trial / twists). */
-export interface RunRules {
-  /** How fast each realm's clock runs against the run's: 2 brings phases, events and the boss in half the time. */
-  readonly pace?: number;
-  /** Stat modifiers for every god of the party, bots included. */
-  readonly modifiers?: readonly Modifier[];
 }
 
 /** A run's kind, echoed in its result: a quick run, a Daily Trial, or a challenge from a link. */
@@ -123,6 +123,8 @@ export class RunState implements WorldFrame {
   readonly party: readonly PartySeat[];
   /** The realm clock's speed (spec: quick-runs / quick pace); 1 for a full run. */
   readonly pace: number;
+  /** A twist's enemy multipliers (spec: daily-trial / twists); 1 each in an ordinary run. */
+  readonly enemyRules: { health: number; damage: number; speed: number; spawnRate: number };
   /** Difficulty multipliers for the party's size (1 for a solo run). */
   readonly partyScale: {
     readonly enemyHealth: number;
@@ -191,6 +193,13 @@ export class RunState implements WorldFrame {
       extra.length ? { ...seat, modifiers: [...seat.modifiers, ...extra] } : seat,
     );
     this.pace = config.rules?.pace ?? 1;
+    const enemies = config.rules?.enemies;
+    this.enemyRules = {
+      health: enemies?.health ?? 1,
+      damage: enemies?.damage ?? 1,
+      speed: enemies?.speed ?? 1,
+      spawnRate: enemies?.spawnRate ?? 1,
+    };
     this.god = index.god(this.party[0].godId);
     // More players, more and tougher enemies (spec: co-op / difficulty per player).
     const others = this.party.length - 1;
@@ -360,7 +369,8 @@ export class RunState implements WorldFrame {
       : this.scaling();
     const elite = options.elite ? this.realm.elite : undefined;
     const party = bossLike ? this.partyScale.bossHealth : this.partyScale.enemyHealth;
-    const health = def.health * scale.health * (elite?.health ?? 1) * party;
+    const health =
+      def.health * scale.health * (elite?.health ?? 1) * party * this.enemyRules.health;
     const enemy: Enemy = {
       id: this.id(),
       def,
@@ -373,8 +383,8 @@ export class RunState implements WorldFrame {
       radius: def.radius * (elite?.size ?? 1),
       health,
       maxHealth: health,
-      damage: def.damage * scale.damage * (elite?.damage ?? 1),
-      speed: def.speed,
+      damage: def.damage * scale.damage * (elite?.damage ?? 1) * this.enemyRules.damage,
+      speed: def.speed * this.enemyRules.speed,
       xp: def.xp * (elite?.xp ?? 1),
       gold: def.gold.amount + (elite?.gold ?? 0),
       elite: !!options.elite,

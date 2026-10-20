@@ -20,6 +20,18 @@ import { ItemIcon } from '../../shared/item-icon';
 
       <nav class="panel menu-panel" aria-label="Main menu">
         <a class="btn btn-primary" routerLink="/gods">Play</a>
+        <!-- The same trial for everyone today (spec: daily-trial); a gold dot until played. -->
+        <a
+          class="btn daily-trial"
+          routerLink="/daily"
+          data-testid="menu-daily-trial"
+          [attr.aria-label]="trial().playedToday ? 'Daily Trial' : 'Daily Trial, new today'"
+        >
+          Daily Trial
+          @if (!trial().playedToday) {
+            <span class="dot" aria-hidden="true"></span>
+          }
+        </a>
         <a class="btn" routerLink="/coop" data-testid="menu-coop">Co-op</a>
         <a class="btn" routerLink="/progression">Progression</a>
         <a class="btn" routerLink="/glory" data-testid="menu-glory">Glory</a>
@@ -233,6 +245,19 @@ import { ItemIcon } from '../../shared/item-icon';
       font-size: 1.4rem;
       cursor: pointer;
     }
+    .daily-trial {
+      position: relative;
+    }
+    .dot {
+      position: absolute;
+      top: 6px;
+      right: 6px;
+      width: 9px;
+      height: 9px;
+      border-radius: 50%;
+      background: var(--gold-2);
+      box-shadow: 0 0 10px rgba(236, 213, 154, 0.9);
+    }
     .touch-hint {
       display: none;
     }
@@ -313,7 +338,11 @@ export class MainMenu {
   protected readonly install = inject(InstallPrompt);
 
   /** Recomputed whenever the save changes; the date is read then (quests change at local midnight). */
+  protected readonly trial = computed(() => {
+    this.progression.save();
+    return this.progression.trialToday();
+  });
   protected readonly goal = computed(() =>
-    nextGoal(this.progression.save(), this.content, new Date()),
+    nextGoal(this.progression.save(), this.content, new Date(), this.trial()),
   );
 }

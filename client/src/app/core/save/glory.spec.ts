@@ -276,7 +276,7 @@ describe('save format version 7 (spec: meta-progression / save format version 7)
     const entry = save.highScores.solo[0];
     const v6 = { ...save, version: 6, highScores: { ...v6Scores, solo: [entry, entry, entry] } };
     const loaded = parseSave(JSON.stringify(v6), CONTENT);
-    expect(loaded.version).toBe(7);
+    expect(loaded.version).toBe(SAVE_VERSION);
     expect(loaded.highScores.solo).toHaveLength(3);
     expect(loaded.highScores.quick).toEqual([]);
   });

@@ -55,6 +55,23 @@ export class ItemIcon {
   });
 }
 
+/**
+ * A sprite's picture as a URL: the character's portrait, waiting up to `waitMs` for its sheet to load, else its
+ * code-drawn art (the share card, spec: daily-trial / sharing a run).
+ */
+export async function spriteImageUrl(
+  manifest: AssetManifest,
+  key: string,
+  px: number,
+  waitMs = 3000,
+): Promise<string | undefined> {
+  // The character's sheet may still be loading (nothing on screen has asked for it yet).
+  const picture = portrait(manifest, key, px);
+  for (let waited = 0; picture !== NONE && !picture() && waited < waitMs; waited += 50)
+    await new Promise((resolve) => setTimeout(resolve, 50));
+  return picture() ?? spriteDataUrl(key, px);
+}
+
 const NONE: Signal<string | undefined> = signal(undefined);
 const portraits = new Map<string, WritableSignal<string | undefined>>();
 
