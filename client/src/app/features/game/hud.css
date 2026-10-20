@@ -603,6 +603,29 @@
   font-variant-numeric: tabular-nums;
 }
 
+/* Surge after a perfect dodge (spec: boss-encounter / perfect dodge). */
+.surge {
+  position: absolute;
+  right: 22px;
+  bottom: 124px;
+  padding: 4px 12px;
+  font-family: var(--display);
+  font-size: 0.8rem;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  color: #2a1a04;
+  background: linear-gradient(180deg, #fff1b8, #e0b44e);
+  border: 1px solid #050404;
+  box-shadow: 0 0 16px rgba(255, 220, 120, 0.6);
+  animation: surge-glow 0.6s ease-in-out infinite alternate;
+}
+
+@keyframes surge-glow {
+  to {
+    box-shadow: 0 0 26px rgba(255, 220, 120, 0.9);
+  }
+}
+
 /* The merchant's banner: the gate's plaque in a warmer gold (spec: hud / the merchant on the hud). */
 .gate.merchant {
   animation: none;

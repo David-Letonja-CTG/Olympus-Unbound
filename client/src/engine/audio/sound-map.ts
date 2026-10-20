@@ -35,4 +35,8 @@ export const BOSS_ATTACK_SOUNDS: Record<BossAttack['type'], SoundCue> = {
   boulder: 'rumble',
   charge: 'bellow',
   summon: 'summon',
+  // Boss mechanics (spec: boss-encounter / signature mechanics) borrow fitting voices.
+  sweep: 'whoosh',
+  lash: 'whoosh',
+  walls: 'rumble',
 };

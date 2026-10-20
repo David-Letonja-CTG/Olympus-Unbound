@@ -3,6 +3,8 @@ import { ContentIndex } from '../data/content-index';
 import { GameContent } from '../data/types';
 import { updateEnemies } from '../enemies/enemy-system';
 import { updateHazards } from '../bosses/boss';
+import { clearBoss } from '../bosses/parts';
+import { updateWalls } from '../bosses/walls';
 import { ArenaData, generateArena } from '../maps/generate-arena';
 import { applyOffer } from '../progression/loadout';
 import { generateOffers } from '../progression/offers';
@@ -140,6 +142,15 @@ export class RunSimulation {
     updateProjectiles(state, dt);
     updateHostileProjectiles(state, dt);
     updateHazards(state, dt);
+    updateWalls(state, dt);
+    // The boss has fallen: its parts, walls and zones go with it.
+    if (
+      state.bossDefeated &&
+      (state.walls.length > 0 ||
+        state.zones.length > 0 ||
+        state.enemies.some((e) => e.part && !e.dead))
+    )
+      clearBoss(state);
     updatePickups(state, dt);
     updateMerchant(state, dt);
     this.removeDead();
@@ -476,6 +487,7 @@ export class RunSimulation {
         cooldown: player.ability.stats.cooldown,
         remaining: player.abilityTimer,
       },
+      surge: player.surge,
       stamina: {
         value: player.stamina,
         max: stamina.max,

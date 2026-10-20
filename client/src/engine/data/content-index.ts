@@ -1,6 +1,7 @@
 import {
   ArmourDefinition,
   BossDefinition,
+  BossPartDefinition,
   CompanionDefinition,
   EnemyDefinition,
   GameContent,
@@ -14,6 +15,30 @@ import {
 } from './types';
 import { ALLOWED_LICENCES, AssetManifest } from './assets';
 import { CutsceneDefinition } from './cutscene';
+
+/** Every damageable boss part as a monster, so snapshots and drawing resolve it like any monster. */
+function partMonsters(content: GameContent): EnemyDefinition[] {
+  return content.bosses.flatMap((boss) =>
+    (boss.parts ?? []).filter((p) => p.health !== undefined).map((p) => bossPartAsEnemy(boss, p)),
+  );
+}
+
+/** A damageable part's monster definition; its id is the boss's and the part's (spec: boss-encounter). */
+export function bossPartAsEnemy(boss: BossDefinition, part: BossPartDefinition): EnemyDefinition {
+  return {
+    id: `${boss.id}_${part.id}`,
+    name: part.name,
+    health: part.health ?? 1,
+    speed: 0,
+    damage: 0,
+    radius: part.radius,
+    xp: 0,
+    gold: { chance: 0, amount: 0 },
+    knockbackResist: 1,
+    behavior: { type: 'chaser' },
+    visual: part.visual,
+  };
+}
 
 function byId<T extends { id: string }>(items: readonly T[]): ReadonlyMap<string, T> {
   return new Map(items.map((item) => [item.id, item]));
@@ -44,7 +69,7 @@ export class ContentIndex {
     this.armour = byId(content.armour);
     this.relics = byId(content.relics);
     this.skills = byId(content.skills);
-    this.enemies = byId(content.enemies);
+    this.enemies = byId([...content.enemies, ...partMonsters(content)]);
     this.bosses = byId(content.bosses);
     this.realms = byId(content.realms);
     this.wares = byId(content.wares);
@@ -207,6 +232,24 @@ export function validateContent(content: GameContent): string[] {
         }
       }
     }
+    // Parts (spec: boss-encounter / signature mechanics).
+    const partIds = new Set<string>();
+    for (const part of boss.parts ?? []) {
+      if (partIds.has(part.id)) errors.push(`Boss "${boss.id}" has two parts "${part.id}".`);
+      partIds.add(part.id);
+      if (!(part.pause > 0)) errors.push(`Part "${boss.id}.${part.id}" needs a pause.`);
+      if ((part.fromPhase ?? 0) >= boss.phases.length)
+        errors.push(`Part "${boss.id}.${part.id}" appears in a phase the boss does not have.`);
+      if (part.health === undefined && (part.order !== undefined || part.zone || part.regrow))
+        errors.push(
+          `Part "${boss.id}.${part.id}" is ordered, holds a zone or regrows, so it needs health.`,
+        );
+      for (const attack of part.attacks)
+        if (attack.type === 'charge' || attack.type === 'walls' || attack.type === 'summon')
+          errors.push(`Part "${boss.id}.${part.id}" cannot ${attack.type}; only the boss can.`);
+    }
+    if (boss.exposed && !(boss.parts ?? []).some((p) => p.health !== undefined))
+      errors.push(`Boss "${boss.id}" can be exposed but has no damageable parts.`);
   }
 
   for (const realm of content.realms) {

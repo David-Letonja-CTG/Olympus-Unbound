@@ -35,6 +35,9 @@ interface FloatingNumber {
 }
 
 const MAX_NUMBERS = 60;
+/** A warning flashes in its last quarter-second (spec: boss-encounter / the moment to dash). */
+const FLASH_SECONDS = 0.25;
+const ROMAN = ['I', 'II', 'III', 'IV', 'V', 'VI'];
 /** Length of the dash streak: about a dash's reach. */
 const DASH_STREAK = 150;
 
@@ -56,6 +59,8 @@ export class Effects {
   private readonly numbers: FloatingNumber[] = [];
   private readonly freeNumbers: Phaser.GameObjects.Text[] = [];
   private seed = 1;
+  /** The number over the next part to cut. */
+  private readonly markLabel: Phaser.GameObjects.Text;
   damageNumbers = true;
   enemyHealthBars = true;
   /** Multiplier for burst particle counts (graphics quality). */
@@ -67,6 +72,18 @@ export class Effects {
     this.bars = scene.add.graphics().setDepth(DEPTH.bars);
     this.pointer = scene.add.graphics().setDepth(DEPTH.pointer).setScrollFactor(0);
     this.marks = scene.add.graphics().setDepth(DEPTH.telegraph + 1);
+    this.markLabel = scene.add
+      .text(0, 0, '', {
+        fontFamily: 'Georgia, serif',
+        fontStyle: 'bold',
+        fontSize: '22px',
+        color: '#ffd34d',
+        stroke: '#000000',
+        strokeThickness: 4,
+      })
+      .setOrigin(0.5)
+      .setDepth(DEPTH.numbers)
+      .setVisible(false);
     this.sparks = scene.add
       .particles(0, 0, 'spark', {
         lifespan: 320,
@@ -163,6 +180,40 @@ export class Effects {
           ttl: 0.32,
         });
         this.burst(this.puffs, event.x, event.y, 8, 0xb9ab92);
+        return;
+      case 'perfectDodge':
+        // The reward for dashing through a boss attack as it lands (spec: boss-encounter / perfect dodge).
+        this.label(event.x, event.y - 46, 'Perfect dodge!', '#ffe680', 1.5, 1.2, -45);
+        this.add({
+          kind: 'burst',
+          x: event.x,
+          y: event.y,
+          radius: 150,
+          angle: 0,
+          arc: 0,
+          color: 0xfff0a0,
+          ttl: 0.5,
+        });
+        this.burst(this.sparks, event.x, event.y, 26, 0xffe680);
+        return;
+      case 'partFell':
+        this.add({
+          kind: 'impact',
+          x: event.x,
+          y: event.y,
+          radius: 60,
+          angle: 0,
+          arc: 0,
+          color: 0xffd27a,
+          ttl: 0.4,
+        });
+        this.burst(this.puffs, event.x, event.y, 20, 0x5a7a4a);
+        return;
+      case 'partGrew':
+        this.burst(this.puffs, event.x, event.y, 14, 0x3a5a3a);
+        return;
+      case 'wallsRose':
+        this.burst(this.puffs, event.x, event.y, 30, 0x9a8a6a);
         return;
       case 'hazardResolved':
         if (event.shape === 'circle') {
@@ -273,6 +324,39 @@ export class Effects {
   }
 
   private number(x: number, y: number, amount: number, crit: boolean, element: Element): void {
+    // A shielded part takes no damage: it says so (spec: boss-encounter / the hydra's heads in order).
+    if (amount <= 0) {
+      this.label(x, y, 'shielded', '#b8b8b8', 0.8, 0.5);
+      return;
+    }
+    const color = crit
+      ? '#ffe14d'
+      : element === 'fire'
+        ? '#ffc29a'
+        : element === 'shadow'
+          ? '#e2ccff'
+          : '#ffffff';
+    this.label(
+      x,
+      y,
+      String(Math.max(1, Math.round(amount))),
+      color,
+      crit ? 1.45 : 1,
+      crit ? 0.8 : 0.6,
+      crit ? -95 : -70,
+    );
+  }
+
+  /** A floating word or number from the shared pool. */
+  private label(
+    x: number,
+    y: number,
+    words: string,
+    color: string,
+    scale: number,
+    life: number,
+    vy = -70,
+  ): void {
     let text = this.freeNumbers.pop();
     if (!text) {
       if (this.numbers.length >= MAX_NUMBERS) {
@@ -293,21 +377,13 @@ export class Effects {
       }
     }
     text
-      .setText(String(Math.max(1, Math.round(amount))))
+      .setText(words)
       .setPosition(x + ((this.seed++ % 7) - 3) * 3, y)
       .setVisible(true)
       .setAlpha(1)
-      .setScale(crit ? 1.45 : 1)
-      .setColor(
-        crit
-          ? '#ffe14d'
-          : element === 'fire'
-            ? '#ffc29a'
-            : element === 'shadow'
-              ? '#e2ccff'
-              : '#ffffff',
-      );
-    this.numbers.push({ text, vy: crit ? -95 : -70, life: crit ? 0.8 : 0.6 });
+      .setScale(scale)
+      .setColor(color);
+    this.numbers.push({ text, vy, life });
   }
 
   private drawTelegraphs(state: WorldFrame): void {
@@ -315,13 +391,40 @@ export class Effects {
     g.clear();
     for (const h of state.hazards) {
       const progress = 1 - Math.max(0, h.timer) / h.warn;
-      if (h.shape === 'circle') {
+      // Its last quarter-second flashes: the moment to dash (spec: boss-encounter / attack warnings).
+      const flash = h.timer <= FLASH_SECONDS && Math.floor(this.clock * 20) % 2 === 0;
+      const edge = flash ? 0xffffff : 0xff5a3a;
+      const edgeWidth = flash ? 5 : 3;
+      if (h.wall !== undefined) {
+        // Where a wall will rise: a stone outline filling up.
+        g.fillStyle(0x8a7e6a, 0.18 + 0.4 * progress);
+        g.fillCircle(h.x, h.y, h.radius * (0.4 + 0.6 * progress));
+        g.lineStyle(flash ? 4 : 2, flash ? 0xffffff : 0xd8ccb0, 0.9);
+        g.strokeCircle(h.x, h.y, h.radius);
+      } else if (h.shape === 'circle') {
         g.fillStyle(0xff2a1a, 0.16);
         g.fillCircle(h.x, h.y, h.radius);
         g.fillStyle(0xff4a2a, 0.35);
         g.fillCircle(h.x, h.y, h.radius * progress);
-        g.lineStyle(3, 0xff5a3a, 0.9);
+        g.lineStyle(edgeWidth, edge, 0.9);
         g.strokeCircle(h.x, h.y, h.radius);
+      } else if (h.shape === 'cone') {
+        const wedge = (r: number) => {
+          const a = h.angle ?? 0;
+          const half = (h.arc ?? 0) / 2;
+          const pts = [new Phaser.Math.Vector2(h.x, h.y)];
+          for (let i = 0; i <= 12; i++) {
+            const t = a - half + ((2 * half) / 12) * i;
+            pts.push(new Phaser.Math.Vector2(h.x + Math.cos(t) * r, h.y + Math.sin(t) * r));
+          }
+          return pts;
+        };
+        g.fillStyle(0xff2a1a, 0.16);
+        g.fillPoints(wedge(h.radius), true);
+        g.fillStyle(0xff4a2a, 0.35);
+        g.fillPoints(wedge(h.radius * progress), true);
+        g.lineStyle(edgeWidth, edge, 0.9);
+        g.strokePoints(wedge(h.radius), true);
       } else {
         const angle = Math.atan2(h.y2 - h.y, h.x2 - h.x);
         const length = Math.hypot(h.x2 - h.x, h.y2 - h.y);
@@ -337,7 +440,7 @@ export class Effects {
         g.fillPoints(pts(length), true);
         g.fillStyle(0xff4a2a, 0.35);
         g.fillPoints(pts(length * progress), true);
-        g.lineStyle(3, 0xff5a3a, 0.9);
+        g.lineStyle(edgeWidth, edge, 0.9);
         g.strokePoints(pts(length), true);
       }
     }
@@ -555,6 +658,7 @@ export class Effects {
       g.lineStyle(1.5, 0xfff0c8, pulse);
       g.strokeCircle(m.x, m.y, m.radius - 7);
     }
+    this.drawBossMarks(state, lights);
     if (state.players.length < 2) return;
     for (const p of state.players) {
       if (p.alive || p.left) continue;
@@ -567,6 +671,54 @@ export class Effects {
         g.strokePath();
       }
     }
+  }
+
+  /**
+   * Boss mechanics, above the darkness (spec: boss-encounter / attack warnings): zones parts hold, shielded parts in
+   * grey, the next part to cut in gold with its number, an exposed boss pulsing white, a dazed one with circling stars.
+   */
+  private drawBossMarks(state: WorldFrame, lights: LightMap): void {
+    const g = this.marks;
+    const t = this.clock;
+    for (const z of state.zones) {
+      g.fillStyle(0x1e6a6c, 0.16);
+      g.fillCircle(z.x, z.y, z.radius);
+      g.lineStyle(3, 0x4ad0c8, 0.55 + Math.sin(t * 3) * 0.15);
+      g.strokeCircle(z.x, z.y, z.radius);
+      lights.add(z.x, z.y, z.radius * 1.2, 0x4ad0c8, 0.35, 2);
+    }
+    let marked = false;
+    for (const e of state.enemies) {
+      if (e.dead) continue;
+      if (e.guarded) {
+        g.lineStyle(3, 0xb8b8b8, 0.8);
+        g.strokeCircle(e.x, e.y, e.radius + 8);
+      }
+      if (e.marked !== undefined) {
+        marked = true;
+        const pulse = 1 + Math.sin(t * 6) * 0.08;
+        g.lineStyle(4, 0xffd34d, 0.95);
+        g.strokeCircle(e.x, e.y, (e.radius + 10) * pulse);
+        lights.add(e.x, e.y, 120, 0xffd34d, 0.7, 3);
+        this.markLabel
+          .setText(ROMAN[e.marked - 1] ?? String(e.marked))
+          .setPosition(e.x, e.y - e.radius - 26)
+          .setVisible(true);
+      }
+      if (e.boss && (e.boss.exposed ?? 0) > 0) {
+        g.lineStyle(6, 0xffffff, 0.5 + Math.sin(t * 8) * 0.3);
+        g.strokeCircle(e.x, e.y, e.radius + 16 + Math.sin(t * 8) * 4);
+        lights.add(e.x, e.y, 220, 0xffffff, 0.8, 4);
+      }
+      if ((e.dazed ?? 0) > 0) {
+        for (let i = 0; i < 3; i++) {
+          const a = t * 4 + (i * Math.PI * 2) / 3;
+          g.fillStyle(0xfff27a, 0.95);
+          g.fillCircle(e.x + Math.cos(a) * 30, e.y - e.radius - 14 + Math.sin(a) * 8, 5);
+        }
+      }
+    }
+    if (!marked) this.markLabel.setVisible(false);
   }
 
   /** An arrow on the screen's edge toward something off-screen: the boss, or the open gate. */

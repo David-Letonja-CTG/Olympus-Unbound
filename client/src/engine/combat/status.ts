@@ -50,8 +50,29 @@ export function applyStatus(
 }
 
 /** Extra damage the enemy takes from shock. */
+/** Extra damage a dazed boss takes (spec: boss-encounter / bull rush into a wall). */
+const DAZED = 1.5;
+
+/**
+ * Damage taken: shock, and a boss's mechanics (spec: boss-encounter / signature mechanics): a shielded part takes
+ * none; a dazed boss takes more; a boss is guarded while a damageable part lives and takes more while exposed.
+ */
 export function damageTakenMultiplier(enemy: Enemy): number {
-  return 1 + (enemy.status.shock > 0 ? enemy.status.shockPotency : 0);
+  if (enemy.guarded) return 0;
+  let m = 1 + (enemy.status.shock > 0 ? enemy.status.shockPotency : 0);
+  if ((enemy.dazed ?? 0) > 0) m *= DAZED;
+  const boss = enemy.boss;
+  if (boss) {
+    if (boss.exposed > 0) m *= boss.def.exposed?.damageTaken ?? 1;
+    else if (boss.def.guard !== undefined) {
+      for (const part of boss.parts.values())
+        if (part.active && part.def.health !== undefined) {
+          m *= boss.def.guard;
+          break;
+        }
+    }
+  }
+  return m;
 }
 
 /** Speed factor from slow (and 0 while stunned). */

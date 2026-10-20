@@ -3,10 +3,11 @@ import { ContentIndex } from '../data/content-index';
 import { SNAPSHOT_FORMAT } from './protocol';
 import { Element, ELEMENTS, EnemyDefinition, GodDefinition } from '../data/types';
 import { RunState } from '../sim/run-state';
-import { PickupKind, RunPhase } from '../sim/types';
+import { PickupKind, RunPhase, Zone } from '../sim/types';
 import {
   FrameEnemy,
   FrameHazard,
+  FrameWall,
   FrameCompanion,
   FrameHostile,
   FramePickup,
@@ -66,6 +67,8 @@ export interface Snapshot {
   readonly waiting: boolean;
   readonly gate: { x: number; y: number; radius: number; standing: number } | undefined;
   readonly companions: SnapCompanion[];
+  readonly walls: FrameWall[];
+  readonly zones: Zone[];
   readonly merchant: { x: number; y: number; radius: number; leavesIn: number } | undefined;
 }
 
@@ -87,12 +90,21 @@ const FLAG = {
   shock: 128,
   slow: 256,
   left: 512,
+  // Boss mechanics (spec: boss-encounter / signature mechanics).
+  guarded: 1024,
+  marked: 2048,
+  dazed: 4096,
+  enraged: 8192,
+  exposed: 16384,
   orbit: 1,
   // A player who left the room.
   gone: 4,
 } as const;
 
 const HEADER = { waiting: 1, gate: 2, merchant: 4 } as const;
+const HAZARD_SHAPES = ['circle', 'line', 'cone'] as const;
+/** A hazard's kind byte: its shape, and whether it raises a wall. */
+const HAZARD_WALL = 4;
 
 /**
  * The host's world as guests see it (D16, design: Snapshot): a compact binary picture of everything the views draw,
@@ -174,11 +186,17 @@ export function encodeSnapshot(state: RunState, phase: RunPhase, waiting = false
         (s.burn > 0 ? FLAG.burn : 0) |
         (s.shock > 0 ? FLAG.shock : 0) |
         (s.slow > 0 ? FLAG.slow : 0) |
-        (e.facing < 0 ? FLAG.left : 0),
+        (e.facing < 0 ? FLAG.left : 0) |
+        (e.guarded ? FLAG.guarded : 0) |
+        (e.marked !== undefined ? FLAG.marked : 0) |
+        ((e.dazed ?? 0) > 0 ? FLAG.dazed : 0) |
+        (e.boss?.enraged ? FLAG.enraged : 0) |
+        ((e.boss?.exposed ?? 0) > 0 ? FLAG.exposed : 0),
     );
     w.u8(Math.round(Math.max(0, Math.min(1, e.health / e.maxHealth)) * 255));
     w.i8(Math.round(e.dirX * 127));
     w.i8(Math.round(e.dirY * 127));
+    if (e.marked !== undefined) w.u8(e.marked);
   }
 
   w.u16(state.projectiles.length);
@@ -212,14 +230,38 @@ export function encodeSnapshot(state: RunState, phase: RunPhase, waiting = false
 
   w.u16(state.hazards.length);
   for (const h of state.hazards) {
-    w.u8(h.shape === 'circle' ? 0 : 1);
+    w.u8(HAZARD_SHAPES.indexOf(h.shape) | (h.wall !== undefined ? HAZARD_WALL : 0));
     w.f32(h.x);
     w.f32(h.y);
     w.f32(h.x2);
     w.f32(h.y2);
     w.f32(h.radius);
     w.f32(h.width);
+    if (h.shape === 'cone') {
+      w.f32(h.angle ?? 0);
+      w.f32(h.arc ?? 0);
+    }
     w.u8(Math.round(Math.max(0, Math.min(1, 1 - Math.max(0, h.timer) / h.warn)) * 255));
+    // The seconds left too (to the hundredth, up to 2.55 s): warnings flash in their last quarter-second.
+    w.u8(timer(h.timer));
+  }
+
+  w.u16(state.walls.length);
+  for (const wall of state.walls) {
+    w.u32(wall.id);
+    w.pos(wall.x);
+    w.pos(wall.y);
+    w.u16(Math.round(wall.radius * RADIUS));
+    w.u8(timer(wall.age));
+    w.u8(timer(wall.left));
+  }
+
+  w.u8(state.zones.length);
+  for (const z of state.zones) {
+    w.pos(z.x);
+    w.pos(z.y);
+    w.u16(Math.round(z.radius * RADIUS));
+    w.u8(Math.round(z.slow * 255));
   }
 
   w.u16(state.companions.length);
@@ -312,7 +354,11 @@ export function decodeSnapshot(buffer: ArrayBuffer, index: ContentIndex): Snapsh
       radius,
       dead: on(FLAG.dead) === 1,
       elite: on(FLAG.elite) === 1,
-      boss: on(FLAG.boss) === 1 || undefined,
+      boss: on(FLAG.boss)
+        ? { enraged: on(FLAG.enraged) === 1, exposed: on(FLAG.exposed) ? 1 : 0 }
+        : undefined,
+      guarded: on(FLAG.guarded) === 1 || undefined,
+      dazed: on(FLAG.dazed) ? 1 : undefined,
       mode: on(FLAG.windup) ? 'windup' : 'move',
       hitFlash: on(FLAG.hit),
       status: {
@@ -326,6 +372,7 @@ export function decodeSnapshot(buffer: ArrayBuffer, index: ContentIndex): Snapsh
       maxHealth: 1,
       dirX: r.i8() / 127,
       dirY: r.i8() / 127,
+      marked: on(FLAG.marked) ? r.u8() : undefined,
     });
   }
 
@@ -371,15 +418,51 @@ export function decodeSnapshot(buffer: ArrayBuffer, index: ContentIndex): Snapsh
 
   const hazards: FrameHazard[] = [];
   for (let n = r.u16(); n > 0; n--) {
-    const shape = r.u8() === 0 ? 'circle' : 'line';
+    const kind = r.u8();
+    const shape = HAZARD_SHAPES[kind & 3] ?? 'circle';
     const x = r.f32();
     const y = r.f32();
     const x2 = r.f32();
     const y2 = r.f32();
     const radius = r.f32();
     const width = r.f32();
-    // Drawn as progress = 1 − timer / warn.
-    hazards.push({ shape, x, y, x2, y2, radius, width, warn: 1, timer: 1 - r.u8() / 255 });
+    const cone = shape === 'cone' ? { angle: r.f32(), arc: r.f32() } : {};
+    const progress = r.u8() / 255;
+    const left = r.u8() / TIMER;
+    // Drawn as progress = 1 − timer / warn, with the true seconds left.
+    const warn = progress < 1 ? left / (1 - progress) : 1;
+    hazards.push({
+      shape,
+      x,
+      y,
+      x2,
+      y2,
+      radius,
+      width,
+      ...cone,
+      wall: kind & HAZARD_WALL ? 1 : undefined,
+      warn: warn > 0 ? warn : 1,
+      timer: left,
+    });
+  }
+
+  const walls: FrameWall[] = [];
+  for (let n = r.u16(); n > 0; n--)
+    walls.push({
+      id: r.u32(),
+      x: r.pos(),
+      y: r.pos(),
+      radius: r.u16() / RADIUS,
+      age: r.u8() / TIMER,
+      left: r.u8() / TIMER,
+    });
+
+  const zones: Zone[] = [];
+  for (let n = r.u8(); n > 0; n--) {
+    const x = r.pos();
+    const y = r.pos();
+    const radius = r.u16() / RADIUS;
+    zones.push({ x, y, radius, dps: 0, slow: r.u8() / 255 });
   }
 
   const companions: SnapCompanion[] = [];
@@ -397,6 +480,8 @@ export function decodeSnapshot(buffer: ArrayBuffer, index: ContentIndex): Snapsh
   return {
     companions,
     merchant,
+    walls,
+    zones,
     time,
     phase,
     players,

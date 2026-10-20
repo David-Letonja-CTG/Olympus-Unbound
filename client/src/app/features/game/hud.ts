@@ -288,6 +288,12 @@ const VESSEL_BOTTOM = 130;
       }
       <span class="key">Space</span>
     </div>
+
+    @if (h.surge > 0) {
+      <div class="surge" data-testid="hud-surge" role="status">
+        Surge · +30% damage · {{ ceil(h.surge) }} s
+      </div>
+    }
   `,
   styleUrl: './hud.css',
 })

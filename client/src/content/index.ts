@@ -3,7 +3,8 @@ import { ACHIEVEMENTS, DAILY_QUESTS } from './achievements';
 import { ASSETS } from './assets';
 import { COMPANIONS, MERCHANT, WARES } from './merchant';
 import { INTRO } from './cutscenes/intro';
-import { BOSSES, ENEMIES } from './enemies';
+import { BOSSES } from './bosses';
+import { ENEMIES } from './enemies';
 import { GODS } from './gods';
 import { ARMOUR, RELICS, SKILLS, SYNERGIES } from './items';
 import { REALMS } from './realms';
@@ -58,6 +59,7 @@ export const BALANCE: BalanceConfig = {
     dashGrace: 0.05,
   },
   merchant: MERCHANT,
+  perfectDodge: { surge: 3, damage: 0.3 },
 };
 
 export const PERMANENT_UPGRADES: readonly PermanentUpgradeDefinition[] = [

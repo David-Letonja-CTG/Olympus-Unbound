@@ -52,7 +52,11 @@ export function hitEnemy(
   if (enemy.dead) return 0;
   const attacker = state.players.find((p) => p.id === source.ownerId);
   const stats = attacker?.stats ?? state.players[0].stats;
-  const { amount, crit } = resolveHit(source, stats, damageTakenMultiplier(enemy), state.combatRng);
+  const hit = resolveHit(source, stats, damageTakenMultiplier(enemy), state.combatRng);
+  // Surge after a perfect dodge (spec: boss-encounter / perfect dodge).
+  const surge = attacker && attacker.surge > 0 ? 1 + state.balance.perfectDodge.damage : 1;
+  const amount = hit.amount * surge;
+  const crit = hit.crit;
   dealDamage(state, enemy, amount, crit, source.element);
 
   if (attacker) {

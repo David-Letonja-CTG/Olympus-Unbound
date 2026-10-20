@@ -14,6 +14,33 @@ export interface Body {
  */
 export class WorldCollision {
   private readonly grid = new SpatialHash<Circle>(128);
+  /** Obstacles that come and go (shifting walls, spec: boss-encounter); few, so checked one by one. */
+  private dynamic: readonly Circle[] = [];
+
+  setDynamic(obstacles: readonly Circle[]): void {
+    this.dynamic = obstacles;
+  }
+
+  /** True when a body overlaps one of the obstacles that come and go. */
+  touchesDynamic(body: Body): boolean {
+    for (const o of this.dynamic)
+      if ((body.x - o.x) ** 2 + (body.y - o.y) ** 2 < (o.radius + body.radius) ** 2) return true;
+    return false;
+  }
+
+  private pushOut(body: Body, o: Circle): void {
+    const dx = body.x - o.x;
+    const dy = body.y - o.y;
+    const dist = Math.sqrt(dx * dx + dy * dy);
+    const overlap = o.radius + body.radius - dist;
+    if (overlap <= 0) return;
+    if (dist > 1e-6) {
+      body.x += (dx / dist) * overlap;
+      body.y += (dy / dist) * overlap;
+    } else {
+      body.x += overlap;
+    }
+  }
 
   constructor(
     readonly bounds: Bounds,
@@ -38,6 +65,7 @@ export class WorldCollision {
           body.x += overlap;
         }
       });
+      for (const o of this.dynamic) this.pushOut(body, o);
     }
     this.clampToBounds(body);
   }
@@ -60,6 +88,6 @@ export class WorldCollision {
       blocked = true;
       return false;
     });
-    return blocked;
+    return blocked || this.touchesDynamic({ x, y, radius });
   }
 }

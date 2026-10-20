@@ -36,6 +36,8 @@ All game content is typed TypeScript in `client/src/content/` (decision D4). The
 
 **New ware or companion:** `content/merchant.ts`. A ware of an existing kind (`companion`, `weaponLevel`, `heal`) is data: name, description, price, effect, icon. A companion is an existing rendered sheet with a warm `tint` and `scale` (D15), an `icon`, speed, `hunt`, `reach` and an `attack` (a weapon-like definition of any behavior but `orbit`; give its id a voice in `ATTACK_SOUNDS`), optionally `heal`. A new kind of ware (an armour upgrade, a relic, a reroll…) is one entry in `WARE_RULES` (`sim/merchant.ts`: its targets and how it applies) plus its effect type, with tests.
 
+**New boss mechanic:** a boss is data in `content/bosses.ts`: phases (attacks, `speedMultiplier`, `pauseMultiplier`, `enraged`), and optionally `parts` (heads, tentacles: place, attacks, pause, delay, health, order, regrow, zone, fromPhase), `guard`, `exposed`, `chargeStun`, `anchored`. Attacks: `slam`, `boulder`, `charge`, `summon`, `sweep`, `lash`, `walls` (parts may not charge, summon or raise walls). A genuinely new kind of attack is a new case in `placeAttack` (`bosses/boss.ts`) with its warning shape and tests.
+
 **New god:** a `GodDefinition` (base stats, starting weapon, ability as a weapon-like definition, passive modifiers, affinities, sprite) → it appears in god selection automatically.
 
 ## Adding an asset pack

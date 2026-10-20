@@ -19,6 +19,8 @@ import {
   Player,
   Projectile,
   SimEvent,
+  Wall,
+  Zone,
 } from './types';
 
 /** What a run is started with. */
@@ -138,6 +140,9 @@ export class RunState implements WorldFrame {
   readonly hazards: Hazard[] = [];
   readonly pickups: Pickup[] = [];
   readonly companions: Companion[] = [];
+  /** Shifting walls' pillars and the zones boss parts hold (spec: boss-encounter / signature mechanics). */
+  readonly walls: Wall[] = [];
+  readonly zones: Zone[] = [];
   /** The Wandering Merchant while it is in the realm (spec: merchant). */
   merchant: Merchant | undefined;
   /** Players who stepped into the merchant's ring and wait for their shop, in order. */
@@ -302,6 +307,8 @@ export class RunState implements WorldFrame {
     // The merchant stays in its realm; companions follow their gods (placed with the party).
     this.merchant = undefined;
     this.shopQueue.length = 0;
+    this.walls.length = 0;
+    this.zones.length = 0;
   }
 
   /** Spawns an enemy unless the global cap is reached (bosses ignore the cap). */
@@ -309,14 +316,20 @@ export class RunState implements WorldFrame {
     def: EnemyDefinition,
     x: number,
     y: number,
-    options: { elite?: boolean; boss?: BossRuntime } = {},
+    options: {
+      elite?: boolean;
+      boss?: BossRuntime;
+      /** A boss part's monster: scaled like its boss, never held back by the cap. */
+      part?: { bossId: number; partId: string };
+    } = {},
   ): Enemy | undefined {
-    if (!options.boss && this.enemies.length >= this.balance.caps.enemies) return undefined;
-    const scale = options.boss
+    const bossLike = !!options.boss || !!options.part;
+    if (!bossLike && this.enemies.length >= this.balance.caps.enemies) return undefined;
+    const scale = bossLike
       ? { health: this.depthScale().bossHealth, damage: this.depthScale().bossDamage }
       : this.scaling();
     const elite = options.elite ? this.realm.elite : undefined;
-    const party = options.boss ? this.partyScale.bossHealth : this.partyScale.enemyHealth;
+    const party = bossLike ? this.partyScale.bossHealth : this.partyScale.enemyHealth;
     const health = def.health * scale.health * (elite?.health ?? 1) * party;
     const enemy: Enemy = {
       id: this.id(),
@@ -336,6 +349,7 @@ export class RunState implements WorldFrame {
       gold: def.gold.amount + (elite?.gold ?? 0),
       elite: !!options.elite,
       boss: options.boss,
+      part: options.part,
       status: emptyStatus(),
       attackTimer: 0.5,
       mode: 'move',

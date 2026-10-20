@@ -258,7 +258,72 @@ export type BossAttack =
       readonly id: string;
       readonly enemy: string;
       readonly count: number;
+    }
+  /**
+   * Marks `count` cones of `arc` radians and reach `radius` toward the target, alternating sides, `gap` seconds apart
+   * (spec: boss-encounter / signature mechanics).
+   */
+  | {
+      readonly type: 'sweep';
+      readonly id: string;
+      readonly windup: number;
+      readonly radius: number;
+      readonly arc: number;
+      readonly damage: number;
+      readonly count: number;
+      readonly gap: number;
+    }
+  /** Marks a line from the attacker toward the target, then hits along it. */
+  | {
+      readonly type: 'lash';
+      readonly id: string;
+      readonly windup: number;
+      readonly length: number;
+      readonly width: number;
+      readonly damage: number;
+    }
+  /**
+   * Raises walls around the boss after a warning: pillars on each ring of `rings` (distances), in `segments` arcs with
+   * `gapShare` of each ring left open; they stand `duration` seconds or until the next set rises.
+   */
+  | {
+      readonly type: 'walls';
+      readonly id: string;
+      readonly windup: number;
+      readonly duration: number;
+      readonly damage: number;
+      readonly rings: readonly number[];
+      readonly segments: number;
+      readonly gapShare: number;
     };
+
+/** A head or tentacle of a boss (spec: boss-encounter / signature mechanics). */
+export interface BossPartDefinition {
+  readonly id: string;
+  readonly name: string;
+  readonly radius: number;
+  /** Where it sits: around the boss (following it) or around the arena's centre. */
+  readonly place: {
+    readonly from: 'boss' | 'arena';
+    readonly angle: number;
+    readonly distance: number;
+  };
+  /** Its own rhythm: these attacks in turn, `pause` seconds apart, the first after `delay`. */
+  readonly attacks: readonly BossAttack[];
+  readonly pause: number;
+  readonly delay: number;
+  /** Damageable (a monster of its own); absent: it only attacks. */
+  readonly health?: number;
+  /** Ordered parts: only the lowest living order can be hurt. */
+  readonly order?: number;
+  /** Seconds after it falls before it grows back. */
+  readonly regrow?: number;
+  /** The stretch of arena it holds: damage per second and slow for gods inside. */
+  readonly zone?: { readonly radius: number; readonly dps: number; readonly slow: number };
+  /** It appears from this boss phase on (0: from the start). */
+  readonly fromPhase?: number;
+  readonly visual: Visual;
+}
 
 export interface BossPhase {
   /** The phase starts when health falls below this fraction (the first phase uses 1). */
@@ -266,6 +331,9 @@ export interface BossPhase {
   readonly speedMultiplier: number;
   readonly attacks: readonly BossAttack[];
   readonly announcement: string;
+  /** Rage: shown red; with `pauseMultiplier`, shorter pauses for the boss and its parts. */
+  readonly enraged?: boolean;
+  readonly pauseMultiplier?: number;
 }
 
 export interface BossDefinition {
@@ -282,6 +350,15 @@ export interface BossDefinition {
   readonly attackPause: number;
   readonly phases: readonly BossPhase[];
   readonly visual: Visual;
+  readonly parts?: readonly BossPartDefinition[];
+  /** Damage the boss takes while a damageable part lives (0.1 = a tenth). */
+  readonly guard?: number;
+  /** When every damageable part is down: exposed for `seconds`, taking `damageTaken` × damage; then they grow back. */
+  readonly exposed?: { readonly seconds: number; readonly damageTaken: number };
+  /** A charge that runs into a wall stops, and the boss is dazed this many seconds. */
+  readonly chargeStun?: number;
+  /** The boss stays within this distance of its arena's centre. */
+  readonly anchored?: number;
 }
 
 // ---------------------------------------------------------------------------------------------------------------
@@ -545,6 +622,8 @@ export interface BalanceConfig {
   };
   /** Sprinting and dashing (spec: player-control / stamina, sprint and dash). */
   readonly stamina: StaminaBalance;
+  /** A dash through a boss attack as it lands: Surge seconds and extra damage (spec: boss-encounter / perfect dodge). */
+  readonly perfectDodge: { readonly surge: number; readonly damage: number };
   /** The Wandering Merchant (spec: merchant). */
   readonly merchant: MerchantBalance;
   /** Reviving a fallen ally (spec: co-op / reviving allies). */

@@ -5,6 +5,7 @@ import {
   ArmourDefinition,
   BossAttack,
   BossDefinition,
+  BossPartDefinition,
   Element,
   EnemyDefinition,
   RelicDefinition,
@@ -96,6 +97,10 @@ export interface Player {
   dashCooldown: number;
   dashX: number;
   dashY: number;
+  /** Seconds of Surge left (+30% damage after a perfect dodge, spec: boss-encounter / perfect dodge). */
+  surge: number;
+  /** This dash has already counted as a perfect dodge. */
+  dodged: boolean;
 }
 
 /** An animal fighting beside its god (spec: merchant / companions). */
@@ -148,6 +153,28 @@ export interface BossRuntime {
   windup: number;
   /** Dashing along a line (charge attack). */
   dash?: { dx: number; dy: number; time: number; speed: number; damage: number; hit: boolean };
+  /** Shown red, with shorter pauses (a raging phase). */
+  enraged: boolean;
+  /** Seconds left of exposure (every damageable part down). */
+  exposed: number;
+  /** Each part's state, by part id. */
+  readonly parts: Map<string, PartState>;
+}
+
+/** A boss part's rhythm and life (spec: boss-encounter / signature mechanics). */
+export interface PartState {
+  readonly def: BossPartDefinition;
+  /** Where it is now (it follows the boss or holds its place in the arena). */
+  x: number;
+  y: number;
+  /** Seconds until its next attack. */
+  timer: number;
+  attackIndex: number;
+  /** Its monster while it lives (damageable parts only). */
+  enemyId?: number;
+  /** Seconds until it grows back; 0 while it lives. */
+  regrowIn: number;
+  active: boolean;
 }
 
 export interface Enemy {
@@ -181,6 +208,34 @@ export interface Enemy {
   hitFlash: number;
   facing: number;
   dead: boolean;
+  /** A boss part's monster: its boss and part (spec: boss-encounter / signature mechanics). */
+  part?: { readonly bossId: number; readonly partId: string };
+  /** Shielded: takes no damage (an ordered part that is not next). */
+  guarded?: boolean;
+  /** The next part to cut, with its order number. */
+  marked?: number;
+  /** Seconds left dazed (a charge into a wall): takes extra damage. */
+  dazed?: number;
+}
+
+/** A pillar of a shifting wall (spec: boss-encounter / asterion's shifting walls). */
+export interface Wall {
+  readonly id: number;
+  readonly x: number;
+  readonly y: number;
+  readonly radius: number;
+  /** Seconds it has stood (for its rising animation), and seconds left. */
+  age: number;
+  left: number;
+}
+
+/** A stretch of arena a part holds: damage over time and slow inside. */
+export interface Zone {
+  readonly x: number;
+  readonly y: number;
+  readonly radius: number;
+  readonly dps: number;
+  readonly slow: number;
 }
 
 /** What a hit is made of; resolved into damage by the one damage pipeline. */
@@ -236,7 +291,12 @@ export interface HostileProjectile {
 export interface Hazard {
   readonly id: number;
   readonly kind: string;
-  readonly shape: 'circle' | 'line';
+  /** Cones (sweeps) use `angle` and `arc`; walls are circles that raise a pillar when they resolve. */
+  readonly shape: 'circle' | 'line' | 'cone';
+  readonly angle?: number;
+  readonly arc?: number;
+  /** A wall's warning: it raises a pillar standing this long. */
+  readonly wall?: number;
   x: number;
   y: number;
   readonly radius: number;
@@ -374,6 +434,12 @@ export type SimEvent =
   | { type: 'playerHealed'; playerId: number; amount: number }
   | { type: 'playerRevived'; playerId: number; x: number; y: number }
   | { type: 'dash'; playerId: number; x: number; y: number; dx: number; dy: number }
+  /** A dash through a boss attack as it lands (spec: boss-encounter / perfect dodge). */
+  | { type: 'perfectDodge'; playerId: number; x: number; y: number }
+  /** A boss part fell, or grew back. */
+  | { type: 'partFell'; x: number; y: number }
+  | { type: 'partGrew'; x: number; y: number }
+  | { type: 'wallsRose'; x: number; y: number }
   | { type: 'merchantArrived'; x: number; y: number }
   | { type: 'merchantLeft' }
   | { type: 'purchase'; playerId: number; wareId: string; price: number }
@@ -433,6 +499,8 @@ export interface HudSnapshot {
     readonly cooldown: number;
     readonly remaining: number;
   };
+  /** Seconds of Surge left after a perfect dodge (spec: boss-encounter / perfect dodge). */
+  readonly surge: number;
   /** Stamina and the dash's state (spec: hud / cooldowns and stamina). */
   readonly stamina: {
     readonly value: number;

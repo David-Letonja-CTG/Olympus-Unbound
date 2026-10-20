@@ -259,6 +259,17 @@ export class ArenaScene extends Phaser.Scene {
       case 'dash':
         sound.play('whoosh', event);
         return;
+      case 'perfectDodge':
+        // Only this player's own perfect dodge rings out (spec: boss-encounter / perfect dodge).
+        if (event.playerId === driver.localId) sound.play('crit');
+        return;
+      case 'partFell':
+        sound.play('killElite', event);
+        return;
+      case 'wallsRose':
+        sound.play('impact', event);
+        this.shake(220, 0.006);
+        return;
       case 'merchantArrived':
         sound.play('gate', event);
         return;

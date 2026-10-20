@@ -8,6 +8,8 @@ import {
   Player,
   Projectile,
   StatusState,
+  Wall,
+  Zone,
 } from './types';
 
 /**
@@ -22,6 +24,9 @@ export interface WorldFrame {
   readonly pickups: readonly FramePickup[];
   readonly hazards: readonly FrameHazard[];
   readonly companions: readonly FrameCompanion[];
+  /** Shifting walls' pillars and the zones boss parts hold (spec: boss-encounter / signature mechanics). */
+  readonly walls: readonly FrameWall[];
+  readonly zones: readonly Zone[];
   /** The merchant while it is in the realm (spec: merchant). */
   readonly merchant:
     | { readonly x: number; readonly y: number; readonly radius: number; readonly leavesIn: number }
@@ -74,11 +79,15 @@ export type FrameEnemy = Readonly<
     | 'mode'
     | 'dirX'
     | 'dirY'
+    | 'guarded'
+    | 'marked'
+    | 'dazed'
+    | 'part'
   >
 > & {
   readonly def: Pick<EnemyDefinition, 'radius' | 'visual' | 'behavior'>;
-  /** Present for the boss; only its presence is drawn. */
-  readonly boss?: unknown;
+  /** Present for the boss: whether it rages, and the seconds it is still exposed. */
+  readonly boss?: { readonly enraged?: boolean; readonly exposed?: number };
   readonly status: Readonly<Pick<StatusState, 'stun' | 'burn' | 'shock' | 'slow'>>;
 };
 
@@ -98,5 +107,21 @@ export type FrameCompanion = Readonly<
 > & { readonly def: Pick<CompanionDefinition, 'id' | 'visual' | 'radius'> };
 
 export type FrameHazard = Readonly<
-  Pick<Hazard, 'x' | 'y' | 'x2' | 'y2' | 'radius' | 'shape' | 'timer' | 'warn' | 'width'>
+  Pick<
+    Hazard,
+    | 'x'
+    | 'y'
+    | 'x2'
+    | 'y2'
+    | 'radius'
+    | 'shape'
+    | 'timer'
+    | 'warn'
+    | 'width'
+    | 'angle'
+    | 'arc'
+    | 'wall'
+  >
 >;
+
+export type FrameWall = Readonly<Pick<Wall, 'id' | 'x' | 'y' | 'radius' | 'age' | 'left'>>;
