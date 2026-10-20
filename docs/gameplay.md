@@ -57,6 +57,10 @@ Friends on the same machine play together on one screen. On god selection, **+ A
 
 Player 1 starts on the left of the keyboard and player 2 on the right; players 3 and 4 take gamepads. Choosing controls another player has swaps them.
 
+<img src="images/together.gif" width="100%" alt="Two players on one keyboard walk apart; the camera zooms out to keep both on screen">
+
+![Two players and a bot; the party panel shows each player's health, stamina and ability](images/together.jpg)
+
 - **One camera** frames every living god, and zooms out as you spread apart. Once it is fully out, you cannot walk further apart: stay together or someone stops at the edge of the screen.
 - **Choices in turn:** at a level-up, a treasure or the merchant, each player's choice is shown in turn, named (*Player 2 · Level 5!*). Any keyboard, mouse or gamepad may answer it.
 - **The party panel** on the left shows every player's health, stamina and whether their ability is ready; the big HUD shows player 1.

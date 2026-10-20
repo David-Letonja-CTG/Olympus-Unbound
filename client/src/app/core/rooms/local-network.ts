@@ -2,7 +2,8 @@ import { PeerLink } from '../../../engine';
 import { RoomError, RoomListing, RoomNetwork } from './room-network';
 
 const CHANNEL = 'olympus-unbound-rooms';
-const JOIN_TIMEOUT_MS = 1500;
+/** Generous: on a busy test runner the host tab is in the background and answers late. */
+const JOIN_TIMEOUT_MS = 6000;
 
 type Envelope =
   | { kind: 'knock'; code: string; from: string }

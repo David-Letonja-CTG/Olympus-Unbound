@@ -107,12 +107,23 @@ async function pickUpgrades(page) {
   }
 }
 
-/** Starts a run of `god` in `realm` (seed 4242) and waits until its loading screen is gone. */
-async function startRun(browser, { god, realm }) {
+/**
+ * Starts a run of `god` in `realm` (seed 4242), with more `players` at the same screen and bot `allies`, and waits
+ * until its loading screen is gone.
+ */
+async function startRun(browser, { god, realm, players = [], allies = [] }) {
   const page = await newPage(browser);
   await page.goto(`${base}/?debug`);
   await page.getByRole('link', { name: 'Play' }).click();
   await page.getByTestId(`god-${god}`).click();
+  for (const other of players) {
+    await page.getByTestId('add-player').click();
+    await page.getByTestId(`add-player-${other}`).click();
+  }
+  for (const ally of allies) {
+    await page.getByTestId('add-ally').click();
+    await page.getByTestId(`add-ally-${ally}`).click();
+  }
   await page.getByRole('button', { name: 'Continue' }).click();
   await page.waitForURL(/realms/);
   await page.getByTestId(`realm-${realm.id}`).click();
@@ -297,7 +308,9 @@ const scenes = {
     await page.screenshot({ path: join(out, 'menu.jpg'), quality: 88 });
     await page.getByRole('link', { name: 'Play' }).click();
     await page.getByTestId('god-zeus').click();
-    // Two allies played by the machine (spec: bot-allies).
+    // A second player at this screen (spec: co-op / local co-op) and two allies played by the machine.
+    await page.getByTestId('add-player').click();
+    await page.getByTestId('add-player-poseidon').click();
     for (const god of ['hades', 'athena']) {
       await page.getByTestId('add-ally').click();
       await page.getByTestId(`add-ally-${god}`).click();
@@ -373,6 +386,43 @@ const scenes = {
     await page.keyboard.up('KeyD');
     const clipC = await record(page, decoder, 1500);
     writeGif('merchant.gif', {
+      frames: [...clipA.frames, ...clipB.frames, ...clipC.frames],
+      delays: [...clipA.delays, ...clipB.delays, ...clipC.delays],
+    });
+    await page.close();
+    await decoder.close();
+  },
+
+  /**
+   * Local co-op: two players on one keyboard and a bot, the camera zooming out as they spread apart (together.gif),
+   * and a still of the party with its panel (together.jpg).
+   */
+  async together(browser) {
+    const decoder = await browser.newPage();
+    const page = await startRun(browser, {
+      god: 'zeus',
+      realm: REALMS[0],
+      players: ['athena'],
+      allies: ['hades'],
+    });
+    await powerUp(page);
+    await send(page, { type: 'skipTo', seconds: 150 });
+    await page.waitForTimeout(3000);
+    await pickUpgrades(page);
+    await page.screenshot({ path: join(out, 'together.jpg'), quality: 88 });
+    const clipA = await record(page, decoder, 1200);
+    // Player 1 walks left on WASD, player 2 right on the arrows: the camera zooms out to keep both.
+    await page.keyboard.down('KeyA');
+    await page.keyboard.down('ArrowRight');
+    const clipB = await record(page, decoder, 3200);
+    await page.keyboard.up('KeyA');
+    await page.keyboard.up('ArrowRight');
+    await page.keyboard.down('KeyD');
+    await page.keyboard.down('ArrowLeft');
+    const clipC = await record(page, decoder, 2400);
+    await page.keyboard.up('KeyD');
+    await page.keyboard.up('ArrowLeft');
+    writeGif('together.gif', {
       frames: [...clipA.frames, ...clipB.frames, ...clipC.frames],
       delays: [...clipA.delays, ...clipB.delays, ...clipC.delays],
     });

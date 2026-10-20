@@ -9,11 +9,13 @@ An original mythological horde-survival roguelite that runs entirely in the brow
 - **Four gods:** Zeus, Hades, Poseidon and Athena, each with a starting weapon, a divine ability, a passive and an arsenal of their own (Thunderbolt is Zeus's alone, the Soul Scythe Hades's).
 - **Sprint and dash:** a stamina bar under your health; sprint away, or dash through an attack untouched.
 - **Five realms, endless runs:** Mount Olympus, the Underworld, the Lernaean Marsh, the Aegean Shore and the Labyrinth of Crete. Each has its own map, monsters and boss: the Cyclops, Cerberus, the Hydra, Scylla and Asterion. After the Labyrinth comes Olympus again, harder.
+- **Bosses with a signature:** the Cyclops rages, Cerberus fights with three heads, the Hydra's heads must fall in order, Scylla's tentacles hold the ground and Asterion shifts the Labyrinth's walls. Every attack is telegraphed, and a dash at the last moment is a perfect dodge.
+- **Battle music:** composed in code, it grows from calm to metal as the realm's boss draws near, the horde closes in and the realms go by.
 - **Build a god:** 10 weapons, 4 armours, 6 relics, 16 skills and 7 synergies; permanent upgrades and a codex between runs.
 - **The Wandering Merchant:** twice a realm, trade the run's gold for companions (an eagle, a hound, a serpent) that fight beside you, whetstones and ambrosia.
 - **Glory:** a score for every run, solo and co-op high scores, 18 achievements and three daily quests.
 - **Co-op:** up to four players on one screen (keyboard and gamepads, one camera that zooms out to frame everyone), or in rooms peer to peer; difficulty per player; a living ally revives a fallen god by standing beside their spirit.
-- **Allies:** no friends online? Add up to three gods played by the machine (Easy, Normal or Hard) to a solo run.
+- **Allies:** not enough friends? Fill the party up to four with gods played by the machine (Easy, Normal or Hard).
 - **Night and myth:** dynamic light, fog and torchlight, and a cast rendered in Blender from licensed models (`art/blender/`).
 
 | Every realm's boss | Level up | The gate onward |
@@ -21,6 +23,8 @@ An original mythological horde-survival roguelite that runs entirely in the brow
 | ![The boss of every realm](docs/images/bosses.jpg) | ![A level-up choice](docs/images/level-up.jpg) | ![The gate to the next realm](docs/images/gate.jpg) |
 | **The Wandering Merchant** | **Companions at your side** | **The Hall of Glory** |
 | ![The merchant's shop](docs/images/shop.jpg) | ![Companions fighting beside Athena, and a dash](docs/images/merchant.gif) | ![High scores, achievements and daily quests](docs/images/glory.jpg) |
+| **Together on one screen** | **Players and allies** | **One camera for everyone** |
+| ![Two players on one keyboard walk apart and the camera zooms out](docs/images/together.gif) | ![God selection with a second player and two bot allies](docs/images/gods.jpg) | ![Two players and a bot; the party panel shows each player's stamina and ability](docs/images/together.jpg) |
 
 **Play it:** [david-letonja-ctg.github.io/Olympus-Unbound](https://david-letonja-ctg.github.io/Olympus-Unbound/), or download the game from [Releases](https://github.com/David-Letonja-CTG/Olympus-Unbound/releases)
 
@@ -36,7 +40,7 @@ npm ci
 npm start          # http://localhost:4200
 ```
 
-WASD/arrows or a gamepad to move, Shift (LB) to sprint, E (B) to dash, Space (A) for the god's divine ability, Esc (Start) to pause, 1–3 to pick upgrades.
+WASD/arrows or a gamepad to move, Shift (LB) to sprint, E (B) to dash, Space (A) for the god's divine ability, Esc (Start) to pause, 1–3 to pick upgrades. With a second player on the same keyboard, player 1 keeps WASD, Space, left Shift and E, and player 2 takes the arrows, Enter, right Shift and right Ctrl; more players use gamepads.
 
 Checks (CI runs the same on every push and pull request):
 
