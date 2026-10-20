@@ -189,7 +189,7 @@ interface AchievementView {
         </section>
       </div>
 
-      <a class="btn" routerLink="/">Back</a>
+      <div class="actions sticky"><a class="btn" routerLink="/">Back</a></div>
     </main>
   `,
   styles: `

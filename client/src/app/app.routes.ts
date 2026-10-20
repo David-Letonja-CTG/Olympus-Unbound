@@ -6,7 +6,6 @@ import { RunSetup } from './core/run-setup';
 
 import { CoopScreen } from './features/coop/coop-screen';
 
-import { GodSelection } from './features/god-selection/god-selection';
 import { MainMenu } from './features/main-menu/main-menu';
 import { RealmSelection } from './features/realm-selection/realm-selection';
 
@@ -36,7 +35,12 @@ export const routes: Routes = [
     title: 'Olympus Unbound',
   },
   { path: 'coop', component: CoopScreen, title: 'Co-op · Olympus Unbound' },
-  { path: 'gods', component: GodSelection, title: 'Choose your god · Olympus Unbound' },
+  {
+    path: 'gods',
+    loadComponent: () =>
+      import('./features/god-selection/god-selection').then((m) => m.GodSelection),
+    title: 'Choose your god · Olympus Unbound',
+  },
   {
     path: 'realms',
     component: RealmSelection,

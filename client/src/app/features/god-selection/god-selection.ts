@@ -47,194 +47,199 @@ const PASSIVE_ICON: Record<Element, string> = {
         }
       </div>
 
-      @if (details(); as d) {
-        <section class="panel details" aria-live="polite">
-          <p class="description">{{ d.god.description }}</p>
-          <div class="facts">
-            <div class="fact">
-              <app-item-icon [sprite]="d.weapon.visual.sprite" [size]="44" />
-              <div>
-                <h3>{{ d.weapon.name }} <span class="tag">starting weapon</span></h3>
-                <p>{{ d.weapon.description }}</p>
+      <!-- Wide windows: the god's details beside the party, so the screen fits without scrolling. -->
+      <div class="columns">
+        @if (details(); as d) {
+          <section class="panel details" aria-live="polite">
+            <p class="description">{{ d.god.description }}</p>
+            <div class="facts">
+              <div class="fact">
+                <app-item-icon [sprite]="d.weapon.visual.sprite" [size]="44" />
+                <div>
+                  <h3>{{ d.weapon.name }} <span class="tag">starting weapon</span></h3>
+                  <p>{{ d.weapon.description }}</p>
+                </div>
+              </div>
+              <div class="fact">
+                <app-item-icon [sprite]="d.god.ability.visual.sprite" [size]="44" />
+                <div>
+                  <h3>{{ d.god.ability.name }} <span class="tag">ability · Space</span></h3>
+                  <p>{{ d.god.ability.description }}</p>
+                </div>
+              </div>
+              <div class="fact">
+                <app-item-icon [sprite]="d.passiveIcon" [size]="44" />
+                <div>
+                  <h3>{{ d.god.passive.name }} <span class="tag">passive</span></h3>
+                  <p>{{ d.god.passive.description }}</p>
+                </div>
               </div>
             </div>
-            <div class="fact">
-              <app-item-icon [sprite]="d.god.ability.visual.sprite" [size]="44" />
+            <dl class="stats">
               <div>
-                <h3>{{ d.god.ability.name }} <span class="tag">ability · Space</span></h3>
-                <p>{{ d.god.ability.description }}</p>
+                <dt>Health</dt>
+                <dd>{{ d.stats.maxHealth }}</dd>
               </div>
-            </div>
-            <div class="fact">
-              <app-item-icon [sprite]="d.passiveIcon" [size]="44" />
               <div>
-                <h3>{{ d.god.passive.name }} <span class="tag">passive</span></h3>
-                <p>{{ d.god.passive.description }}</p>
+                <dt>Speed</dt>
+                <dd>{{ d.stats.moveSpeed }}</dd>
               </div>
-            </div>
-          </div>
-          <dl class="stats">
-            <div>
-              <dt>Health</dt>
-              <dd>{{ d.stats.maxHealth }}</dd>
-            </div>
-            <div>
-              <dt>Speed</dt>
-              <dd>{{ d.stats.moveSpeed }}</dd>
-            </div>
-            <div>
-              <dt>Critical chance</dt>
-              <dd>{{ d.crit }}%</dd>
-            </div>
-          </dl>
-        </section>
-      }
-
-      <!-- Players at this screen (spec: co-op / local co-op on one screen). -->
-      <section class="panel allies" aria-labelledby="players-title" data-testid="players">
-        <div class="allies-head">
-          <h2 id="players-title">Players</h2>
-          <p class="hint">
-            Friends on this machine play with you on one screen: one on the other side of the
-            keyboard, more with gamepads.
-          </p>
-        </div>
-        @if (players().length) {
-          <ul class="ally-list">
-            <li data-testid="player-0">
-              <app-item-icon [sprite]="godSprite(selected() ?? '')" [size]="40" />
-              <span class="ally-name">Player 1</span>
-              <span class="seat-god">{{ godName(selected() ?? '') }}</span>
-              <select
-                aria-label="Player 1 controls"
-                data-testid="player-0-controls"
-                (change)="setControls(0, $event)"
-              >
-                @for (c of schemes; track c) {
-                  <option [value]="c" [selected]="c === setup.firstControls()">
-                    {{ controlLabels[c] }}
-                  </option>
-                }
-              </select>
-            </li>
-            @for (p of players(); track $index; let i = $index) {
-              <li [attr.data-testid]="'player-' + (i + 1)">
-                <app-item-icon [sprite]="godSprite(p.godId)" [size]="40" />
-                <span class="ally-name">Player {{ i + 2 }}</span>
-                <span class="seat-god">{{ godName(p.godId) }}</span>
-                <select
-                  [attr.aria-label]="'Player ' + (i + 2) + ' controls'"
-                  [attr.data-testid]="'player-' + (i + 1) + '-controls'"
-                  (change)="setControls(i + 1, $event)"
-                >
-                  @for (c of schemes; track c) {
-                    <option [value]="c" [selected]="c === p.controls">
-                      {{ controlLabels[c] }}
-                    </option>
-                  }
-                </select>
-                <button
-                  class="remove"
-                  [attr.aria-label]="'Remove player ' + (i + 2)"
-                  [attr.data-testid]="'player-' + (i + 1) + '-remove'"
-                  (click)="setup.removePlayer(i)"
-                >
-                  ✕
-                </button>
-              </li>
-            }
-          </ul>
+              <div>
+                <dt>Critical chance</dt>
+                <dd>{{ d.crit }}%</dd>
+              </div>
+            </dl>
+          </section>
         }
-        @if (setup.seatsLeft() > 0) {
-          @if (picking() === 'player') {
-            <div class="pick" role="group" aria-label="Choose the new player's god">
-              @for (god of gods; track god.id) {
-                <button
-                  class="btn pick-god"
-                  [attr.data-testid]="'add-player-' + god.id"
-                  (click)="addPlayer(god.id)"
-                >
-                  <app-item-icon [sprite]="god.visual.sprite" [size]="28" /> {{ god.name }}
-                </button>
-              }
-              <button class="btn" (click)="picking.set(undefined)">Cancel</button>
-            </div>
-          } @else {
-            <button class="btn" data-testid="add-player" (click)="picking.set('player')">
-              + Add a player
-            </button>
-          }
-        }
-      </section>
 
-      <!-- Bot allies for a run at this screen (spec: bot-allies / adding allies). -->
-      <section class="panel allies" aria-labelledby="allies-title" data-testid="allies">
-        <div class="allies-head">
-          <h2 id="allies-title">Allies</h2>
-          <p class="hint">
-            Gods played by the machine fight beside you. The horde grows with every god, as in
-            co-op.
-          </p>
-        </div>
-        @if (allies().length) {
-          <ul class="ally-list">
-            @for (a of allies(); track $index; let i = $index) {
-              <li [attr.data-testid]="'ally-' + i">
-                <app-item-icon [sprite]="godSprite(a.godId)" [size]="40" />
-                <span class="ally-name">{{ godName(a.godId) }}</span>
-                <span
-                  class="skills"
-                  role="radiogroup"
-                  [attr.aria-label]="godName(a.godId) + ' difficulty'"
-                >
-                  @for (s of skills; track s.id) {
-                    <button
-                      class="tab"
-                      role="radio"
-                      [attr.aria-checked]="a.skill === s.id"
-                      [attr.aria-selected]="a.skill === s.id"
-                      [attr.data-testid]="'ally-' + i + '-' + s.id"
-                      (click)="setup.setAllySkill(i, s.id)"
+        <div class="party-col">
+          <!-- Players at this screen (spec: co-op / local co-op on one screen). -->
+          <section class="panel allies" aria-labelledby="players-title" data-testid="players">
+            <div class="allies-head">
+              <h2 id="players-title">Players</h2>
+              <p class="hint">
+                Friends on this machine play with you on one screen: one on the other side of the
+                keyboard, more with gamepads.
+              </p>
+            </div>
+            @if (players().length) {
+              <ul class="ally-list">
+                <li data-testid="player-0">
+                  <app-item-icon [sprite]="godSprite(selected() ?? '')" [size]="40" />
+                  <span class="ally-name">Player 1</span>
+                  <span class="seat-god">{{ godName(selected() ?? '') }}</span>
+                  <select
+                    aria-label="Player 1 controls"
+                    data-testid="player-0-controls"
+                    (change)="setControls(0, $event)"
+                  >
+                    @for (c of schemes; track c) {
+                      <option [value]="c" [selected]="c === setup.firstControls()">
+                        {{ controlLabels[c] }}
+                      </option>
+                    }
+                  </select>
+                </li>
+                @for (p of players(); track $index; let i = $index) {
+                  <li [attr.data-testid]="'player-' + (i + 1)">
+                    <app-item-icon [sprite]="godSprite(p.godId)" [size]="40" />
+                    <span class="ally-name">Player {{ i + 2 }}</span>
+                    <span class="seat-god">{{ godName(p.godId) }}</span>
+                    <select
+                      [attr.aria-label]="'Player ' + (i + 2) + ' controls'"
+                      [attr.data-testid]="'player-' + (i + 1) + '-controls'"
+                      (change)="setControls(i + 1, $event)"
                     >
-                      {{ s.label }}
+                      @for (c of schemes; track c) {
+                        <option [value]="c" [selected]="c === p.controls">
+                          {{ controlLabels[c] }}
+                        </option>
+                      }
+                    </select>
+                    <button
+                      class="remove"
+                      [attr.aria-label]="'Remove player ' + (i + 2)"
+                      [attr.data-testid]="'player-' + (i + 1) + '-remove'"
+                      (click)="setup.removePlayer(i)"
+                    >
+                      ✕
+                    </button>
+                  </li>
+                }
+              </ul>
+            }
+            @if (setup.seatsLeft() > 0) {
+              @if (picking() === 'player') {
+                <div class="pick" role="group" aria-label="Choose the new player's god">
+                  @for (god of gods; track god.id) {
+                    <button
+                      class="btn pick-god"
+                      [attr.data-testid]="'add-player-' + god.id"
+                      (click)="addPlayer(god.id)"
+                    >
+                      <app-item-icon [sprite]="god.visual.sprite" [size]="28" /> {{ god.name }}
                     </button>
                   }
-                </span>
-                <button
-                  class="remove"
-                  [attr.aria-label]="'Remove ' + godName(a.godId)"
-                  [attr.data-testid]="'ally-' + i + '-remove'"
-                  (click)="setup.removeAlly(i)"
-                >
-                  ✕
-                </button>
-              </li>
-            }
-          </ul>
-        }
-        @if (setup.seatsLeft() > 0) {
-          @if (picking() === 'ally') {
-            <div class="pick" role="group" aria-label="Choose an ally">
-              @for (god of gods; track god.id) {
-                <button
-                  class="btn pick-god"
-                  [attr.data-testid]="'add-ally-' + god.id"
-                  (click)="addAlly(god.id)"
-                >
-                  <app-item-icon [sprite]="god.visual.sprite" [size]="28" /> {{ god.name }}
+                  <button class="btn" (click)="picking.set(undefined)">Cancel</button>
+                </div>
+              } @else {
+                <button class="btn" data-testid="add-player" (click)="picking.set('player')">
+                  + Add a player
                 </button>
               }
-              <button class="btn" (click)="picking.set(undefined)">Cancel</button>
-            </div>
-          } @else {
-            <button class="btn" data-testid="add-ally" (click)="picking.set('ally')">
-              + Add an ally
-            </button>
-          }
-        }
-      </section>
+            }
+          </section>
 
-      <div class="actions">
+          <!-- Bot allies for a run at this screen (spec: bot-allies / adding allies). -->
+          <section class="panel allies" aria-labelledby="allies-title" data-testid="allies">
+            <div class="allies-head">
+              <h2 id="allies-title">Allies</h2>
+              <p class="hint">
+                Gods played by the machine fight beside you. The horde grows with every god, as in
+                co-op.
+              </p>
+            </div>
+            @if (allies().length) {
+              <ul class="ally-list">
+                @for (a of allies(); track $index; let i = $index) {
+                  <li [attr.data-testid]="'ally-' + i">
+                    <app-item-icon [sprite]="godSprite(a.godId)" [size]="40" />
+                    <span class="ally-name">{{ godName(a.godId) }}</span>
+                    <span
+                      class="skills"
+                      role="radiogroup"
+                      [attr.aria-label]="godName(a.godId) + ' difficulty'"
+                    >
+                      @for (s of skills; track s.id) {
+                        <button
+                          class="tab"
+                          role="radio"
+                          [attr.aria-checked]="a.skill === s.id"
+                          [attr.aria-selected]="a.skill === s.id"
+                          [attr.data-testid]="'ally-' + i + '-' + s.id"
+                          (click)="setup.setAllySkill(i, s.id)"
+                        >
+                          {{ s.label }}
+                        </button>
+                      }
+                    </span>
+                    <button
+                      class="remove"
+                      [attr.aria-label]="'Remove ' + godName(a.godId)"
+                      [attr.data-testid]="'ally-' + i + '-remove'"
+                      (click)="setup.removeAlly(i)"
+                    >
+                      ✕
+                    </button>
+                  </li>
+                }
+              </ul>
+            }
+            @if (setup.seatsLeft() > 0) {
+              @if (picking() === 'ally') {
+                <div class="pick" role="group" aria-label="Choose an ally">
+                  @for (god of gods; track god.id) {
+                    <button
+                      class="btn pick-god"
+                      [attr.data-testid]="'add-ally-' + god.id"
+                      (click)="addAlly(god.id)"
+                    >
+                      <app-item-icon [sprite]="god.visual.sprite" [size]="28" /> {{ god.name }}
+                    </button>
+                  }
+                  <button class="btn" (click)="picking.set(undefined)">Cancel</button>
+                </div>
+              } @else {
+                <button class="btn" data-testid="add-ally" (click)="picking.set('ally')">
+                  + Add an ally
+                </button>
+              }
+            }
+          </section>
+        </div>
+      </div>
+
+      <div class="actions sticky">
         <a class="btn" routerLink="/">Back</a>
         <button class="btn btn-primary" [disabled]="!selected()" (click)="continue()">
           Continue
@@ -277,8 +282,39 @@ const PASSIVE_ICON: Record<Element, string> = {
       color: var(--muted);
       font-style: italic;
     }
-    .details {
+    .columns {
+      display: grid;
+      gap: 16px;
       width: min(760px, 100%);
+      align-items: start;
+    }
+    .party-col {
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+      min-width: 0;
+    }
+    @media (min-width: 1100px) {
+      .columns {
+        grid-template-columns: minmax(0, 1.15fr) minmax(0, 1fr);
+        width: min(1200px, 100%);
+      }
+    }
+    /* Short windows: smaller god cards. */
+    @media (max-height: 820px) {
+      .god-card {
+        padding: 10px 12px;
+        gap: 2px;
+      }
+      .god-card app-item-icon {
+        zoom: 0.7;
+      }
+      .name {
+        font-size: 1.35rem;
+      }
+    }
+    .details {
+      min-width: 0;
       padding: 20px 24px;
       display: flex;
       flex-direction: column;
@@ -324,7 +360,6 @@ const PASSIVE_ICON: Record<Element, string> = {
       font-weight: 700;
     }
     .allies {
-      width: min(760px, 100%);
       padding: 16px 22px;
       display: flex;
       flex-direction: column;
