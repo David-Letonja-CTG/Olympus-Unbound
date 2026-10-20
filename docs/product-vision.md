@@ -17,7 +17,7 @@ A mythological horde-survival roguelite. The player is a god thrown into hostile
 
 ## Audience and platform
 
-Desktop browsers with keyboard or gamepad first; the game is a static web build (decision D1). Mobile/touch is a later consideration with its own controls, not a shrunk desktop UI.
+Desktop browsers with keyboard or gamepad first; the game is a static web build (decision D1). Phones and tablets play it with touch controls of their own, held sideways, with a HUD and menus laid out for them (D17), not a shrunk desktop UI.
 
 ## Long-term shape
 
@@ -37,6 +37,7 @@ Choose a god (Zeus, Hades, …) → choose a realm (Olympus, Atlantis, Egyptian 
 | 6c Endless realms | The chain of realms through gates, reviving allies; the Underworld, Lernaean Marsh, Aegean Shore and Labyrinth of Crete with their bosses; minimap, health bars, recorded sound, GitHub Pages releases | **Done** (`add-endless-runs` … `record-sounds`) |
 | 6d Mechanics and goals | Stamina, sprint and dash; each god's own arsenal; glory score, solo and co-op high scores, achievements, daily quests; admin statistics and balance report; the Wandering Merchant and companions | **Done** (`add-stamina-dash-and-god-arsenals`, `add-glory-records-and-quests`, `add-merchants-and-companions`) |
 | 6e Together | Bot allies; adaptive battle music; boss signature mechanics and the perfect dodge; local co-op on one screen (keyboard and gamepads) | **Done** (`add-bot-allies` … `add-local-coop`) |
-| 7 Expansion | Atlantis and further realms and bosses; unlockable gods/realms; more wares and companion upgrades; controller refinement; host migration; mobile controls if prioritized | Later |
+| 6f Phones | Touch stick and buttons, landscape and fullscreen, a phone HUD and menus, Low quality tuned for phones | **Done** (`add-phone-play`) |
+| 7 Expansion | Atlantis and further realms and bosses; unlockable gods/realms; more wares and companion upgrades; controller refinement; host migration | Later |
 
 Each step is an OpenSpec change (see `CLAUDE.md`).

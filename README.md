@@ -17,6 +17,7 @@ An original mythological horde-survival roguelite that runs entirely in the brow
 - **Co-op:** up to four players on one screen (keyboard and gamepads, one camera that zooms out to frame everyone), or in rooms peer to peer; difficulty per player; a living ally revives a fallen god by standing beside their spirit.
 - **Allies:** not enough friends? Fill the party up to four with gods played by the machine (Easy, Normal or Hard).
 - **A HUD for every party:** a bronze frieze with orbs of blood and ichor, split between two players at one screen, a plaque in each corner for three or four, and medallions for everyone else; nobody shown twice.
+- **On a phone:** hold it sideways. A stick appears under your left thumb, Power, Dash and Sprint wait under your right, and the HUD keeps its orbs between them. Fullscreen where the browser allows, Low quality to start with, rooms by touch.
 - **Night and myth:** dynamic light, fog and torchlight, and a cast rendered in Blender from licensed models (`art/blender/`).
 
 | Every realm's boss | Level up | The gate onward |
@@ -26,6 +27,8 @@ An original mythological horde-survival roguelite that runs entirely in the brow
 | ![The merchant's shop](docs/images/shop.jpg) | ![Companions fighting beside Athena, and a dash](docs/images/merchant.gif) | ![High scores, achievements and daily quests](docs/images/glory.jpg) |
 | **Together on one screen** | **Players and allies** | **Four at one screen** |
 | ![Two players on one keyboard walk apart and the camera zooms out](docs/images/together.gif) | ![God selection with a second player and two bot allies](docs/images/gods.jpg) | ![Four players at one screen, a plaque in every corner](docs/images/together-four.jpg) |
+| **On a phone, sideways** | **Menus upright** | |
+| ![A run on a phone: the stick under the left thumb, Power, Dash and Sprint on the right, the orbs between](docs/images/phone.jpg) | ![God selection on a phone held upright](docs/images/phone-gods.jpg) | |
 
 **Play it:** [david-letonja-ctg.github.io/Olympus-Unbound](https://david-letonja-ctg.github.io/Olympus-Unbound/), or download the game from [Releases](https://github.com/David-Letonja-CTG/Olympus-Unbound/releases)
 
@@ -41,14 +44,14 @@ npm ci
 npm start          # http://localhost:4200
 ```
 
-WASD/arrows or a gamepad to move, Shift (LB) to sprint, E (B) to dash, Space (A) for the god's divine ability, Esc (Start) to pause, 1–3 to pick upgrades. With a second player on the same keyboard, player 1 keeps WASD, Space, left Shift and E, and player 2 takes the arrows, Enter, right Shift and right Ctrl; more players use gamepads.
+WASD/arrows or a gamepad to move, Shift (LB) to sprint, E (B) to dash, Space (A) for the god's divine ability, Esc (Start) to pause, 1–3 to pick upgrades. With a second player on the same keyboard, player 1 keeps WASD, Space, left Shift and E, and player 2 takes the arrows, Enter, right Shift and right Ctrl; more players use gamepads. On a phone or tablet: touch the left half of the screen and drag to move, tap Power, Dash and Sprint (on/off) on the right, and the pause button at the top left.
 
 Checks (CI runs the same on every push and pull request):
 
 ```bash
 cd client
 npm run check      # format, lint, asset licences, unit tests, production build
-npm run e2e        # plays the game in Chromium, solo and in a co-op room (npx playwright install chromium once)
+npm run e2e        # plays the game in Chromium, solo, in a co-op room and on an emulated phone (npx playwright install chromium once)
 ```
 
 `npm run build` produces a static site in `client/dist/olympus-unbound/browser` that any static host can serve. Publishing a GitHub Release puts it live on GitHub Pages and attaches it to the release as a zip ([docs/hosting.md](docs/hosting.md)).

@@ -17,6 +17,6 @@
 
 ## 3. Performance on phones (PR 3)
 
-- [ ] 3.1 Measurement script under phone emulation (CPU ×4, Low, ~300 enemies); baseline numbers
-- [ ] 3.2 Tune presentation where measured; default Low on touch devices; numbers after
-- [ ] 3.3 Docs (README, gameplay controls, architecture input and performance), phone scene in docs/images; `npm run check`, `npm run e2e`; playtest
+- [x] 3.1 Measurement script under phone emulation (CPU ×4, Low, ~300 enemies); baseline numbers
+- [x] 3.2 Tune presentation where measured; default Low on touch devices; numbers after
+- [x] 3.3 Docs (README, gameplay controls, architecture input and performance), phone scene in docs/images; `npm run check`, `npm run e2e`; playtest

@@ -26,18 +26,27 @@ The game as the player experiences it. Numbers live in `client/src/content/` and
 
 ## Controls
 
-| Action | Keyboard | Gamepad |
-|---|---|---|
-| Move | WASD / arrow keys | left stick / d-pad |
-| Divine ability | Space | A (south) or right trigger |
-| Sprint (uses stamina) | hold Shift | hold left bumper or left trigger |
-| Dash (uses stamina, untouchable while dashing) | E | B (east) |
-| Pause / resume | Esc or P | Start |
-| Choose an upgrade | 1–3, or arrows/W/S + Enter/Space, or mouse | d-pad + A |
+| Action | Keyboard | Gamepad | Touch (phone, tablet) |
+|---|---|---|---|
+| Move | WASD / arrow keys | left stick / d-pad | touch the left half and drag: the stick appears under your thumb |
+| Divine ability | Space | A (south) or right trigger | Power (shows the cooldown) |
+| Sprint (uses stamina) | hold Shift | hold left bumper or left trigger | Sprint switches it on and off |
+| Dash (uses stamina, untouchable while dashing) | E | B (east) | Dash (dims while a dash is not affordable) |
+| Pause / resume | Esc or P | Start | the pause button at the top left |
+| Choose an upgrade | 1–3, or arrows/W/S + Enter/Space, or mouse | d-pad + A | tap it |
 
 The game pauses by itself when the window loses focus or the tab is hidden (not in a room's run).
 
 **Stamina** is the orb of golden ichor at the right end of the frieze (on a shared screen, the gold ring around your orb of blood). Sprinting drains it while you run; a dash costs about a third of it and carries you some 150 units in the blink of an eye, through any attack. It refills once you stop spending it for a moment; running on with Shift held while spent keeps it empty, so let go to catch your breath. The small pip beside it shows when a dash is ready; the dashed line across the orb shows how much a dash costs.
+
+**On a phone** the game is played sideways. Held upright, a run asks you to turn the phone and waits, paused. Starting a run asks for fullscreen where the browser allows it (not on iPhone Safari).
+
+- **The stick** follows your thumb: half a drag walks at half speed, and the rim is full speed. Dragging past the rim pulls the stick along, so turning back is quick. Lift the thumb and your god stops.
+- **Each finger** drives only what it first touched, so you can hold the stick and tap Dash with the other thumb.
+- **During a run** the page does not zoom, scroll or refresh under your thumbs.
+- **A keyboard or gamepad** connected to the phone still works.
+- **Co-op:** local co-op on one screen is not offered on a touch-only device. Rooms (Co-op → create or join by code) work by touch.
+- **Quality:** phones start at *Low*.
 
 **Each god has an arsenal.** Some weapons belong to one god (Thunderbolt to Zeus, the Soul Scythe to Hades), some to a few (the Thunder Spear to Zeus, Poseidon and Athena), and the Divine Bow, War Hammer and Flaming Sword to all. You are only ever offered your own god's weapons.
 
@@ -85,7 +94,7 @@ Up to four gods fight one horde, each player in their own browser.
 
 Runs take place at night. The arena is dark beyond your light; braziers ring the marble plazas, lightning and fire light up their surroundings, fog drifts and embers float over the field. Enemies outside the light stay visible as dim figures; telegraphs, enemy arrows and pickups are always drawn at full strength.
 
-**Graphics quality** (Settings or the pause menu, applies at once): *Low* — fewer lights, no fog, embers, bloom or colour grading (chosen automatically without hardware graphics); *Medium*; *High* — the most lights, denser fog and embers, bloom on lightning and fire.
+**Graphics quality** (Settings or the pause menu, applies at once): *Low* — fewer lights; no fog, embers, bloom or colour grading; monsters drawn once above the darkness with a night tint, instead of lit figures with a copy over them; no ground shadows under ordinary monsters. Chosen automatically on phones and without hardware graphics. *Medium*; *High* — the most lights, denser fog and embers, bloom on lightning and fire.
 
 ## Music
 
@@ -94,6 +103,13 @@ Every run has battle music, composed and played by the game itself: a lyre and f
 ## The HUD
 
 A bronze **frieze** runs along the bottom, Diablo-like: your health is the **orb of blood** on its left end and your **stamina** the **orb of golden ichor** on its right, each a crystal sphere on a bronze tripod, with the dash pip beside the ichor. Your weapons (each with its own cooldown sweep), armour, relics and companions and the experience bar sit in the middle; the divine ability waits in an iron slot beside the ichor with a dark cooldown sweep that turns smoothly, the seconds left and a flash when it is ready. The run time sits in the top plaque with the minimap at the top right and gold and kills under it, active synergies at the top left, and the boss appears in a banner under the timer. Several players at one screen share it as described under *Local co-op*.
+
+**On a phone held sideways** the corners belong to your thumbs:
+
+- The orbs stand on a shorter frieze between the stick's corner and the buttons' corner, with the experience bar along it.
+- Your loadout sits beside the pause button at the top left.
+- The Power button itself shows the ability's cooldown, and the Dash button dims while a dash is not affordable.
+- The minimap, plaques and banners are smaller on any short screen.
 
 **Health bars:** every monster that has been hurt shows a thin red bar above it (Settings → *Enemy health bars* hides them); elites keep their gold bar and the boss its banner.
 

@@ -72,6 +72,8 @@ Darkness is a screen-sized light map (ambient colour + additive radial lights) m
 
 *Alternative considered:* Phaser's per-sprite lighting with normal maps — rejected for now: a hard light budget, broken batching, and combining it with darkness darkened scenes twice. Shading is painted into the art instead.
 
+*Amended 2026-10-20 (phones, `add-phone-play`):* on Low, each enemy is drawn once, above the light map in y order and with a night tint, instead of lit below it with a copy above. That halves a horde's sprites, and readability is unchanged. Ordinary enemies lose their ground shadows on Low. Touch devices default to Low.
+
 ## D14 — Cutscenes are in-engine scripts (Accepted, 2026-10-11)
 
 Cutscenes are data (`content/cutscenes/*.ts`): actors, hordes, camera moves, fades, lights, strikes and captions on a timeline. A pure `CutsceneTimeline` (unit-tested) drives a Phaser `CutsceneScene` that reuses the arena, lighting and effects of a run; Angular renders captions and handles skipping. No video files. The intro plays once on first launch (remembered in save v2), is skippable at any moment and replayable from the menu.
@@ -89,3 +91,17 @@ Every character (gods, enemies, bosses, cutscene actors) is drawn from sprite sh
 Co-op rooms connect the players' browsers directly over WebRTC data channels, using PeerJS (MIT) and its public signalling service to find the host by a five-character room code. The host's browser runs the only `RunSimulation`. Guests send their input each step, and receive the world as binary snapshots at 20 Hz together with the events, their own HUD, choices and result. They draw it 100 ms behind with interpolation, and predict their own movement. The scene runs on a `RunDriver` (local simulation, or a guest's replica), and the views read a `WorldFrame`, so nothing in the scene or the views knows which one it has. PeerJS is used only by `app/core/rooms/peer-network.ts`, loaded when a room is opened (lint), and the engine sees rooms only as `PeerLink`s. Rooms last one run, there is no joining mid-run, and a host who leaves ends the run for everyone (as abandoned).
 
 *Alternatives considered:* lockstep, with every browser simulating and exchanging only inputs (rejected: `Math.sin`/`cos` may differ between browsers, so the runs would drift apart); a relay or game server of our own (rejected by D1); host migration and reconnection (deferred).
+
+## D17 — Phones: touch controls in the Phaser layer, runs in landscape (Accepted, 2026-10-20)
+
+The owner prioritized phone play (`add-phone-play`). Touch is one more input device, so it lives where the keyboard and gamepads are read. `InputReader` reads a `'touch'` control scheme from `TouchControls` (`engine/phaser/touch-controls.ts`), a DOM layer that the Phaser layer puts over its own canvas. The layer is a floating stick under the left thumb and Power, Dash and Sprint buttons on the right. It reads pointer events, and drawing follows those events. Phaser's own input plugin stays off for touch.
+
+Angular only decides that a device is touch (`TouchScreen`: the main pointer is coarse) and passes the scheme to the session. It also adds what is UI: the pause button, the "turn your phone" overlay, fullscreen on Play, and the phone layouts of the HUD and menus.
+
+Sprint is a toggle; pushing the stick far was rejected because it sprints by accident. Runs are landscape only. Local co-op on one screen is not offered on touch-only devices. The simulation is the same on every device (D5, D16): phone tuning changes only drawing.
+
+*Alternatives considered:*
+
+- The controls as Angular components. Rejected: their state would have to reach the engine as commands every frame, against D3.
+- Phaser's pointer input with buttons drawn in the scene. Rejected: the buttons would be zoomed with the camera and sit under the Angular HUD.
+- Lower enemy caps on phones. Rejected: that changes the rules, and in a room the host's caps decide for everyone.
