@@ -35,6 +35,12 @@ import { LevelUpDialog } from './level-up-dialog';
 import { PauseMenu } from './pause-menu';
 import { PartyMember, RunLoading } from './run-loading';
 
+/** What makes a run quick (spec: quick-runs): the realm's clock at double speed, double experience. */
+const QUICK_RUN: Pick<RunConfig, 'rules' | 'variant'> = {
+  rules: { pace: 2, modifiers: [{ stat: 'xpGain', flat: 1 }] },
+  variant: { kind: 'quick' },
+};
+
 /** How long the final moment of a run stays on screen before the summary. */
 const END_DELAY_MS = 1600;
 const ANNOUNCEMENT_MS = 3200;
@@ -450,6 +456,8 @@ export class PlayScreen {
       seed: this.setup.seed(),
       modifiers,
       sharedScreen: players.length > 0 || undefined,
+      // Realms at twice the pace, double experience (spec: quick-runs / quick pace).
+      ...(this.setup.quick() ? QUICK_RUN : {}),
       party:
         allies.length || players.length
           ? [

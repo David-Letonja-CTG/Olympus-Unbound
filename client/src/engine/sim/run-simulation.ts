@@ -132,7 +132,8 @@ export class RunSimulation {
     if (this.currentPhase !== 'playing') return;
     const state = this.state;
     state.time += dt;
-    state.realmTime += dt;
+    // A quick run's realm clock runs ahead of the run's (spec: quick-runs / quick pace).
+    state.realmTime += dt * state.pace;
 
     updatePlayers(state, this.withBots(inputs), dt);
     holdParty(state);
@@ -374,6 +375,7 @@ export class RunSimulation {
       godId: player.god.id,
       realmId: state.config.realmId,
       seed: state.config.seed,
+      variant: state.config.variant,
       outcome,
       timeSeconds: Math.floor(state.time),
       level: state.level,
@@ -409,7 +411,7 @@ export class RunSimulation {
       case 'skipTo':
         // Realm time: the current realm's timeline jumps; the run's clock moves by as much.
         if (action.seconds > state.realmTime) {
-          state.time += action.seconds - state.realmTime;
+          state.time += (action.seconds - state.realmTime) / state.pace;
           state.realmTime = action.seconds;
           this.director.skipTo(action.seconds);
         }

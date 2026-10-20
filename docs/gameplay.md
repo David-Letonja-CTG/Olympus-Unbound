@@ -50,6 +50,8 @@ The game pauses by itself when the window loses focus or the tab is hidden (not 
 
 **Installing the game.** It is an installable web app. In Chrome, Edge or on Android, the main menu offers **Install the game**. On iPhone and iPad, Safari's **Share → Add to Home Screen** does it, and the main menu explains how. The installed game has its own icon and opens full screen (and sideways on Android). Once it has loaded online, it keeps all its files: menus, the intro and solo runs (with bot allies) play offline. Co-op rooms need a connection; offline, the Co-op screen says so. A new version downloads by itself, and the main menu then offers **Reload**; a run is never interrupted. On iPhone, the Home Screen game keeps its own saves, apart from Safari's.
 
+**Quick runs.** Realm selection offers **Full** (the boss at 7:00) or **Quick** (the boss at 3:30). In a quick run each realm's clock runs twice as fast: phases, events, the merchant, the monsters' growth and the boss all come in half the time. Your god gains double experience, so the build keeps up. Monsters still arrive as fast as in a full run, so a quick realm is shorter and lighter rather than harder. It is made for a break on the phone. Quick runs have their own table in the Hall of Glory; they count for quests and achievements like any run. Play again keeps the choice, and rooms always play full runs.
+
 **Each god has an arsenal.** Some weapons belong to one god (Thunderbolt to Zeus, the Soul Scythe to Hades), some to a few (the Thunder Spear to Zeus, Poseidon and Athena), and the Divine Bow, War Hammer and Flaming Sword to all. You are only ever offered your own god's weapons.
 
 ## Allies
@@ -292,7 +294,7 @@ Twice in every realm (at 2:30 and 5:30) a merchant arrives a short walk from the
 
 ![High scores, achievements and daily quests in the Hall of Glory](images/glory.jpg)
 
-Every run earns a **score**: kills + 2 per second survived + 10 per level + 1,000 per realm cleared. The **Hall of Glory** (main menu → Glory) keeps the ten best solo runs and, apart from them, the ten best co-op runs, with a filter per god.
+Every run earns a **score**: kills + 2 per second survived + 10 per level + 1,000 per realm cleared. The **Hall of Glory** (main menu → Glory) keeps the ten best solo runs and, apart from them, the ten best co-op runs, runs with allies and quick runs, with a filter per god.
 
 **Achievements** (18) pay gold once: clear a realm, clear 3 or 5 in one run, survive 10 or 20 minutes, slay 1,000 in a run or 1,000 / 10,000 over all runs, reach level 30, two synergies at once, 1,500 gold in a run, 25 runs, two realms with each god, a realm with every god, a realm in co-op.
 

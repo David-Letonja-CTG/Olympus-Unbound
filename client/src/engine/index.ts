@@ -34,7 +34,7 @@ export {
 } from './data/assets';
 export { computeStats, DEFAULT_STATS, STAT_IDS } from './core/stats';
 export type { Modifier, StatBlock, StatId } from './core/stats';
-export type { PartySeat, RunConfig } from './sim/run-state';
+export type { PartySeat, RunConfig, RunRules, RunVariant } from './sim/run-state';
 export type { PeerLink } from './net/link';
 export { NET_VERSION, roomVersion } from './net/protocol';
 export type { DebugAction } from './sim/run-simulation';

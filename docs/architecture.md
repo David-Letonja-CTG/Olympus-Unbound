@@ -224,6 +224,17 @@ flowchart LR
 
 `CutsceneTimeline` answers which cues fire between two times, the eased camera and fade at a time, and the active captions. `CutsceneScene` builds the realm's arena from the scene's seed and plays cues (spawn, move, remove, horde, strike, light, burst, shake, sound) with the same `WorldView`, `LightMap`, `Atmosphere` and `Effects` as a run; no simulation runs. `IntroScreen` (route `/intro`) shows loading, captions and the skip prompt; the root route's guard sends a player who has not seen the intro there once per page load.
 
+## Run rules and variants
+
+`RunConfig.rules` changes how a run plays on top of the content, as deterministic data (D5):
+
+- `pace` speeds the realm's clock against the run's. The merchant's arrivals follow the realm's clock, and `skipTo` moves the run's clock by the realm time skipped divided by the pace.
+- `modifiers` are added to every seat of the party, bots included.
+
+A quick run is `pace: 2` plus `xpGain +1`.
+
+`RunConfig.variant` (`quick`, `daily` or `challenge`) is not read by the simulation. It comes back in `RunResult.variant`, so the application files the result in the right high-score table.
+
 ## Simulation step order
 
 `RunSimulation.step` does nothing unless the phase is `playing`. Then, in order: players (movement, collision, regen, ability) → revives → spawn director → enemies (status, behavior or boss, knockback, separation, world collision, contact damage; grid rebuilt) → weapons → projectiles → enemy projectiles → hazards → pickups → remove dead → a fallen boss opens the gate (its gold counts even if the party falls in the same step) → defeat when every god is down → the gate (standing, countdown, travel) → open a pending level-up/chest choice.

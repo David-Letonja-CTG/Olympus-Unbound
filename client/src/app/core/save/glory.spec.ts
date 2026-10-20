@@ -85,6 +85,20 @@ describe('high scores (spec: glory / high scores)', () => {
     expect(save.highScores.coop).toEqual([]);
   });
 
+  it('puts a quick run in the Quick table, whatever the party (spec: glory / quick run high scores)', () => {
+    const solo = play(freshSave(), content, { variant: { kind: 'quick' }, kills: 900 });
+    expect(solo.rewards.glory.highScore).toEqual({ mode: 'quick', rank: 1 });
+    expect(solo.save.highScores.quick).toHaveLength(1);
+    expect(solo.save.highScores.solo).toEqual([]);
+    const party = play(solo.save, content, {
+      runId: 'g-2',
+      variant: { kind: 'quick' },
+      players: 2,
+    });
+    expect(party.save.highScores.quick).toHaveLength(2);
+    expect(party.save.highScores.coop).toEqual([]);
+  });
+
   it('counts a party of two as co-op', () => {
     const { save, rewards } = play(freshSave(), content, { players: 2 });
     expect(rewards.glory.highScore?.mode).toBe('coop');
@@ -201,7 +215,7 @@ describe('save format version 4 (spec: meta-progression / save format version 4)
     expect(save.version).toBe(SAVE_VERSION);
     expect(save.gold).toBe(800);
     expect(save.history).toEqual([]);
-    expect(save.highScores).toEqual({ solo: [], coop: [], allies: [] });
+    expect(save.highScores).toEqual({ solo: [], coop: [], allies: [], quick: [] });
     expect(save.achievements).toEqual({});
   });
 
@@ -240,7 +254,7 @@ describe('save format version 4 (spec: meta-progression / save format version 4)
   it('migrates a version 5 save to 6 with the music at its default (spec: meta-progression / save format version 6)', () => {
     const raw = JSON.stringify({ version: 5, gold: 10, settings: { sfxVolume: 0.3 } });
     const loaded = parseSave(raw, CONTENT);
-    expect(loaded.version).toBe(6);
+    expect(loaded.version).toBe(SAVE_VERSION);
     expect(loaded.settings.sfxVolume).toBe(0.3);
     expect(loaded.settings.musicVolume).toBe(0.5);
     const broken = parseSave(JSON.stringify({ version: 6, settings: { musicVolume: 7 } }), CONTENT);
@@ -251,5 +265,19 @@ describe('save format version 4 (spec: meta-progression / save format version 4)
     let save = freshSave();
     for (let i = 0; i < 101; i++) save = play(save, only({}), {}).save;
     expect(save.history).toHaveLength(100);
+  });
+});
+
+describe('save format version 7 (spec: meta-progression / save format version 7)', () => {
+  it('migrates a version 6 save with an empty Quick table, keeping the rest', () => {
+    const { save } = play(freshSave(), only({}), { kills: 50 });
+    const { quick: _quick, ...v6Scores } = save.highScores;
+    void _quick;
+    const entry = save.highScores.solo[0];
+    const v6 = { ...save, version: 6, highScores: { ...v6Scores, solo: [entry, entry, entry] } };
+    const loaded = parseSave(JSON.stringify(v6), CONTENT);
+    expect(loaded.version).toBe(7);
+    expect(loaded.highScores.solo).toHaveLength(3);
+    expect(loaded.highScores.quick).toEqual([]);
   });
 });

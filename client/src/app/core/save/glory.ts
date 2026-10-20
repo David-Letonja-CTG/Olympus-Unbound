@@ -26,7 +26,7 @@ export function scoreOf(r: Pick<RunResult, 'kills' | 'timeSeconds' | 'level' | '
   return r.kills + 2 * r.timeSeconds + 10 * r.level + 1000 * r.realmsCleared;
 }
 
-export type GloryMode = 'solo' | 'coop' | 'allies';
+export type GloryMode = 'solo' | 'coop' | 'allies' | 'quick';
 
 /**
  * Co-op needs two or more players; a solo run with bot allies is its own mode and never co-op (spec: glory / runs with
@@ -101,7 +101,8 @@ export function applyGlory(
 ): { save: SaveData; glory: GloryOutcome } {
   const endedAt = now.toISOString();
   const score = scoreOf(r);
-  const mode = modeOf(r.players, r.bots);
+  // Quick runs have their own table, whatever the party (spec: quick-runs / quick runs are remembered).
+  const mode: GloryMode = r.variant?.kind === 'quick' ? 'quick' : modeOf(r.players, r.bots);
 
   const entry: ScoreEntry = {
     runId: r.runId,

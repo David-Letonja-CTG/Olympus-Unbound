@@ -64,6 +64,8 @@ export class RunSetup {
   readonly godId = signal<string | undefined>(undefined);
   readonly realmId = signal<string | undefined>(undefined);
   readonly seed = signal<number>(randomSeed());
+  /** A quick run: realms at twice the pace (spec: quick-runs), remembered for the visit. */
+  readonly quick = signal(false);
   /** Bot allies for the next run at this screen, in the order added. */
   readonly allies = signal<readonly Ally[]>([]);
   /** Players 2–4 at this screen, in the order added. */

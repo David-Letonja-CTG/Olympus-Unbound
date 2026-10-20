@@ -47,6 +47,33 @@ import { ItemIcon } from '../../shared/item-icon';
             </section>
           }
 
+          <!-- Run length (spec: run-setup / realm selection; quick-runs). -->
+          <section class="panel length" aria-labelledby="length-title">
+            <span id="length-title" class="length-title">Run length</span>
+            <div class="segments" role="radiogroup" aria-labelledby="length-title">
+              <button
+                type="button"
+                role="radio"
+                data-testid="length-full"
+                [attr.aria-checked]="!setup.quick()"
+                [class.on]="!setup.quick()"
+                (click)="setup.quick.set(false)"
+              >
+                Full <small>boss at {{ clock(bossAt()) }}</small>
+              </button>
+              <button
+                type="button"
+                role="radio"
+                data-testid="length-quick"
+                [attr.aria-checked]="setup.quick()"
+                [class.on]="setup.quick()"
+                (click)="setup.quick.set(true)"
+              >
+                Quick <small>boss at {{ clock(bossAt() / 2) }}</small>
+              </button>
+            </div>
+          </section>
+
           <section class="panel seed">
             <label for="seed">Seed</label>
             <div class="seed-row">
@@ -176,6 +203,48 @@ import { ItemIcon } from '../../shared/item-icon';
     .seed {
       padding: 16px 20px;
     }
+    .length {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      flex-wrap: wrap;
+      gap: 8px 14px;
+      padding: 12px 20px;
+    }
+    .length-title {
+      font-weight: 600;
+    }
+    .segments {
+      display: flex;
+      border: 1px solid var(--line);
+      border-radius: 4px;
+      overflow: hidden;
+    }
+    .segments button {
+      appearance: none;
+      border: 0;
+      background: transparent;
+      color: var(--muted);
+      padding: 8px 14px;
+      min-height: 44px;
+      cursor: pointer;
+      font: inherit;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      line-height: 1.2;
+    }
+    .segments button + button {
+      border-left: 1px solid var(--line);
+    }
+    .segments button.on {
+      background: var(--accent-bg);
+      color: var(--gold-2);
+    }
+    .segments small {
+      font-size: 0.72rem;
+      color: var(--muted);
+    }
     .actions {
       justify-content: flex-end;
     }
@@ -281,7 +350,7 @@ import { ItemIcon } from '../../shared/item-icon';
 })
 export class RealmSelection {
   private readonly content: GameContent = inject(GAME_CONTENT);
-  private readonly setup = inject(RunSetup);
+  protected readonly setup = inject(RunSetup);
   private readonly router = inject(Router);
   private readonly touchScreen = inject(TouchScreen);
 
@@ -310,6 +379,13 @@ export class RealmSelection {
   protected nextName(realm: RealmDefinition): string {
     const i = this.realms.indexOf(realm);
     return this.realms[(i + 1) % this.realms.length].name;
+  }
+
+  /** When the selected realm's boss comes in a full run, in seconds. */
+  protected readonly bossAt = computed(() => this.current()?.boss.at ?? 420);
+
+  protected clock(seconds: number): string {
+    return `${Math.floor(seconds / 60)}:${String(Math.round(seconds % 60)).padStart(2, '0')}`;
   }
 
   protected reroll(): void {

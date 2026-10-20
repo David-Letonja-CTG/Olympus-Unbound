@@ -85,7 +85,8 @@ export function priceOf(state: RunState, ware: WareDefinition): number {
 /** Arrivals, departures and stepping into the ring (spec: merchant / the merchant's visits, the shop). */
 export function updateMerchant(state: RunState, dt: number): void {
   const rules = state.balance.merchant;
-  const before = state.realmTime - dt;
+  // Arrivals are on the realm's clock, which a quick run turns faster (spec: quick-runs / quick pace).
+  const before = state.realmTime - dt * state.pace;
   if (!state.merchant && rules.arrivals.some((t) => before < t && state.realmTime >= t))
     arriveMerchant(state);
   const merchant = state.merchant;

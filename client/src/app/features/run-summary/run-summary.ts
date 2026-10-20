@@ -59,10 +59,8 @@ const TITLES = { defeat: 'You have fallen', abandoned: 'Run abandoned' } as cons
               Score <strong data-testid="summary-score">{{ fmt(v.rewards.glory.score) }}</strong>
               @if (v.rewards.glory.highScore; as hs) {
                 <span class="record" data-testid="summary-high-score"
-                  >New {{ hs.mode === 'coop' ? 'co-op ' : '' }}high score{{
-                    hs.mode === 'allies' ? ' with allies' : ''
-                  }}
-                  · #{{ hs.rank }}</span
+                  >New {{ hs.mode === 'coop' ? 'co-op ' : hs.mode === 'quick' ? 'quick ' : '' }}high
+                  score{{ hs.mode === 'allies' ? ' with allies' : '' }} · #{{ hs.rank }}</span
                 >
               }
             </p>

@@ -21,7 +21,7 @@ import {
 } from './save-records';
 
 /** Current save format version (D8). Bump it and add a migration when the shape changes. */
-export const SAVE_VERSION = 6;
+export const SAVE_VERSION = 7;
 /** How many processed run IDs are remembered to keep rewards idempotent. */
 export const REMEMBERED_RUNS = 20;
 
@@ -112,6 +112,8 @@ const MIGRATIONS: Record<number, (save: Raw) => Raw> = {
   4: (save) => ({ ...save, version: 5 }),
   // v6 adds the music volume (spec: meta-progression / save format version 6), at its default.
   5: (save) => ({ ...save, version: 6 }),
+  // v7 adds the Quick high scores (spec: meta-progression / save format version 7), empty.
+  6: (save) => ({ ...save, version: 7 }),
 };
 
 /**

@@ -1,3 +1,4 @@
+import type { RunVariant } from './run-state';
 import { StatBlock } from '../core/stats';
 import {
   CompanionDefinition,
@@ -392,6 +393,8 @@ export interface RunResult {
   readonly godId: string;
   readonly realmId: string;
   readonly seed: number;
+  /** The run's kind as its config said (quick, Daily Trial, challenge); absent for an ordinary run. */
+  readonly variant?: RunVariant;
   readonly outcome: RunOutcome;
   readonly timeSeconds: number;
   readonly level: number;
