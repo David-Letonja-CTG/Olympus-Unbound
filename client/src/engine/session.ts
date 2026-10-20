@@ -94,9 +94,15 @@ export type UiInput = 'up' | 'down' | 'left' | 'right' | 'confirm' | 'back' | 'p
 export type GameEvent =
   | { readonly type: 'loadProgress'; readonly progress: number; readonly stage?: LoadStage }
   | { readonly type: 'ready' }
-  | { readonly type: 'hud'; readonly hud: HudSnapshot }
+  /** Player 1's HUD; on a shared screen also every local player's, in seat order (spec: hud). */
+  | { readonly type: 'hud'; readonly hud: HudSnapshot; readonly locals?: readonly HudSnapshot[] }
   | { readonly type: 'choice'; readonly choice: UpgradeChoice }
-  | { readonly type: 'choiceResolved'; readonly offer: UpgradeOffer; readonly playerId: number }
+  | {
+      readonly type: 'choiceResolved';
+      readonly offer: UpgradeOffer;
+      readonly playerId: number;
+      readonly choiceId: number;
+    }
   | { readonly type: 'paused' }
   | { readonly type: 'resumed' }
   | { readonly type: 'announcement'; readonly text: string; readonly kind: AnnouncementKind }

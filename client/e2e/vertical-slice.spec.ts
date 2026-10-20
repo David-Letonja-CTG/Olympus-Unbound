@@ -190,7 +190,7 @@ test('a solo run with bot allies plays as a party (spec: bot-allies)', async ({ 
   await page.getByTestId('begin').click();
   await expect(page.getByTestId('party-member')).toHaveCount(2, { timeout: 30_000 });
   await expect(page.getByTestId('run-loading')).toHaveCount(0, { timeout: 120_000 });
-  await expect(page.getByTestId('hud-party')).toContainText('(bot)', { timeout: 20_000 });
+  await expect(page.getByTestId('hud-party')).toContainText('bot', { timeout: 20_000 });
   await expect.poll(async () => (await inspect(page))?.players ?? 0).toBe(2);
   // The ally moves on its own.
   const at = (await inspect(page))?.party[1];
@@ -250,7 +250,9 @@ test('two players share one keyboard and one screen (spec: co-op / local co-op o
   await expect(page.getByTestId('party-member')).toHaveCount(2, { timeout: 30_000 });
   await expect(page.getByTestId('run-loading')).toHaveCount(0, { timeout: 120_000 });
   await debug(page, { type: 'godMode', enabled: true });
-  await expect(page.getByTestId('party-local-1')).toBeVisible({ timeout: 20_000 });
+  // Each player has their own half of the frieze (spec: hud / local players on the hud).
+  await expect(page.getByTestId('plaque-1')).toBeVisible({ timeout: 20_000 });
+  await expect(page.getByTestId('plaque-1')).toContainText('Enter');
 
   // WASD moves player 1 and the arrows player 2.
   const start = (await inspect(page))?.party ?? [];

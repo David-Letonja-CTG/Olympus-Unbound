@@ -12,7 +12,7 @@ import { Atmosphere, LightMap, QUALITY, viewAround } from './atmosphere';
 import { Effects } from './effects';
 import { GroundBuilder } from './ground-canvas';
 import { InputReader } from './input';
-import { Minimap } from './minimap';
+import { CORNER_MINIMAP_TOP, Minimap } from './minimap';
 import { registerTextures } from './textures';
 import { WorldView } from './world-view';
 
@@ -127,6 +127,8 @@ export class ArenaScene extends Phaser.Scene {
     this.view = new WorldView(this, this.resolver, arena, realm.map, this.ground.canvas);
     this.effects = new Effects(this);
     this.minimap = new Minimap(this, arena, this.ground.canvas);
+    // Three or four players at one screen have a plaque in every corner; the map moves below the top-right one.
+    if (this.host.controls.length >= 3) this.minimap.top = CORNER_MINIMAP_TOP;
     this.lightMap = new LightMap(this, realm.atmosphere.ambient);
     this.atmosphere = new Atmosphere(this, arena.width, arena.height, realm.atmosphere);
     this.applySettings(this.host.settings());
@@ -150,9 +152,11 @@ export class ArenaScene extends Phaser.Scene {
     this.emitHud();
   }
 
+  /** Player 1's HUD, and every local player's on a shared screen (spec: hud / local players on the HUD). */
   private emitHud(): HudSnapshot | undefined {
-    const hud = this.host.driver.hud();
-    if (hud) this.host.emit({ type: 'hud', hud });
+    const huds = this.host.driver.huds();
+    const hud = huds[0];
+    if (hud) this.host.emit({ type: 'hud', hud, ...(huds.length > 1 ? { locals: huds } : {}) });
     return hud;
   }
 
@@ -312,7 +316,12 @@ export class ArenaScene extends Phaser.Scene {
         return;
       case 'choiceResolved':
         sound.play('choose');
-        emit({ type: 'choiceResolved', offer: event.offer, playerId: event.playerId });
+        emit({
+          type: 'choiceResolved',
+          offer: event.offer,
+          playerId: event.playerId,
+          choiceId: event.choiceId,
+        });
         this.emitHud();
         return;
       case 'synergy':

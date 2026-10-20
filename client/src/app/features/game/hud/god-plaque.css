@@ -1,0 +1,146 @@
+/* A player's plaque on a shared screen (god-plaque.ts); not encapsulated, nested under app-hud like hud.css. */
+app-hud {
+  /* A player's plaque on a shared screen: orb at the screen's edge, then name and loadout, then the ability. */
+  .god-plaque {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    background: none;
+    border: none;
+    box-shadow: none;
+  }
+
+  .plaque-vessel {
+    position: relative;
+    --vessel: 110px;
+
+    app-dash-pip {
+      position: absolute;
+      right: -6px;
+      bottom: 18px;
+    }
+  }
+
+  .plaque-body {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 6px;
+    min-width: 0;
+  }
+
+  .plaque-name {
+    font-family: var(--display);
+    font-size: 0.8rem;
+    font-weight: 700;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--seat);
+    white-space: nowrap;
+  }
+
+  .god-plaque.fallen .plaque-body,
+  .god-plaque.fallen app-ability-slot {
+    opacity: 0.45;
+    filter: grayscale(1);
+  }
+
+  /* Two players: the frieze's halves, player 2 mirrored. */
+  app-god-plaque.left,
+  app-god-plaque.right {
+    position: absolute;
+    bottom: 6px;
+  }
+
+  app-god-plaque.left {
+    left: 14px;
+  }
+
+  app-god-plaque.right {
+    right: 14px;
+
+    .god-plaque {
+      flex-direction: row-reverse;
+    }
+    .plaque-body {
+      align-items: flex-end;
+    }
+    .plaque-vessel app-dash-pip {
+      right: auto;
+      left: -6px;
+    }
+  }
+
+  /* Three or four players: a 320 × 132 plaque in each corner, in the seat's colour. */
+  app-god-plaque[class*='corner'] {
+    position: absolute;
+
+    .god-plaque {
+      width: 320px;
+      height: 132px;
+      box-sizing: border-box;
+      padding: 6px 12px 6px 8px;
+      background:
+        linear-gradient(180deg, rgba(255, 235, 200, 0.07), rgba(0, 0, 0, 0.3)),
+        linear-gradient(180deg, rgba(42, 38, 36, 0.92), rgba(18, 16, 16, 0.92));
+      border: 1px solid #050404;
+      box-shadow:
+        inset 0 0 0 1px var(--seat),
+        0 3px 10px rgba(0, 0, 0, 0.7);
+    }
+    .plaque-vessel {
+      --vessel: 74px;
+    }
+    .plaque-body {
+      flex: 1;
+    }
+    .loadout,
+    .loadout ul {
+      align-items: flex-start;
+      justify-content: flex-start;
+      gap: 4px;
+    }
+    .ability {
+      padding: 6px;
+      margin-bottom: 14px;
+    }
+  }
+
+  app-god-plaque.corner-0 {
+    top: 12px;
+    left: 12px;
+  }
+
+  app-god-plaque.corner-1 {
+    top: 12px;
+    right: 12px;
+  }
+
+  app-god-plaque.corner-2 {
+    bottom: 12px;
+    left: 12px;
+  }
+
+  app-god-plaque.corner-3 {
+    bottom: 12px;
+    right: 12px;
+  }
+
+  app-god-plaque.corner-1,
+  app-god-plaque.corner-3 {
+    .god-plaque {
+      flex-direction: row-reverse;
+      padding: 6px 8px 6px 12px;
+    }
+    .plaque-body,
+    .loadout,
+    .loadout ul {
+      align-items: flex-end;
+      justify-content: flex-end;
+    }
+    .plaque-vessel app-dash-pip {
+      right: auto;
+      left: -6px;
+    }
+  }
+}

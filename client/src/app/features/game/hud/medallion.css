@@ -1,0 +1,98 @@
+/* A god not played at this screen (god-plaque.ts, Medallion); not encapsulated, nested under app-hud. */
+app-hud {
+  /* A god not played here: a coin in the seat's colour (spec: hud / party health). */
+  .medallion {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .coin {
+    position: relative;
+    width: 48px;
+    height: 48px;
+    flex: none;
+    border-radius: 50%;
+    box-shadow:
+      0 0 0 2px var(--seat),
+      0 3px 8px rgba(0, 0, 0, 0.8);
+  }
+
+  .coin svg {
+    position: absolute;
+    inset: 0;
+    width: 48px;
+    height: 48px;
+  }
+
+  .coin-track {
+    fill: rgba(20, 16, 12, 0.9);
+    stroke: rgba(0, 0, 0, 0.7);
+    stroke-width: 5;
+  }
+
+  .coin-ring {
+    fill: none;
+    stroke: #c8352a;
+    stroke-width: 5;
+    transition: stroke-dasharray 0.15s linear;
+  }
+
+  .coin-stamina {
+    fill: none;
+    stroke: #e8c25a;
+    stroke-width: 2.5;
+  }
+
+  .portrait {
+    position: absolute;
+    left: 9px;
+    top: 9px;
+    width: 30px;
+    height: 30px;
+    border-radius: 50%;
+    overflow: hidden;
+  }
+
+  .gem {
+    position: absolute;
+    top: -3px;
+    right: -3px;
+    width: 10px;
+    height: 10px;
+    transform: rotate(45deg);
+    background: #1d2a36;
+    border: 1px solid var(--gold);
+  }
+
+  .gem.ready {
+    background: #9fd4ff;
+    box-shadow: 0 0 8px #9fd4ff;
+  }
+
+  .medallion.fallen {
+    .portrait {
+      filter: grayscale(1);
+      opacity: 0.5;
+    }
+    .coin-ring {
+      stroke: #ecd59a;
+    }
+  }
+
+  .medal-text {
+    display: flex;
+    flex-direction: column;
+    font-variant-numeric: tabular-nums;
+  }
+
+  .medal-name {
+    font-size: 0.85rem;
+    color: var(--seat);
+  }
+
+  .medal-state {
+    font-size: 0.72rem;
+    color: var(--muted);
+  }
+}

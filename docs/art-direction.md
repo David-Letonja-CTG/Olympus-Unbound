@@ -29,7 +29,7 @@ Darkness is a light map multiplied over the world; anything that must be read in
 
 ## UI
 
-Carved night stone panels in forged iron frames with worn gold-leaf inlays (`public/ui/frame.svg`, `divider.svg`, `stone.svg`); gold lettering in an inscriptional serif; blood-red only for health, danger and destructive actions. Health is an **amphora** that fills with blood-red liquid; the ability lives in an iron slot with a cooldown sweep; the boss in a banner. Text keeps ≥ 4.5:1 contrast (tested via `src/app/shared/ui-palette.ts`). The HUD stays at the edges; the centre belongs to the fight.
+Carved night stone panels in forged iron frames with worn gold-leaf inlays (`public/ui/frame.svg`, `divider.svg`, `stone.svg`); gold lettering in an inscriptional serif; blood-red only for health, danger and destructive actions. Health is a crystal **orb of blood** on a bronze tripod and stamina its twin **orb of golden ichor**, at the two ends of a bronze frieze with a Greek key border (a Diablo-like layout in Greek dress); the ability lives in an iron slot with a cooldown sweep; gods not played at this screen are round coin medallions in their seat colour; the boss is in a banner. Text keeps ≥ 4.5:1 contrast (tested via `src/app/shared/ui-palette.ts`). The HUD stays at the edges; the centre belongs to the fight.
 
 ## Typography
 

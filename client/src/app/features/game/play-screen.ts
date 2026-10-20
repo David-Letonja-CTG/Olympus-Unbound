@@ -28,7 +28,7 @@ import { GAME_CONTENT, GAME_SESSION_FACTORY } from '../../core/game-content';
 import { Progression } from '../../core/progression';
 import { RoomService } from '../../core/rooms/room-service';
 import { ALLY_SKILLS, RunSetup } from '../../core/run-setup';
-import { Announcement, Hud } from './hud';
+import { Announcement, Hud } from './hud/hud';
 import { LevelUpDialog } from './level-up-dialog';
 import { PauseMenu } from './pause-menu';
 import { PartyMember, RunLoading } from './run-loading';
@@ -75,7 +75,7 @@ declare global {
       />
     }
     @if (hud(); as h) {
-      <app-hud [hud]="h" [announcements]="announcements()" />
+      <app-hud [hud]="h" [locals]="locals()" [controls]="local" [announcements]="announcements()" />
     }
     @if (choice(); as c) {
       <app-level-up-dialog [choice]="c" [player]="chooser()" (chosen)="choose(c, $event)" />
@@ -186,11 +186,13 @@ export class PlayScreen {
   private readonly pauseMenu = viewChild(PauseMenu);
 
   protected readonly hud = signal<HudSnapshot | undefined>(undefined);
+  /** Every local player's HUD on a shared screen, in seat order (spec: hud / local players on the hud). */
+  protected readonly locals = signal<readonly HudSnapshot[]>([]);
   /** The open choices of the players at this screen; the first is shown, then the next (spec: co-op / local co-op). */
   private readonly choices = signal<readonly UpgradeChoice[]>([]);
   protected readonly choice = computed<UpgradeChoice | undefined>(() => this.choices()[0]);
   /** Several players at this screen: their controls from seat 0 (spec: co-op / local co-op on one screen). */
-  private readonly local = this.room ? undefined : this.setup.controls();
+  protected readonly local = this.room ? undefined : this.setup.controls();
   /** Whose choice is shown, when several players share the screen. */
   protected readonly chooser = computed(() => {
     const choice = this.choice();
@@ -392,6 +394,7 @@ export class PlayScreen {
     switch (event.type) {
       case 'hud':
         this.hud.set(event.hud);
+        this.locals.set(event.locals ?? []);
         return;
       case 'choice': {
         // A player's newer choice (the shop again after buying) takes their old one's place.
@@ -404,7 +407,9 @@ export class PlayScreen {
         return;
       }
       case 'choiceResolved':
-        this.choices.update((list) => list.filter((c) => c.playerId !== event.playerId));
+        // By ID: in a room the answer's word travels with the next frame, after the player's next choice may have
+        // come (spec: rooms / choices in a room).
+        this.choices.update((list) => list.filter((c) => c.id !== event.choiceId));
         return;
       case 'paused':
         this.paused.set(true);

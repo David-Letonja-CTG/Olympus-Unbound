@@ -215,6 +215,10 @@ export class GuestDriver implements RunDriver {
     return this.latestHud;
   }
 
+  huds(): HudSnapshot[] {
+    return this.latestHud ? [this.latestHud] : [];
+  }
+
   focus(): { x: number; y: number } {
     const self = this.frame.players.find((p) => p.id === this.player);
     if (self?.alive && this.me.active) return this.selfPosition();

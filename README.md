@@ -7,7 +7,7 @@ An original mythological horde-survival roguelite that runs entirely in the brow
 <img src="docs/images/hero.gif" width="100%" alt="A run in every realm: Mount Olympus, the Underworld, the Lernaean Marsh, the Aegean Shore and the Labyrinth of Crete">
 
 - **Four gods:** Zeus, Hades, Poseidon and Athena, each with a starting weapon, a divine ability, a passive and an arsenal of their own (Thunderbolt is Zeus's alone, the Soul Scythe Hades's).
-- **Sprint and dash:** a stamina bar under your health; sprint away, or dash through an attack untouched.
+- **Sprint and dash:** an orb of golden ichor beside your orb of blood; sprint away, or dash through an attack untouched.
 - **Five realms, endless runs:** Mount Olympus, the Underworld, the Lernaean Marsh, the Aegean Shore and the Labyrinth of Crete. Each has its own map, monsters and boss: the Cyclops, Cerberus, the Hydra, Scylla and Asterion. After the Labyrinth comes Olympus again, harder.
 - **Bosses with a signature:** the Cyclops rages, Cerberus fights with three heads, the Hydra's heads must fall in order, Scylla's tentacles hold the ground and Asterion shifts the Labyrinth's walls. Every attack is telegraphed, and a dash at the last moment is a perfect dodge.
 - **Battle music:** composed in code, it grows from calm to metal as the realm's boss draws near, the horde closes in and the realms go by.
@@ -16,6 +16,7 @@ An original mythological horde-survival roguelite that runs entirely in the brow
 - **Glory:** a score for every run, solo and co-op high scores, 18 achievements and three daily quests.
 - **Co-op:** up to four players on one screen (keyboard and gamepads, one camera that zooms out to frame everyone), or in rooms peer to peer; difficulty per player; a living ally revives a fallen god by standing beside their spirit.
 - **Allies:** not enough friends? Fill the party up to four with gods played by the machine (Easy, Normal or Hard).
+- **A HUD for every party:** a bronze frieze with orbs of blood and ichor, split between two players at one screen, a plaque in each corner for three or four, and medallions for everyone else; nobody shown twice.
 - **Night and myth:** dynamic light, fog and torchlight, and a cast rendered in Blender from licensed models (`art/blender/`).
 
 | Every realm's boss | Level up | The gate onward |
@@ -23,8 +24,8 @@ An original mythological horde-survival roguelite that runs entirely in the brow
 | ![The boss of every realm](docs/images/bosses.jpg) | ![A level-up choice](docs/images/level-up.jpg) | ![The gate to the next realm](docs/images/gate.jpg) |
 | **The Wandering Merchant** | **Companions at your side** | **The Hall of Glory** |
 | ![The merchant's shop](docs/images/shop.jpg) | ![Companions fighting beside Athena, and a dash](docs/images/merchant.gif) | ![High scores, achievements and daily quests](docs/images/glory.jpg) |
-| **Together on one screen** | **Players and allies** | **One camera for everyone** |
-| ![Two players on one keyboard walk apart and the camera zooms out](docs/images/together.gif) | ![God selection with a second player and two bot allies](docs/images/gods.jpg) | ![Two players and a bot; the party panel shows each player's stamina and ability](docs/images/together.jpg) |
+| **Together on one screen** | **Players and allies** | **Four at one screen** |
+| ![Two players on one keyboard walk apart and the camera zooms out](docs/images/together.gif) | ![God selection with a second player and two bot allies](docs/images/gods.jpg) | ![Four players at one screen, a plaque in every corner](docs/images/together-four.jpg) |
 
 **Play it:** [david-letonja-ctg.github.io/Olympus-Unbound](https://david-letonja-ctg.github.io/Olympus-Unbound/), or download the game from [Releases](https://github.com/David-Letonja-CTG/Olympus-Unbound/releases)
 
