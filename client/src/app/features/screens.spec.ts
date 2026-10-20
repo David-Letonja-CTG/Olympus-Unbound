@@ -39,6 +39,16 @@ describe('main menu', () => {
     expect(text(h)).toContain('Settings');
     expect(q(h, '[data-testid=menu-gold]')?.textContent).toBe('75');
   });
+
+  it('shows the next goal and leads to it (spec: run-setup / main menu)', async () => {
+    const h = await open('/', { version: 2, gold: 150, introSeen: true });
+    const goal = q<HTMLAnchorElement>(h, '[data-testid=next-goal]');
+    expect(goal?.textContent).toContain('Buy Attraction I');
+    expect(goal?.textContent).toContain('80 gold');
+    goal?.click();
+    await h.fixture.whenStable();
+    expect(TestBed.inject(Router).url).toBe('/progression');
+  });
 });
 
 describe('installing and updating (spec: installable-app)', () => {

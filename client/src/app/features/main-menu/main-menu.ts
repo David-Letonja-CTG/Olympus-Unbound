@@ -1,9 +1,11 @@
-import { ChangeDetectionStrategy, Component, inject } from '@angular/core';
+import { ChangeDetectionStrategy, Component, computed, inject } from '@angular/core';
 import { RouterLink } from '@angular/router';
 
 import { AppUpdate } from '../../core/app-update';
 import { InstallPrompt } from '../../core/install-prompt';
-import { DailyQuestView, Progression } from '../../core/progression';
+import { GAME_CONTENT } from '../../core/game-content';
+import { nextGoal } from '../../core/next-goal';
+import { Progression } from '../../core/progression';
 import { ItemIcon } from '../../shared/item-icon';
 
 @Component({
@@ -25,10 +27,16 @@ import { ItemIcon } from '../../shared/item-icon';
         <a class="btn" routerLink="/intro" data-testid="menu-intro">Intro</a>
       </nav>
 
-      @let quests = progression.todayQuests();
-      <a class="daily" routerLink="/glory" data-testid="menu-daily">
-        Daily quests: {{ doneCount(quests) }} / {{ quests.length }} done
-      </a>
+      <!-- The nearest unfinished thing, so there is always a reason to press Play (spec: run-setup / main menu). -->
+      @if (goal(); as g) {
+        <a class="daily" [routerLink]="g.route" data-testid="next-goal">
+          <span class="goal-label">Next</span>
+          <span class="goal-text">{{ g.text }}</span>
+          @if (g.detail) {
+            <span class="goal-detail">{{ g.detail }}</span>
+          }
+        </a>
+      }
 
       <p class="gold">
         <app-item-icon sprite="icon_gold" [size]="22" />
@@ -135,10 +143,31 @@ import { ItemIcon } from '../../shared/item-icon';
       color: var(--muted);
     }
     .daily {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: center;
+      align-items: baseline;
+      gap: 4px 10px;
+      max-width: min(520px, 100%);
+      padding: 6px 14px;
       color: var(--gold-2);
       font-size: 0.9rem;
+      text-align: center;
       text-decoration: none;
-      border-bottom: 1px dotted var(--gold);
+      border-top: 1px solid var(--line);
+      border-bottom: 1px solid var(--line);
+      background: linear-gradient(90deg, transparent, rgba(60, 40, 10, 0.55), transparent);
+    }
+    .goal-label {
+      font-family: var(--display);
+      font-size: 0.7rem;
+      letter-spacing: 0.2em;
+      text-transform: uppercase;
+      color: var(--muted);
+    }
+    .goal-detail {
+      color: var(--text);
+      font-variant-numeric: tabular-nums;
     }
     .hint {
       color: var(--muted);
@@ -279,10 +308,12 @@ import { ItemIcon } from '../../shared/item-icon';
 })
 export class MainMenu {
   protected readonly progression = inject(Progression);
+  private readonly content = inject(GAME_CONTENT);
   protected readonly update = inject(AppUpdate);
   protected readonly install = inject(InstallPrompt);
 
-  protected doneCount(quests: readonly DailyQuestView[]): number {
-    return quests.filter((q) => q.done).length;
-  }
+  /** Recomputed whenever the save changes; the date is read then (quests change at local midnight). */
+  protected readonly goal = computed(() =>
+    nextGoal(this.progression.save(), this.content, new Date()),
+  );
 }

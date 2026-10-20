@@ -296,7 +296,15 @@ Every run earns a **score**: kills + 2 per second survived + 10 per level + 1,00
 
 **Achievements** (18) pay gold once: clear a realm, clear 3 or 5 in one run, survive 10 or 20 minutes, slay 1,000 in a run or 1,000 / 10,000 over all runs, reach level 30, two synergies at once, 1,500 gold in a run, 25 runs, two realms with each god, a realm with every god, a realm in co-op.
 
-**Daily quests**: three a day, the same for everyone on that date, at most one for a particular god; progress adds up over the day's runs (or counts the day's best run), each pays gold once, and new ones come at local midnight. The main menu shows how many are done. The run summary lists the score, a new high score, and achievements and quests completed with their gold.
+**Daily quests**: three a day, the same for everyone on that date, at most one for a particular god; progress adds up over the day's runs (or counts the day's best run), each pays gold once, and new ones come at local midnight. The run summary lists the score, a new high score, and achievements and quests completed with their gold.
+
+**Next goal**: the main menu always names one thing to do next, in this order:
+
+1. A blessing you can afford now.
+2. The daily quest closest to done, with its progress.
+3. The achievement closest to done, for those whose progress adds up.
+
+Tapping it opens the screen where that goal lives.
 
 ## Admin mode
 
