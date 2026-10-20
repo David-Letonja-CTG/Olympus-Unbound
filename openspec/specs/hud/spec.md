@@ -101,22 +101,30 @@ Every common monster that has lost health SHALL show a small health bar above it
 - **THEN** no common monster shows a health bar
 
 ### Requirement: Party health
-When more than one god is in the run, the HUD SHALL list every god still in it on the left of the screen, in seat order, with their seat's colour, god, name, a health bar and their health in numbers; the player's own god SHALL be marked. A fallen god SHALL be shown as fallen, with how far their revive has come. A player who left SHALL no longer be listed. Alone, the list SHALL not be shown.
+Gods not played at this screen (bot allies, and the other players of a room) SHALL be shown on the left as medallions in seat order: a round portrait in the seat's colour with the god's name, a ring for their health and, for players, an arc for their stamina and a gem lit when their ability is ready. A fallen god's medallion SHALL turn grey and its ring SHALL show how far their revive has come. A player who left SHALL no longer be shown. A god played at this screen SHALL never be shown as a medallion; with no other god, no medallion is shown.
 
 #### Scenario: A friend is hurt
 - **WHEN** two gods are in a room and the other has 30 of 150 health
-- **THEN** the list shows them with a bar a fifth full and 30 / 150
+- **THEN** their medallion's health ring is a fifth full
 
 #### Scenario: A friend has fallen
 - **WHEN** the other god has fallen and is being revived halfway
-- **THEN** the list shows them as fallen with the revive half done
+- **THEN** their medallion is grey and its ring is half full
+
+#### Scenario: Never twice
+- **WHEN** a solo player brings one bot ally
+- **THEN** only the bot has a medallion; the player is shown by the frieze alone
 
 ### Requirement: Cooldowns and stamina
-The HUD SHALL show the player's stamina as a bar under the health vessel. The ability slot's cooldown sweep SHALL turn smoothly (not in visible steps) and the slot SHALL flash once when the ability becomes ready. Every weapon slot SHALL show a sweep for the share of its cooldown still to run. A dash pip SHALL show the dash's recovery and whether there is stamina enough for a dash.
+Each player at this screen SHALL see their stamina: alone (or in a room) as an orb of golden ichor at the right end of the frieze, and on a shared screen as a gold ring around their own orb of blood. The ability slot's cooldown sweep SHALL turn smoothly (not in visible steps) and the slot SHALL flash once when the ability becomes ready. Every weapon slot SHALL show a sweep for the share of its cooldown still to run. A dash pip SHALL show the dash's recovery and whether there is stamina enough for a dash.
+
+#### Scenario: Stamina orb
+- **WHEN** the player has 40 of 100 stamina
+- **THEN** the orb of ichor is 40% full
 
 #### Scenario: Stamina bar
-- **WHEN** the player has 40 of 100 stamina
-- **THEN** the stamina bar under the health vessel is 40% full
+- **WHEN** player 2 on a shared screen has 40 of 100 stamina
+- **THEN** the gold ring around player 2's orb of blood is 40% full
 
 #### Scenario: Weapon cooldown
 - **WHEN** a weapon with a 2-second cooldown fired half a second ago
@@ -142,8 +150,16 @@ While the merchant is in the realm the HUD SHALL show a banner with the time unt
 - **THEN** the eagle's icon is in the loadout
 
 ### Requirement: Local players on the HUD
-In a local co-op run the party panel SHALL show, for every local player, their health, their stamina and whether their ability is ready, under their name and seat colour.
+Every player at this screen SHALL have a plaque of their own with their orb of blood, stamina, dash pip, ability slot labelled with their key, and loadout; nothing a plaque shows SHALL be repeated elsewhere on the HUD. One player (solo, or in a room) SHALL have the bottom frieze. Two players SHALL share it, player 1 on the left and player 2 mirrored on the right. Three or four players SHALL each have a compact plaque in a corner (player 1 top-left, 2 top-right, 3 bottom-left, 4 bottom-right), with the minimap, gold and kills below the top-right plaque. Experience and level SHALL be shown once, in the bottom middle. A fallen player's plaque SHALL turn grey and show their revive.
+
+#### Scenario: Two at one screen
+- **WHEN** two players share the screen
+- **THEN** player 1's plaque is at the bottom left and player 2's at the bottom right, each with their own health, stamina and ability key
+
+#### Scenario: Four at one screen
+- **WHEN** four players share the screen
+- **THEN** each player's plaque is in their corner and the minimap sits below player 2's
 
 #### Scenario: Player 2's ability
 - **WHEN** player 2's ability is cooling down
-- **THEN** player 2's card in the party panel shows it is not ready, and shows it ready again when it is
+- **THEN** player 2's ability slot shows its sweep, and flashes when it is ready
