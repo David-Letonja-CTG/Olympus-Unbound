@@ -182,7 +182,8 @@ declare global {
     .rotate {
       position: absolute;
       inset: 0;
-      z-index: 10;
+      /* Above the loading screen (z-index 20), which a run shows while it is held upright. */
+      z-index: 30;
       display: grid;
       place-content: center;
       justify-items: center;
@@ -400,10 +401,6 @@ export class PlayScreen {
     effect(() => {
       if (this.touch() && this.portrait()) this.session?.send({ type: 'pause' });
     });
-    // Safari zooms on pinch through its own gesture events, whatever touch-action says.
-    const blockGesture = (event: Event) => event.preventDefault();
-    document.addEventListener('gesturestart', blockGesture);
-    destroyRef.onDestroy(() => document.removeEventListener('gesturestart', blockGesture));
     // Settings changed in the pause menu apply to the running game immediately.
     effect(() => {
       const settings = this.progression.settings();

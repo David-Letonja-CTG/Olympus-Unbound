@@ -220,12 +220,18 @@ import { ItemIcon } from '../../shared/item-icon';
       .realms {
         flex-basis: auto;
       }
-      /* One column on a phone: Back and Begin stay on the bottom edge while the details scroll (spec: phone-play). */
+      /*
+       * One column on a phone: Back and Begin stay on the bottom edge while the details scroll, centred and shaded
+       * across the whole width like every other menu's pinned buttons (styles.css, .actions.sticky).
+       */
       .actions {
         position: sticky;
         bottom: 0;
         z-index: 5;
-        padding: 14px 0 max(16px, env(safe-area-inset-bottom));
+        justify-content: center;
+        width: calc(100% + 32px);
+        margin: 0 -16px;
+        padding: 14px 16px max(16px, env(safe-area-inset-bottom));
         background: linear-gradient(180deg, transparent, rgba(11, 10, 12, 0.92) 40%);
       }
     }
