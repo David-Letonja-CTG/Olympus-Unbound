@@ -554,6 +554,12 @@ export interface HudPartyMember {
   readonly self: boolean;
   /** Played by the machine (spec: bot-allies). */
   readonly bot?: boolean;
+  /** Played at this screen alongside its own god (spec: hud / local players on the HUD). */
+  readonly local?: boolean;
+  /** Stamina, 0–1. */
+  readonly stamina: number;
+  /** How far the ability has recharged, 0–1 (1: ready). */
+  readonly ability: number;
 }
 
 export interface HudItem {

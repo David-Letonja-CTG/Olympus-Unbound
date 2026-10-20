@@ -1,11 +1,13 @@
 // Public surface of the gameplay engine. The application and content import only from here (D3).
 export {
+  CONTROL_SCHEMES,
   createCutsceneSession,
   createGameSession,
   DEFAULT_SETTINGS,
   GRAPHICS_QUALITIES,
 } from './session';
 export type {
+  ControlScheme,
   CutsceneEvent,
   CutsceneSession,
   CutsceneSessionOptions,

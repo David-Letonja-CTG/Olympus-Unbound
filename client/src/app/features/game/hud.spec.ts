@@ -53,6 +53,8 @@ describe('Hud', () => {
       alive: true,
       revive: 0,
       self: false,
+      stamina: 1,
+      ability: 1,
       ...extra,
     });
     expect(render(base).querySelector('[data-testid=hud-party]')).toBeNull();
@@ -74,6 +76,21 @@ describe('Hud', () => {
     expect(rows[0].textContent).toContain('80 / 160');
     expect(rows[0].querySelector('[role=progressbar]')?.getAttribute('aria-valuenow')).toBe('80');
     expect(rows[1].textContent).toContain('Fallen');
+    expect(el.querySelector('[data-testid=party-local-0]')).toBeNull();
+
+    // On a shared screen, every local god's card shows its stamina and ability (spec: hud / local players).
+    const local = render({
+      ...base,
+      party: [
+        member(0, 'Player 1', { self: true, local: true }),
+        member(1, 'Player 2', { local: true, ability: 0.4, stamina: 0.5 }),
+      ],
+    });
+    expect(local.textContent).not.toContain('(you)');
+    expect(local.querySelector('[data-testid=party-ability-0]')?.classList).toContain('ready');
+    const second = local.querySelector<HTMLElement>('[data-testid=party-ability-1]');
+    expect(second?.classList).not.toContain('ready');
+    expect(second?.getAttribute('aria-label')).toBe('Ability recharging');
   });
 
   it('fills the health amphora to the health fraction and shows the numbers', () => {

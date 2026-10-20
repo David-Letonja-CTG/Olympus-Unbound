@@ -1,8 +1,16 @@
 import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@angular/core';
 import { Router, RouterLink } from '@angular/router';
-import { ContentIndex, Element, GameContent, GodDefinition, computeStats } from '../../../engine';
+import {
+  CONTROL_SCHEMES,
+  ContentIndex,
+  ControlScheme,
+  Element,
+  GameContent,
+  GodDefinition,
+  computeStats,
+} from '../../../engine';
 import { GAME_CONTENT } from '../../core/game-content';
-import { ALLY_SKILLS, MAX_ALLIES, RunSetup } from '../../core/run-setup';
+import { ALLY_SKILLS, CONTROL_LABELS, RunSetup } from '../../core/run-setup';
 import { ItemIcon } from '../../shared/item-icon';
 
 /** The passive's emblem: the skill icon of the god's first affinity. */
@@ -82,7 +90,84 @@ const PASSIVE_ICON: Record<Element, string> = {
         </section>
       }
 
-      <!-- Bot allies for a solo run (spec: bot-allies / adding allies). -->
+      <!-- Players at this screen (spec: co-op / local co-op on one screen). -->
+      <section class="panel allies" aria-labelledby="players-title" data-testid="players">
+        <div class="allies-head">
+          <h2 id="players-title">Players</h2>
+          <p class="hint">
+            Friends on this machine play with you on one screen: one on the other side of the
+            keyboard, more with gamepads.
+          </p>
+        </div>
+        @if (players().length) {
+          <ul class="ally-list">
+            <li data-testid="player-0">
+              <app-item-icon [sprite]="godSprite(selected() ?? '')" [size]="40" />
+              <span class="ally-name">Player 1</span>
+              <span class="seat-god">{{ godName(selected() ?? '') }}</span>
+              <select
+                aria-label="Player 1 controls"
+                data-testid="player-0-controls"
+                (change)="setControls(0, $event)"
+              >
+                @for (c of schemes; track c) {
+                  <option [value]="c" [selected]="c === setup.firstControls()">
+                    {{ controlLabels[c] }}
+                  </option>
+                }
+              </select>
+            </li>
+            @for (p of players(); track $index; let i = $index) {
+              <li [attr.data-testid]="'player-' + (i + 1)">
+                <app-item-icon [sprite]="godSprite(p.godId)" [size]="40" />
+                <span class="ally-name">Player {{ i + 2 }}</span>
+                <span class="seat-god">{{ godName(p.godId) }}</span>
+                <select
+                  [attr.aria-label]="'Player ' + (i + 2) + ' controls'"
+                  [attr.data-testid]="'player-' + (i + 1) + '-controls'"
+                  (change)="setControls(i + 1, $event)"
+                >
+                  @for (c of schemes; track c) {
+                    <option [value]="c" [selected]="c === p.controls">
+                      {{ controlLabels[c] }}
+                    </option>
+                  }
+                </select>
+                <button
+                  class="remove"
+                  [attr.aria-label]="'Remove player ' + (i + 2)"
+                  [attr.data-testid]="'player-' + (i + 1) + '-remove'"
+                  (click)="setup.removePlayer(i)"
+                >
+                  ✕
+                </button>
+              </li>
+            }
+          </ul>
+        }
+        @if (setup.seatsLeft() > 0) {
+          @if (picking() === 'player') {
+            <div class="pick" role="group" aria-label="Choose the new player's god">
+              @for (god of gods; track god.id) {
+                <button
+                  class="btn pick-god"
+                  [attr.data-testid]="'add-player-' + god.id"
+                  (click)="addPlayer(god.id)"
+                >
+                  <app-item-icon [sprite]="god.visual.sprite" [size]="28" /> {{ god.name }}
+                </button>
+              }
+              <button class="btn" (click)="picking.set(undefined)">Cancel</button>
+            </div>
+          } @else {
+            <button class="btn" data-testid="add-player" (click)="picking.set('player')">
+              + Add a player
+            </button>
+          }
+        }
+      </section>
+
+      <!-- Bot allies for a run at this screen (spec: bot-allies / adding allies). -->
       <section class="panel allies" aria-labelledby="allies-title" data-testid="allies">
         <div class="allies-head">
           <h2 id="allies-title">Allies</h2>
@@ -127,8 +212,8 @@ const PASSIVE_ICON: Record<Element, string> = {
             }
           </ul>
         }
-        @if (allies().length < maxAllies) {
-          @if (picking()) {
+        @if (setup.seatsLeft() > 0) {
+          @if (picking() === 'ally') {
             <div class="pick" role="group" aria-label="Choose an ally">
               @for (god of gods; track god.id) {
                 <button
@@ -139,10 +224,10 @@ const PASSIVE_ICON: Record<Element, string> = {
                   <app-item-icon [sprite]="god.visual.sprite" [size]="28" /> {{ god.name }}
                 </button>
               }
-              <button class="btn" (click)="picking.set(false)">Cancel</button>
+              <button class="btn" (click)="picking.set(undefined)">Cancel</button>
             </div>
           } @else {
-            <button class="btn" data-testid="add-ally" (click)="picking.set(true)">
+            <button class="btn" data-testid="add-ally" (click)="picking.set('ally')">
               + Add an ally
             </button>
           }
@@ -278,6 +363,17 @@ const PASSIVE_ICON: Record<Element, string> = {
       display: flex;
       gap: 6px;
     }
+    .seat-god {
+      color: var(--muted);
+      min-width: 70px;
+    }
+    select {
+      font: inherit;
+      color: var(--text);
+      background: rgba(0, 0, 0, 0.45);
+      border: 1px solid var(--line);
+      padding: 4px 8px;
+    }
     .remove {
       margin-left: auto;
       background: none;
@@ -307,9 +403,12 @@ export class GodSelection {
   private readonly content: GameContent = inject(GAME_CONTENT);
   protected readonly setup = inject(RunSetup);
   protected readonly allies = this.setup.allies;
-  protected readonly maxAllies = MAX_ALLIES;
+  protected readonly players = this.setup.players;
   protected readonly skills = ALLY_SKILLS;
-  protected readonly picking = signal(false);
+  protected readonly schemes = CONTROL_SCHEMES;
+  protected readonly controlLabels = CONTROL_LABELS;
+  /** Which god list is open: a new player's or a new ally's. */
+  protected readonly picking = signal<'player' | 'ally' | undefined>(undefined);
   private readonly router = inject(Router);
   private readonly index = new ContentIndex(this.content);
 
@@ -333,7 +432,16 @@ export class GodSelection {
 
   protected addAlly(godId: string): void {
     this.setup.addAlly(godId);
-    this.picking.set(false);
+    this.picking.set(undefined);
+  }
+
+  protected addPlayer(godId: string): void {
+    this.setup.addPlayer(godId);
+    this.picking.set(undefined);
+  }
+
+  protected setControls(seat: number, event: Event): void {
+    this.setup.setControls(seat, (event.target as HTMLSelectElement).value as ControlScheme);
   }
 
   protected godName(id: string): string {

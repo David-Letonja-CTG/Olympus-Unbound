@@ -60,7 +60,7 @@ const VESSEL_BOTTOM = 130;
             <span class="who">
               <span class="member-name"
                 >{{ m.name }}
-                @if (m.self) {
+                @if (m.self && !m.local) {
                   <span class="you"> (you)</span>
                 }
                 @if (m.bot) {
@@ -82,6 +82,21 @@ const VESSEL_BOTTOM = 130;
                   ></span
                 ></span>
                 <span class="member-hp">{{ m.health }} / {{ m.maxHealth }}</span>
+                <!-- A god played at this screen: its stamina and ability (spec: hud / local players). -->
+                @if (m.local) {
+                  <span class="member-extra" [attr.data-testid]="'party-local-' + m.seat">
+                    <span class="member-track stamina"
+                      ><span class="member-fill" [style.width.%]="m.stamina * 100"></span
+                    ></span>
+                    <span
+                      class="member-ability"
+                      [class.ready]="m.ability >= 1"
+                      [attr.data-testid]="'party-ability-' + m.seat"
+                      [attr.aria-label]="m.ability >= 1 ? 'Ability ready' : 'Ability recharging'"
+                      [style.--charge]="m.ability * 100 + '%'"
+                    ></span>
+                  </span>
+                }
               } @else {
                 <span class="member-track revive"
                   ><span class="member-fill" [style.width.%]="m.revive * 100"></span

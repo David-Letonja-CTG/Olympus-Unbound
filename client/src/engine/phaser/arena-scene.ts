@@ -3,9 +3,10 @@ import { musicIntensity, NEAR, TierTracker } from '../audio/music-intensity';
 import { MusicPlayer } from '../audio/music-player';
 import { SoundPlayer } from '../audio/sound-player';
 import { ATTACK_SOUNDS, BOSS_ATTACK_SOUNDS, HIT_SOUNDS } from '../audio/sound-map';
-import { GameEvent, GameSettings } from '../session';
+import { ControlScheme, GameEvent, GameSettings } from '../session';
 import { RunDriver } from '../net/driver';
-import { HudSnapshot, NO_INPUT, SimEvent } from '../sim/types';
+import { SHARED_MARGIN, SHARED_ZOOM_OUT } from '../sim/shared-screen';
+import { HudSnapshot, SimEvent } from '../sim/types';
 import { queueAssets, SpriteResolver } from './assets';
 import { Atmosphere, LightMap, QUALITY, viewAround } from './atmosphere';
 import { Effects } from './effects';
@@ -27,6 +28,8 @@ const GROUND_BUDGET_MS = 10;
 export interface SceneHost {
   /** Where the run comes from: the local simulation, or a room's host (D16). */
   readonly driver: RunDriver;
+  /** The controls of each player at this screen, in seat order. */
+  readonly controls: readonly ControlScheme[];
   readonly settings: () => GameSettings;
   readonly emit: (event: GameEvent) => void;
   readonly sound: SoundPlayer;
@@ -53,6 +56,9 @@ export class ArenaScene extends Phaser.Scene {
   /** Loading: painting the ground, building the scene, then (rooms) waiting for the party; the run waits. */
   private loading: 'realm' | 'scene' | 'party' | 'ready' = 'realm';
   private hudTimer = 0;
+  /** The usual zoom for the window, and the share of it a shared screen zooms out to. */
+  private baseZoom = 1;
+  private partyZoom = 1;
   private readonly onBlur = () => this.autoPause();
   private readonly onVisibility = () => {
     if (document.hidden) this.autoPause();
@@ -84,7 +90,7 @@ export class ArenaScene extends Phaser.Scene {
     this.resolver = new SpriteResolver(this, content.assets, this.failedAssets);
     // The ground is painted over the next frames (spec: run-loading / progress stages); the world follows.
     this.ground = new GroundBuilder(driver.arena, realm.map, this.host.settings().quality);
-    this.input$ = new InputReader(this);
+    this.input$ = new InputReader(this, this.host.controls);
 
     window.addEventListener('blur', this.onBlur);
     document.addEventListener('visibilitychange', this.onVisibility);
@@ -101,7 +107,7 @@ export class ArenaScene extends Phaser.Scene {
     if (this.loading === 'party') {
       // Rooms: every member loads before the run starts (spec: rooms / lobby). The room's messages keep flowing.
       const dt = Math.min(this.game.loop.rawDelta / 1000, MAX_FRAME_SECONDS);
-      driver.advance(dt, NO_INPUT, () => undefined);
+      driver.advance(dt, [], () => undefined);
       this.host.emit({ type: 'loadProgress', progress: driver.partyProgress, stage: 'party' });
       if (driver.started) this.start();
       return;
@@ -181,7 +187,7 @@ export class ArenaScene extends Phaser.Scene {
       }
     }
 
-    driver.advance(dt, this.input$.player(), () => this.input$.consumeTaps());
+    driver.advance(dt, this.input$.players(), () => this.input$.consumeTaps());
     if (driver.paused || driver.phase !== 'playing')
       for (const ui of this.input$.uiInputs()) this.host.emit({ type: 'uiInput', input: ui });
 
@@ -194,6 +200,7 @@ export class ArenaScene extends Phaser.Scene {
     this.view.sync(world, alpha, time, this.lightMap);
     this.view.addArenaLights(this.lightMap, time);
     const focus = driver.focus();
+    this.frameParty(dt);
     camera.centerOn(focus.x, focus.y);
     // Sounds are heard from the view (spec: hud / sound feedback).
     this.host.sound.setListener(focus.x, focus.y, camera.worldView.width / 2);
@@ -249,7 +256,7 @@ export class ArenaScene extends Phaser.Scene {
         return;
       case 'playerHurt':
         // Only this player's own wounds hurt on this screen (spec: rooms).
-        if (event.playerId !== driver.localId) return;
+        if (!driver.localIds.includes(event.playerId)) return;
         sound.play('hurt');
         this.shake(120, 0.004);
         return;
@@ -261,7 +268,7 @@ export class ArenaScene extends Phaser.Scene {
         return;
       case 'perfectDodge':
         // Only this player's own perfect dodge rings out (spec: boss-encounter / perfect dodge).
-        if (event.playerId === driver.localId) sound.play('crit');
+        if (driver.localIds.includes(event.playerId)) sound.play('crit');
         return;
       case 'partFell':
         sound.play('killElite', event);
@@ -363,9 +370,36 @@ export class ArenaScene extends Phaser.Scene {
   private fitCamera(): void {
     const camera = this.cameras.main;
     const { width, height } = this.scale.gameSize;
-    const zoom = Math.max(0.35, Math.min(width / VIEW_WIDTH, height / VIEW_HEIGHT));
-    camera.setZoom(zoom);
+    this.baseZoom = Math.max(0.35, Math.min(width / VIEW_WIDTH, height / VIEW_HEIGHT));
+    camera.setZoom(this.baseZoom * this.partyZoom);
     this.lightMap?.resize();
-    this.host.driver.setView(width / zoom / 2, height / zoom / 2);
+    // The simulation spawns outside, and holds a shared screen's party within, the usual view.
+    this.host.driver.setView(width / this.baseZoom / 2, height / this.baseZoom / 2);
+  }
+
+  /**
+   * A shared screen frames every living local god (spec: co-op / local co-op on one screen): the camera zooms out as
+   * they spread, down to `SHARED_ZOOM_OUT`, where the simulation's soft edge holds them.
+   */
+  private frameParty(dt: number): void {
+    const spread = this.host.driver.spread();
+    const { width, height } = this.scale.gameSize;
+    const viewWidth = width / this.baseZoom;
+    const viewHeight = height / this.baseZoom;
+    const want = Math.max(
+      SHARED_ZOOM_OUT,
+      Math.min(
+        1,
+        viewWidth / (spread.x + SHARED_MARGIN * 2),
+        viewHeight / (spread.y + SHARED_MARGIN * 2),
+      ),
+    );
+    // Out at once, so nobody leaves the screen; back in gently.
+    this.partyZoom =
+      want < this.partyZoom
+        ? want
+        : Math.min(want, this.partyZoom + (want - this.partyZoom) * dt * 2);
+    const zoom = this.baseZoom * this.partyZoom;
+    if (Math.abs(this.cameras.main.zoom - zoom) > 1e-4) this.cameras.main.setZoom(zoom);
   }
 }

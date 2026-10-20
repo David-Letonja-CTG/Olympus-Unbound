@@ -236,6 +236,8 @@ const KIND_LABEL: Record<UpgradeOffer['kind'], string> = {
 })
 export class LevelUpDialog {
   readonly choice = input.required<UpgradeChoice>();
+  /** Whose choice it is, when several players share the screen (spec: co-op / local co-op on one screen). */
+  readonly player = input<string>();
   readonly chosen = output<number>();
 
   protected readonly selected = signal(0);
@@ -264,8 +266,14 @@ export class LevelUpDialog {
 
   protected title(): string {
     const choice = this.choice();
-    if (choice.source === 'shop') return 'The Wandering Merchant';
-    return choice.source === 'chest' ? 'Divine treasure' : `Level ${choice.level}!`;
+    const title =
+      choice.source === 'shop'
+        ? 'The Wandering Merchant'
+        : choice.source === 'chest'
+          ? 'Divine treasure'
+          : `Level ${choice.level}!`;
+    const player = this.player();
+    return player ? `${player} · ${title}` : title;
   }
 
   /** A ware the party cannot pay for is shown but cannot be picked. */

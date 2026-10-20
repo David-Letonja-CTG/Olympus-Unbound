@@ -111,7 +111,7 @@ const choice: UpgradeChoice = {
   ],
 };
 
-async function setup(room?: RoomRun) {
+async function setup(room?: RoomRun, prepare?: (run: RunSetup) => void) {
   const session = new StubSession();
   const data: Record<string, string> = {};
   TestBed.configureTestingModule({
@@ -138,6 +138,7 @@ async function setup(room?: RoomRun) {
   run.godId.set('zeus');
   run.realmId.set('mount_olympus');
   run.seed.set(847291);
+  prepare?.(run);
   const navigate = vi.spyOn(TestBed.inject(Router), 'navigate').mockResolvedValue(true);
   const fixture = TestBed.createComponent(PlayScreen);
   await fixture.whenStable();
@@ -181,6 +182,36 @@ describe('PlayScreen', () => {
     expect(session.sent).toContainEqual({ type: 'chooseUpgrade', choiceId: 3, index: 1 });
     await update({ type: 'choiceResolved', offer: choice.offers[1], playerId: 1 });
     expect(el.querySelector('[data-testid=offer-0]')).toBeNull();
+  });
+
+  it('lets players at one screen choose in turn, each named (spec: co-op / local co-op on one screen)', async () => {
+    const { el, update, session } = await setup(undefined, (run) => {
+      run.addPlayer('athena');
+      run.addAlly('hades');
+    });
+    expect(session.options?.local).toEqual(['keys-left', 'keys-right']);
+    const party = session.options?.run.party ?? [];
+    expect(party.map((p) => [p.name, p.godId, !!p.bot])).toEqual([
+      ['Player 1', 'zeus', false],
+      ['Player 2', 'athena', false],
+      ['Hades', 'hades', true],
+    ]);
+    expect(session.options?.run.sharedScreen).toBe(true);
+    const member = (id: number, name: string) => ({
+      ...{ id, seat: id - 1, name, god: name, sprite: 'zeus', health: 80, maxHealth: 160 },
+      ...{ alive: true, revive: 0, self: id === 1, local: true, stamina: 1, ability: 1 },
+    });
+    await update({
+      type: 'hud',
+      hud: { ...hud, party: [member(1, 'Player 1'), member(2, 'Player 2')] },
+    });
+    await update({ type: 'choice', choice });
+    await update({ type: 'choice', choice: { ...choice, id: 4, playerId: 2 } });
+    expect(el.querySelector('#levelup-title')?.textContent).toContain('Player 1 · Level 5!');
+    await update({ type: 'choiceResolved', offer: choice.offers[0], playerId: 1 });
+    expect(el.querySelector('#levelup-title')?.textContent).toContain('Player 2 · Level 5!');
+    (el.querySelector('[data-testid=offer-2]') as HTMLButtonElement).click();
+    expect(session.sent).toContainEqual({ type: 'chooseUpgrade', choiceId: 4, index: 2 });
   });
 
   it('picks with the gamepad through forwarded menu input', async () => {

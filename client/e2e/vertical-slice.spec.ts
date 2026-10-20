@@ -235,3 +235,44 @@ test('the wandering merchant sells a companion (spec: merchant)', async ({ page 
   await expect(page.getByRole('dialog', { name: 'The Wandering Merchant' })).toHaveCount(0);
   await expect(page.getByTestId('hud-companion-eagle_of_zeus')).toBeVisible();
 });
+
+test('two players share one keyboard and one screen (spec: co-op / local co-op on one screen)', async ({
+  page,
+}) => {
+  await openAsReturningPlayer(page);
+  await page.getByRole('link', { name: 'Play' }).click();
+  await page.getByTestId('god-zeus').click();
+  await page.getByTestId('add-player').click();
+  await page.getByTestId('add-player-athena').click();
+  await page.getByRole('button', { name: 'Continue' }).click();
+  await page.getByTestId('seed-input').fill('847291');
+  await page.getByTestId('begin').click();
+  await expect(page.getByTestId('party-member')).toHaveCount(2, { timeout: 30_000 });
+  await expect(page.getByTestId('run-loading')).toHaveCount(0, { timeout: 120_000 });
+  await debug(page, { type: 'godMode', enabled: true });
+  await expect(page.getByTestId('party-local-1')).toBeVisible({ timeout: 20_000 });
+
+  // WASD moves player 1 and the arrows player 2.
+  const start = (await inspect(page))?.party ?? [];
+  await page.keyboard.down('a');
+  await page.keyboard.down('ArrowDown');
+  await expect
+    .poll(async () => {
+      const [one, two] = (await inspect(page))?.party ?? [];
+      return [one.x < start[0].x - 40, two.y > start[1].y + 40];
+    })
+    .toEqual([true, true]);
+  await page.keyboard.up('a');
+  await page.keyboard.up('ArrowDown');
+
+  // A level-up: each player chooses in turn.
+  await debug(page, { type: 'grantXp', amount: 10 });
+  const dialog = page.getByRole('dialog');
+  await expect(dialog).toContainText('Player 1 · Level', { timeout: 10_000 });
+  await page.waitForTimeout(600);
+  await page.getByTestId('offer-0').click();
+  await expect(dialog).toContainText('Player 2 · Level');
+  await page.waitForTimeout(600);
+  await page.getByTestId('offer-0').click();
+  await expect(dialog).toHaveCount(0);
+});

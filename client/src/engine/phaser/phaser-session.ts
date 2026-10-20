@@ -37,6 +37,7 @@ export function startPhaserSession(options: GameSessionOptions): GameSession {
 
   const scene = new ArenaScene({
     driver,
+    controls: options.local ?? ['keyboard'],
     settings: () => settings,
     emit,
     sound,
@@ -108,5 +109,9 @@ function createDriver(options: GameSessionOptions, index: ContentIndex): RunDriv
   const room = options.room;
   if (room?.role === 'guest') return new GuestDriver(index, options.run, room.slot, room.host);
   const sim = new RunSimulation(options.run, index);
-  return new LocalDriver(sim, room ? new RoomHost(sim, room.guests) : undefined);
+  return new LocalDriver(
+    sim,
+    room ? new RoomHost(sim, room.guests) : undefined,
+    options.local?.length ?? 1,
+  );
 }

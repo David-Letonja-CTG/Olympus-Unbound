@@ -23,6 +23,7 @@ import { createPlayer, updatePlayers } from './players';
 import { GATE_OPEN_SECONDS, GATE_RADIUS, GATE_STAND_SECONDS, realmAt, realmSeed } from './realms';
 import { updateRevives } from './revive';
 import { RunConfig, RunState } from './run-state';
+import { holdParty } from './shared-screen';
 import {
   HudSnapshot,
   NO_INPUT,
@@ -134,6 +135,7 @@ export class RunSimulation {
     state.realmTime += dt;
 
     updatePlayers(state, this.withBots(inputs), dt);
+    holdParty(state);
     updateRevives(state, dt);
     this.director.update(dt);
     updateEnemies(state, dt);
@@ -558,6 +560,9 @@ export class RunSimulation {
           revive: p.revive,
           self: p === player,
           bot: !!p.bot || undefined,
+          local: (state.config.sharedScreen && !p.bot) || undefined,
+          stamina: p.stamina / stamina.max,
+          ability: p.ability.stats.cooldown > 0 ? 1 - p.abilityTimer / p.ability.stats.cooldown : 1,
         })),
     };
   }
