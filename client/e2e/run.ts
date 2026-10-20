@@ -18,6 +18,7 @@ export interface Snapshot {
   bossAlive: boolean;
   merchant?: { x: number; y: number };
   musicTier?: number;
+  view?: { canvas: number[]; camera: number[] };
   players: number;
   party: { x: number; y: number; alive: boolean }[];
   depth: number;

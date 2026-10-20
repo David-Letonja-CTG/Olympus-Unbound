@@ -125,6 +125,8 @@ export interface DebugSnapshot {
   readonly boss?: { readonly x: number; readonly y: number };
   /** The battle music's tier, 0 (Calm) to 4 (Titan) (spec: music). */
   readonly musicTier?: number;
+  /** The canvas and the camera drawing it, in CSS pixels: they must match (spec: phone-play / the phone screen). */
+  readonly view?: { readonly canvas: readonly number[]; readonly camera: readonly number[] };
   /** Where the merchant stands while it is in the realm (spec: merchant). */
   readonly merchant?: { readonly x: number; readonly y: number };
   /** Players still in the run (not left). */
