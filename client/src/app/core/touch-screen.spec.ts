@@ -1,4 +1,5 @@
 import { TestBed } from '@angular/core/testing';
+import { InstallPrompt } from './install-prompt';
 import { TouchScreen } from './touch-screen';
 
 /** Media queries answered from a table, changeable later. */
@@ -54,5 +55,14 @@ describe('TouchScreen (spec: phone-play)', () => {
     TestBed.inject(TouchScreen).enterFullscreen();
     expect(request).toHaveBeenCalled();
     await Promise.resolve();
+  });
+
+  it('asks for no fullscreen in the installed game (spec: installable-app / full screen when installed)', () => {
+    const request = vi.fn(() => Promise.resolve());
+    document.documentElement.requestFullscreen = request;
+    stubMedia({ '(pointer: coarse)': true });
+    TestBed.inject(InstallPrompt).installed.set(true);
+    TestBed.inject(TouchScreen).enterFullscreen();
+    expect(request).not.toHaveBeenCalled();
   });
 });

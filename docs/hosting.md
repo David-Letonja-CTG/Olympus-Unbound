@@ -32,6 +32,10 @@ flowchart LR
 
 - **Paths:** Pages serves a project site under `/Olympus-Unbound/`, so the app never refers to files from the site root. Code loads `assets/...` relative to the `<base href>`, and the global styles reference their fonts and frames from `public/`, so the build bundles them with relative URLs.
 - **Deep links:** a link such as `/Olympus-Unbound/play` has no file behind it. Pages answers with `404.html`, which the build makes a copy of `index.html`, so the app starts and its router takes over.
+- **Installed and offline (D18):** the production build contains `ngsw-worker.js` and `ngsw.json`, the service worker's list of every file with its hash, and a `manifest.webmanifest` with relative paths. After a visit, the browser keeps the whole game.
+  - A new release is noticed at the next launch, or within 30 minutes, and downloaded in the background. The main menu then offers to reload.
+  - Files are content-hashed, so a version never mixes files of another.
+  - Any host works, as long as it serves `ngsw.json` and the worker from the build's folder.
 
 ## One-time setup
 
@@ -87,4 +91,5 @@ The zip is the game for the root of a static host: unzip it and serve the folder
 | Deploy fails with *Get Pages site failed* or *Not Found* | Pages is not enabled with the GitHub Actions source (one-time setup, step 2). |
 | *no CI run on main for …* | The tag points at a commit that is not on `main`. Release from `main`. |
 | The site loads but shows no fonts, frames or art | Something refers to a file from the site root (`/…`). Load files relative to the base href (`assets/…`) or from `public/` in styles. |
+| Players keep an old version | Their game has not checked yet, or they have not tapped *Reload* on the menu's notice. A check runs at every launch. In an emergency, deleting `ngsw.json` from the site makes the worker step aside on the next visit. |
 | A reload on `/play` shows GitHub's 404 page | `404.html` is missing from the build; the workflow copies it from `index.html`. |

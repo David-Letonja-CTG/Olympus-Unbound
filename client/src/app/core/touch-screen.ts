@@ -1,4 +1,5 @@
 import { DestroyRef, Injectable, inject, signal } from '@angular/core';
+import { InstallPrompt } from './install-prompt';
 
 /** A live media query as a signal; false where media queries are missing (unit tests in jsdom). */
 function mediaSignal(query: string, destroyRef: DestroyRef) {
@@ -20,6 +21,7 @@ function mediaSignal(query: string, destroyRef: DestroyRef) {
 @Injectable({ providedIn: 'root' })
 export class TouchScreen {
   private readonly destroyRef = inject(DestroyRef);
+  private readonly install = inject(InstallPrompt);
   /** The main pointer is coarse: touch controls are shown in a run. */
   readonly touch = mediaSignal('(pointer: coarse)', this.destroyRef);
   private readonly fine = mediaSignal('(any-pointer: fine)', this.destroyRef);
@@ -35,7 +37,9 @@ export class TouchScreen {
    * tap. A browser that refuses (iPhone Safari has no element fullscreen) leaves the page as it is; never throws.
    */
   enterFullscreen(): void {
-    if (!this.touch() || typeof document === 'undefined' || document.fullscreenElement) return;
+    // The installed game already fills the screen (spec: installable-app / full screen when installed).
+    if (!this.touch() || this.install.installed()) return;
+    if (typeof document === 'undefined' || document.fullscreenElement) return;
     const root = document.documentElement;
     try {
       void root

@@ -18,6 +18,7 @@ An original mythological horde-survival roguelite that runs entirely in the brow
 - **Allies:** not enough friends? Fill the party up to four with gods played by the machine (Easy, Normal or Hard).
 - **A HUD for every party:** a bronze frieze with orbs of blood and ichor, split between two players at one screen, a plaque in each corner for three or four, and medallions for everyone else; nobody shown twice.
 - **On a phone:** hold it sideways. A stick appears under your left thumb, Power, Dash and Sprint wait under your right, and the HUD keeps its orbs between them. Fullscreen where the browser allows, Low quality to start with, rooms by touch.
+- **Install it:** an installable web app. From the menu (Chrome, Edge, Android) or Safari's Add to Home Screen (iPhone, iPad), it gets its own icon and opens full screen. Once loaded, it plays offline, all but co-op rooms. New versions download in the background and wait for a reload from the menu.
 - **Night and myth:** dynamic light, fog and torchlight, and a cast rendered in Blender from licensed models (`art/blender/`).
 
 | Every realm's boss | Level up | The gate onward |
@@ -51,7 +52,7 @@ Checks (CI runs the same on every push and pull request):
 ```bash
 cd client
 npm run check      # format, lint, asset licences, unit tests, production build
-npm run e2e        # plays the game in Chromium, solo, in a co-op room and on an emulated phone (npx playwright install chromium once)
+npm run e2e        # plays the game in Chromium: solo, in a co-op room, on an emulated phone, and offline from a production build (npx playwright install chromium once)
 ```
 
 `npm run build` produces a static site in `client/dist/olympus-unbound/browser` that any static host can serve. Publishing a GitHub Release puts it live on GitHub Pages and attaches it to the release as a zip ([docs/hosting.md](docs/hosting.md)).
