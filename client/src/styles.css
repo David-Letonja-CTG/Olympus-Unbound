@@ -55,6 +55,8 @@ html {
   background-attachment: fixed;
   /* No pull to refresh or bounce on phones (spec: phone-play / the phone screen). */
   overscroll-behavior: none;
+  /* A game, not a page: scrolling, but no pinch or double-tap zoom anywhere (owner's choice, 2026-10-20). */
+  touch-action: pan-x pan-y;
 }
 
 body {

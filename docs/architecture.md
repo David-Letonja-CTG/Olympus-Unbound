@@ -155,7 +155,7 @@ sequenceDiagram
 - **Schemes:** `'touch'` is the touch controls plus the whole keyboard and the first gamepad, as `'keyboard'` has. `PlayScreen` passes `local: ['touch']` when `TouchScreen` (`app/core/touch-screen.ts`) reports a coarse main pointer.
 - **The phone screen** (Angular):
   - `TouchScreen` also knows portrait and touch-only devices, and asks for fullscreen and a landscape lock from the taps that start a run. A guest asks on the first touch of the run.
-  - `PlayScreen` adds the pause button and the rotate overlay, which pauses a solo run. During a run it blocks zoom, scroll, pull to refresh and the long-press menu.
+  - `PlayScreen` adds the pause button and the rotate overlay, which pauses a solo run. During a run it blocks scroll, pull to refresh and the long-press menu. Zoom is blocked everywhere: by the viewport (`maximum-scale=1`), by `touch-action: pan-x pan-y` on the page, and in `App` by cancelling Safari's gesture events.
 
 ## The installed app (D18)
 

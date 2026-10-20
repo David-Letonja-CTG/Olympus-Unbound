@@ -43,7 +43,7 @@ The game pauses by itself when the window loses focus or the tab is hidden (not 
 
 - **The stick** follows your thumb: half a drag walks at half speed, and the rim is full speed. Dragging past the rim pulls the stick along, so turning back is quick. Lift the thumb and your god stops.
 - **Each finger** drives only what it first touched, so you can hold the stick and tap Dash with the other thumb.
-- **During a run** the page does not zoom, scroll or refresh under your thumbs.
+- **No zoom:** the game never zooms by pinch or double tap, in menus or in a run. During a run the page also does not scroll or refresh under your thumbs.
 - **A keyboard or gamepad** connected to the phone still works.
 - **Co-op:** local co-op on one screen is not offered on a touch-only device. Rooms (Co-op → create or join by code) work by touch.
 - **Quality:** phones start at *Low*.
