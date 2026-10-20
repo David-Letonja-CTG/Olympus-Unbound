@@ -2,6 +2,7 @@ import { ContentIndex } from '../data/content-index';
 import { RealmDefinition } from '../data/types';
 import { ArenaData } from '../maps/generate-arena';
 import { DebugAction, RunSimulation, STEP } from '../sim/run-simulation';
+import { partyFrame } from '../sim/shared-screen';
 import { HudSnapshot, NO_INPUT, PlayerInput, RunPhase, SimEvent } from '../sim/types';
 import { WorldFrame } from '../sim/world-frame';
 import { RoomHost } from './host';
@@ -35,8 +36,10 @@ export interface RunDriver {
   /** Interpolation between every entity's previous and current position. */
   readonly alpha: number;
   readonly phase: RunPhase;
-  /** The local player's ID. */
+  /** The local player's ID (player 1 on a shared screen). */
   readonly localId: number;
+  /** Every player at this screen, in seat order (several on a shared screen, spec: co-op / local co-op). */
+  readonly localIds: readonly number[];
   /** A room's run: the pause menu does not stop it (spec: rooms / pausing in a room). */
   readonly shared: boolean;
   /** The local pause menu is open. */
@@ -47,13 +50,18 @@ export interface RunDriver {
   readonly partyProgress: number;
   /** The local scene is built and ready to play (again after every gate, spec: endless-run). */
   markLoaded(): void;
-  /** Advances by `dt` real seconds; `afterStep` runs after every fixed step (it clears input taps). */
-  advance(dt: number, input: PlayerInput, afterStep: () => void): void;
-  /** Events for this player's screen since the last call: feedback, own choices and own result. */
+  /**
+   * Advances by `dt` real seconds with the input of every local player in seat order; `afterStep` runs after every
+   * fixed step (it clears input taps).
+   */
+  advance(dt: number, inputs: readonly PlayerInput[], afterStep: () => void): void;
+  /** Events for this screen since the last call: feedback, its players' own choices and the result. */
   events(): SimEvent[];
   hud(): HudSnapshot | undefined;
   /** The point the camera follows: the local god, or a living ally once it has fallen. */
   focus(): { x: number; y: number };
+  /** How far apart the living local gods are (0 with one); the camera zooms out to frame them. */
+  spread(): { x: number; y: number };
   pause(): boolean;
   resume(): boolean;
   choose(choiceId: number, index: number): void;
@@ -72,9 +80,11 @@ export class LocalDriver implements RunDriver {
   private pending: SimEvent[] = [];
   private loaded = false;
 
+  /** The first `locals` seats play at this screen (spec: co-op / local co-op on one screen). */
   constructor(
     readonly sim: RunSimulation,
     private readonly room?: RoomHost,
+    private readonly locals = 1,
   ) {}
 
   get index(): ContentIndex {
@@ -98,6 +108,9 @@ export class LocalDriver implements RunDriver {
   get localId(): number {
     return this.sim.state.players[0].id;
   }
+  get localIds(): readonly number[] {
+    return this.sim.state.players.slice(0, this.locals).map((p) => p.id);
+  }
   get shared(): boolean {
     return !!this.room;
   }
@@ -115,15 +128,15 @@ export class LocalDriver implements RunDriver {
     this.loaded = true;
   }
 
-  advance(dt: number, input: PlayerInput, afterStep: () => void): void {
+  advance(dt: number, inputs: readonly PlayerInput[], afterStep: () => void): void {
     const sim = this.sim;
     this.room?.receive(dt);
     if (this.started && sim.phase === 'playing') {
       this.accumulator += dt;
       while (this.accumulator >= STEP && sim.phase === 'playing') {
         // With the menu open in a room, the run goes on without this player's input.
-        const own = this.menuOpen ? NO_INPUT : input;
-        sim.step(STEP, this.room ? this.room.inputs(own) : [own]);
+        const own = this.menuOpen ? NO_INPUT : (inputs[0] ?? NO_INPUT);
+        sim.step(STEP, this.room ? this.room.inputs(own) : inputs);
         this.accumulator -= STEP;
         afterStep();
       }
@@ -139,7 +152,7 @@ export class LocalDriver implements RunDriver {
   private drain(): void {
     const events = this.sim.events();
     this.room?.forward(events);
-    const me = this.localId;
+    const mine = this.localIds;
     for (const e of events) {
       // A new realm: this scene rebuilds it, and the run waits until everyone has (spec: endless-run).
       if (e.type === 'realmEntered') {
@@ -148,8 +161,8 @@ export class LocalDriver implements RunDriver {
         this.room?.newRealm();
       }
       // Other players' choices are theirs alone (spec: rooms / choices in a room).
-      if (e.type === 'choice' && e.choice.playerId !== me) continue;
-      if (e.type === 'choiceResolved' && e.playerId !== me) continue;
+      if (e.type === 'choice' && !mine.includes(e.choice.playerId)) continue;
+      if (e.type === 'choiceResolved' && !mine.includes(e.playerId)) continue;
       this.pending.push(e);
     }
   }
@@ -163,7 +176,22 @@ export class LocalDriver implements RunDriver {
   }
 
   focus(): { x: number; y: number } {
-    return focusOf(this.sim.state.players, this.localId, this.alpha);
+    const gods = this.livingLocals();
+    if (gods.length < 2) return focusOf(this.sim.state.players, this.localId, this.alpha);
+    const { x, y } = partyFrame(gods, this.alpha);
+    return { x, y };
+  }
+
+  spread(): { x: number; y: number } {
+    const gods = this.livingLocals();
+    if (gods.length < 2) return { x: 0, y: 0 };
+    const frame = partyFrame(gods, this.alpha);
+    return { x: frame.spreadX, y: frame.spreadY };
+  }
+
+  /** The living gods played at this screen. */
+  private livingLocals() {
+    return this.sim.state.players.slice(0, this.locals).filter((p) => p.alive && !p.left);
   }
 
   pause(): boolean {
@@ -181,8 +209,9 @@ export class LocalDriver implements RunDriver {
   }
 
   choose(choiceId: number, index: number): void {
-    // Only the local player's own choice is answered here; guests answer theirs through the room.
-    if (this.sim.choiceFor(this.localId)?.id === choiceId) this.sim.choose(index, choiceId);
+    // Only the choices of the players at this screen are answered here; guests answer theirs through the room.
+    if (this.localIds.some((id) => this.sim.choiceFor(id)?.id === choiceId))
+      this.sim.choose(index, choiceId);
   }
 
   abandon(): void {

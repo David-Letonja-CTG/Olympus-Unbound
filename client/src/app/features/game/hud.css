@@ -602,6 +602,29 @@
   color: var(--muted);
   font-variant-numeric: tabular-nums;
 }
+.member-extra {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.member-track.stamina {
+  flex: 1;
+  height: 4px;
+}
+.member-track.stamina .member-fill {
+  background: #e8c25a;
+}
+.member-ability {
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  background: conic-gradient(#6fb6ff var(--charge), rgba(0, 0, 0, 0.6) 0);
+}
+.member-ability.ready {
+  background: #9fd4ff;
+  box-shadow: 0 0 6px #9fd4ff;
+}
 
 /* Surge after a perfect dodge (spec: boss-encounter / perfect dodge). */
 .surge {

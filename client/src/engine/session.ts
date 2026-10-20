@@ -47,7 +47,28 @@ export interface GameSessionOptions {
   readonly debug?: boolean;
   /** A room's run (D16): the host runs it for everyone; a guest plays the host's run. Absent: a solo run. */
   readonly room?: RoomSeat;
+  /**
+   * The controls of each player at this screen, from seat 0 (spec: co-op / local co-op on one screen). Absent: one
+   * player with the whole keyboard and the first gamepad.
+   */
+  readonly local?: readonly ControlScheme[];
 }
+
+/**
+ * One local player's controls (spec: player-control / controls per local player): the whole keyboard (a player
+ * alone), its left side (WASD) or its right side (arrows), or one gamepad.
+ */
+export type ControlScheme =
+  'keyboard' | 'keys-left' | 'keys-right' | 'pad-1' | 'pad-2' | 'pad-3' | 'pad-4';
+
+export const CONTROL_SCHEMES: readonly ControlScheme[] = [
+  'keys-left',
+  'keys-right',
+  'pad-1',
+  'pad-2',
+  'pad-3',
+  'pad-4',
+];
 
 /**
  * This browser's part in a room's run (D16). The host has a link to every guest by seat (`run.party` order, the host

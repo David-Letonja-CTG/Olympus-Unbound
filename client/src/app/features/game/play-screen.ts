@@ -78,15 +78,19 @@ declare global {
       <app-hud [hud]="h" [announcements]="announcements()" />
     }
     @if (choice(); as c) {
-      <app-level-up-dialog [choice]="c" (chosen)="choose(c, $event)" />
+      <app-level-up-dialog [choice]="c" [player]="chooser()" (chosen)="choose(c, $event)" />
     } @else if (waitingFor(); as names) {
       <p class="waiting" role="status" data-testid="waiting-for">
         Waiting for {{ names }} to choose…
       </p>
     }
-    @if (fallen()) {
+    @if (fallen(); as who) {
       <p class="waiting fallen" role="status" data-testid="fallen">
-        You have fallen · an ally can revive you by standing beside your spirit
+        @if (who === 'you') {
+          You have fallen · an ally can revive you by standing beside your spirit
+        } @else {
+          {{ who }} fallen · stand beside the spirit to revive
+        }
       </p>
     }
     @if (paused() && !ended()) {
@@ -182,7 +186,17 @@ export class PlayScreen {
   private readonly pauseMenu = viewChild(PauseMenu);
 
   protected readonly hud = signal<HudSnapshot | undefined>(undefined);
-  protected readonly choice = signal<UpgradeChoice | undefined>(undefined);
+  /** The open choices of the players at this screen; the first is shown, then the next (spec: co-op / local co-op). */
+  private readonly choices = signal<readonly UpgradeChoice[]>([]);
+  protected readonly choice = computed<UpgradeChoice | undefined>(() => this.choices()[0]);
+  /** Several players at this screen: their controls from seat 0 (spec: co-op / local co-op on one screen). */
+  private readonly local = this.room ? undefined : this.setup.controls();
+  /** Whose choice is shown, when several players share the screen. */
+  protected readonly chooser = computed(() => {
+    const choice = this.choice();
+    if (!choice || !this.local) return undefined;
+    return this.hud()?.party.find((m) => m.id === choice.playerId)?.name;
+  });
   protected readonly paused = signal(false);
   protected readonly ended = signal<RunOutcome | undefined>(undefined);
   protected readonly announcements = signal<readonly Announcement[]>([]);
@@ -224,6 +238,14 @@ export class PlayScreen {
     }
     const god = godOf(this.setup.godId() ?? '');
     if (!god) return [];
+    const players = this.setup.players().map((p, i) => {
+      const other = godOf(p.godId);
+      return {
+        name: `Player ${i + 2}`,
+        godName: other?.name ?? p.godId,
+        sprite: other?.visual.sprite ?? p.godId,
+      };
+    });
     const allies = this.setup.allies().map((a) => {
       const ally = godOf(a.godId);
       return {
@@ -234,15 +256,27 @@ export class PlayScreen {
       };
     });
     return [
-      { name: 'You', godName: god.name, sprite: god.visual.sprite, you: allies.length > 0 },
+      players.length
+        ? { name: 'Player 1', godName: god.name, sprite: god.visual.sprite }
+        : { name: 'You', godName: god.name, sprite: god.visual.sprite, you: allies.length > 0 },
+      ...players,
       ...allies,
     ];
   });
-  /** In a room, this player's god is down but the run goes on (spec: co-op / reviving allies). */
+  /**
+   * In a party, this player's god is down but the run goes on (spec: co-op / reviving allies): 'you', or on a shared
+   * screen the names of its fallen players.
+   */
   protected readonly fallen = computed(() => {
     const hud = this.hud();
+    if (!hud || this.ended()) return undefined;
+    if (this.local) {
+      const names = hud.party.filter((m) => m.local && !m.alive).map((m) => m.name);
+      if (!names.length) return undefined;
+      return names.join(' and ') + (names.length > 1 ? ' have' : ' has');
+    }
     const party = !!this.room || this.setup.allies().length > 0;
-    return party && !!hud && hud.health <= 0 && !this.ended();
+    return party && hud.health <= 0 ? 'you' : undefined;
   });
   /** In a room, who the open round of choices still waits for once this player has chosen. */
   protected readonly waitingFor = computed(() => {
@@ -287,27 +321,34 @@ export class PlayScreen {
     void this.router.navigate(['/']);
   }
 
-  /** A solo run: the player alone, or with bot allies as a party (spec: bot-allies / a party like co-op). */
+  /**
+   * A run at this screen: the player alone, or a party with the other players here and bot allies (spec: bot-allies,
+   * co-op / local co-op on one screen). Everyone here shares this machine's save, so its blessings.
+   */
   private soloRun(godId: string, realmId: string): RunConfig {
     const modifiers = this.progression.runModifiers();
     const allies = this.setup.allies();
+    const players = this.setup.players();
     return {
       runId: this.setup.newRunId(),
       godId,
       realmId,
       seed: this.setup.seed(),
       modifiers,
-      party: allies.length
-        ? [
-            { godId, name: 'You', modifiers },
-            ...allies.map((a) => ({
-              godId: a.godId,
-              name: this.content.gods.find((g) => g.id === a.godId)?.name ?? a.godId,
-              modifiers: [],
-              bot: { skill: a.skill },
-            })),
-          ]
-        : undefined,
+      sharedScreen: players.length > 0 || undefined,
+      party:
+        allies.length || players.length
+          ? [
+              { godId, name: players.length ? 'Player 1' : 'You', modifiers },
+              ...players.map((p, i) => ({ godId: p.godId, name: `Player ${i + 2}`, modifiers })),
+              ...allies.map((a) => ({
+                godId: a.godId,
+                name: this.content.gods.find((g) => g.id === a.godId)?.name ?? a.godId,
+                modifiers: [],
+                bot: { skill: a.skill },
+              })),
+            ]
+          : undefined,
     };
   }
 
@@ -327,6 +368,7 @@ export class PlayScreen {
         settings: this.progression.settings(),
         debug,
         room: this.room?.seat,
+        local: this.local,
       });
       if (this.destroyed) {
         session.destroy();
@@ -351,11 +393,18 @@ export class PlayScreen {
       case 'hud':
         this.hud.set(event.hud);
         return;
-      case 'choice':
-        this.choice.set(event.choice);
+      case 'choice': {
+        // A player's newer choice (the shop again after buying) takes their old one's place.
+        const choice = event.choice;
+        this.choices.update((list) =>
+          list.some((c) => c.playerId === choice.playerId)
+            ? list.map((c) => (c.playerId === choice.playerId ? choice : c))
+            : [...list, choice],
+        );
         return;
+      }
       case 'choiceResolved':
-        this.choice.set(undefined);
+        this.choices.update((list) => list.filter((c) => c.playerId !== event.playerId));
         return;
       case 'paused':
         this.paused.set(true);
@@ -372,7 +421,7 @@ export class PlayScreen {
       case 'runEnded': {
         // A run ends once; a repeated report must not replace the rewards shown on the summary.
         if (this.ended()) return;
-        this.choice.set(undefined);
+        this.choices.set([]);
         this.ended.set(event.result.outcome);
         const rewards = this.progression.recordRun(event.result);
         this.setup.lastRun.set({ result: event.result, rewards, inRoom: !!this.room });
@@ -398,7 +447,7 @@ export class PlayScreen {
         // Through the gate: the loading screen shows the next realm while it is built (spec: run-loading).
         this.realmId.set(event.realmId);
         this.depth.set(event.depth);
-        this.choice.set(undefined);
+        this.choices.set([]);
         this.loaded.set(false);
         this.loadStage.set(undefined);
         this.loadProgress.set(0);

@@ -46,6 +46,11 @@ export interface RunConfig {
    * with its size (spec: co-op / difficulty per player).
    */
   readonly party?: readonly PartySeat[];
+  /**
+   * Several players on one screen (spec: co-op / local co-op on one screen): the human seats come first, and a soft
+   * edge keeps them within the shared camera's reach.
+   */
+  readonly sharedScreen?: boolean;
 }
 
 /** The party of a run config: its seats, or the solo player. */

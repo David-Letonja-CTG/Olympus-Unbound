@@ -158,6 +158,9 @@ export class GuestDriver implements RunDriver {
   get localId(): number {
     return this.player;
   }
+  get localIds(): readonly number[] {
+    return [this.player];
+  }
   get paused(): boolean {
     return this.menuOpen;
   }
@@ -179,7 +182,8 @@ export class GuestDriver implements RunDriver {
     this.send({ type: 'loaded', depth: this.depth });
   }
 
-  advance(dt: number, input: PlayerInput, afterStep: () => void): void {
+  advance(dt: number, inputs: readonly PlayerInput[], afterStep: () => void): void {
+    const input = inputs[0] ?? NO_INPUT;
     this.receive();
     if (this.hostGone && !this.ended) this.finish(this.abandonedResult());
 
@@ -215,6 +219,10 @@ export class GuestDriver implements RunDriver {
     const self = this.frame.players.find((p) => p.id === this.player);
     if (self?.alive && this.me.active) return this.selfPosition();
     return focusOf(this.frame.players, this.player, this.interpolation);
+  }
+
+  spread(): { x: number; y: number } {
+    return { x: 0, y: 0 };
   }
 
   pause(): boolean {

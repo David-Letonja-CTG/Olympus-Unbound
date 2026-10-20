@@ -34,9 +34,9 @@ function room(content = quietContent()) {
   /** One frame on both ends, `frames` times, delivering messages in between. */
   const play = (frames: number, hostInput = NO_INPUT, guestInput = NO_INPUT) => {
     for (let i = 0; i < frames; i++) {
-      guest.advance(STEP, guestInput, noop);
+      guest.advance(STEP, [guestInput], noop);
       link.flush();
-      host.advance(STEP, hostInput, noop);
+      host.advance(STEP, [hostInput], noop);
       link.flush();
       hostEvents.push(...host.events());
       guestEvents.push(...guest.events());

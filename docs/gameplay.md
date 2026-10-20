@@ -43,7 +43,24 @@ The game pauses by itself when the window loses focus or the tab is hidden (not 
 
 ## Allies
 
-Not enough friends? On god selection, **+ Add an ally** brings a god played by the machine, up to three, each set to **Easy**, **Normal** or **Hard**. A run with allies plays like co-op: the horde grows with every god, each ally takes its own upgrades at once (you are never kept waiting), allies revive you and each other by standing beside a fallen spirit, and everyone goes through the gate together. They stay near you, fight at the range that suits their weapons, gather what lies near and leave the merchant to you. Easy allies react slowly and use their ability whenever it is ready; Normal ones step out of telegraphs, dash out of trouble and save the ability for a crowd; Hard ones react almost at once and build on their best weapons. Runs with allies have their own high-score table (*With allies*) and never count as co-op.
+Not enough friends? On god selection, **+ Add an ally** brings a god played by the machine, up to three, each set to **Easy**, **Normal** or **Hard**. A run with allies plays like co-op: the horde grows with every god, each ally takes its own upgrades at once (you are never kept waiting), allies revive you and each other by standing beside a fallen spirit, and everyone goes through the gate together. They stay near you, fight at the range that suits their weapons, gather what lies near and leave the merchant to you. Easy allies react slowly and use their ability whenever it is ready; Normal ones step out of telegraphs, dash out of trouble and save the ability for a crowd; Hard ones react almost at once and build on their best weapons. Runs with allies have their own high-score table (*With allies*) and never count as co-op, unless two or more people play (see Local co-op).
+
+## Local co-op
+
+Friends on the same machine play together on one screen. On god selection, **+ Add a player** adds a player with their own god, up to four gods together with any bot allies. Each player picks their controls:
+
+| Controls | Move | Ability | Sprint | Dash |
+|---|---|---|---|---|
+| Keyboard left | WASD | Space | left Shift | E |
+| Keyboard right | arrow keys | Enter or numpad 0 | right Shift | right Ctrl or numpad 1 |
+| Gamepad 1–4 | left stick / d-pad | A or right trigger | left bumper or trigger | B |
+
+Player 1 starts on the left of the keyboard and player 2 on the right; players 3 and 4 take gamepads. Choosing controls another player has swaps them.
+
+- **One camera** frames every living god, and zooms out as you spread apart. Once it is fully out, you cannot walk further apart: stay together or someone stops at the edge of the screen.
+- **Choices in turn:** at a level-up, a treasure or the merchant, each player's choice is shown in turn, named (*Player 2 · Level 5!*). Any keyboard, mouse or gamepad may answer it.
+- **The party panel** on the left shows every player's health, stamina and whether their ability is ready; the big HUD shows player 1.
+- The rules are those of co-op rooms below: difficulty per god, reviving, the gate. Any player's Esc, P or Start pauses for everyone. Everyone here shares this machine's save and its blessings, and a run with two or more players counts as co-op for Glory.
 
 ## Co-op rooms
 

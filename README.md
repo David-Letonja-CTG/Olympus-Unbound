@@ -2,7 +2,7 @@
 
 *Unleash the gods. Survive the divine war.*
 
-An original mythological horde-survival roguelite that runs entirely in the browser. Choose a god, survive ever-larger hordes in procedurally generated realms of Greek myth, combine weapons, armour, relics and skills into synergies, defeat each realm's boss and pass its gate into the next, harder realm. The run goes on until every god has fallen; then spend your rewards on lasting upgrades and go again. Play alone, or with up to three friends in a co-op room joined by code.
+An original mythological horde-survival roguelite that runs entirely in the browser. Choose a god, survive ever-larger hordes in procedurally generated realms of Greek myth, combine weapons, armour, relics and skills into synergies, defeat each realm's boss and pass its gate into the next, harder realm. The run goes on until every god has fallen; then spend your rewards on lasting upgrades and go again. Play alone, with up to three friends on one screen, or in a co-op room joined by code.
 
 <img src="docs/images/hero.gif" width="100%" alt="A run in every realm: Mount Olympus, the Underworld, the Lernaean Marsh, the Aegean Shore and the Labyrinth of Crete">
 
@@ -12,7 +12,7 @@ An original mythological horde-survival roguelite that runs entirely in the brow
 - **Build a god:** 10 weapons, 4 armours, 6 relics, 16 skills and 7 synergies; permanent upgrades and a codex between runs.
 - **The Wandering Merchant:** twice a realm, trade the run's gold for companions (an eagle, a hound, a serpent) that fight beside you, whetstones and ambrosia.
 - **Glory:** a score for every run, solo and co-op high scores, 18 achievements and three daily quests.
-- **Co-op:** rooms for up to four players, peer to peer, with difficulty per player; a living ally revives a fallen god by standing beside their spirit.
+- **Co-op:** up to four players on one screen (keyboard and gamepads, one camera that zooms out to frame everyone), or in rooms peer to peer; difficulty per player; a living ally revives a fallen god by standing beside their spirit.
 - **Allies:** no friends online? Add up to three gods played by the machine (Easy, Normal or Hard) to a solo run.
 - **Night and myth:** dynamic light, fog and torchlight, and a cast rendered in Blender from licensed models (`art/blender/`).
 
