@@ -134,3 +134,10 @@ To bring players back each day and let them bring friends (`add-daily-play`), th
 - A global daily leaderboard. Rejected for now: it needs a server; a parked plan exists.
 - One attempt a day. Rejected: it punishes a bad first try, so every attempt counts and the best is kept.
 - Seeds from the UTC date. Rejected: the trial changes at local midnight like the daily quests, so players in other time zones may play a different trial at the same moment. Sharing names the date.
+
+## D20 — Licence: MIT code, reserved name and own art (Accepted, 2026-10-20)
+
+The owner chose to open the code and keep the game's identity. The source code (and what it generates at run time: code-drawn art, synthesized sound, the music) is MIT. The name, tagline, logo and the project's own image files (rendered character sheets, the preview image, documentation images) are all rights reserved. Third-party assets keep their own licences (D12). `LICENSE` holds the standard MIT text, so hosts recognise it, and `NOTICE.md` states the scope.
+
+*Alternatives considered:* all rights reserved (no reuse at all); GPL-3.0 (reuse only in open-source work); MIT for everything (others could ship a near-identical game).
+
