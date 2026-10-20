@@ -140,3 +140,10 @@ While the merchant is in the realm the HUD SHALL show a banner with the time unt
 #### Scenario: Companions in the loadout
 - **WHEN** the god has bought the eagle
 - **THEN** the eagle's icon is in the loadout
+
+### Requirement: Local players on the HUD
+In a local co-op run the party panel SHALL show, for every local player, their health, their stamina and whether their ability is ready, under their name and seat colour.
+
+#### Scenario: Player 2's ability
+- **WHEN** player 2's ability is cooling down
+- **THEN** player 2's card in the party panel shows it is not ready, and shows it ready again when it is
