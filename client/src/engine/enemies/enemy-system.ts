@@ -45,6 +45,8 @@ export function updateEnemies(state: RunState, dt: number): void {
     if (target) {
       if (enemy.boss) {
         updateBoss(state, enemy, target, dt);
+      } else if (enemy.part) {
+        // A boss's part sits where its boss places it (bosses/parts.ts).
       } else {
         const stunned = enemy.status.stun > 0;
         const s = stunned ? { x: 0, y: 0, speed: 0 } : steer(state, enemy, target, dt);
@@ -65,6 +67,7 @@ export function updateEnemies(state: RunState, dt: number): void {
 
   for (const enemy of state.enemies) {
     if (enemy.dead) continue;
+    if (enemy.part) continue;
     state.collision.resolve(enemy);
     if (enemy.status.stun > 0 || enemy.attackTimer > 0) continue;
     for (const player of state.players) {
@@ -85,7 +88,7 @@ export function updateEnemies(state: RunState, dt: number): void {
 function separate(state: RunState): void {
   state.rebuildEnemyGrid();
   for (const enemy of state.enemies) {
-    if (enemy.dead || enemy.boss) continue;
+    if (enemy.dead || enemy.boss || enemy.part) continue;
     let pushed = 0;
     state.enemyGrid.query(enemy.x, enemy.y, enemy.radius, (other) => {
       if (other === enemy || other.dead) return;
@@ -94,8 +97,8 @@ function separate(state: RunState): void {
       const dist = Math.sqrt(dx * dx + dy * dy);
       const overlap = enemy.radius + other.radius - dist;
       if (overlap <= 0) return;
-      // The boss shoves; regular enemies share the correction.
-      const share = other.boss ? 1 : 0.5;
+      // The boss and its parts shove; regular enemies share the correction.
+      const share = other.boss || other.part ? 1 : 0.5;
       if (dist > 1e-6) {
         enemy.x += (dx / dist) * overlap * share;
         enemy.y += (dy / dist) * overlap * share;

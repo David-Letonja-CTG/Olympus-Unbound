@@ -16,6 +16,9 @@ const MERCHANT_SPRITE = 'ally_smith';
 const MERCHANT_TINT = 0xfff2dc;
 /** Pool key of the merchant: entity IDs start at 1. */
 const MERCHANT_ID = -1;
+/** Shifting walls are the Labyrinth's wall blocks; seconds they take to rise or sink. */
+const WALL_SPRITE = 'labyrinth_wall';
+const WALL_RISE = 0.3;
 
 export const DEPTH = {
   ground: -40000,
@@ -100,7 +103,8 @@ export class WorldView {
     | 'hostile'
     | 'pickup'
     | 'companion'
-    | 'npc',
+    | 'npc'
+    | 'wall',
     SpritePool
   >;
   private readonly staticLights: StaticLight[] = [];
@@ -127,6 +131,7 @@ export class WorldView {
       pickup: pool(),
       companion: pool(),
       npc: pool(),
+      wall: pool(),
     };
   }
 
@@ -230,6 +235,9 @@ export class WorldView {
       else if (s.burn > 0) sprite.setTint(0xffa060).setTintMode(multiply);
       else if (s.shock > 0) sprite.setTint(0xa8e6ff).setTintMode(multiply);
       else if (s.slow > 0) sprite.setTint(0xc8a8ff).setTintMode(multiply);
+      // Boss mechanics (spec: boss-encounter / attack warnings): shielded parts in stone grey, a raging boss red.
+      else if (e.guarded) sprite.setTint(0x8a8a8a).setTintMode(multiply);
+      else if (e.boss?.enraged) sprite.setTint(0xff7a60).setTintMode(multiply);
       else sprite.clearTint();
 
       // The same figure again above the darkness, partly transparent: every enemy stays readable in the dark
@@ -325,6 +333,21 @@ export class WorldView {
         .setDepth(DEPTH.shadow)
         .setScale((c.def.radius * 2.6) / 64);
       lights.add(x, y, 90, c.def.visual.color, 0.45, 2);
+    }
+
+    // Shifting walls: the Labyrinth's blocks rising from the floor and sinking back (spec: boss-encounter).
+    for (const w of state.walls) {
+      const r = this.resolver.resolve(WALL_SPRITE);
+      const sprite = p.wall.get(w.id);
+      applySprite(sprite, r, 1, false, 'idle', 0);
+      const rise = Math.min(1, w.age / WALL_RISE, w.left / WALL_RISE);
+      sprite
+        .setPosition(w.x, w.y + (1 - rise) * 18)
+        .setDepth(w.y + w.radius * 0.4)
+        .setRotation(0)
+        .setAlpha(0.35 + 0.65 * rise)
+        .clearTint();
+      sprite.setScale(r.scale, r.scale * (0.3 + 0.7 * rise));
     }
 
     // The Wandering Merchant: lit by its own lantern so it stays readable at night (D13).

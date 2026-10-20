@@ -42,6 +42,8 @@ describe('boss encounter', () => {
     if (!boss?.boss) throw new Error('no boss');
     boss.x = boss.px = player.x + 120;
     boss.y = boss.py = player.y;
+    // Its third attack is the slam (after the club sweep and the boulders).
+    boss.boss.attackIndex = 2;
     boss.boss.attackTimer = 0;
     player.invulnerable = 0;
     boss.attackTimer = 99;
@@ -172,8 +174,8 @@ describe('boss encounter', () => {
       sim.state.enemies.filter(
         (e) => e.def.id === 'swamp_serpent' && Math.hypot(e.x - boss.x, e.y - boss.y) < 200,
       ).length;
-    // Its third attack is the brood.
-    boss.boss.attackIndex = 2;
+    // Its second attack is the brood.
+    boss.boss.attackIndex = 1;
     boss.boss.attackTimer = 0;
     const before = near();
     run(sim, 0.2);
@@ -201,7 +203,8 @@ describe('boss encounter', () => {
     boss.health = boss.maxHealth * 0.55;
     run(sim, 0.5);
     expect(boss.boss.phase).toBe(1);
-    boss.boss.attackIndex = 0;
+    // The second attack of the phase (after the shifting walls).
+    boss.boss.attackIndex = 1;
     boss.boss.attackTimer = 0;
     const near = () =>
       sim.state.enemies.filter(

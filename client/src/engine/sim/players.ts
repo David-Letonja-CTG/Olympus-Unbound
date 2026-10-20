@@ -1,6 +1,7 @@
 import { computeStats } from '../core/stats';
 import { createWeapon, evaluateSynergies, refreshPlayer } from '../progression/loadout';
 import { useAbility } from '../weapons/weapon-system';
+import { zoneSlow } from '../bosses/parts';
 import { stepMovement } from './movement';
 import { RunState } from './run-state';
 import { NO_INPUT, Player, PlayerInput } from './types';
@@ -41,6 +42,8 @@ export function createPlayer(state: RunState, slot: number, x: number, y: number
     dashCooldown: 0,
     dashX: 1,
     dashY: 0,
+    surge: 0,
+    dodged: false,
   };
   player.loadout.weapons.push(createWeapon(state.index.weapon(god.startingWeapon), stats));
   refreshPlayer(state, player);
@@ -59,7 +62,10 @@ export function updatePlayers(state: RunState, inputs: readonly PlayerInput[], d
     const rules = state.balance.stamina;
     const x = player.x;
     const y = player.y;
-    if (stepMovement(player, input, player.stats.moveSpeed, rules, state.collision, dt)) {
+    if (player.surge > 0) player.surge = Math.max(0, player.surge - dt);
+    const speed = player.stats.moveSpeed * zoneSlow(state, player);
+    if (stepMovement(player, input, speed, rules, state.collision, dt)) {
+      player.dodged = false;
       // Untouchable for the dash (spec: player-control / dash through an attack); the one damage check is unchanged.
       player.invulnerable = Math.max(player.invulnerable, rules.dashDuration + rules.dashGrace);
       state.emit({ type: 'dash', playerId: player.id, x, y, dx: player.dashX, dy: player.dashY });

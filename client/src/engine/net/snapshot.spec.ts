@@ -87,7 +87,7 @@ describe('snapshots (spec: rooms / one authoritative game)', () => {
     const snap = decodeSnapshot(encodeSnapshot(sim.state, sim.phase), index);
     expect(snap.bossId).toBe(boss?.id);
     const decoded = snap.enemies.find((e) => e.id === boss?.id);
-    expect(decoded?.boss).toBe(true);
+    expect(decoded?.boss).toEqual({ enraged: false, exposed: 0 });
     expect(decoded?.def.visual.sprite).toBe(boss?.def.visual.sprite);
     expect(snap.hazards.length).toBe(sim.state.hazards.length);
     if (snap.hazards.length) {

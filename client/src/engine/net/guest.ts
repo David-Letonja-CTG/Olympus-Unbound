@@ -57,6 +57,8 @@ interface ReplicaFrame {
   gate: Snapshot['gate'];
   companions: SnapCompanion[];
   merchant: Snapshot['merchant'];
+  walls: Snapshot['walls'];
+  zones: Snapshot['zones'];
   depth: number;
   span: number;
 }
@@ -87,6 +89,8 @@ export class GuestDriver implements RunDriver {
     gate: undefined,
     companions: [],
     merchant: undefined,
+    walls: [],
+    zones: [],
     depth: 0,
     span: STEP,
   };
@@ -376,14 +380,14 @@ export class GuestDriver implements RunDriver {
     // The same movement rule as the host's players (sim/movement.ts), against the same obstacles.
     me.px = me.x;
     me.py = me.y;
-    stepMovement(
-      me,
-      input,
-      this.moveSpeed,
-      this.index.content.balance.stamina,
-      this.collision,
-      STEP,
-    );
+    // A part's zone slows the god here as it does on the host.
+    let speed = this.moveSpeed;
+    for (const z of this.frame.zones)
+      if ((me.x - z.x) ** 2 + (me.y - z.y) ** 2 <= (z.radius + me.radius) ** 2) {
+        speed *= 1 - z.slow;
+        break;
+      }
+    stepMovement(me, input, speed, this.index.content.balance.stamina, this.collision, STEP);
     this.history.push({ seq: this.seq, x: me.x, y: me.y, stamina: me.stamina });
     if (this.history.length > 120) this.history.shift();
   }
@@ -541,6 +545,8 @@ export class GuestDriver implements RunDriver {
       return { ...p };
     });
     this.pickupPath = path;
+    // The host's shifting walls block the guest's own predicted movement too (spec: boss-encounter).
+    this.collision.setDynamic(b.walls);
     this.frame = {
       players: from(a.players, b.players),
       enemies,
@@ -552,6 +558,8 @@ export class GuestDriver implements RunDriver {
       gate: b.gate,
       companions: from(a.companions, b.companions),
       merchant: b.merchant,
+      walls: b.walls,
+      zones: b.zones,
       depth: b.depth,
       span: b.time > a.time ? b.time - a.time : STEP,
     };

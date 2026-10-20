@@ -129,7 +129,9 @@ Enemy health and damage grow a little each minute (capped). Elites are larger an
 
 ## The Cyclops
 
-12,000 health. Phase 1: **Ground Slam** (circle around it) and **Boulder Throw** (circles at and around you). Below 50%: enraged — faster, adds **Rampage Charge** (a marked lane, then a dash), a bigger slam, five boulders and **Call the Legion** (summons hoplites). Every damaging attack is marked in red first; only a player inside the mark when it ends is hit. A red arrow at the screen edge points to the Cyclops while it is off-screen.
+12,000 health. Phase 1: **Club Sweep** (two cones in front of him, one after the other, left then right), **Boulder Throw** (circles at and around you) and **Ground Slam** (a circle around him). Below 50% he **rages**: he turns red, moves faster and pauses far less, sweeps three times in a row, adds **Rampage Charge** (a marked lane, then a dash), five boulders and **Call the Legion** (hoplites). Every damaging attack is marked in red first and flashes white in its last quarter-second; only a player inside the mark when it ends is hit. A red arrow at the screen edge points to the Cyclops while it is off-screen.
+
+**Perfect dodge:** dash so that a boss attack lands while you are untouchable (a warning resolving on you, a charge or a lash reaching you): "Perfect dodge!", your dash's stamina comes back, and you gain **Surge**, +30% damage for 3 seconds (shown above the ability slot). The white flash is the moment to dash.
 
 ## The Underworld
 
@@ -149,8 +151,8 @@ Hordes of shades and furies and elite furies, lampads and Orthrus arrive on the 
 ## Cerberus
 
 The three-headed hound of Hades, with a smouldering serpent mane (13,000 health, 300 gold).
-- **Calm:** a triple bite in a circle around itself, hellfire breath on three circles under you, and a pounce along a red line.
-- **Below half health:** it howls for the pack, calling three Orthrus, then bites wider, breathes six fires and pounces faster.
+- **Three heads, three rhythms:** the left head breathes **hellfire** in a cone, the middle head **lunges** along a line, the right head rains **soul-fire** on circles under you, each on its own beat while the body pounces along a red line and bites in a circle.
+- **Below half health:** it howls for the pack, calling three Orthrus; the heads and the body quicken, it bites wider and pounces faster.
 
 ## Lernaean Marsh
 
@@ -167,8 +169,8 @@ The poisoned swamp of Lerna: bog, mud and reedbeds around deep water in a green 
 ## The Hydra
 
 Five serpent necks rising from one body (15,000 health, 320 gold).
-- **Calm:** its heads bite in a circle around it, venom rains on four circles under you, and it calls a brood of four serpents.
-- **Below half health:** "Cut one head and two grow back!" It moves faster, calls six serpents, rains seven venoms, and lunges along a red line.
+- **Cut the heads in order.** Three heads, marked **I, II, III** in gold above the one to cut next; the others are shielded (grey ring, "shielded" when hit). Each head spits venom and strikes along a line. A cut head grows back after 14 s, so finish the sequence quickly. While any head lives, her body takes only a tenth of the damage; with every head down she is **exposed** for 8 s (a white pulse) and takes 60% more, then the heads grow back.
+- **Below half health:** "Cut one head and two grow back!" Two more heads (IV and V), more venom rain, a brood of serpents and a wider bite.
 
 ## Aegean Shore
 
@@ -185,8 +187,8 @@ Moonlit sand, dunes and sea-rock above the strait, under a cool silver light wit
 ## Scylla
 
 The monster of the strait: a woman with six hounds at her waist and serpent tentacles beneath (16,000 health, 340 gold).
-- **Calm:** her six hounds bite in a circle around her, Charybdis opens four whirlpools under you, and her tentacles lash along a red line.
-- **Below half health:** "The drowned answer Scylla's call!" She calls five drowned sailors, moves faster, bites wider and opens seven whirlpools.
+- **She holds the strait:** anchored near her arena, with **four tentacles** around it. Each tentacle holds a stretch of shore (a teal ring): standing in it hurts and slows you. Tentacles lash at gods who come near, can be destroyed and grow back after 20 s. While any tentacle lives, Scylla takes half damage. Her hounds bite in a circle, Charybdis opens whirlpools under you.
+- **Below half health:** "The drowned answer Scylla's call!" Five drowned sailors, seven whirlpools, double sweeps of her hounds and a wider bite.
 
 ## Labyrinth of Crete
 
@@ -203,9 +205,9 @@ The maze Daedalus built beneath Knossos: dressed stone under warm torchlight, du
 ## Asterion
 
 The Minotaur, king of the Labyrinth, with a bronze labrys (18,000 health, 380 gold).
-- **Calm:** his labrys sweeps in a circle around him, he rushes along a red line, and the ceiling's stones fall on five circles under you.
-- **Below 60% health:** "The Labyrinth answers its king!" He calls three minotaurs, moves faster, rushes further, brings down seven stones and sweeps wider.
-- **Below 25% health:** "Asterion goes berserk!" Faster still; he rushes twice in every round of attacks, and nine stones fall.
+- **The Labyrinth shifts:** walls rise around him in rings with gaps (stone outlines warn where), stand a while and are replaced by new ones. A god caught where a wall rises is thrown aside and hurt. His **bull rush** stops dead at a wall and leaves him **dazed** for 2.5 s (stars over his head), taking 50% more damage: lure him into the walls. His labrys sweeps in a circle and the ceiling's stones fall on you.
+- **Below 60% health:** "The Labyrinth answers its king!" Three rings of walls, three minotaurs, longer rushes and more stones.
+- **Below 25% health:** "Asterion goes berserk!" He rages red, the walls shift faster, and he rushes twice in every round of attacks.
 
 <img src="images/boss.gif" width="100%" alt="Fighting Asterion in the Labyrinth">
 
