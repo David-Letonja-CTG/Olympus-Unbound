@@ -9,6 +9,7 @@ import {
 import {
   DailyState,
   EMPTY_DAILY,
+  EMPTY_TRIAL,
   EMPTY_HIGH_SCORES,
   HighScores,
   parseDaily,
@@ -16,12 +17,14 @@ import {
   parseHighScores,
   parseHistory,
   parseNumbers,
+  parseTrial,
   parseUnlocked,
   RunRecord,
+  TrialRecord,
 } from './save-records';
 
 /** Current save format version (D8). Bump it and add a migration when the shape changes. */
-export const SAVE_VERSION = 7;
+export const SAVE_VERSION = 8;
 /** How many processed run IDs are remembered to keep rewards idempotent. */
 export const REMEMBERED_RUNS = 20;
 
@@ -60,6 +63,8 @@ export interface SaveData {
   /** Gods that met an every-god achievement's goal. */
   readonly achievementGods: Readonly<Record<string, readonly string[]>>;
   readonly daily: DailyState;
+  /** The Daily Trial of the last day played (spec: daily-trial / daily best). */
+  readonly dailyTrial: TrialRecord;
 }
 
 export function freshSave(quality: GraphicsQuality = DEFAULT_SETTINGS.quality): SaveData {
@@ -78,6 +83,7 @@ export function freshSave(quality: GraphicsQuality = DEFAULT_SETTINGS.quality): 
     achievementProgress: {},
     achievementGods: {},
     daily: EMPTY_DAILY,
+    dailyTrial: EMPTY_TRIAL,
   };
 }
 
@@ -114,6 +120,8 @@ const MIGRATIONS: Record<number, (save: Raw) => Raw> = {
   5: (save) => ({ ...save, version: 6 }),
   // v7 adds the Quick high scores (spec: meta-progression / save format version 7), empty.
   6: (save) => ({ ...save, version: 7 }),
+  // v8 adds the Daily Trial record (spec: meta-progression / save format version 8), none played.
+  7: (save) => ({ ...save, version: 8 }),
 };
 
 /**
@@ -205,6 +213,7 @@ export function parseSave(
     achievementProgress: parseNumbers(save['achievementProgress'], achievementIds),
     achievementGods: parseGodLists(save['achievementGods'], achievementIds, content),
     daily: parseDaily(save['daily'], content),
+    dailyTrial: parseTrial(save['dailyTrial']),
   };
 }
 

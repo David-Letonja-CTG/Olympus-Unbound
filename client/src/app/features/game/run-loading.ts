@@ -109,6 +109,11 @@ const EMBERS = Array.from({ length: 26 }, (_, i) => ({
         <h1>{{ realm().name }}</h1>
         <div class="divider" aria-hidden="true"></div>
         <p class="description">{{ realm().description }}</p>
+        @if (twist(); as t) {
+          <p class="twist" data-testid="loading-twist">
+            <strong>{{ t.name }}</strong> · {{ t.description }}
+          </p>
+        }
       </header>
 
       <section class="party" aria-label="Party">
@@ -273,6 +278,14 @@ const EMBERS = Array.from({ length: 26 }, (_, i) => ({
       margin: 0 auto 12px;
       width: min(420px, 70%);
       background: url('../../../../public/ui/divider.svg') center / contain no-repeat;
+    }
+    .twist {
+      margin: 8px auto 0;
+      max-width: 640px;
+      color: #e4dccb;
+    }
+    .twist strong {
+      color: var(--gold-2);
     }
     .description {
       font-family: var(--serif);
@@ -516,6 +529,10 @@ export class RunLoading {
   readonly depth = input(0);
   /** A room's code (spec: run-loading / party); absent for a solo run. */
   readonly roomCode = input<string | undefined>(undefined);
+  /** A Daily Trial's or challenge's twist (spec: daily-trial / twists). */
+  readonly twist = input<{ readonly name: string; readonly description: string } | undefined>(
+    undefined,
+  );
   readonly stage = input<LoadStage | undefined>(undefined);
   /** Progress of the current stage, 0–1. */
   readonly stageProgress = input(0);

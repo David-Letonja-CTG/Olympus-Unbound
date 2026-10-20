@@ -302,11 +302,25 @@ Every run earns a **score**: kills + 2 per second survived + 10 per level + 1,00
 
 **Next goal**: the main menu always names one thing to do next, in this order:
 
-1. A blessing you can afford now.
-2. The daily quest closest to done, with its progress.
-3. The achievement closest to done, for those whose progress adds up.
+1. Today's Daily Trial, until you have played it.
+2. A blessing you can afford now.
+3. The daily quest closest to done, with its progress.
+4. The achievement closest to done, for those whose progress adds up.
 
 Tapping it opens the screen where that goal lives.
+
+## Daily Trial
+
+Every day has one **Daily Trial** (main menu → Daily Trial, marked with a gold dot until you have played it today). It is the same for everyone that day, picked from the date:
+
+- a god;
+- a realm (Mount Olympus one day in three);
+- a seed;
+- a **twist**, a rule for the day with a gift and a cost. The twists are Swift Foes, Glass God, Golden Age, Endless Swarm, Iron Hides, Winged Sandals, Haste of Hermes and Blood Moon.
+
+The trial is a solo, full-length run. Every attempt counts, and your best score of the day is kept. It shows on the trial's screen, on the summary ("New best today") and in the Hall of Glory. Trial runs count for quests, achievements and statistics, but stay out of the high-score tables, since they play by other rules. A new trial comes at local midnight.
+
+**Share** (on every run summary) makes a picture of your run: god, realm, time, kills, level, score, and the trial or quick run. On a phone it opens the share sheet; on a computer it saves the picture and copies a **challenge link**. The link starts the same god, realm, seed, length and twist for whoever opens it, and shows the score to beat; their summary says whether they beat it. A challenge with a twist stays out of the high-score tables, and one without a twist counts like any run. The game's address also shows a preview card (title, tagline, picture) when pasted into a chat.
 
 ## Admin mode
 

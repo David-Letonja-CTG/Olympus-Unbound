@@ -5,7 +5,9 @@ import { routes } from '../app.routes';
 import { AppUpdate } from '../core/app-update';
 import { Connectivity } from '../core/connectivity';
 import { InstallPrompt } from '../core/install-prompt';
+import { Progression } from '../core/progression';
 import { RunSetup } from '../core/run-setup';
+import { localDate } from '../core/save/glory';
 import { SAVE_KEY, SAVE_STORAGE } from '../core/save/save-store';
 import { parseSeed } from '../core/run-setup';
 
@@ -41,7 +43,14 @@ describe('main menu', () => {
   });
 
   it('shows the next goal and leads to it (spec: run-setup / main menu)', async () => {
-    const h = await open('/', { version: 2, gold: 150, introSeen: true });
+    // Today's trial already played, so the blessing comes first.
+    const today = localDate(new Date());
+    const h = await open('/', {
+      version: 8,
+      gold: 150,
+      introSeen: true,
+      dailyTrial: { date: today, attempts: 1 },
+    });
     const goal = q<HTMLAnchorElement>(h, '[data-testid=next-goal]');
     expect(goal?.textContent).toContain('Buy Attraction I');
     expect(goal?.textContent).toContain('80 gold');
@@ -279,5 +288,58 @@ describe('graphics quality', () => {
     h.detectChanges();
     expect(JSON.parse(data[SAVE_KEY]).settings.quality).toBe('high');
     expect(q(h, '[data-testid=quality-high]')?.getAttribute('aria-checked')).toBe('true');
+  });
+});
+
+describe('Daily Trial screens (spec: daily-trial)', () => {
+  const returning = { version: 2, introSeen: true };
+
+  it('leads from the menu, by its button and the next goal, until played today', async () => {
+    const h = await open('/', returning);
+    expect(q(h, '[data-testid=menu-daily-trial] .dot')).toBeTruthy();
+    expect(q(h, '[data-testid=next-goal]')?.textContent).toContain("Today's Daily Trial");
+    q<HTMLAnchorElement>(h, '[data-testid=next-goal]')?.click();
+    await h.fixture.whenStable();
+    expect(TestBed.inject(Router).url).toBe('/daily');
+  });
+
+  it("shows today's trial and begins it, solo, with its own seed", async () => {
+    const h = await open('/daily', returning);
+    const trial = TestBed.inject(Progression).trialToday().trial;
+    expect(q(h, '[data-testid=trial-twist]')?.textContent).toContain(trial.twist.name);
+    expect(q(h, '[data-testid=trial-best]')?.textContent).toContain('Not played yet today');
+    q<HTMLButtonElement>(h, '[data-testid=trial-begin]')?.click();
+    await h.fixture.whenStable();
+    const setup = TestBed.inject(RunSetup);
+    expect(setup.special()).toEqual({ kind: 'daily', trial });
+    expect(setup.seed()).toBe(trial.seed);
+    expect(setup.godId()).toBe(trial.godId);
+  });
+
+  it('opens a challenge link and accepts it', async () => {
+    const h = await open('/challenge?g=hades&r=the_underworld&s=991&q=1&b=3400', returning);
+    expect(q(h, '[data-testid=challenge-god]')?.textContent).toContain('Hades');
+    expect(q(h, '[data-testid=challenge-to-beat]')?.textContent).toContain('3,400');
+    q<HTMLButtonElement>(h, '[data-testid=challenge-accept]')?.click();
+    await h.fixture.whenStable();
+    const special = TestBed.inject(RunSetup).special();
+    expect(special?.kind === 'challenge' && special.challenge).toMatchObject({
+      godId: 'hades',
+      seed: 991,
+      quick: true,
+      toBeat: 3400,
+    });
+  });
+
+  it('sends a broken challenge link to the main menu', async () => {
+    const h = await open('/challenge?g=nobody&r=the_underworld&s=1', returning);
+    await h.fixture.whenStable();
+    expect(TestBed.inject(Router).url).toBe('/');
+  });
+
+  it("shows today's trial in the Hall of Glory", async () => {
+    const h = await open('/glory', returning);
+    const trial = TestBed.inject(Progression).trialToday().trial;
+    expect(q(h, '[data-testid=glory-trial]')?.textContent).toContain(trial.twist.name);
   });
 });

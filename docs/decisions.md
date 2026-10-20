@@ -120,3 +120,17 @@ Still static files only (D1). Saves are unchanged (D8).
 - Workbox. Rejected: a second build tool, where Angular's worker fits the build.
 - Caching lazily, only what was seen. Rejected: realms and sounds not yet met would be missing offline.
 - Reloading automatically on a new version. Rejected: it could interrupt a run.
+
+## D19 — Daily Trial and challenges without a server (Accepted, 2026-10-20)
+
+To bring players back each day and let them bring friends (`add-daily-play`), the game has a Daily Trial and challenge links, still with no server (D1).
+
+- **The trial:** the day's god, realm, seed and twist come from the local date by a fixed hash, so every browser agrees. Twists are content: gods' stat changes and enemy multipliers, applied by the simulation as `RunRules` (deterministic, D5).
+- **Scores** are compared by sharing: a picture of the run and a link that starts the same run with the score to beat. The link carries the score as it was made; nothing checks it, which is fine between friends.
+- **Tables:** trial runs, and challenges with a twist, play by other rules, so they stay out of the high-score tables. The day's best is kept in the save (v8).
+
+*Alternatives considered:*
+
+- A global daily leaderboard. Rejected for now: it needs a server; a parked plan exists.
+- One attempt a day. Rejected: it punishes a bad first try, so every attempt counts and the best is kept.
+- Seeds from the UTC date. Rejected: the trial changes at local midnight like the daily quests, so players in other time zones may play a different trial at the same moment. Sharing names the date.

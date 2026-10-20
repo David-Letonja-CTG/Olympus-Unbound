@@ -57,6 +57,23 @@ export interface HighScores {
   readonly quick: readonly ScoreEntry[];
 }
 
+/** The best Daily Trial run of a day (spec: daily-trial / daily best). */
+export interface TrialBest {
+  readonly score: number;
+  readonly timeSeconds: number;
+  readonly kills: number;
+  readonly level: number;
+  readonly realmsCleared: number;
+}
+
+/** The Daily Trial of the last day played (spec: meta-progression / save format version 8). */
+export interface TrialRecord {
+  /** Local date, `YYYY-MM-DD`; empty when no trial was played. */
+  readonly date: string;
+  readonly attempts: number;
+  readonly best?: TrialBest;
+}
+
 /** The day's quests: progress per quest and the ones already paid (spec: glory / daily quests). */
 export interface DailyState {
   /** Local date, `YYYY-MM-DD`. */
@@ -67,6 +84,7 @@ export interface DailyState {
 
 export const EMPTY_HIGH_SCORES: HighScores = { solo: [], coop: [], allies: [], quick: [] };
 export const EMPTY_DAILY: DailyState = { date: '', progress: {}, done: [] };
+export const EMPTY_TRIAL: TrialRecord = { date: '', attempts: 0 };
 
 type Raw = Record<string, unknown>;
 const isObject = (v: unknown): v is Raw => typeof v === 'object' && v !== null && !Array.isArray(v);
@@ -186,5 +204,23 @@ export function parseDaily(v: unknown, content: GameContent): DailyState {
     done: Array.isArray(v['done'])
       ? [...new Set(v['done'].filter((id): id is string => str(id) && known.has(id)))]
       : [],
+  };
+}
+
+/** The last Daily Trial played; anything broken reads as none played (spec: meta-progression / robust loading). */
+export function parseTrial(v: unknown): TrialRecord {
+  if (!isObject(v) || !str(v['date']) || !/^\d{4}-\d{2}-\d{2}$/.test(v['date'] as string))
+    return EMPTY_TRIAL;
+  const best = v['best'];
+  const fields = ['score', 'timeSeconds', 'kills', 'level', 'realmsCleared'] as const;
+  const validBest = isObject(best) && fields.every((f) => num(best[f]));
+  return {
+    date: v['date'] as string,
+    attempts: num(v['attempts']) ? Math.floor(v['attempts'] as number) : 0,
+    best: validBest
+      ? (Object.fromEntries(
+          fields.map((f) => [f, Math.floor(best[f] as number)]),
+        ) as unknown as TrialBest)
+      : undefined,
   };
 }

@@ -555,6 +555,37 @@ const scenes = {
     await sideways.close();
   },
 
+  /**
+   * The link preview (spec: daily-trial / link preview): a run in full swing at 1200 × 630, written to
+   * client/public/og-image.jpg so the site serves it.
+   */
+  async og(browser) {
+    const page = await newPage(browser, { width: 1200, height: 630 });
+    await page.goto(`${base}/?debug`);
+    await page.getByRole('link', { name: 'Play' }).click();
+    await page.getByTestId('god-zeus').click();
+    await page.getByRole('button', { name: 'Continue' }).click();
+    await page.getByTestId('realm-mount_olympus').click();
+    await page.getByTestId('seed-input').fill('4242');
+    await page.getByTestId('begin').click();
+    await page.waitForFunction(() => (window.olympusDebug?.inspect()?.time ?? 0) > 0.3, null, {
+      timeout: 120000,
+    });
+    await page.getByTestId('run-loading').waitFor({ state: 'detached', timeout: 120000 });
+    await send(page, { type: 'godMode', enabled: true });
+    await powerUp(page);
+    await send(page, { type: 'skipTo', seconds: 300 });
+    await page.waitForTimeout(7000);
+    await pickUpgrades(page);
+    await page.keyboard.down('d');
+    await page.waitForTimeout(600);
+    await page.keyboard.press('Space');
+    await page.waitForTimeout(500);
+    await page.screenshot({ path: join(here, '..', '..', 'public', 'og-image.jpg'), quality: 82 });
+    await page.keyboard.up('d');
+    await page.close();
+  },
+
   /** In a run: a level-up choice, the gate after a boss, and the summary at the end. */
   async run(browser) {
     const realm = REALMS[0];

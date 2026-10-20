@@ -8,10 +8,20 @@ import {
   RunResult,
 } from '../../engine';
 import { GAME_CONTENT } from './game-content';
-import { dailyOf, questsFor } from './save/glory';
+import { DailyTrial, dailyTrialFor } from './daily-trial';
+import { dailyOf, localDate, questsFor } from './save/glory';
+import { TrialBest } from './save/save-records';
 import { applyRunResult, RunRewards } from './save/rewards';
 import { permanentModifiers, SaveData } from './save/save-data';
 import { SaveStore } from './save/save-store';
+
+/** Today's Daily Trial and how the player has done in it (spec: daily-trial). */
+export interface TrialView {
+  readonly trial: DailyTrial;
+  readonly attempts: number;
+  readonly best?: TrialBest;
+  readonly playedToday: boolean;
+}
 
 export interface DailyQuestView {
   readonly def: QuestDefinition;
@@ -83,6 +93,19 @@ export class Progression {
       progress: Math.min(def.goal.target, day.progress[def.id] ?? 0),
       done: day.done.includes(def.id),
     }));
+  }
+
+  /** Today's Daily Trial with the day's attempts and best (spec: daily-trial / daily best). */
+  trialToday(now = new Date()): TrialView {
+    const date = localDate(now);
+    const record = this.state().dailyTrial;
+    const today = record.date === date;
+    return {
+      trial: dailyTrialFor(date, this.content),
+      attempts: today ? record.attempts : 0,
+      best: today ? record.best : undefined,
+      playedToday: today && record.attempts > 0,
+    };
   }
 
   /** Modifiers from permanent upgrades, for the next run. */

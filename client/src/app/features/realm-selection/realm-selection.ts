@@ -97,19 +97,20 @@ import { ItemIcon } from '../../shared/item-icon';
               }
             </p>
           </section>
-
-          <div class="actions">
-            <a class="btn" routerLink="/gods">Back</a>
-            <button
-              class="btn btn-primary"
-              data-testid="begin"
-              [disabled]="!canStart()"
-              (click)="begin()"
-            >
-              Begin
-            </button>
-          </div>
         </div>
+      </div>
+
+      <!-- Pinned on the window's bottom edge, centred, like every menu's (styles.css, .actions.sticky). -->
+      <div class="actions sticky">
+        <a class="btn" routerLink="/gods">Back</a>
+        <button
+          class="btn btn-primary"
+          data-testid="begin"
+          [disabled]="!canStart()"
+          (click)="begin()"
+        >
+          Begin
+        </button>
       </div>
     </main>
   `,
@@ -245,9 +246,6 @@ import { ItemIcon } from '../../shared/item-icon';
       font-size: 0.72rem;
       color: var(--muted);
     }
-    .actions {
-      justify-content: flex-end;
-    }
     label {
       font-weight: 600;
     }
@@ -279,9 +277,6 @@ import { ItemIcon } from '../../shared/item-icon';
       color: #ffb4a8;
     }
     @media (max-width: 760px) {
-      .realm-screen {
-        padding-bottom: 0;
-      }
       .layout {
         flex-direction: column;
         align-items: stretch;
@@ -289,29 +284,12 @@ import { ItemIcon } from '../../shared/item-icon';
       .realms {
         flex-basis: auto;
       }
-      /*
-       * One column on a phone: Back and Begin stay on the bottom edge while the details scroll, centred and shaded
-       * across the whole width like every other menu's pinned buttons (styles.css, .actions.sticky).
-       */
-      .actions {
-        position: sticky;
-        bottom: 0;
-        z-index: 5;
-        justify-content: center;
-        width: calc(100% + 32px);
-        margin: 0 -16px;
-        padding: 14px 16px max(16px, env(safe-area-inset-bottom));
-        background: linear-gradient(180deg, transparent, rgba(11, 10, 12, 0.92) 40%);
-      }
     }
     /*
      * A phone held sideways (spec: phone-play / phone menus): the list beside the details again, compact, with Begin
      * kept at the bottom of the screen.
      */
     @media (max-height: 500px) and (min-width: 560px) {
-      .realm-screen {
-        padding-bottom: 0;
-      }
       .layout {
         flex-direction: row;
         align-items: flex-start;
@@ -338,12 +316,6 @@ import { ItemIcon } from '../../shared/item-icon';
       }
       .description {
         font-size: 0.85rem;
-      }
-      .actions {
-        position: sticky;
-        bottom: 0;
-        padding: 8px 0 max(8px, env(safe-area-inset-bottom));
-        background: linear-gradient(180deg, transparent, rgba(11, 10, 12, 0.92) 40%);
       }
     }
   `,
@@ -399,6 +371,8 @@ export class RealmSelection {
     if (seed === undefined || !realm || !this.canStart()) return;
     this.setup.realmId.set(realm);
     this.setup.seed.set(seed);
+    // A run of the player's own: no Daily Trial or challenge any more.
+    this.setup.special.set(undefined);
     // Spec: phone-play / the phone screen — from the tap, as browsers require.
     this.touchScreen.enterFullscreen();
     void this.router.navigate(['/play']);

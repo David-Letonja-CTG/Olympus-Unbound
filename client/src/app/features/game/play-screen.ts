@@ -30,6 +30,8 @@ import { Progression } from '../../core/progression';
 import { RoomService } from '../../core/rooms/room-service';
 import { ALLY_SKILLS, RunSetup } from '../../core/run-setup';
 import { TouchScreen } from '../../core/touch-screen';
+import { challengeRun, QUICK_RULES } from '../../core/challenge';
+import { trialRun } from '../../core/daily-trial';
 import { Announcement, Hud } from './hud/hud';
 import { LevelUpDialog } from './level-up-dialog';
 import { PauseMenu } from './pause-menu';
@@ -37,7 +39,7 @@ import { PartyMember, RunLoading } from './run-loading';
 
 /** What makes a run quick (spec: quick-runs): the realm's clock at double speed, double experience. */
 const QUICK_RUN: Pick<RunConfig, 'rules' | 'variant'> = {
-  rules: { pace: 2, modifiers: [{ stat: 'xpGain', flat: 1 }] },
+  rules: QUICK_RULES,
   variant: { kind: 'quick' },
 };
 
@@ -81,6 +83,7 @@ declare global {
         [seed]="seed()"
         [depth]="depth()"
         [roomCode]="room?.code"
+        [twist]="twist()"
         [stage]="loadStage()"
         [stageProgress]="loadProgress()"
         [done]="loaded()"
@@ -291,7 +294,7 @@ export class PlayScreen {
   private readonly choices = signal<readonly UpgradeChoice[]>([]);
   protected readonly choice = computed<UpgradeChoice | undefined>(() => this.choices()[0]);
   /** Several players at this screen: their controls from seat 0 (spec: co-op / local co-op on one screen). */
-  protected readonly local = this.room ? undefined : this.setup.controls();
+  protected readonly local = this.room || this.setup.special() ? undefined : this.setup.controls();
   /** Whose choice is shown, when several players share the screen. */
   protected readonly chooser = computed(() => {
     const choice = this.choice();
@@ -306,6 +309,11 @@ export class PlayScreen {
   protected readonly controls: readonly ControlScheme[] | undefined =
     this.local ?? (this.touch() ? ['touch'] : undefined);
   private askedFullscreen = false;
+  /** The Daily Trial's or a challenge's twist, for the loading screen (spec: daily-trial / twists). */
+  protected readonly twist = computed(() => {
+    const special = this.room ? undefined : this.setup.special();
+    return special?.kind === 'daily' ? special.trial.twist : special?.challenge.twist;
+  });
   protected readonly paused = signal(false);
   protected readonly ended = signal<RunOutcome | undefined>(undefined);
   protected readonly announcements = signal<readonly Announcement[]>([]);
@@ -347,7 +355,9 @@ export class PlayScreen {
     }
     const god = godOf(this.setup.godId() ?? '');
     if (!god) return [];
-    const players = this.setup.players().map((p, i) => {
+    // The Daily Trial and challenges are solo (spec: daily-trial).
+    const solo = !!this.setup.special();
+    const players = (solo ? [] : this.setup.players()).map((p, i) => {
       const other = godOf(p.godId);
       return {
         name: `Player ${i + 2}`,
@@ -355,7 +365,7 @@ export class PlayScreen {
         sprite: other?.visual.sprite ?? p.godId,
       };
     });
-    const allies = this.setup.allies().map((a) => {
+    const allies = (solo ? [] : this.setup.allies()).map((a) => {
       const ally = godOf(a.godId);
       return {
         name: ally?.name ?? a.godId,
@@ -447,6 +457,17 @@ export class PlayScreen {
    */
   private soloRun(godId: string, realmId: string): RunConfig {
     const modifiers = this.progression.runModifiers();
+    // Today's Daily Trial or a challenge: solo, with their own god, realm, seed and rules (spec: daily-trial).
+    const special = this.setup.special();
+    if (special) {
+      const base = { runId: this.setup.newRunId(), modifiers };
+      if (special.kind === 'daily') {
+        const t = special.trial;
+        return { ...base, godId: t.godId, realmId: t.realmId, seed: t.seed, ...trialRun(t) };
+      }
+      const c = special.challenge;
+      return { ...base, godId: c.godId, realmId: c.realmId, seed: c.seed, ...challengeRun(c) };
+    }
     const allies = this.setup.allies();
     const players = this.setup.players();
     return {

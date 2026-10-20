@@ -660,6 +660,35 @@ export interface GameContent {
   /** What the Wandering Merchant sells (spec: merchant / wares). */
   readonly wares: readonly WareDefinition[];
   readonly companions: readonly CompanionDefinition[];
+  /** A Daily Trial's rule for the day (spec: daily-trial / twists). */
+  readonly twists: readonly TwistDefinition[];
+}
+
+// ---------------------------------------------------------------------------------------------------------------
+// Run rules (spec: quick-runs, daily-trial)
+
+/** Rules a run plays by on top of the content; deterministic data (D5). */
+export interface RunRules {
+  /** How fast each realm's clock runs against the run's: 2 brings phases, events and the boss in half the time. */
+  readonly pace?: number;
+  /** Stat modifiers for every god of the party, bots included. */
+  readonly modifiers?: readonly Modifier[];
+  /** Multipliers on every enemy (bosses included) and on the spawn rate. */
+  readonly enemies?: {
+    readonly health?: number;
+    readonly damage?: number;
+    readonly speed?: number;
+    readonly spawnRate?: number;
+  };
+}
+
+/** A Daily Trial's twist: a named rule for one run (spec: daily-trial / twists). */
+export interface TwistDefinition {
+  readonly id: string;
+  readonly name: string;
+  readonly description: string;
+  /** Gods' modifiers and enemy multipliers only; the pace stays the realm's own. */
+  readonly rules: Omit<RunRules, 'pace'>;
 }
 
 // ---------------------------------------------------------------------------------------------------------------

@@ -14,8 +14,8 @@
 
 ## 3. Daily Trial (PR 3)
 
-- [ ] 3.1 Enemy multipliers in `RunRules`; twists content + validation; tests
-- [ ] 3.2 `dailyTrialFor`, Daily Trial screen and route, menu button and goal, loading/summary twist
-- [ ] 3.3 Glory: daily best, save v8 + migration, Hall panel; tests
-- [ ] 3.4 Share card, share/download/copy, challenge link and screen; tests
-- [ ] 3.5 Link preview tags and image; docs (README, gameplay, architecture, D-entry), docs images; check, e2e; playtest
+- [x] 3.1 Enemy multipliers in `RunRules`; twists content + validation; tests
+- [x] 3.2 `dailyTrialFor`, Daily Trial screen and route, menu button and goal, loading/summary twist
+- [x] 3.3 Glory: daily best, save v8 + migration, Hall panel; tests
+- [x] 3.4 Share card, share/download/copy, challenge link and screen; tests
+- [x] 3.5 Link preview tags and image; docs (README, gameplay, architecture, D-entry), docs images; check, e2e; playtest

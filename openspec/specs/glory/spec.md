@@ -66,11 +66,13 @@ Each local calendar day SHALL have three different quests, chosen from the quest
 - **THEN** three quests for that date are shown with no progress
 
 ### Requirement: Hall of Glory
-The main menu SHALL lead to the Hall of Glory, which shows the high scores, the achievements and the day's quests.
+
+The main menu SHALL lead to the Hall of Glory, which shows the high scores (solo, With allies, co-op and Quick), the achievements, the day's quests and today's Daily Trial with the player's best score today.
 
 #### Scenario: Opening the Hall
+
 - **WHEN** the player opens Glory from the main menu
-- **THEN** the solo and co-op tables, every achievement and today's three quests are shown
+- **THEN** the solo and co-op tables, every achievement, today's three quests and today's Daily Trial are shown
 
 ### Requirement: Runs with allies
 A solo run with bot allies SHALL go to its own high-score table, *With allies*, kept like the others (the ten best, at most once per run), shown in the Hall of Glory beside Solo and Co-op. Such a run SHALL NOT count as co-op for high scores, achievements or quests; every other goal SHALL count as usual. The run summary SHALL say the run was played with allies.
@@ -82,3 +84,12 @@ A solo run with bot allies SHALL go to its own high-score table, *With allies*, 
 #### Scenario: Not co-op
 - **WHEN** a run with allies clears a realm
 - **THEN** `brothers_in_arms` (clear a realm in co-op) does not unlock, and `first_gate` does
+
+### Requirement: Quick run high scores
+
+The game SHALL keep the ten best scores of quick runs (spec: quick-runs) in their own table, whatever the party. The entries are like the other tables', with the party size shown. The Hall of Glory SHALL show it as **Quick**, filterable by god.
+
+#### Scenario: The Quick table
+
+- **WHEN** the player opens the Hall of Glory and chooses Quick
+- **THEN** only quick runs are listed, best first

@@ -39,7 +39,8 @@ export class SpawnDirector {
       phase.rate *
       (bossActive ? state.realm.boss.spawnRateMultiplier : 1) *
       state.partyScale.spawnRate *
-      depth.spawnRate;
+      depth.spawnRate *
+      state.enemyRules.spawnRate;
     const maxAlive = Math.round(phase.maxAlive * state.partyScale.maxAlive * depth.maxAlive);
 
     this.accumulator += rate * dt;

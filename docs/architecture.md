@@ -235,6 +235,21 @@ A quick run is `pace: 2` plus `xpGain +1`.
 
 `RunConfig.variant` (`quick`, `daily` or `challenge`) is not read by the simulation. It comes back in `RunResult.variant`, so the application files the result in the right high-score table.
 
+
+`RunRules.enemies` multiplies every enemy's health, damage and speed when it is created, and the spawn rate in the director.
+
+## Daily Trial and challenges (D19)
+
+- **The trial:** `dailyTrialFor(date, content)` (`app/core/daily-trial.ts`) picks the day's god, realm, seed and twist from the date alone (FNV-1a into a small LCG, as for the daily quests).
+  - Twists are content (`content/daily.ts`, `TwistDefinition`), checked by `validateContent`. They change only gods' stats and enemy multipliers.
+  - `RunSetup.special` carries the trial, or a challenge, to `PlayScreen`, which starts it solo with `trialRun` / `challengeRun` (rules and variant).
+- **Records:** `applyGlory` files a result by `tableOf(result)`. Daily Trials and twisted challenges enter no table. The day's best goes to `SaveData.dailyTrial` (save v8).
+- **Sharing:**
+  - `drawShareCard` (`app/core/share-card.ts`) paints a 1200 × 630 PNG on a canvas.
+  - `shareRun` uses the Web Share API with files where available; otherwise it downloads the picture and copies the link.
+  - `challengeLink` / `parseChallenge` (`app/core/challenge.ts`) write and read `challenge?g=…&r=…&s=…[&q=1][&t=…]&b=…`, relative to the base URL. The `/challenge` route opens the challenge, and a broken link goes to the menu.
+- **Link preview:** `index.html` carries Open Graph and Twitter tags with absolute URLs on the Pages site and `public/og-image.jpg`. The docs-media script's `og` scene renders that image.
+
 ## Simulation step order
 
 `RunSimulation.step` does nothing unless the phase is `playing`. Then, in order: players (movement, collision, regen, ability) → revives → spawn director → enemies (status, behavior or boss, knockback, separation, world collision, contact damage; grid rebuilt) → weapons → projectiles → enemy projectiles → hazards → pickups → remove dead → a fallen boss opens the gate (its gold counts even if the party falls in the same step) → defeat when every god is down → the gate (standing, countdown, travel) → open a pending level-up/chest choice.
@@ -260,7 +275,7 @@ Application states are routes (`/`, `/gods`, `/realms`, `/coop`, `/play`, `/summ
 |---|---|---|
 | Simulation | Vitest (`ng test`), Node + jsdom | RNG, stats, collision, arena generation, damage/status, every weapon and enemy behavior, spawning, offers, synergies, boss attacks, run phases, co-op, deterministic replays, headless autopilot runs through the gate and to defeat, endless realms and reviving, content validation; rooms over in-memory links (`engine/testing/memory-link.ts`): snapshots, host + guest, prediction, leaving |
 | Angular | Vitest + TestBed, stubbed `GAME_SESSION_FACTORY`, `ROOM_NETWORK` and storage | save parsing/migration, rewards, progression, screens, guards, PlayScreen ↔ session, the lobby protocol |
-| Browser | Playwright (Chromium, dev server, `?debug`; `E2E_NO_GPU=1` for software rendering) | the installed game offline (a production build served by `scripts/serve-dist.mjs`, whose connections are dropped once the service worker has every file: a deep link, the Co-op screen offline, a solo run), the intro (first launch, skip, no replay, replay from the menu), a run on a phone (Pixel 7 sideways: moving, dashing and pausing by touch, the HUD clear of the thumbs, a choice by tap), the full vertical-slice path, defeat, pause/abandon, buying upgrades and persistence, a room played by two tabs (`net=local`) |
+| Browser | Playwright (Chromium, dev server, `?debug`; `E2E_NO_GPU=1` for software rendering) | the Daily Trial (from the menu to its summary, Share saving the picture and copying the link, the Hall showing the best, the challenge link starting the same run), a quick run (the boss at 3:30, the Quick table), the installed game offline (a production build served by `scripts/serve-dist.mjs`, whose connections are dropped once the service worker has every file: a deep link, the Co-op screen offline, a solo run), the intro (first launch, skip, no replay, replay from the menu), a run on a phone (Pixel 7 sideways: moving, dashing and pausing by touch, the HUD clear of the thumbs, a choice by tap), the full vertical-slice path, defeat, pause/abandon, buying upgrades and persistence, a room played by two tabs (`net=local`) |
 | Assets | `npm run assets:check` | every external file has an allowed licence entry, every entry has a file |
 
 ## Performance

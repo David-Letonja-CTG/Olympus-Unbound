@@ -160,9 +160,17 @@ button {
   background: linear-gradient(180deg, transparent, rgba(11, 10, 12, 0.92) 40%);
 }
 
-/* Scrolled to the end, the pinned buttons stay on the bottom edge: no page padding below them (spec: phone-play). */
+/*
+ * Pinned buttons always sit on the window's bottom edge, like a footer: on a short page as on a long one scrolled
+ * to the end (spec: phone-play).
+ */
 .screen:has(> .actions.sticky) {
+  min-height: 100vh;
+  min-height: 100dvh;
   padding-bottom: 0;
+}
+.screen > .actions.sticky {
+  margin-top: auto;
 }
 
 .screen-subtitle {
