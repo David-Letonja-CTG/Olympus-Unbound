@@ -13,7 +13,7 @@ import { Progression } from '../../core/progression';
 import { ScoreEntry } from '../../core/save/save-records';
 import { formatTime, ItemIcon } from '../../shared/item-icon';
 
-type Mode = 'solo' | 'allies' | 'coop';
+type Mode = 'solo' | 'allies' | 'coop' | 'quick';
 
 interface AchievementView {
   readonly def: AchievementDefinition;
@@ -359,6 +359,7 @@ export class GloryScreen {
     { id: 'solo', label: 'Solo' },
     { id: 'allies', label: 'With allies' },
     { id: 'coop', label: 'Co-op' },
+    { id: 'quick', label: 'Quick' },
   ];
   protected readonly mode = signal<Mode>('solo');
   protected readonly god = signal<string | undefined>(undefined);

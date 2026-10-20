@@ -53,6 +53,8 @@ export interface HighScores {
   readonly coop: readonly ScoreEntry[];
   /** Solo runs with bot allies (spec: glory / runs with allies). */
   readonly allies: readonly ScoreEntry[];
+  /** Quick runs, whatever the party (spec: glory / quick run high scores). */
+  readonly quick: readonly ScoreEntry[];
 }
 
 /** The day's quests: progress per quest and the ones already paid (spec: glory / daily quests). */
@@ -63,7 +65,7 @@ export interface DailyState {
   readonly done: readonly string[];
 }
 
-export const EMPTY_HIGH_SCORES: HighScores = { solo: [], coop: [], allies: [] };
+export const EMPTY_HIGH_SCORES: HighScores = { solo: [], coop: [], allies: [], quick: [] };
 export const EMPTY_DAILY: DailyState = { date: '', progress: {}, done: [] };
 
 type Raw = Record<string, unknown>;
@@ -137,7 +139,12 @@ export function parseHighScores(v: unknown, content: GameContent): HighScores {
   const raw = isObject(v) ? v : {};
   const table = (t: unknown) =>
     entries(t, (e) => parseEntry(e, content), HIGH_SCORES).sort((a, b) => b.score - a.score);
-  return { solo: table(raw['solo']), coop: table(raw['coop']), allies: table(raw['allies']) };
+  return {
+    solo: table(raw['solo']),
+    coop: table(raw['coop']),
+    allies: table(raw['allies']),
+    quick: table(raw['quick']),
+  };
 }
 
 /** Unlocked achievements (id → date), known IDs only. */

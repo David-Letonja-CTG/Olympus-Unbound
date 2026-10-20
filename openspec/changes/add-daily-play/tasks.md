@@ -7,10 +7,10 @@
 
 ## 2. Quick runs (PR 2)
 
-- [ ] 2.1 `RunRules` / `RunVariant` in the engine (pace, modifiers, echo), simulation tests
-- [ ] 2.2 Realm selection Full / Quick; play screen and Play again
-- [ ] 2.3 Glory: Quick table, save v7 + migration, Hall tab; tests
-- [ ] 2.4 E2E quick run; docs; check, e2e
+- [x] 2.1 `RunRules` / `RunVariant` in the engine (pace, modifiers, echo), simulation tests
+- [x] 2.2 Realm selection Full / Quick; play screen and Play again
+- [x] 2.3 Glory: Quick table, save v7 + migration, Hall tab; tests
+- [x] 2.4 E2E quick run; docs; check, e2e
 
 ## 3. Daily Trial (PR 3)
 

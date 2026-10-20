@@ -51,7 +51,25 @@ export interface RunConfig {
    * edge keeps them within the shared camera's reach.
    */
   readonly sharedScreen?: boolean;
+  /** How this run plays apart from the content (quick runs, a Daily Trial's twist). Deterministic data (D5). */
+  readonly rules?: RunRules;
+  /** What kind of run this is, for the application's records; the simulation only echoes it in the result. */
+  readonly variant?: RunVariant;
 }
+
+/** Rules a run plays by on top of the content (spec: quick-runs, daily-trial / twists). */
+export interface RunRules {
+  /** How fast each realm's clock runs against the run's: 2 brings phases, events and the boss in half the time. */
+  readonly pace?: number;
+  /** Stat modifiers for every god of the party, bots included. */
+  readonly modifiers?: readonly Modifier[];
+}
+
+/** A run's kind, echoed in its result: a quick run, a Daily Trial, or a challenge from a link. */
+export type RunVariant =
+  | { readonly kind: 'quick' }
+  | { readonly kind: 'daily'; readonly date: string; readonly twistId: string }
+  | { readonly kind: 'challenge'; readonly quick?: boolean; readonly twistId?: string };
 
 /** The party of a run config: its seats, or the solo player. */
 export function partyOf(config: RunConfig): readonly PartySeat[] {
@@ -103,6 +121,8 @@ export class RunState implements WorldFrame {
   collision: WorldCollision;
   readonly god: GodDefinition;
   readonly party: readonly PartySeat[];
+  /** The realm clock's speed (spec: quick-runs / quick pace); 1 for a full run. */
+  readonly pace: number;
   /** Difficulty multipliers for the party's size (1 for a solo run). */
   readonly partyScale: {
     readonly enemyHealth: number;
@@ -165,16 +185,21 @@ export class RunState implements WorldFrame {
     this.balance = index.content.balance;
     this.realm = index.realm(config.realmId);
     this.arena = arena;
-    this.party = partyOf(config);
+    // The run's own modifiers go to every seat (spec: quick-runs / quick pace).
+    const extra = config.rules?.modifiers ?? [];
+    this.party = partyOf(config).map((seat) =>
+      extra.length ? { ...seat, modifiers: [...seat.modifiers, ...extra] } : seat,
+    );
+    this.pace = config.rules?.pace ?? 1;
     this.god = index.god(this.party[0].godId);
     // More players, more and tougher enemies (spec: co-op / difficulty per player).
-    const extra = this.party.length - 1;
+    const others = this.party.length - 1;
     const coop = this.balance.coop;
     this.partyScale = {
-      enemyHealth: 1 + coop.enemyHealthPerPlayer * extra,
-      spawnRate: 1 + coop.spawnRatePerPlayer * extra,
-      maxAlive: 1 + coop.maxAlivePerPlayer * extra,
-      bossHealth: 1 + coop.bossHealthPerPlayer * extra,
+      enemyHealth: 1 + coop.enemyHealthPerPlayer * others,
+      spawnRate: 1 + coop.spawnRatePerPlayer * others,
+      maxAlive: 1 + coop.maxAlivePerPlayer * others,
+      bossHealth: 1 + coop.bossHealthPerPlayer * others,
     };
     this.collision = new WorldCollision(arena.bounds, arena.obstacles);
     const rng = new Rng(`run:${config.seed}`);

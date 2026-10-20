@@ -180,6 +180,14 @@ describe('PlayScreen', () => {
     expect(session.options?.debug).toBe(false);
   });
 
+  it('starts a quick run with the realm clock at double speed (spec: quick-runs)', async () => {
+    const { session } = await setup(undefined, (run) => run.quick.set(true));
+    expect(session.options?.run).toMatchObject({
+      rules: { pace: 2, modifiers: [{ stat: 'xpGain', flat: 1 }] },
+      variant: { kind: 'quick' },
+    });
+  });
+
   it('shows the HUD from snapshots', async () => {
     const { el, update } = await setup();
     await update({ type: 'hud', hud });

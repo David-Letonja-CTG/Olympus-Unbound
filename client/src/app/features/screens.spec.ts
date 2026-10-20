@@ -125,6 +125,22 @@ describe('god selection on a phone (spec: phone-play / co-op on a phone)', () =>
 });
 
 describe('realm selection', () => {
+  it('offers a full or a quick run, with the boss times (spec: run-setup / realm selection)', async () => {
+    TestBed.configureTestingModule({
+      providers: [provideRouter(routes), { provide: SAVE_STORAGE, useValue: storageWith() }],
+    });
+    TestBed.inject(RunSetup).godId.set('zeus');
+    const h = await RouterTestingHarness.create();
+    await h.navigateByUrl('/realms');
+    expect(q(h, '[data-testid=length-full]')?.textContent).toContain('7:00');
+    const quick = q<HTMLButtonElement>(h, '[data-testid=length-quick]');
+    expect(quick?.textContent).toContain('3:30');
+    quick?.click();
+    await h.fixture.whenStable();
+    expect(TestBed.inject(RunSetup).quick()).toBe(true);
+    expect(quick?.getAttribute('aria-checked')).toBe('true');
+  });
+
   it('starts a run with the chosen seed', async () => {
     const h = await open('/gods');
     TestBed.inject(RunSetup).godId.set('zeus');
