@@ -4,6 +4,7 @@ import { ContentIndex, GameContent } from '../../../engine';
 import { GAME_CONTENT } from '../../core/game-content';
 import { Progression } from '../../core/progression';
 import { RunSetup } from '../../core/run-setup';
+import { TouchScreen } from '../../core/touch-screen';
 import { formatTime, ItemIcon } from '../../shared/item-icon';
 
 const TITLES = { defeat: 'You have fallen', abandoned: 'Run abandoned' } as const;
@@ -270,6 +271,7 @@ export class RunSummary {
   private readonly index = new ContentIndex(this.content);
   private readonly setup = inject(RunSetup);
   private readonly router = inject(Router);
+  private readonly touchScreen = inject(TouchScreen);
   protected readonly progression = inject(Progression);
 
   protected readonly view = computed(() => {
@@ -318,6 +320,7 @@ export class RunSummary {
 
   protected playAgain(): void {
     this.setup.rerollSeed();
+    this.touchScreen.enterFullscreen();
     void this.router.navigate(['/play']);
   }
 }

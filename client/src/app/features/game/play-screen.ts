@@ -20,6 +20,7 @@ import {
   LoadStage,
   RunConfig,
   RunOutcome,
+  ControlScheme,
   UiInput,
   UpgradeChoice,
 } from '../../../engine';
@@ -28,6 +29,7 @@ import { GAME_CONTENT, GAME_SESSION_FACTORY } from '../../core/game-content';
 import { Progression } from '../../core/progression';
 import { RoomService } from '../../core/rooms/room-service';
 import { ALLY_SKILLS, RunSetup } from '../../core/run-setup';
+import { TouchScreen } from '../../core/touch-screen';
 import { Announcement, Hud } from './hud/hud';
 import { LevelUpDialog } from './level-up-dialog';
 import { PauseMenu } from './pause-menu';
@@ -58,6 +60,10 @@ declare global {
   selector: 'app-play-screen',
   imports: [Hud, LevelUpDialog, PauseMenu, RunLoading],
   changeDetection: ChangeDetectionStrategy.OnPush,
+  host: {
+    '(contextmenu)': '$event.preventDefault()',
+    '(pointerdown)': 'onPointerDown($event)',
+  },
   template: `
     <div class="game-host" #host data-testid="game-host"></div>
     @if (showLoading()) {
@@ -75,7 +81,22 @@ declare global {
       />
     }
     @if (hud(); as h) {
-      <app-hud [hud]="h" [locals]="locals()" [controls]="local" [announcements]="announcements()" />
+      <app-hud
+        [hud]="h"
+        [locals]="locals()"
+        [controls]="controls"
+        [announcements]="announcements()"
+      />
+      @if (touch() && !paused() && !ended() && !choice()) {
+        <button
+          class="touch-pause"
+          data-testid="touch-pause"
+          [attr.aria-label]="room ? 'Menu' : 'Pause'"
+          (click)="send({ type: 'pause' })"
+        >
+          <span aria-hidden="true"></span><span aria-hidden="true"></span>
+        </button>
+      }
     }
     @if (choice(); as c) {
       <app-level-up-dialog [choice]="c" [player]="chooser()" (chosen)="choose(c, $event)" />
@@ -105,6 +126,12 @@ declare global {
         {{ outcome === 'abandoned' ? 'Run abandoned' : 'You have fallen' }}
       </div>
     }
+    @if (touch() && portrait()) {
+      <div class="rotate" role="alert" data-testid="rotate-phone">
+        <div class="rotate-phone" aria-hidden="true"></div>
+        <p>Turn your phone sideways to fight</p>
+      </div>
+    }
     @if (error()) {
       <div class="error" role="alert">
         <p>The game could not start: {{ error() }}</p>
@@ -119,10 +146,75 @@ declare global {
       overflow: hidden;
       background: #000;
       user-select: none;
+      -webkit-user-select: none;
+      /* No zoom, scroll, pull to refresh or long-press menu during a run (spec: phone-play / the phone screen). */
+      touch-action: none;
+      overscroll-behavior: none;
+      -webkit-touch-callout: none;
+      -webkit-tap-highlight-color: transparent;
+    }
+    .touch-pause {
+      position: absolute;
+      top: calc(8px + env(safe-area-inset-top, 0px));
+      left: calc(10px + env(safe-area-inset-left, 0px));
+      width: 44px;
+      height: 44px;
+      display: flex;
+      gap: 6px;
+      align-items: center;
+      justify-content: center;
+      border-radius: 50%;
+      border: 2px solid rgba(214, 170, 92, 0.85);
+      background: radial-gradient(
+        circle at 50% 35%,
+        rgba(70, 48, 22, 0.85),
+        rgba(14, 10, 8, 0.9) 70%
+      );
+      box-shadow: 0 0 0 3px rgba(0, 0, 0, 0.45);
+      cursor: pointer;
+    }
+    .touch-pause span {
+      width: 5px;
+      height: 16px;
+      border-radius: 1px;
+      background: var(--gold-2);
+    }
+    .rotate {
+      position: absolute;
+      inset: 0;
+      z-index: 10;
+      display: grid;
+      place-content: center;
+      justify-items: center;
+      gap: 24px;
+      padding: 24px;
+      text-align: center;
+      background: var(--bg);
+      color: var(--gold-2);
+      font-family: var(--serif);
+      font-size: 1.4rem;
+    }
+    .rotate p {
+      margin: 0;
+    }
+    .rotate-phone {
+      width: 56px;
+      height: 96px;
+      border: 3px solid var(--gold-2);
+      border-radius: 10px;
+      animation: turn 2.4s ease-in-out infinite;
+    }
+    @keyframes turn {
+      30%,
+      70% {
+        transform: rotate(-90deg);
+      }
     }
     .game-host {
       position: absolute;
       inset: 0;
+      /* Its own stacking context: the touch controls inside stay under the HUD and the dialogs. */
+      z-index: 0;
     }
     .ending {
       position: absolute;
@@ -199,6 +291,14 @@ export class PlayScreen {
     if (!choice || !this.local) return undefined;
     return this.hud()?.party.find((m) => m.id === choice.playerId)?.name;
   });
+  private readonly touchScreen = inject(TouchScreen);
+  /** A touch device: touch controls, the pause button and landscape (spec: phone-play). */
+  protected readonly touch = this.touchScreen.touch;
+  protected readonly portrait = this.touchScreen.portrait;
+  /** The controls of the players at this screen: shared-screen seats, or the touch controls on a touch device. */
+  protected readonly controls: readonly ControlScheme[] | undefined =
+    this.local ?? (this.touch() ? ['touch'] : undefined);
+  private askedFullscreen = false;
   protected readonly paused = signal(false);
   protected readonly ended = signal<RunOutcome | undefined>(undefined);
   protected readonly announcements = signal<readonly Announcement[]>([]);
@@ -296,6 +396,14 @@ export class PlayScreen {
   constructor() {
     const destroyRef = inject(DestroyRef);
     afterNextRender(() => void this.start());
+    // Held upright, a phone's run pauses under the rotate overlay (spec: phone-play / the phone screen).
+    effect(() => {
+      if (this.touch() && this.portrait()) this.session?.send({ type: 'pause' });
+    });
+    // Safari zooms on pinch through its own gesture events, whatever touch-action says.
+    const blockGesture = (event: Event) => event.preventDefault();
+    document.addEventListener('gesturestart', blockGesture);
+    destroyRef.onDestroy(() => document.removeEventListener('gesturestart', blockGesture));
     // Settings changed in the pause menu apply to the running game immediately.
     effect(() => {
       const settings = this.progression.settings();
@@ -317,6 +425,13 @@ export class PlayScreen {
 
   protected choose(choice: UpgradeChoice, index: number): void {
     this.send({ type: 'chooseUpgrade', choiceId: choice.id, index });
+  }
+
+  /** A run started without a tap (a room's guest): fullscreen on its first touch instead. */
+  protected onPointerDown(event: PointerEvent): void {
+    if (event.pointerType !== 'touch' || this.askedFullscreen) return;
+    this.askedFullscreen = true;
+    this.touchScreen.enterFullscreen();
   }
 
   protected leave(): void {
@@ -370,7 +485,7 @@ export class PlayScreen {
         settings: this.progression.settings(),
         debug,
         room: this.room?.seat,
-        local: this.local,
+        local: this.controls,
       });
       if (this.destroyed) {
         session.destroy();
@@ -441,6 +556,7 @@ export class PlayScreen {
         return;
       case 'ready': {
         this.loaded.set(true);
+        if (this.touch() && this.portrait()) this.send({ type: 'pause' });
         const depth = this.depth();
         // A gate passed during the fade keeps its own loading screen.
         this.later(() => {

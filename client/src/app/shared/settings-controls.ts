@@ -145,6 +145,24 @@ const QUALITY_LABEL: Record<GraphicsQuality, string> = {
       background: var(--accent-bg);
       color: var(--gold-2);
     }
+    /* Fingers (spec: phone-play / touch menus during a run): targets a thumb can hit. */
+    @media (pointer: coarse) {
+      .row {
+        min-height: 44px;
+      }
+      .segments button {
+        min-height: 44px;
+        padding: 6px 14px;
+      }
+      input[type='checkbox'] {
+        width: 30px;
+        height: 30px;
+      }
+      input[type='range'] {
+        width: min(160px, 36vw);
+        height: 32px;
+      }
+    }
   `,
 })
 export class SettingsControls {

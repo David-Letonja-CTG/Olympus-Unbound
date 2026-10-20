@@ -576,14 +576,17 @@ export class SoundPlayer {
         this.buses.set(bus, gain);
       }
       void ctx.resume().catch(() => undefined);
-      // Browsers keep audio suspended until the first key press or click (e.g. an intro on first launch).
+      // Browsers keep audio suspended until the first key press, click or touch (e.g. an intro on first launch); iOS
+      // Safari unlocks only from a touch's end (spec: phone-play / the phone screen).
       const unlock = () => {
         void this.context?.resume().catch(() => undefined);
         window.removeEventListener('keydown', unlock);
         window.removeEventListener('pointerdown', unlock);
+        window.removeEventListener('touchend', unlock);
       };
       window.addEventListener('keydown', unlock);
       window.addEventListener('pointerdown', unlock);
+      window.addEventListener('touchend', unlock);
     } catch {
       // No audio available (old browser or tests): stay silent.
       this.context = undefined;

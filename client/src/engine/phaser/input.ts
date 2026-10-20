@@ -1,6 +1,7 @@
 import Phaser from 'phaser';
 import { ControlScheme, UiInput } from '../session';
 import { PlayerInput } from '../sim/types';
+import { TouchControls } from './touch-controls';
 
 const STICK_UI_THRESHOLD = 0.6;
 
@@ -64,6 +65,8 @@ export class InputReader {
   private readonly tapped = new Set<string>();
   private readonly previous = new Map<string, boolean>();
   private pauseRequested = false;
+  /** The thumbs' controls of a run on a touch device (spec: phone-play / touch controls). */
+  private readonly touch: TouchControls | undefined;
   private readonly onKeyDown = (event: KeyboardEvent) => {
     if (!event.repeat) this.tapped.add(event.code);
     this.held.add(event.code);
@@ -79,6 +82,8 @@ export class InputReader {
   ) {
     window.addEventListener('keydown', this.onKeyDown);
     window.addEventListener('keyup', this.onKeyUp);
+    const parent = scene.game.canvas?.parentElement;
+    if (controls.includes('touch') && parent) this.touch = new TouchControls(parent);
     scene.events.once(Phaser.Scenes.Events.SHUTDOWN, () => this.destroy());
   }
 
@@ -99,10 +104,12 @@ export class InputReader {
     let ability = pressed(keys.ability);
     let sprint = down(keys.sprint);
     let dash = pressed(keys.dash);
-    // A player alone also has the first gamepad.
-    const pad = scheme === 'keyboard' ? this.pads()[0] : undefined;
-    if (pad) {
-      const p = fromPad(pad);
+    // A player alone also has the first gamepad, and on a touch device the touch controls.
+    const alone = scheme === 'keyboard' || scheme === 'touch';
+    const pad = alone ? this.pads()[0] : undefined;
+    const others = [pad && fromPad(pad), scheme === 'touch' ? this.touch?.read() : undefined];
+    for (const p of others) {
+      if (!p) continue;
       if (Math.hypot(p.moveX, p.moveY) > Math.hypot(x, y) * 0.5) {
         x = p.moveX;
         y = p.moveY;
@@ -117,6 +124,7 @@ export class InputReader {
   /** The simulation has stepped with the current input: latched taps are used up. */
   consumeTaps(): void {
     this.tapped.clear();
+    this.touch?.consumeTaps();
   }
 
   /** True once per key/button press of pause (Escape, P, any gamepad's Start). */
@@ -149,11 +157,13 @@ export class InputReader {
     this.held.clear();
     this.tapped.clear();
     this.pauseRequested = false;
+    this.touch?.reset();
   }
 
   destroy(): void {
     window.removeEventListener('keydown', this.onKeyDown);
     window.removeEventListener('keyup', this.onKeyUp);
+    this.touch?.destroy();
   }
 
   /** Connected gamepads in the order the browser numbers them. */
