@@ -42,7 +42,7 @@ import { SettingsControls } from '../../shared/settings-controls';
           </div>
         </dl>
       </section>
-      <div class="actions">
+      <div class="actions sticky">
         <app-credits-dialog />
         <a class="btn" routerLink="/">Back</a>
       </div>

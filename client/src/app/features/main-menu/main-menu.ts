@@ -104,6 +104,25 @@ import { ItemIcon } from '../../shared/item-icon';
       text-align: center;
       margin: 0;
     }
+    /* Short windows: a smaller crest and title and tighter buttons, so the whole menu fits. */
+    @media (max-height: 820px) {
+      .menu {
+        gap: 12px;
+      }
+      .crest {
+        zoom: 0.62;
+      }
+      .title {
+        font-size: clamp(2.2rem, 9vh, 4.4rem);
+      }
+      .menu-panel {
+        gap: 8px;
+      }
+      .menu-panel .btn {
+        padding-top: 8px;
+        padding-bottom: 8px;
+      }
+    }
   `,
 })
 export class MainMenu {
