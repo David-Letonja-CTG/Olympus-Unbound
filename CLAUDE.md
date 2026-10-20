@@ -45,6 +45,8 @@ E2E_NO_GPU=1 npm run e2e  # the same with software WebGL, as on the GPU-less CI 
 npx playwright install chromium   # once per machine
 node scripts/docs-media/capture.mjs   # regenerate docs/images from the running game (npm start first; see the script)
 node scripts/perf/phone.mjs           # frame times of a full horde under phone emulation (npm start first; see the script)
+node scripts/serve-dist.mjs 4322      # serve the production build (npm run build first): the service worker only runs there
+node scripts/pwa-icons.mjs            # re-render the installed app's icons (public/icons)
 ```
 
 Unit tests are `*.spec.ts` next to the code (Vitest through `ng test`, jsdom). Test-only helpers live in `engine/testing/` (fixtures, autopilot) and are excluded from the app build. Engine tests may use the real content (`engine/testing/content.ts`).

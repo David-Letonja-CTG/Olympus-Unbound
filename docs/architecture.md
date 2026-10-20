@@ -57,7 +57,7 @@ flowchart LR
 client/
   src/app/                 Angular
     core/                  Progression, RunSetup, SaveStore + save model/rewards/glory, injection tokens, debug and
-                           admin flags,
+                           admin flags, TouchScreen, the installed app (AppUpdate, InstallPrompt, Connectivity),
                            rooms (RoomService lobby, RoomNetwork: PeerJS or BroadcastChannel)
     features/              main-menu, god-selection, realm-selection, coop (lobby), game (play screen, HUD,
                            dialogs, loading), run-summary, progression, glory (Hall of Glory), admin (statistics,
@@ -92,6 +92,10 @@ client/
   public/assets/           external art packs (licensed, see docs/content.md)
   scripts/check-assets.mjs licence check for external files
   scripts/perf/phone.mjs   frame times of a full horde under phone emulation (see Performance)
+  scripts/serve-dist.mjs   serves a production build (the offline e2e test)
+  scripts/pwa-icons.mjs    renders the installed app's icons
+  ngsw-config.json         what the service worker keeps (D18)
+  public/manifest.webmanifest, public/icons/   the installable app
   e2e/                     Playwright tests
 docs/  openspec/  .github/workflows/  .claude/
 ```
@@ -152,6 +156,20 @@ sequenceDiagram
 - **The phone screen** (Angular):
   - `TouchScreen` also knows portrait and touch-only devices, and asks for fullscreen and a landscape lock from the taps that start a run. A guest asks on the first touch of the run.
   - `PlayScreen` adds the pause button and the rotate overlay, which pauses a solo run. During a run it blocks zoom, scroll, pull to refresh and the long-press menu.
+
+## The installed app (D18)
+
+- **Service worker:** Angular's (`@angular/service-worker`), in production builds only. It is registered once the first screen is idle.
+  - `ngsw-config.json` keeps every file of the build in advance (about 11 MB): code, art, sounds, fonts and the styles' `media/`.
+  - Navigations are answered with the cached `index.html`, so deep links work offline.
+  - Its paths are relative to its own location, so it works under any `--base-href`.
+- **Manifest:** `public/manifest.webmanifest`, with `start_url` and `scope` set to `./`. It asks for full screen and landscape, and lists the icons from `scripts/pwa-icons.mjs`. `index.html` links it and adds what iOS reads instead: the touch icon, `apple-mobile-web-app-capable` and the status bar.
+- **Services:**
+  - `AppUpdate` wraps `SwUpdate`: it checks at launch and every 30 minutes, and the main menu offers to reload. Nothing reloads by itself.
+  - `InstallPrompt` keeps Chrome's `beforeinstallprompt` for the menu's button, knows the installed display mode, and recognises iOS Safari.
+  - `Connectivity` disables rooms offline.
+  - `TouchScreen` asks for no fullscreen in the installed app.
+- **Saves** stay in `localStorage` (D8); the worker never touches them.
 
 ## Presentation layers (D12, D13)
 
@@ -231,7 +249,7 @@ Application states are routes (`/`, `/gods`, `/realms`, `/coop`, `/play`, `/summ
 |---|---|---|
 | Simulation | Vitest (`ng test`), Node + jsdom | RNG, stats, collision, arena generation, damage/status, every weapon and enemy behavior, spawning, offers, synergies, boss attacks, run phases, co-op, deterministic replays, headless autopilot runs through the gate and to defeat, endless realms and reviving, content validation; rooms over in-memory links (`engine/testing/memory-link.ts`): snapshots, host + guest, prediction, leaving |
 | Angular | Vitest + TestBed, stubbed `GAME_SESSION_FACTORY`, `ROOM_NETWORK` and storage | save parsing/migration, rewards, progression, screens, guards, PlayScreen ↔ session, the lobby protocol |
-| Browser | Playwright (Chromium, dev server, `?debug`; `E2E_NO_GPU=1` for software rendering) | the intro (first launch, skip, no replay, replay from the menu), a run on a phone (Pixel 7 sideways: moving, dashing and pausing by touch, the HUD clear of the thumbs, a choice by tap), the full vertical-slice path, defeat, pause/abandon, buying upgrades and persistence, a room played by two tabs (`net=local`) |
+| Browser | Playwright (Chromium, dev server, `?debug`; `E2E_NO_GPU=1` for software rendering) | the installed game offline (a production build served by `scripts/serve-dist.mjs`, whose connections are dropped once the service worker has every file: a deep link, the Co-op screen offline, a solo run), the intro (first launch, skip, no replay, replay from the menu), a run on a phone (Pixel 7 sideways: moving, dashing and pausing by touch, the HUD clear of the thumbs, a choice by tap), the full vertical-slice path, defeat, pause/abandon, buying upgrades and persistence, a room played by two tabs (`net=local`) |
 | Assets | `npm run assets:check` | every external file has an allowed licence entry, every entry has a file |
 
 ## Performance

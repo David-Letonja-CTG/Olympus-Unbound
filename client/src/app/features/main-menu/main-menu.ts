@@ -1,6 +1,8 @@
 import { ChangeDetectionStrategy, Component, inject } from '@angular/core';
 import { RouterLink } from '@angular/router';
 
+import { AppUpdate } from '../../core/app-update';
+import { InstallPrompt } from '../../core/install-prompt';
 import { DailyQuestView, Progression } from '../../core/progression';
 import { ItemIcon } from '../../shared/item-icon';
 
@@ -40,6 +42,42 @@ import { ItemIcon } from '../../shared/item-icon';
         WASD / arrows or gamepad to move · Shift to sprint · E to dash · Space to unleash your
         ability · Esc to pause
       </p>
+      <!-- Installing and updating the game (spec: installable-app); never shown during a run. -->
+      <div class="notices">
+        @if (update.ready() || update.broken()) {
+          <div class="notice" role="status" data-testid="update-ready">
+            <span>{{
+              update.broken()
+                ? 'This version can no longer load its files.'
+                : 'A new version is ready.'
+            }}</span>
+            <button class="btn btn-primary" (click)="update.reload()">Reload</button>
+          </div>
+        }
+        @if (!install.installed() && !install.dismissed()) {
+          @if (install.canPrompt()) {
+            <div class="notice" data-testid="install-hint">
+              <button class="btn" data-testid="install-game" (click)="install.install()">
+                Install the game
+              </button>
+              <span>Full screen, and playable offline.</span>
+              <button class="close" aria-label="Not now" (click)="install.dismissed.set(true)">
+                ×
+              </button>
+            </div>
+          } @else if (install.iosHint) {
+            <div class="notice" data-testid="install-ios">
+              <span
+                >To play full screen and offline, tap <strong>Share</strong>, then
+                <strong>Add to Home Screen</strong>. The installed game keeps its own saves.</span
+              >
+              <button class="close" aria-label="Not now" (click)="install.dismissed.set(true)">
+                ×
+              </button>
+            </div>
+          }
+        }
+      </div>
     </main>
   `,
   styles: `
@@ -127,6 +165,45 @@ import { ItemIcon } from '../../shared/item-icon';
         padding-bottom: 8px;
       }
     }
+    .notices {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      width: min(560px, calc(100% - 24px));
+    }
+    .notices:empty {
+      display: none;
+    }
+    .notice {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 8px 12px;
+      font-size: 0.9rem;
+      color: var(--text);
+      background: rgba(12, 10, 14, 0.94);
+      border: 1px solid var(--line);
+      box-shadow:
+        inset 0 0 0 1px rgba(201, 165, 90, 0.3),
+        0 6px 18px rgba(0, 0, 0, 0.6);
+    }
+    .notice span {
+      flex: 1;
+    }
+    .notice .btn {
+      flex: none;
+      padding: 6px 14px;
+    }
+    .close {
+      flex: none;
+      min-width: 36px;
+      min-height: 36px;
+      border: 0;
+      background: transparent;
+      color: var(--muted);
+      font-size: 1.4rem;
+      cursor: pointer;
+    }
     .touch-hint {
       display: none;
     }
@@ -194,11 +271,16 @@ import { ItemIcon } from '../../shared/item-icon';
       .hint {
         display: none;
       }
+      .notices {
+        grid-column: 1 / -1;
+      }
     }
   `,
 })
 export class MainMenu {
   protected readonly progression = inject(Progression);
+  protected readonly update = inject(AppUpdate);
+  protected readonly install = inject(InstallPrompt);
 
   protected doneCount(quests: readonly DailyQuestView[]): number {
     return quests.filter((q) => q.done).length;

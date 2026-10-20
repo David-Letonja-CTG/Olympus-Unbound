@@ -2,6 +2,9 @@ import { TestBed } from '@angular/core/testing';
 import { provideRouter, Router } from '@angular/router';
 import { RouterTestingHarness } from '@angular/router/testing';
 import { routes } from '../app.routes';
+import { AppUpdate } from '../core/app-update';
+import { Connectivity } from '../core/connectivity';
+import { InstallPrompt } from '../core/install-prompt';
 import { RunSetup } from '../core/run-setup';
 import { SAVE_KEY, SAVE_STORAGE } from '../core/save/save-store';
 import { parseSeed } from '../core/run-setup';
@@ -14,10 +17,11 @@ function storageWith(save?: object) {
   };
 }
 
-async function open(url: string, save?: object) {
+async function open(url: string, save?: object, prepare?: () => void) {
   TestBed.configureTestingModule({
     providers: [provideRouter(routes), { provide: SAVE_STORAGE, useValue: storageWith(save) }],
   });
+  prepare?.();
   const harness = await RouterTestingHarness.create();
   await harness.navigateByUrl(url);
   return harness;
@@ -34,6 +38,42 @@ describe('main menu', () => {
     expect(text(h)).toContain('Progression');
     expect(text(h)).toContain('Settings');
     expect(q(h, '[data-testid=menu-gold]')?.textContent).toBe('75');
+  });
+});
+
+describe('installing and updating (spec: installable-app)', () => {
+  const returning = { version: 2, introSeen: true };
+
+  it('offers to install the game where the browser can, until dismissed', async () => {
+    const h = await open('/', returning, () => TestBed.inject(InstallPrompt).canPrompt.set(true));
+    expect(q(h, '[data-testid=install-game]')).toBeTruthy();
+    q<HTMLButtonElement>(h, '[aria-label="Not now"]')?.click();
+    await h.fixture.whenStable();
+    expect(q(h, '[data-testid=install-hint]')).toBeNull();
+  });
+
+  it('shows no install hint in the installed game', async () => {
+    const h = await open('/', returning, () => {
+      const install = TestBed.inject(InstallPrompt);
+      install.canPrompt.set(true);
+      install.installed.set(true);
+    });
+    expect(q(h, '[data-testid=install-hint]')).toBeNull();
+    expect(q(h, '[data-testid=install-ios]')).toBeNull();
+  });
+
+  it('offers to reload into a new version', async () => {
+    const h = await open('/', returning, () => TestBed.inject(AppUpdate).ready.set(true));
+    expect(q(h, '[data-testid=update-ready]')?.textContent).toContain('A new version is ready');
+  });
+
+  it('keeps rooms closed while offline', async () => {
+    const h = await open('/coop', returning, () => TestBed.inject(Connectivity).online.set(false));
+    expect(q(h, '[data-testid=offline]')?.textContent).toContain('need an internet connection');
+    expect(q<HTMLButtonElement>(h, '[data-testid=create-room]')?.disabled).toBe(true);
+    TestBed.inject(Connectivity).online.set(true);
+    await h.fixture.whenStable();
+    expect(q(h, '[data-testid=offline]')).toBeNull();
   });
 });
 

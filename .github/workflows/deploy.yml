@@ -124,14 +124,16 @@ jobs:
         id: deployment
         uses: actions/deploy-pages@v5
 
-      # The site, a deep link and the game's own files answer.
+      # The site, a deep link, the game's own files and the installed app's manifest and file list answer (D18).
       - name: Smoke test
         env:
           SITE: ${{ steps.deployment.outputs.page_url }}
         run: |
           for _ in $(seq 1 24); do
             if curl -fsS -o /dev/null --max-time 10 "$SITE" \
-              && curl -fsS -o /dev/null --max-time 10 "${SITE}assets/olympus/zeus.png"; then
+              && curl -fsS -o /dev/null --max-time 10 "${SITE}assets/olympus/zeus.png" \
+              && curl -fsS -o /dev/null --max-time 10 "${SITE}manifest.webmanifest" \
+              && curl -fsS -o /dev/null --max-time 10 "${SITE}ngsw.json"; then
               code=$(curl -s -o /dev/null -w '%{http_code}' --max-time 10 "${SITE}play")
               if curl -s --max-time 10 "${SITE}play" | grep -q '<app-root'; then
                 echo "live at $SITE (deep link answered $code with the app)"

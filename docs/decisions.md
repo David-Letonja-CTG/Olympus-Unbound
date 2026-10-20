@@ -105,3 +105,18 @@ Sprint is a toggle; pushing the stick far was rejected because it sprints by acc
 - The controls as Angular components. Rejected: their state would have to reach the engine as commands every frame, against D3.
 - Phaser's pointer input with buttons drawn in the scene. Rejected: the buttons would be zoomed with the camera and sit under the Angular HUD.
 - Lower enemy caps on phones. Rejected: that changes the rules, and in a room the host's caps decide for everyone.
+
+## D18 — An installable web app that plays offline (Accepted, 2026-10-20)
+
+The owner asked for a PWA (`add-pwa`). The game has a web manifest (relative start page and scope, full screen, landscape, its own icons) and Angular's service worker, in production builds only. The worker keeps every file of the build in advance (about 11 MB), so menus, the intro and solo runs play offline once the game has loaded. Rooms need a connection, and the Co-op screen says so offline.
+
+A new release downloads in the background. The player reloads into it from the main menu, never by itself and never during a run. The main menu offers installation where the browser allows it (Chrome's `beforeinstallprompt`), and explains Add to Home Screen in iOS Safari, including that the Home Screen game keeps its own saves.
+
+Still static files only (D1). Saves are unchanged (D8).
+
+*Alternatives considered:*
+
+- A hand-written service worker. Rejected: update, hashing and navigation handling to maintain ourselves.
+- Workbox. Rejected: a second build tool, where Angular's worker fits the build.
+- Caching lazily, only what was seen. Rejected: realms and sounds not yet met would be missing offline.
+- Reloading automatically on a new version. Rejected: it could interrupt a run.

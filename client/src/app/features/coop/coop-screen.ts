@@ -15,6 +15,7 @@ import {
   normaliseCode,
   RoomService,
 } from '../../core/rooms/room-service';
+import { Connectivity } from '../../core/connectivity';
 import { RunSetup } from '../../core/run-setup';
 import { TouchScreen } from '../../core/touch-screen';
 import { ItemIcon } from '../../shared/item-icon';
@@ -148,6 +149,12 @@ import { ItemIcon } from '../../shared/item-icon';
         <p class="waiting" role="status">{{ waiting() }}</p>
       } @else {
         <section class="panel start">
+          @if (!online()) {
+            <!-- Spec: installable-app / rooms need a connection. -->
+            <p class="error" role="status" data-testid="offline">
+              Rooms need an internet connection. Solo runs and bot allies play offline.
+            </p>
+          }
           <label class="field name-field">
             <span>Your name</span>
             <input
@@ -164,7 +171,7 @@ import { ItemIcon } from '../../shared/item-icon';
               <button
                 class="btn btn-primary"
                 data-testid="create-room"
-                [disabled]="busy()"
+                [disabled]="busy() || !online()"
                 (click)="create()"
               >
                 Create room
@@ -187,7 +194,7 @@ import { ItemIcon } from '../../shared/item-icon';
               <button
                 class="btn btn-primary"
                 data-testid="join-room"
-                [disabled]="busy() || !codeValid()"
+                [disabled]="busy() || !codeValid() || !online()"
                 (click)="join()"
               >
                 Join
@@ -390,6 +397,7 @@ export class CoopScreen {
   private readonly setup = inject(RunSetup);
   private readonly router = inject(Router);
   private readonly touchScreen = inject(TouchScreen);
+  protected readonly online = inject(Connectivity).online;
 
   protected readonly maxMembers = MAX_MEMBERS;
   protected readonly gods = this.content.gods;

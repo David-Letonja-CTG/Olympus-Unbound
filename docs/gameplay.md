@@ -48,6 +48,8 @@ The game pauses by itself when the window loses focus or the tab is hidden (not 
 - **Co-op:** local co-op on one screen is not offered on a touch-only device. Rooms (Co-op → create or join by code) work by touch.
 - **Quality:** phones start at *Low*.
 
+**Installing the game.** It is an installable web app. In Chrome, Edge or on Android, the main menu offers **Install the game**. On iPhone and iPad, Safari's **Share → Add to Home Screen** does it, and the main menu explains how. The installed game has its own icon and opens full screen (and sideways on Android). Once it has loaded online, it keeps all its files: menus, the intro and solo runs (with bot allies) play offline. Co-op rooms need a connection; offline, the Co-op screen says so. A new version downloads by itself, and the main menu then offers **Reload**; a run is never interrupted. On iPhone, the Home Screen game keeps its own saves, apart from Safari's.
+
 **Each god has an arsenal.** Some weapons belong to one god (Thunderbolt to Zeus, the Soul Scythe to Hades), some to a few (the Thunder Spear to Zeus, Poseidon and Athena), and the Divine Bow, War Hammer and Flaming Sword to all. You are only ever offered your own god's weapons.
 
 ## Allies
