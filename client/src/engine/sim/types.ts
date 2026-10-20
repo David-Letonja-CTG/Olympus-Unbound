@@ -461,7 +461,8 @@ export type SimEvent =
   | { type: 'enemyCharge'; enemyId: number }
   | { type: 'levelUp'; level: number }
   | { type: 'choice'; choice: UpgradeChoice }
-  | { type: 'choiceResolved'; offer: UpgradeOffer; playerId: number }
+  /** `choiceId`: which choice was answered; a later one of the same player may already be open (D16). */
+  | { type: 'choiceResolved'; offer: UpgradeOffer; playerId: number; choiceId: number }
   | { type: 'synergy'; id: string; name: string }
   | { type: 'announcement'; text: string; kind: AnnouncementKind }
   | { type: 'bossSpawned'; bossId: string; name: string }

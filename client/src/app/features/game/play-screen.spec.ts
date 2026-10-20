@@ -180,8 +180,18 @@ describe('PlayScreen', () => {
     expect(el.textContent).toContain('Level 5!');
     (el.querySelector('[data-testid=offer-1]') as HTMLButtonElement).click();
     expect(session.sent).toContainEqual({ type: 'chooseUpgrade', choiceId: 3, index: 1 });
-    await update({ type: 'choiceResolved', offer: choice.offers[1], playerId: 1 });
+    await update({ type: 'choiceResolved', offer: choice.offers[1], playerId: 1, choiceId: 3 });
     expect(el.querySelector('[data-testid=offer-0]')).toBeNull();
+  });
+
+  it('keeps a next choice that came before word of the last answer (spec: rooms / choices in a room)', async () => {
+    const { el, update } = await setup();
+    await update({ type: 'hud', hud });
+    await update({ type: 'choice', choice });
+    // A room's guest: the next level's choice arrives at once, the answer to the last with the next frame.
+    await update({ type: 'choice', choice: { ...choice, id: 4, level: 6 } });
+    await update({ type: 'choiceResolved', offer: choice.offers[1], playerId: 1, choiceId: 3 });
+    expect(el.querySelector('#levelup-title')?.textContent).toContain('Level 6!');
   });
 
   it('lets players at one screen choose in turn, each named (spec: co-op / local co-op on one screen)', async () => {
@@ -208,7 +218,7 @@ describe('PlayScreen', () => {
     await update({ type: 'choice', choice });
     await update({ type: 'choice', choice: { ...choice, id: 4, playerId: 2 } });
     expect(el.querySelector('#levelup-title')?.textContent).toContain('Player 1 · Level 5!');
-    await update({ type: 'choiceResolved', offer: choice.offers[0], playerId: 1 });
+    await update({ type: 'choiceResolved', offer: choice.offers[0], playerId: 1, choiceId: 3 });
     expect(el.querySelector('#levelup-title')?.textContent).toContain('Player 2 · Level 5!');
     (el.querySelector('[data-testid=offer-2]') as HTMLButtonElement).click();
     expect(session.sent).toContainEqual({ type: 'chooseUpgrade', choiceId: 4, index: 2 });

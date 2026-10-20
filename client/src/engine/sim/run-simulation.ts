@@ -275,7 +275,12 @@ export class RunSimulation {
     if (choice.source === 'shop') return this.shop(choice, player, offer);
     applyOffer(this.state, player, offer);
     this.choices.delete(choice.playerId);
-    this.state.emit({ type: 'choiceResolved', offer, playerId: choice.playerId });
+    this.state.emit({
+      type: 'choiceResolved',
+      offer,
+      playerId: choice.playerId,
+      choiceId: choice.id,
+    });
     if (this.choices.size === 0) this.closeRound(choice.source);
     return true;
   }
@@ -287,7 +292,12 @@ export class RunSimulation {
   private shop(choice: UpgradeChoice, player: Player, offer: UpgradeOffer): boolean {
     if (offer.kind !== 'leave' && !buyWare(this.state, player, offer)) return false;
     this.choices.delete(choice.playerId);
-    this.state.emit({ type: 'choiceResolved', offer, playerId: choice.playerId });
+    this.state.emit({
+      type: 'choiceResolved',
+      offer,
+      playerId: choice.playerId,
+      choiceId: choice.id,
+    });
     if (offer.kind === 'leave' || !this.state.merchant) this.closeRound('shop');
     else this.openShop(player);
     return true;

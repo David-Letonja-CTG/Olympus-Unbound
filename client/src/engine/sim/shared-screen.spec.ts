@@ -83,6 +83,8 @@ describe('local co-op on one screen (spec: co-op / local co-op on one screen)', 
     driver.markLoaded();
     const [p1, p2] = sim.state.players;
     expect(driver.localIds).toEqual([p1.id, p2.id]);
+    // Each local player's own HUD, in seat order (spec: hud / local players on the hud).
+    expect(driver.huds().map((h) => h.party.find((m) => m.self)?.id)).toEqual([p1.id, p2.id]);
     const y = p2.y;
     driver.advance(0.5, [NO_INPUT, walk(0, 1)], () => undefined);
     expect(p2.y).toBeGreaterThan(y);

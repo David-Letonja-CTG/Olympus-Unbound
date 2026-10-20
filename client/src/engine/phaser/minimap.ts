@@ -8,6 +8,11 @@ import { ATMOSPHERE_DEPTH } from './atmosphere';
 const SIZE = 172;
 /** The minimap sits at the top right; the gold and kills plaque sits under it (hud.css). */
 const TOP = 12;
+/**
+ * With three or four players at one screen, below the top-right player's plaque (spec: hud / local players on the
+ * HUD): 12 px from the top, the plaque's 132 px and a 10 px gap. hud.css shifts the gold plaque by the difference.
+ */
+export const CORNER_MINIMAP_TOP = 154;
 const MARGIN = 16;
 /** The picture is drawn at twice its on-screen size, for sharp high-density screens. */
 const RESOLUTION = 2;
@@ -29,6 +34,8 @@ export class Minimap {
   private readonly ox: number;
   private readonly oy: number;
   private elapsed = REDRAW_MS;
+  /** Distance from the top of the screen, CSS pixels. */
+  top = TOP;
 
   constructor(
     private readonly scene: Phaser.Scene,
@@ -78,7 +85,7 @@ export class Minimap {
     // Smaller on narrow windows, so it stays clear of the boss's health bar.
     const fit = Math.max(0.7, Math.min(1, camera.width / 1280));
     const sx = camera.width - MARGIN - SIZE * fit;
-    const sy = TOP;
+    const sy = this.top;
     this.container.setPosition(
       camera.width / 2 + (sx - camera.width / 2) / z,
       camera.height / 2 + (sy - camera.height / 2) / z,

@@ -58,6 +58,8 @@ export interface RunDriver {
   /** Events for this screen since the last call: feedback, its players' own choices and the result. */
   events(): SimEvent[];
   hud(): HudSnapshot | undefined;
+  /** The HUD of every player at this screen, in seat order. */
+  huds(): HudSnapshot[];
   /** The point the camera follows: the local god, or a living ally once it has fallen. */
   focus(): { x: number; y: number };
   /** How far apart the living local gods are (0 with one); the camera zooms out to frame them. */
@@ -173,6 +175,10 @@ export class LocalDriver implements RunDriver {
 
   hud(): HudSnapshot {
     return this.sim.hud(this.localId);
+  }
+
+  huds(): HudSnapshot[] {
+    return this.localIds.map((id) => this.sim.hud(id));
   }
 
   focus(): { x: number; y: number } {

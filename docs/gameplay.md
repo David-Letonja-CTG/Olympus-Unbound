@@ -37,7 +37,7 @@ The game as the player experiences it. Numbers live in `client/src/content/` and
 
 The game pauses by itself when the window loses focus or the tab is hidden (not in a room's run).
 
-**Stamina** is the gold bar under the health amphora. Sprinting drains it while you run; a dash costs about a third of it and carries you some 150 units in the blink of an eye, through any attack. It refills once you stop spending it for a moment; running on with Shift held while spent keeps it empty, so let go to catch your breath. The small pip at its end shows when a dash is ready; the mark on the bar shows how much a dash costs.
+**Stamina** is the orb of golden ichor at the right end of the frieze (on a shared screen, the gold ring around your orb of blood). Sprinting drains it while you run; a dash costs about a third of it and carries you some 150 units in the blink of an eye, through any attack. It refills once you stop spending it for a moment; running on with Shift held while spent keeps it empty, so let go to catch your breath. The small pip beside it shows when a dash is ready; the dashed line across the orb shows how much a dash costs.
 
 **Each god has an arsenal.** Some weapons belong to one god (Thunderbolt to Zeus, the Soul Scythe to Hades), some to a few (the Thunder Spear to Zeus, Poseidon and Athena), and the Divine Bow, War Hammer and Flaming Sword to all. You are only ever offered your own god's weapons.
 
@@ -59,11 +59,13 @@ Player 1 starts on the left of the keyboard and player 2 on the right; players 3
 
 <img src="images/together.gif" width="100%" alt="Two players on one keyboard walk apart; the camera zooms out to keep both on screen">
 
-![Two players and a bot; the party panel shows each player's health, stamina and ability](images/together.jpg)
+![Two players and a bot: each player's half of the frieze, the bot as a medallion](images/together.jpg)
+
+![Four players at one screen: a plaque in every corner, the minimap below player 2's](images/together-four.jpg)
 
 - **One camera** frames every living god, and zooms out as you spread apart. Once it is fully out, you cannot walk further apart: stay together or someone stops at the edge of the screen.
 - **Choices in turn:** at a level-up, a treasure or the merchant, each player's choice is shown in turn, named (*Player 2 · Level 5!*). Any keyboard, mouse or gamepad may answer it.
-- **The party panel** on the left shows every player's health, stamina and whether their ability is ready; the big HUD shows player 1.
+- **Your own HUD:** with two players the bottom frieze splits, player 1 on the left and player 2 mirrored on the right, each with their orb of blood ringed by stamina, dash pip, loadout and ability labelled with their key. With three or four, each player has a plaque in their corner (1 top-left, 2 top-right, 3 bottom-left, 4 bottom-right) and the minimap moves below player 2's. Experience is shown once, at the bottom. A fallen player's plaque turns grey and counts their revive.
 - The rules are those of co-op rooms below: difficulty per god, reviving, the gate. Any player's Esc, P or Start pauses for everyone. Everyone here shares this machine's save and its blessings, and a run with two or more players counts as co-op for Glory.
 
 ## Co-op rooms
@@ -91,11 +93,13 @@ Every run has battle music, composed and played by the game itself: a lyre and f
 
 ## The HUD
 
-Health fills an **amphora** (bottom left) with the gold **stamina** bar and the dash pip beneath it, the experience bar and your weapons (each with its own cooldown sweep), armour, relics and companions sit along the bottom, the divine ability waits in an iron slot (bottom right) with a dark cooldown sweep that turns smoothly, the seconds left and a flash when it is ready, the run time sits in the top plaque with the minimap at the top right and gold and kills under it, active synergies at the top left, and the boss appears in a banner under the timer.
+A bronze **frieze** runs along the bottom, Diablo-like: your health is the **orb of blood** on its left end and your **stamina** the **orb of golden ichor** on its right, each a crystal sphere on a bronze tripod, with the dash pip beside the ichor. Your weapons (each with its own cooldown sweep), armour, relics and companions and the experience bar sit in the middle; the divine ability waits in an iron slot beside the ichor with a dark cooldown sweep that turns smoothly, the seconds left and a flash when it is ready. The run time sits in the top plaque with the minimap at the top right and gold and kills under it, active synergies at the top left, and the boss appears in a banner under the timer. Several players at one screen share it as described under *Local co-op*.
 
 **Health bars:** every monster that has been hurt shows a thin red bar above it (Settings → *Enemy health bars* hides them); elites keep their gold bar and the boss its banner.
 
-**Party health** (co-op, on the left): every god in the run in their seat's colour (the same as on the minimap), with their god, name, a health bar and the numbers; your own is marked *(you)*, and a fallen god shows how far their revive has come.
+**Medallions** (top left): every god not played at this screen (bot allies, and the other players of a room) is a round coin in their seat's colour (the same as on the minimap) with their name, a ring of health and the numbers; players also show a thin gold arc of stamina and a gem that lights when their ability is ready. A fallen god's coin turns grey and its ring shows how far their revive has come. Nobody is shown twice: your own god is the frieze (or your plaque), never a medallion.
+
+![An online room seen by its host: the frieze, and the guest as a medallion](images/room.jpg)
 
 **Minimap** (top right, above the gold and kills): the whole realm with its walls and the boss arena; monsters as red dots (elites larger and gold), the boss as a large red mark once it wakes, the open gate as a pale ring, the merchant as a gold diamond, every god in their own colour (yours largest, with a white rim; fallen gods as hollow rings), and the outline of what the screen shows.
 

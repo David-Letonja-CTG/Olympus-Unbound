@@ -1,0 +1,198 @@
+/* The pieces of a player's HUD (hud-pieces.ts); not encapsulated, nested under app-hud like hud.css. */
+/* Cooldown sweeps turn smoothly between the HUD's ten updates a second (D7): --share is registered to transition. */
+@property --share {
+  syntax: '<percentage>';
+  inherits: false;
+  initial-value: 0%;
+}
+
+@keyframes hud-ready-flash {
+  0% {
+    filter: brightness(2.2);
+    transform: scale(1.12);
+  }
+  100% {
+    filter: none;
+    transform: none;
+  }
+}
+
+app-hud {
+  /* An orb with its numbers under it. */
+  .vessel {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    filter: drop-shadow(0 4px 10px rgba(0, 0, 0, 0.8));
+  }
+
+  /* The orbs of blood and ichor: 200 × 250 drawings, sized by --vessel. */
+  app-orb svg {
+    display: block;
+    width: var(--vessel, 116px);
+    height: auto;
+  }
+
+  .vessel.fallen svg {
+    filter: grayscale(1) brightness(0.7);
+  }
+
+  .vessel-text {
+    margin-top: -4px;
+    font-weight: 700;
+    font-size: 0.85rem;
+    font-variant-numeric: tabular-nums;
+    white-space: nowrap;
+  }
+
+  /* Stamina around a shared screen's orb. */
+  .ring-track,
+  .ring-fill {
+    fill: none;
+    stroke-linecap: round;
+  }
+
+  .ring-track {
+    stroke: rgba(10, 8, 4, 0.85);
+    stroke-width: 7;
+  }
+
+  .ring-fill {
+    stroke: #e8c25a;
+    stroke-width: 5;
+    transition: stroke-dasharray 0.11s linear;
+  }
+
+  .slot {
+    position: relative;
+    padding: 3px;
+    border-radius: 2px;
+  }
+
+  .slot.companion {
+    box-shadow:
+      inset 0 0 0 1px rgba(255, 210, 122, 0.75),
+      0 3px 10px rgba(0, 0, 0, 0.7);
+  }
+
+  .lvl {
+    position: absolute;
+    right: -5px;
+    bottom: -5px;
+    font-size: 0.62rem;
+    font-weight: 800;
+    background: #120e0a;
+    border: 1px solid var(--gold);
+    color: var(--gold-2);
+    border-radius: 2px;
+    padding: 0 4px;
+  }
+
+  .loadout {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 6px;
+  }
+
+  .loadout ul {
+    list-style: none;
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 6px;
+    margin: 0;
+    padding: 0;
+  }
+
+  /* The ability slot. */
+  .ability {
+    position: relative;
+    display: grid;
+    place-items: center;
+    padding: 9px;
+    border-radius: 2px;
+    opacity: 0.85;
+  }
+
+  .ability.ready {
+    opacity: 1;
+    box-shadow:
+      inset 0 0 0 1px rgba(236, 213, 154, 0.8),
+      0 0 22px rgba(191, 230, 255, 0.45),
+      0 3px 10px rgba(0, 0, 0, 0.7);
+    animation: hud-ready-flash 0.6s ease-out;
+  }
+
+  .sweep {
+    position: absolute;
+    inset: 3px;
+    pointer-events: none;
+    background: conic-gradient(rgba(0, 0, 0, 0.72) var(--share), transparent 0);
+    transition: --share 0.11s linear;
+  }
+
+  .seconds {
+    position: absolute;
+    font-family: var(--display);
+    font-size: 1.4rem;
+    font-weight: 700;
+  }
+
+  .key {
+    position: absolute;
+    bottom: -18px;
+    font-family: var(--display);
+    font-size: 0.66rem;
+    font-weight: 700;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--muted);
+    white-space: nowrap;
+  }
+
+  /* The dash pip. */
+  .dash {
+    position: relative;
+    width: 26px;
+    height: 26px;
+    display: grid;
+    place-items: center;
+    border-radius: 50%;
+    background: linear-gradient(180deg, #2a2624, #121010);
+    border: 1px solid #050404;
+    box-shadow: inset 0 0 0 1px rgba(201, 165, 90, 0.45);
+    overflow: hidden;
+  }
+
+  .dash .sweep {
+    inset: 0;
+  }
+
+  .dash.ready {
+    box-shadow:
+      inset 0 0 0 1px rgba(236, 213, 154, 0.9),
+      0 0 10px rgba(243, 226, 160, 0.45);
+  }
+
+  .dash.tired {
+    opacity: 0.4;
+  }
+
+  .dash-glyph {
+    font-family: var(--display);
+    font-size: 1rem;
+    font-weight: 700;
+    line-height: 1;
+    color: var(--gold-2);
+  }
+
+  .dash-key {
+    position: absolute;
+    right: 0;
+    bottom: -1px;
+    font-size: 0.5rem;
+    font-weight: 800;
+    color: var(--muted);
+  }
+}

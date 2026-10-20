@@ -395,7 +395,7 @@ const scenes = {
 
   /**
    * Local co-op: two players on one keyboard and a bot, the camera zooming out as they spread apart (together.gif),
-   * and a still of the party with its panel (together.jpg).
+   * a still of the split frieze (together.jpg), and four players with a plaque in every corner (together-four.jpg).
    */
   async together(browser) {
     const decoder = await browser.newPage();
@@ -428,6 +428,76 @@ const scenes = {
     });
     await page.close();
     await decoder.close();
+
+    // Four players: a plaque in every corner, the minimap below player 2's (together-four.jpg).
+    const four = await startRun(browser, {
+      god: 'zeus',
+      realm: REALMS[0],
+      players: ['athena', 'hades', 'poseidon'],
+    });
+    await powerUp(four);
+    await send(four, { type: 'skipTo', seconds: 150 });
+    await four.waitForTimeout(3000);
+    await pickUpgrades(four);
+    await four.screenshot({ path: join(out, 'together-four.jpg'), quality: 88 });
+    await four.close();
+  },
+
+  /**
+   * An online room seen by its host (room.jpg): the host's own frieze, and the guest as a medallion on the left. Two
+   * tabs of one browser joined over `net=local`, as in the end-to-end test.
+   */
+  async room(browser) {
+    const context = await browser.newContext({ viewport: VIEW });
+    await context.addInitScript(
+      (save) => localStorage.setItem('olympus-unbound/save', JSON.stringify(save)),
+      SAVE,
+    );
+    const open = async (name) => {
+      const page = await context.newPage();
+      await page.goto(`${base}/coop?debug&net=local`);
+      await page.getByTestId('player-name').fill(name);
+      return page;
+    };
+    const host = await open('Ada');
+    await host.getByTestId('create-room').click();
+    const code = (await host.getByTestId('room-code').textContent())?.trim() ?? '';
+    const guest = await open('Bo');
+    await guest.getByTestId('room-code-input').fill(code);
+    await guest.getByTestId('join-room').click();
+    await guest.getByTestId('lobby-god-hades').click();
+    await guest.getByTestId('ready').click();
+    await host.getByTestId('start-room').click();
+    for (const p of [host, guest])
+      await p.getByTestId('run-loading').waitFor({ state: 'detached', timeout: 150000 });
+    await host.waitForFunction(() => (window.olympusDebug?.inspect()?.time ?? 0) > 0.3);
+    await send(host, { type: 'godMode', enabled: true });
+    /** Both answer every open choice until the run goes on. */
+    const answerAll = async () => {
+      for (let i = 0; i < 30; i++) {
+        for (const p of [host, guest]) await pickUpgrades(p);
+        if ((await inspect(host))?.phase === 'playing') return;
+      }
+    };
+    for (let i = 0; i < 4; i++) {
+      await send(host, { type: 'grantXp', amount: 150 });
+      await host.waitForTimeout(600);
+      await answerAll();
+    }
+    await send(host, { type: 'skipTo', seconds: 140 });
+    await guest.keyboard.down('KeyD');
+    await host.waitForTimeout(3000);
+    await guest.keyboard.up('KeyD');
+    await answerAll();
+    // The guest's god takes a few blows, so their ring shows it.
+    await send(host, { type: 'godMode', enabled: false });
+    await host.waitForTimeout(2500);
+    await send(host, { type: 'godMode', enabled: true });
+    await answerAll();
+    await host.bringToFront();
+    await host.waitForTimeout(1500);
+    await host.screenshot({ path: join(out, 'room.jpg'), quality: 88 });
+    await context.close();
   },
 
   /** In a run: a level-up choice, the gate after a boss, and the summary at the end. */
