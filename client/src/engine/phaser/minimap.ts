@@ -82,8 +82,12 @@ export class Minimap {
   ): void {
     // Objects that ignore scrolling are still zoomed around the screen's centre: undo it (like the boss pointer).
     const z = camera.zoom;
-    // Smaller on narrow windows, so it stays clear of the boss's health bar.
-    const fit = Math.max(0.7, Math.min(1, camera.width / 1280));
+    // Smaller on narrow windows, so it stays clear of the boss's health bar, and on short ones (a phone held
+    // sideways, spec: phone-play / phone HUD). The HUD's gold and kills plaque follows the same sizes (hud.css).
+    const fit = Math.min(
+      Math.max(0.7, Math.min(1, camera.width / 1280)),
+      Math.max(0.5, camera.height / 700),
+    );
     const sx = camera.width - MARGIN - SIZE * fit;
     const sy = this.top;
     this.container.setPosition(

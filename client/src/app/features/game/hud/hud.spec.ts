@@ -240,4 +240,13 @@ describe('UI palette', () => {
       expect(contrastRatio(fg, bg)).toBeGreaterThanOrEqual(4.5);
     }
   });
+
+  it('by touch, leaves the ability to the Power button and drops key hints (spec: phone-play / phone HUD)', () => {
+    const el = render(base, [], ['touch']);
+    expect(el.classList.contains('touch')).toBe(true);
+    expect(el.querySelector('.solo-ability')).toBeNull();
+    expect(el.querySelector('.dash-key')).toBeNull();
+    expect(el.querySelector('[data-testid=hud-health]')).toBeTruthy();
+    expect(el.querySelector('[data-testid=hud-level]')).toBeTruthy();
+  });
 });

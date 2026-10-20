@@ -121,6 +121,11 @@ export class InputReader {
     return { moveX: x, moveY: y, ability, sprint, dash };
   }
 
+  /** What the touch buttons show of the HUD: the ability's cooldown and whether a dash is affordable. */
+  showHud(abilityRemaining: number, abilityCooldown: number, dashReady: boolean): void {
+    this.touch?.showHud(abilityRemaining, abilityCooldown, dashReady);
+  }
+
   /** The simulation has stepped with the current input: latched taps are used up. */
   consumeTaps(): void {
     this.tapped.clear();

@@ -335,6 +335,21 @@ interface AchievementView {
         display: none;
       }
     }
+    /* A phone upright (spec: phone-play / phone menus): the essential columns, the rest scrolls inside. */
+    @media (max-width: 560px) {
+      .scores {
+        min-width: 0;
+        overflow-x: auto;
+      }
+      .data-table th:nth-child(3),
+      .data-table td:nth-child(3),
+      .data-table th:nth-child(7),
+      .data-table td:nth-child(7),
+      .data-table th:nth-child(9),
+      .data-table td:nth-child(9) {
+        display: none;
+      }
+    }
   `,
 })
 export class GloryScreen {

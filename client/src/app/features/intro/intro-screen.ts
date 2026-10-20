@@ -132,6 +132,12 @@ const SKIP_KEYS = new Set(['Escape', 'Enter', 'Space', 'NumpadEnter']);
       margin-left: 6px;
       font-family: var(--sans);
     }
+    /* No keyboard on a phone (spec: phone-play): a tap skips. */
+    @media (pointer: coarse) {
+      kbd {
+        display: none;
+      }
+    }
     @keyframes appear {
       from {
         opacity: 0;

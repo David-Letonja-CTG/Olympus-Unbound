@@ -153,7 +153,7 @@ const TITLES = { defeat: 'You have fallen', abandoned: 'Run abandoned' } as cons
           }
         </section>
 
-        <div class="actions">
+        <div class="actions sticky">
           <a class="btn" routerLink="/" data-testid="to-menu">Main menu</a>
           @if (inRoom()) {
             <a class="btn btn-primary" routerLink="/coop" data-testid="to-coop">Co-op</a>

@@ -130,7 +130,10 @@ export type HudLayout = 'frieze' | 'duo' | 'corners';
       @let keys = keysAt(0);
       <app-health-vessel class="solo-health" [health]="h.health" [maxHealth]="h.maxHealth" />
       <div class="solo-loadout"><app-loadout [hud]="h" /></div>
-      <app-ability-slot class="solo-ability" [ability]="h.ability" [key]="keys.ability" />
+      <!-- By touch, the Power button shows the cooldown under the thumb (spec: phone-play / phone HUD). -->
+      @if (!touch()) {
+        <app-ability-slot class="solo-ability" [ability]="h.ability" [key]="keys.ability" />
+      }
       <div
         class="solo-stamina"
         [title]="keys.dash ? 'Stamina: hold Shift to sprint, ' + keys.dash + ' to dash' : 'Stamina'"
