@@ -32,7 +32,11 @@ import { ItemIcon } from '../../shared/item-icon';
         <app-item-icon sprite="icon_gold" [size]="22" />
         <span class="gold-amount" data-testid="menu-gold">{{ progression.gold() }}</span> gold
       </p>
-      <p class="hint">
+      <p class="hint touch-hint">
+        Left thumb to move · Power, Dash and Sprint under the right thumb · turn your phone sideways
+        to play
+      </p>
+      <p class="hint keys-hint">
         WASD / arrows or gamepad to move · Shift to sprint · E to dash · Space to unleash your
         ability · Esc to pause
       </p>
@@ -113,7 +117,7 @@ import { ItemIcon } from '../../shared/item-icon';
         zoom: 0.62;
       }
       .title {
-        font-size: clamp(2.2rem, 9vh, 4.4rem);
+        font-size: clamp(2.2rem, min(9vh, 11vw), 4.4rem);
       }
       .menu-panel {
         gap: 8px;
@@ -121,6 +125,74 @@ import { ItemIcon } from '../../shared/item-icon';
       .menu-panel .btn {
         padding-top: 8px;
         padding-bottom: 8px;
+      }
+    }
+    .touch-hint {
+      display: none;
+    }
+    /* Fingers (spec: phone-play): the touch controls, not the keys. */
+    @media (pointer: coarse) {
+      .touch-hint {
+        display: block;
+      }
+      .keys-hint {
+        display: none;
+      }
+    }
+    /* A phone held sideways: the title on the left, the buttons on the right, all on one screen. */
+    @media (max-height: 500px) and (min-width: 560px) {
+      .menu {
+        display: grid;
+        grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+        grid-template-areas:
+          'crest nav'
+          'title nav'
+          'tagline nav'
+          'daily nav'
+          'gold nav';
+        align-content: center;
+        justify-items: center;
+        column-gap: 24px;
+        row-gap: 6px;
+      }
+      .crest {
+        grid-area: crest;
+        zoom: 0.45;
+      }
+      .title {
+        grid-area: title;
+        font-size: clamp(1.8rem, 11vh, 3rem);
+      }
+      .tagline {
+        grid-area: tagline;
+        font-size: 0.9rem;
+        text-align: center;
+      }
+      .daily {
+        grid-area: daily;
+      }
+      .gold {
+        grid-area: gold;
+      }
+      .menu-panel {
+        grid-area: nav;
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        width: 100%;
+        max-width: 380px;
+        box-sizing: border-box;
+      }
+      .menu-panel .btn-primary {
+        grid-column: 1 / -1;
+      }
+      .menu-panel .btn {
+        font-size: 0.9rem;
+        letter-spacing: 0.06em;
+        padding-left: 6px;
+        padding-right: 8px;
+      }
+      .hint {
+        display: none;
       }
     }
   `,

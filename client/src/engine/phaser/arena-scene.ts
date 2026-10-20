@@ -220,6 +220,14 @@ export class ArenaScene extends Phaser.Scene {
       this.hudTimer = 0;
       const hud = this.emitHud();
       this.updateMusic(hud, HUD_INTERVAL_MS / 1000);
+      if (hud) {
+        const { ability, stamina } = hud;
+        this.input$.showHud(
+          ability.remaining,
+          ability.cooldown,
+          stamina.value >= stamina.dashCost && stamina.dashRemaining <= 0,
+        );
+      }
     }
   }
 

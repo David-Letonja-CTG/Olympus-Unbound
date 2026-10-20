@@ -113,12 +113,12 @@ app-hud {
 
   /*
    * Gold and kills under the minimap. The minimap is 172 px wide at 1280 px and wider windows, scaled down to 70% on
-   * narrower ones, and placed 12 px from the top with a 5 px frame; with plaques in the corners it sits 142 px lower
+   * narrower ones, and on windows under 700 px tall with their height down to 50%; it is placed 12 px from the top with a 5 px frame; with plaques in the corners it sits 142 px lower
    * (phaser/minimap.ts, CORNER_MINIMAP_TOP).
    */
   .plaque.small {
     position: absolute;
-    top: calc(clamp(120.4px, 13.4375cqw, 172px) + 12px);
+    top: calc(min(clamp(120.4px, 13.4375cqw, 172px), max(86px, 24.5714cqh)) + 12px);
     right: 0;
     display: flex;
     gap: 16px;
@@ -127,7 +127,7 @@ app-hud {
   }
 
   &.corners .plaque.small {
-    top: calc(clamp(120.4px, 13.4375cqw, 172px) + 154px);
+    top: calc(min(clamp(120.4px, 13.4375cqw, 172px), max(86px, 24.5714cqh)) + 154px);
   }
 
   .stat {
@@ -444,6 +444,186 @@ app-hud {
       position: absolute;
       left: 6px;
       top: 34px;
+    }
+  }
+
+  /*
+   * A short window — a phone held sideways is 360–430 px tall (spec: phone-play / phone HUD): the same pieces, smaller,
+   * and the centre kept clear.
+   */
+  @media (max-height: 500px) {
+    .top {
+      top: calc(6px + env(safe-area-inset-top, 0px));
+    }
+
+    .plaque {
+      padding: 2px 18px;
+    }
+
+    .timer {
+      font-size: 1.15rem;
+    }
+
+    .realm {
+      font-size: 0.58rem;
+    }
+
+    .plaque.small {
+      gap: 10px;
+      padding: 3px 14px;
+      font-size: 0.85rem;
+    }
+
+    .gate,
+    .boss {
+      top: calc(50px + env(safe-area-inset-top, 0px));
+    }
+
+    .gate {
+      padding: 4px 16px;
+    }
+
+    .gate-title {
+      font-size: 0.85rem;
+    }
+
+    .gate-time {
+      font-size: 0.7rem;
+    }
+
+    .boss {
+      width: min(420px, 52vw);
+    }
+
+    .boss-name {
+      font-size: 0.85rem;
+      margin-bottom: 2px;
+    }
+
+    .boss-name span {
+      font-size: 0.68rem;
+    }
+
+    .boss-track {
+      height: 10px;
+      padding: 2px;
+    }
+
+    .announcements {
+      top: 20%;
+      gap: 2px;
+    }
+
+    .announcement {
+      font-size: 1rem;
+    }
+
+    .announcement.kind-boss {
+      font-size: 1.3rem;
+    }
+
+    .side {
+      zoom: 0.75;
+    }
+
+    .frieze {
+      height: 40px;
+    }
+
+    .xp {
+      bottom: 8px;
+      width: clamp(120px, calc(100% - 300px), 420px);
+    }
+
+    .solo-health,
+    .solo-stamina {
+      --vessel: 96px;
+    }
+
+    .solo-loadout {
+      bottom: 40px;
+      zoom: 0.7;
+    }
+
+    .solo-ability {
+      right: 112px;
+      bottom: 14px;
+      zoom: 0.75;
+    }
+
+    .surge {
+      bottom: 130px;
+    }
+  }
+
+  /*
+   * Played by touch on a phone (spec: phone-play / phone HUD): the stick's corner and the buttons' corner stay free.
+   * The orbs stand on a shorter frieze between them, with experience along it; the loadout moves up beside the pause
+   * button; the Power button shows the ability's cooldown.
+   */
+  @media (max-height: 500px) {
+    &.touch.frieze {
+      --thumb-left: calc(200px + env(safe-area-inset-left, 0px));
+      --thumb-right: calc(222px + env(safe-area-inset-right, 0px));
+      --vessel: 78px;
+
+      .frieze {
+        left: calc(var(--thumb-left) - 24px);
+        right: calc(var(--thumb-right) - 24px);
+        height: 32px;
+        border-left: 2px solid #8a6a3a;
+        border-right: 2px solid #8a6a3a;
+        border-radius: 6px 6px 0 0;
+      }
+
+      .solo-health,
+      .solo-stamina {
+        --vessel: 78px;
+      }
+
+      .solo-health {
+        left: calc(var(--thumb-left) - 34px);
+      }
+
+      .solo-stamina {
+        right: calc(var(--thumb-right) - 34px);
+
+        /* The Dash button shows when a dash is affordable. */
+        app-dash-pip {
+          display: none;
+        }
+      }
+
+      .vessel-text {
+        font-size: 0.72rem;
+      }
+
+      .xp {
+        bottom: 9px;
+        width: max(60px, calc(100% - var(--thumb-left) - var(--thumb-right) - 120px));
+      }
+
+      .solo-loadout {
+        /* Offsets of a zoomed element are zoomed too. */
+        top: calc((8px + env(safe-area-inset-top, 0px)) / 0.62);
+        bottom: auto;
+        left: calc((64px + env(safe-area-inset-left, 0px)) / 0.62);
+        transform: none;
+        zoom: 0.62;
+
+        .loadout {
+          align-items: flex-start;
+        }
+
+        .loadout ul {
+          justify-content: flex-start;
+          max-width: 420px;
+        }
+      }
+
+      .side {
+        top: calc((100px + env(safe-area-inset-top, 0px)) / 0.75);
+      }
     }
   }
 }

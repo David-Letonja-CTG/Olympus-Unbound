@@ -123,7 +123,7 @@ import { ItemIcon } from '../../shared/item-icon';
           </div>
         </section>
 
-        <div class="actions">
+        <div class="actions sticky">
           <button class="btn" data-testid="leave-room" (click)="leave()">Leave room</button>
           @if (rooms.role() === 'host') {
             <button
@@ -201,7 +201,7 @@ import { ItemIcon } from '../../shared/item-icon';
             <p class="error" role="alert" data-testid="room-error">{{ e }}</p>
           }
         </section>
-        <div class="actions">
+        <div class="actions sticky">
           <a class="btn" routerLink="/">Back</a>
         </div>
       }

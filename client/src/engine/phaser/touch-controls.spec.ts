@@ -153,4 +153,17 @@ describe('TouchControls', () => {
       sprint: true,
     });
   });
+
+  it('shows the ability cooldown on the Power button and a tired Dash button (spec: phone-play / phone HUD)', () => {
+    controls.showHud(10, 25, false);
+    const power = button('ability');
+    expect(power.style.getPropertyValue('--ou-share')).toBe('40.0%');
+    expect(power.classList.contains('cooling')).toBe(true);
+    expect(power.querySelector('.ou-seconds')?.textContent).toBe('10');
+    expect(button('dash').classList.contains('tired')).toBe(true);
+    controls.showHud(0, 25, true);
+    expect(power.classList.contains('cooling')).toBe(false);
+    expect(power.querySelector('.ou-seconds')?.textContent).toBe('');
+    expect(button('dash').classList.contains('tired')).toBe(false);
+  });
 });

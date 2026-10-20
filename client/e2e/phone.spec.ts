@@ -22,6 +22,21 @@ test('a run on a phone: moving, dashing and pausing by touch (spec: phone-play)'
   await debug(page, { type: 'godMode', enabled: true });
   await expect(page.getByTestId('touch-controls')).toBeVisible();
 
+  // The phone HUD leaves the thumbs' corners free (spec: phone-play / phone HUD).
+  await expect(page.getByTestId('hud-health')).toBeVisible();
+  const overlaps = await page.evaluate(() => {
+    const rects = (selector: string) =>
+      [...document.querySelectorAll(selector)].map((e) => e.getBoundingClientRect());
+    const thumbs = rects('.ou-btn, .ou-stick-hint');
+    const hud = rects(
+      'app-hud .vessel, app-hud .frieze, app-hud .xp, app-hud .loadout, app-hud .top',
+    );
+    const hit = (a: DOMRect, b: DOMRect) =>
+      a.left < b.right && b.left < a.right && a.top < b.bottom && b.top < a.bottom;
+    return hud.flatMap((h) => thumbs.filter((t) => hit(h, t))).length;
+  });
+  expect(overlaps).toBe(0);
+
   // The stick: a thumb lands on the left and drags right; Zeus walks right.
   const cdp = await page.context().newCDPSession(page);
   const height = page.viewportSize()?.height ?? 360;

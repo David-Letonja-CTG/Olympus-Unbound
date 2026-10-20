@@ -43,14 +43,25 @@ _Alternative rejected:_ "push the stick far to sprint". On a small stick it is e
 
 ## Phone HUD and menus (step 2)
 
-- The HUD scales with `container-type: size` and `cqh`/`cqw`. A phone-landscape rule (`max-height: 500px`) applies:
-  - The frieze and orbs shrink, and the orbs move up to sit above the thumbs' zones' bottom corners.
-  - The stick zone is the lower-left quarter; the buttons sit in the lower-right corner.
-  - The loadout and experience bar stay in the bottom centre.
-  - Plaques, medallions, the boss banner, gate and merchant notices, and announcements get smaller sizes and offsets.
-  - The minimap (drawn by Phaser, `phaser/minimap.ts`) takes its size from the window. It is sized down below 500 px of height.
-- On touch, the HUD gets the touch scheme and hides keyboard hints (`keysFor('touch')`).
-- Menus: every screen is checked at 375×667 and 430×932 (portrait) and at 844×390 and 932×430 (landscape). Fixes are CSS only: wrapping, single columns, scroll inside the screen, pinned actions, and safe-area padding.
+- Short windows (`max-height: 500px`) get smaller plaques, timer, boss banner, gate and merchant banners and announcements. The left column is zoomed to 75%, and the frieze, orbs, loadout and ability are scaled down.
+- The minimap (Phaser, `phaser/minimap.ts`) also shrinks with the window's height, to as little as 50% (`min(width rule, max(0.5, height / 700))`). The gold and kills plaque under it follows the same formula in CSS (`cqw`/`cqh`).
+- By touch on a short window (`app-hud.touch.frieze`), the thumbs' corners stay free. This is checked in the phone e2e: no HUD piece intersects a touch button or the stick's resting place.
+  - The left zone is 200 px wide and the right zone 222 px, plus the safe areas.
+  - A shorter frieze runs between the two zones. The orbs (78 px) stand on its ends and the experience bar runs along it.
+  - The loadout moves up beside the pause button, at 62%.
+  - The dash pip is hidden; the Dash button dims when a dash is not affordable.
+- The ability's cooldown is shown on the Power button, under the thumb, so the HUD's ability slot is left out by touch.
+  - `ArenaScene` passes the HUD's ability and stamina to `InputReader.showHud` at its 10 Hz HUD tick.
+  - `TouchControls` updates a conic sweep, the seconds left and a "tired" Dash, touching the DOM only on change.
+- Keyboard hints are hidden by touch: on the HUD (`keysFor('touch')`), on the main menu (a touch hint replaces the keys) and on the intro's skip.
+- Menus were checked at 360–430 px portrait and 740×360 landscape (the pane's touch emulation) for sideways overflow, and visually. The fixes are CSS only:
+  - The main menu has two columns sideways.
+  - God cards are two by two upright and four in a row sideways.
+  - Realm selection keeps the list beside the details sideways, with Begin pinned.
+  - The Glory table drops the realm, level and date columns under 560 px.
+  - The run summary and the co-op lobby have pinned actions.
+  - The loading screen is compact.
+  - Screens get safe-area padding.
 
 ## Performance (step 3)
 

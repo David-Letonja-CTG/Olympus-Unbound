@@ -439,6 +439,47 @@ const EMBERS = Array.from({ length: 26 }, (_, i) => ({
         opacity: 0;
       }
     }
+    /* A phone held sideways (spec: phone-play / phone menus): everything on one short screen. */
+    @media (max-height: 500px) {
+      .content {
+        padding: max(10px, env(safe-area-inset-top)) max(16px, env(safe-area-inset-right)) 10px
+          max(16px, env(safe-area-inset-left));
+        gap: 6px;
+      }
+      .kicker {
+        font-size: 0.62rem;
+      }
+      h1 {
+        font-size: 1.7rem;
+        margin: 2px 0 4px;
+      }
+      .divider {
+        margin-bottom: 4px;
+      }
+      .description,
+      .tip {
+        font-size: 0.82rem;
+      }
+      .tip {
+        min-height: 0;
+      }
+      .party {
+        zoom: 0.62;
+      }
+      .boss {
+        zoom: 0.6;
+      }
+      footer {
+        gap: 4px;
+      }
+      .progress {
+        grid-template-columns: auto minmax(120px, 420px) 3.2em;
+        font-size: 0.85rem;
+      }
+      .seed {
+        display: none;
+      }
+    }
     @media (prefers-reduced-motion: reduce) {
       .ember,
       .mist,

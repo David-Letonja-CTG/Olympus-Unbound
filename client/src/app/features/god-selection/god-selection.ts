@@ -316,6 +316,39 @@ const PASSIVE_ICON: Record<Element, string> = {
         font-size: 1.35rem;
       }
     }
+    /* A phone (spec: phone-play / phone menus): four gods in one row sideways, two by two upright. */
+    @media (max-height: 500px) {
+      .god-card {
+        width: 160px;
+      }
+      .god-card app-item-icon {
+        zoom: 0.55;
+      }
+      .name {
+        font-size: 1.15rem;
+      }
+      .title {
+        font-size: 0.8rem;
+      }
+    }
+    @media (max-width: 560px) {
+      .gods {
+        gap: 10px;
+      }
+      .god-card {
+        width: calc(50% - 5px);
+        padding: 10px 8px;
+      }
+      .god-card app-item-icon {
+        zoom: 0.6;
+      }
+      .name {
+        font-size: 1.2rem;
+      }
+      .title {
+        font-size: 0.8rem;
+      }
+    }
     .details {
       min-width: 0;
       padding: 20px 24px;

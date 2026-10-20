@@ -218,6 +218,45 @@ import { ItemIcon } from '../../shared/item-icon';
         flex-basis: auto;
       }
     }
+    /*
+     * A phone held sideways (spec: phone-play / phone menus): the list beside the details again, compact, with Begin
+     * kept at the bottom of the screen.
+     */
+    @media (max-height: 500px) and (min-width: 560px) {
+      .layout {
+        flex-direction: row;
+        align-items: flex-start;
+        gap: 12px;
+      }
+      .realms {
+        padding: 8px;
+        gap: 2px;
+      }
+      .realm {
+        padding-top: 4px;
+        padding-bottom: 4px;
+      }
+      .realm app-item-icon {
+        zoom: 0.75;
+      }
+      .detail,
+      .seed {
+        padding: 10px 14px;
+      }
+      .detail .boss,
+      .help {
+        display: none;
+      }
+      .description {
+        font-size: 0.85rem;
+      }
+      .actions {
+        position: sticky;
+        bottom: 0;
+        padding: 8px 0 max(8px, env(safe-area-inset-bottom));
+        background: linear-gradient(180deg, transparent, rgba(11, 10, 12, 0.92) 40%);
+      }
+    }
   `,
 })
 export class RealmSelection {

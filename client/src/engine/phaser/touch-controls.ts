@@ -73,6 +73,8 @@ export class TouchControls {
   private readonly held = new Set<Button>();
   private readonly tapped = new Set<Button>();
   private sprintOn = false;
+  private readonly abilitySeconds: HTMLElement;
+  private shown = { share: -1, seconds: -1, tired: false };
 
   constructor(parent: HTMLElement) {
     ensureStyles(parent.ownerDocument);
@@ -98,9 +100,12 @@ export class TouchControls {
       el.setAttribute('role', 'button');
       el.setAttribute('aria-label', LABELS[button]);
       el.innerHTML = `<svg viewBox="0 0 24 24" aria-hidden="true">${ICONS[button]}</svg><span>${LABELS[button]}</span>`;
+      if (button === 'ability')
+        el.insertAdjacentHTML('beforeend', '<i class="ou-sweep"></i><b class="ou-seconds"></b>');
       this.buttons.set(button, el);
       this.element.append(el);
     }
+    this.abilitySeconds = this.element.querySelector('.ou-seconds') as HTMLElement;
     this.element.addEventListener('pointerdown', this.onDown);
     this.element.addEventListener('pointermove', this.onMove);
     this.element.addEventListener('pointerup', this.onUp);
@@ -117,6 +122,26 @@ export class TouchControls {
       dash: this.held.has('dash') || this.tapped.has('dash'),
       sprint: this.sprintOn,
     };
+  }
+
+  /**
+   * The ability's cooldown on the Power button and whether a dash is affordable, from the HUD's ten updates a second
+   * (spec: phone-play / phone HUD). The DOM is touched only when something changed.
+   */
+  showHud(abilityRemaining: number, abilityCooldown: number, dashReady: boolean): void {
+    const share =
+      abilityRemaining > 0 ? Math.min(1, abilityRemaining / Math.max(abilityCooldown, 0.001)) : 0;
+    const seconds = Math.ceil(abilityRemaining);
+    const ability = this.buttons.get('ability');
+    if (ability && Math.abs(share - this.shown.share) > 0.005) {
+      ability.style.setProperty('--ou-share', `${(share * 100).toFixed(1)}%`);
+      ability.classList.toggle('cooling', share > 0);
+    }
+    if (seconds !== this.shown.seconds)
+      this.abilitySeconds.textContent = seconds > 0 ? String(seconds) : '';
+    if (!dashReady !== this.shown.tired)
+      this.buttons.get('dash')?.classList.toggle('tired', !dashReady);
+    this.shown = { share, seconds, tired: !dashReady };
   }
 
   /** The simulation has stepped with the current input: latched taps are used up. */
@@ -256,6 +281,17 @@ function ensureStyles(doc: Document): void {
 .ou-ability { width: 84px; height: 84px; right: var(--ou-right); bottom: var(--ou-bottom); }
 .ou-dash { width: 64px; height: 64px; right: calc(var(--ou-right) + 98px); bottom: var(--ou-bottom); }
 .ou-sprint { width: 56px; height: 56px; right: calc(var(--ou-right) + 14px); bottom: calc(var(--ou-bottom) + 98px); }
+.ou-sweep {
+  position: absolute; inset: 0; border-radius: 50%; pointer-events: none;
+  background: conic-gradient(rgba(0, 0, 0, 0.7) var(--ou-share, 0%), transparent 0);
+}
+.ou-seconds {
+  position: absolute; inset: 0; display: grid; place-items: center; pointer-events: none;
+  font: 700 26px/1 var(--display, Georgia, serif); color: #fff3d0; text-shadow: 0 2px 4px #000;
+}
+.ou-ability.cooling svg, .ou-ability.cooling span { opacity: 0.45; }
+.ou-ability:not(.cooling) { box-shadow: 0 0 0 3px rgba(0, 0, 0, 0.45), 0 0 18px rgba(191, 230, 255, 0.45); }
+.ou-dash.tired { opacity: 0.5; }
 .ou-sprint.on { color: #1b1206; background: radial-gradient(circle at 50% 35%, #ffe7a6, #c99434 70%); border-color: #fff1c4; }
 `;
   doc.head.append(style);

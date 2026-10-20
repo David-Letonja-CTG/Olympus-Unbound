@@ -11,9 +11,9 @@
 
 ## 2. Phone HUD and menus (PR 2)
 
-- [ ] 2.1 HUD phone-landscape layout clear of the thumbs; minimap, boss banner and announcements sized down
-- [ ] 2.2 Every menu screen at 375–430 px portrait and 390–430 px landscape
-- [ ] 2.3 Tests, `npm run check`, `npm run e2e`; playtest with screenshots at Low and High
+- [x] 2.1 HUD phone-landscape layout clear of the thumbs; minimap, boss banner and announcements sized down
+- [x] 2.2 Every menu screen at 375–430 px portrait and 390–430 px landscape
+- [x] 2.3 Tests, `npm run check`, `npm run e2e`; playtest with screenshots at Low and High
 
 ## 3. Performance on phones (PR 3)
 
