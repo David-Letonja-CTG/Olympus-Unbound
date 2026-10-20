@@ -29,6 +29,22 @@ const QUALITY_LABEL: Record<GraphicsQuality, string> = {
       <span class="value">{{ round(s.sfxVolume * 100) }}%</span>
     </div>
     <div class="row">
+      <label for="music">Music</label>
+      <input
+        id="music"
+        type="range"
+        min="0"
+        max="100"
+        step="5"
+        data-testid="music-volume"
+        [value]="round(s.musicVolume * 100)"
+        (input)="
+          progression.updateSettings({ musicVolume: $any($event.target).valueAsNumber / 100 })
+        "
+      />
+      <span class="value">{{ round(s.musicVolume * 100) }}%</span>
+    </div>
+    <div class="row">
       <label for="shake">Screen shake</label>
       <input
         id="shake"

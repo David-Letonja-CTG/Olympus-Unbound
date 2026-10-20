@@ -87,6 +87,10 @@ Excess XP carries over; each threshold crossed queues one choice. Chests queue a
 
 Synergies are checked after every change; each activates once, is announced, and adds its modifiers.
 
+## Music — `engine/audio/music-*.ts`
+
+Presentation only (no gameplay rule, D2). `musicIntensity` = 0.55 × min(1, realmTime / boss.at) + min(0.45, 0.15 × depth) + min(0.3, 0.3 × enemies within 420 of the local god / 40), capped below Titan; 1 while a boss is awake. `TierTracker` follows rises over ~1 s and falls over ~8 s; tier edges 0.2 / 0.4 / 0.62 / 0.95 with 0.06 hysteresis. Tiers (`music-score.ts`): Calm 88, Stirring 100, Battle 120, Fury 140, Titan 160 BPM, 4/4 over D minor – B♭ – C – A. `MusicPlayer` schedules each bar 150 ms ahead on the audio clock (the tier takes over at the bar), synthesizes kick, snare, hat, crash, frame drum, toms, bass, power-chord and palm-muted guitars (waveshaper + cabinet low-pass), lyre and choir, through a glue compressor and a limiter, with its own volume (`settings.musicVolume`, default 0.5). It ducks to 25% while paused and fades out over 2.5 s at the run's end; the session owns it, so it carries on when the scene restarts for a new realm.
+
 ## Bot allies — `engine/sim/bots.ts`
 
 A `PartySeat` with `bot: { skill }` is played by `botInput` (its input replaces the slot's each step) and answers its choices at once with `botPick` (rounds wait only for players). Deterministic: it reads only the run's state (D5). Every `rethink` steps (Easy 24, Normal 12, Hard 4) a bot sums pulls: away from enemies within 210 (260/d² × size, bosses ×5), toward the nearest enemy within 700 when beyond its weapons' mean reach (140–420), back to the player beyond 260 (strongly beyond 520), out of warned hazards (Normal margin 10, Hard 40; Easy ignores them), toward pickups within 260 (heals only below 70%), toward fallen gods within 700, toward the open gate. Dash (Normal, Hard): an enemy in contact or a hazard landing within 0.45 s. Ability: Easy whenever foes are near; Normal with 3 within 220; Hard with 5, or below 40% health with any near. Picks: Easy the first offer; Normal new weapons then weapon levels; Hard scores offers (held weapons by level and damage share, affinities, synergy parts, healing when hurt). Bots never join the merchant's queue. Glory mode: `coop` when players − bots > 1, `allies` when bots > 0, else `solo`.
@@ -152,7 +156,7 @@ Migrations: v0 (unversioned) → v1 renames nothing; v1 → v2 adds `introSeen: 
 
 To change the save format: bump `SAVE_VERSION`, add `MIGRATIONS[oldVersion]`, extend `parseSave`, add tests for the old shape.
 
-**v5** adds `highScores.allies` and `bots` in score entries and run records (0 for older ones). **v4** (spec: meta-progression / save format version 4) adds `history` (last 100 `RunRecord`s), `highScores { solo, coop }` (10 each, best first), `achievements` (id → ISO date), `achievementProgress` (added-up goals), `achievementGods` (every-god goals) and `daily { date, progress, done }`; v3 → v4 adds them empty. Records are validated entry by entry (`save-records.ts`).
+**v6** adds `settings.musicVolume` (default 0.5). **v5** adds `highScores.allies` and `bots` in score entries and run records (0 for older ones). **v4** (spec: meta-progression / save format version 4) adds `history` (last 100 `RunRecord`s), `highScores { solo, coop }` (10 each, best first), `achievements` (id → ISO date), `achievementProgress` (added-up goals), `achievementGods` (every-god goals) and `daily { date, progress, done }`; v3 → v4 adds them empty. Records are validated entry by entry (`save-records.ts`).
 
 ## Glory — `client/src/app/core/save/glory.ts`
 

@@ -19,6 +19,8 @@ export const GRAPHICS_QUALITIES: readonly GraphicsQuality[] = ['low', 'medium', 
 export interface GameSettings {
   /** 0–1. */
   readonly sfxVolume: number;
+  /** 0–1 (spec: music / music volume). */
+  readonly musicVolume: number;
   readonly screenShake: boolean;
   readonly damageNumbers: boolean;
   /** Health bars over hurt monsters (spec: hud / enemy health bars). */
@@ -28,6 +30,7 @@ export interface GameSettings {
 
 export const DEFAULT_SETTINGS: GameSettings = {
   sfxVolume: 0.6,
+  musicVolume: 0.5,
   screenShake: true,
   damageNumbers: true,
   enemyHealthBars: true,
@@ -92,6 +95,8 @@ export interface DebugSnapshot {
   readonly bossAlive: boolean;
   /** Where the living boss is (solo runs and a room's host), for scripts that wait for it to come into view. */
   readonly boss?: { readonly x: number; readonly y: number };
+  /** The battle music's tier, 0 (Calm) to 4 (Titan) (spec: music). */
+  readonly musicTier?: number;
   /** Where the merchant stands while it is in the realm (spec: merchant). */
   readonly merchant?: { readonly x: number; readonly y: number };
   /** Players still in the run (not left). */

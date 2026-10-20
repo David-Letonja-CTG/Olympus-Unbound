@@ -461,6 +461,7 @@ export class RunSimulation {
     }
     return {
       time: state.time,
+      realmTime: state.realmTime,
       phase: this.currentPhase,
       health: Math.max(0, player.health),
       maxHealth: player.stats.maxHealth,

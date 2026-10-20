@@ -41,6 +41,7 @@ class StubSession implements GameSession {
 
 const hud: HudSnapshot = {
   time: 95,
+  realmTime: 95,
   phase: 'playing',
   health: 80,
   maxHealth: 120,

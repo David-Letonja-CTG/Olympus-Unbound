@@ -64,6 +64,10 @@ Runs take place at night. The arena is dark beyond your light; braziers ring the
 
 **Graphics quality** (Settings or the pause menu, applies at once): *Low* — fewer lights, no fog, embers, bloom or colour grading (chosen automatically without hardware graphics); *Medium*; *High* — the most lights, denser fog and embers, bloom on lightning and fire.
 
+## Music
+
+Every run has battle music, composed and played by the game itself: a lyre and frame drum while the realm is young (**Calm**), then war drums and bass (**Stirring**), a rock beat with power chords (**Battle**), driving metal with double kick and palm-muted riffs (**Fury**), and, while a boss is awake, the fastest and heaviest tier with a choir (**Titan**). It rises with the realm's time toward its boss, with every realm cleared and with the foes crowding around your god, and eases back down slowly when the field clears. A change waits for the end of the bar, so it lands on the beat. The music is quieter while paused, carries on through the gate, and fades out when the run ends. **Settings → Music** (also in the pause menu) sets its volume, apart from the sound effects.
+
 ## The HUD
 
 Health fills an **amphora** (bottom left) with the gold **stamina** bar and the dash pip beneath it, the experience bar and your weapons (each with its own cooldown sweep), armour, relics and companions sit along the bottom, the divine ability waits in an iron slot (bottom right) with a dark cooldown sweep that turns smoothly, the seconds left and a flash when it is ready, the run time sits in the top plaque with the minimap at the top right and gold and kills under it, active synergies at the top left, and the boss appears in a banner under the timer.

@@ -590,6 +590,11 @@ export class SoundPlayer {
     }
   }
 
+  /** The audio context, shared with the music (spec: music); undefined without audio. */
+  get audioContext(): AudioContext | undefined {
+    return this.context;
+  }
+
   setVolume(volume: number): void {
     this.volume = volume;
     if (this.master) this.master.gain.value = volume;

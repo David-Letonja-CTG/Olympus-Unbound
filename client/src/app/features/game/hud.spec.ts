@@ -5,6 +5,7 @@ import { Hud } from './hud';
 
 const base: HudSnapshot = {
   time: 61,
+  realmTime: 61,
   phase: 'playing',
   health: 60,
   maxHealth: 120,
