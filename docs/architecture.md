@@ -83,7 +83,7 @@ client/
     cutscene/              CutsceneTimeline (pure timing of cutscenes)
     audio/                 sound cues (recordings and Web Audio synthesis) and the adaptive battle music
     phaser/                Phaser games: ArenaScene, CutsceneScene, WorldView, Effects, LightMap + Atmosphere,
-                           asset loading + SpriteResolver, InputReader, textures
+                           asset loading + SpriteResolver, InputReader + TouchControls, textures
     analysis/              the autopilot bot and BalanceReport (admin mode's balance report)
     testing/               fixtures for engine tests (re-exports the autopilot)
   src/content/             gods, weapons, items (armour/relics/skills/synergies), enemies (+ bosses), realms, balance,
@@ -91,6 +91,7 @@ client/
   public/ui/               SVG ornaments for the UI (frame, divider, stone grain)
   public/assets/           external art packs (licensed, see docs/content.md)
   scripts/check-assets.mjs licence check for external files
+  scripts/perf/phone.mjs   frame times of a full horde under phone emulation (see Performance)
   e2e/                     Playwright tests
 docs/  openspec/  .github/workflows/  .claude/
 ```
@@ -124,7 +125,7 @@ sequenceDiagram
   participant R as RunSimulation
   participant A as Angular PlayScreen
   P->>S: update(time, delta)
-  S->>S: read keyboard/gamepad → PlayerInput
+  S->>S: read keyboard/gamepad/touch → PlayerInput
   S->>D: advance(dt, input)
   loop while accumulator ≥ 1/60 s (≤ 250 ms per frame)
     D->>R: step(1/60, inputs by slot)
@@ -135,6 +136,22 @@ sequenceDiagram
   S->>S: WorldView.sync (interpolated), camera, telegraphs
   S-->>A: hud snapshot (every 100 ms)
 ```
+
+## Input (D17)
+
+`InputReader` (`engine/phaser/input.ts`) turns devices into one `PlayerInput` per local seat's `ControlScheme`, and into gamepad `UiInput` edges for the menus.
+
+- **Keyboards** are read by `KeyboardEvent.code` from window listeners. Taps shorter than a frame are latched until the simulation has stepped.
+- **Gamepads** are read by index.
+- **Touch:** `TouchControls` (`engine/phaser/touch-controls.ts`, no Phaser import) is a DOM layer inside the game's parent, above the canvas and below the Angular HUD and dialogs. The game host is its own stacking context, and the HUD has `pointer-events: none`.
+  - Pointer events bind each finger to the control it first touched: the stick (left half) or a button.
+  - The pure `stickVector` maps a drag to a move: the share of the radius, nothing inside the simulation's dead zone. `followThumb` drags the base behind a thumb past the rim.
+  - Taps are latched like keys. Sprint is a toggle.
+  - At the HUD's 10 Hz tick, `ArenaScene` passes the ability's cooldown and the dash's affordability to `InputReader.showHud`, which the buttons show.
+- **Schemes:** `'touch'` is the touch controls plus the whole keyboard and the first gamepad, as `'keyboard'` has. `PlayScreen` passes `local: ['touch']` when `TouchScreen` (`app/core/touch-screen.ts`) reports a coarse main pointer.
+- **The phone screen** (Angular):
+  - `TouchScreen` also knows portrait and touch-only devices, and asks for fullscreen and a landscape lock from the taps that start a run. A guest asks on the first touch of the run.
+  - `PlayScreen` adds the pause button and the rotate overlay, which pauses a solo run. During a run it blocks zoom, scroll, pull to refresh and the long-press menu.
 
 ## Presentation layers (D12, D13)
 
@@ -150,7 +167,8 @@ ground image + grain → marble plazas → cliff shadow → decorations → shad
 - **Assets:** each scene's `preload` queues the manifest's files and reports `loadProgress`; `SpriteResolver` answers per sprite key with the pack frame/animation or the code-drawn texture (2× resolution, shown at half scale).
 - **Light map:** a screen-sized dynamic texture cleared to the realm's ambient colour; every light this frame (player, braziers, strikes, chains, novas, fire, projectiles, elites, boss, chests) is stamped additively, nearest first, up to the quality budget; the result is multiplied over the world. The view rectangle is computed from the camera target (`viewAround`) so the light map never lags a frame.
 - **Atmosphere:** two drifting fog layers, embers around the camera, a vignette, and camera filters (colour grade, bloom with a high threshold) switched by quality.
-- **Quality profiles** (`phaser/atmosphere.ts`): Low 16 lights at ¼ resolution, no fog/embers/bloom/grade; Medium 48 lights; High 96 lights at ½ resolution with denser fog and embers.
+- **Quality profiles** (`phaser/atmosphere.ts`): Low 16 lights at ¼ resolution, no fog/embers/bloom/grade, enemies drawn once above the light map with a night tint (no copy, no ground shadow for ordinary ones); Medium 48 lights; High 96 lights at ½ resolution with denser fog and embers.
+- **Culling:** enemies further than a margin outside the camera's view get no sprites (their lights still count).
 
 ## Loading a run
 
@@ -213,9 +231,22 @@ Application states are routes (`/`, `/gods`, `/realms`, `/coop`, `/play`, `/summ
 |---|---|---|
 | Simulation | Vitest (`ng test`), Node + jsdom | RNG, stats, collision, arena generation, damage/status, every weapon and enemy behavior, spawning, offers, synergies, boss attacks, run phases, co-op, deterministic replays, headless autopilot runs through the gate and to defeat, endless realms and reviving, content validation; rooms over in-memory links (`engine/testing/memory-link.ts`): snapshots, host + guest, prediction, leaving |
 | Angular | Vitest + TestBed, stubbed `GAME_SESSION_FACTORY`, `ROOM_NETWORK` and storage | save parsing/migration, rewards, progression, screens, guards, PlayScreen ↔ session, the lobby protocol |
-| Browser | Playwright (Chromium, dev server, `?debug`; `E2E_NO_GPU=1` for software rendering) | the intro (first launch, skip, no replay, replay from the menu), the full vertical-slice path, defeat, pause/abandon, buying upgrades and persistence, a room played by two tabs (`net=local`) |
+| Browser | Playwright (Chromium, dev server, `?debug`; `E2E_NO_GPU=1` for software rendering) | the intro (first launch, skip, no replay, replay from the menu), a run on a phone (Pixel 7 sideways: moving, dashing and pausing by touch, the HUD clear of the thumbs, a choice by tap), the full vertical-slice path, defeat, pause/abandon, buying upgrades and persistence, a room played by two tabs (`net=local`) |
 | Assets | `npm run assets:check` | every external file has an allowed licence entry, every entry has a file |
 
 ## Performance
 
 Targets: 60 fps at 1080p with ~300 enemies at High. Measured 2026-10-11 (GTX 1660, Chromium, 1920×1080, 331 enemies, lighting and atmosphere on): **High 79 fps, worst frame 14 ms; Medium 78 fps**. Software rendering (no GPU, Low, 960×540, 331 enemies): ~9 fps with the simulation still in real time — enough for CI, not a player target. Simulation step **0.8 ms** with ~300 enemies (Node). Means: global caps (400 enemies, 300 projectiles, 400 pickups with XP merging), spatial hashing, in-place compaction of dead entities, sprite pooling by entity in `WorldView`, a budgeted light map, ≤ 60 pooled damage numbers, separation limited to 4 neighbours, one Graphics object per effect layer, HUD at 10 Hz.
+
+**Phones** (measured 2026-10-20 with `node scripts/perf/phone.mjs`, against the development build):
+
+- Setup: Pixel 7 emulation held sideways (863 × 360, touch), CPU slowed 4× through the DevTools protocol, this machine's GPU, Zeus on Mount Olympus with 300–400 enemies.
+- Before tuning, at Low: about 18 fps, median frame 50 ms, 95th percentile 100 ms.
+- The main thread was saturated. About 80% of it went to drawing (Phaser and the WebGL calls behind it), about 16% to the simulation, and about 10% to the HUD's repainting.
+- Tuning, presentation only:
+  - The spatial hash's query finds the same items in the same order without a per-query set; the simulation's runs are unchanged.
+  - Enemies off screen are not drawn.
+  - On Low, enemies are drawn once above the darkness (D13 amended), without ordinary ground shadows.
+  - On touch devices, the HUD has no transitions or endless glows.
+- After tuning, at Low: **26 fps, median 33 ms, 95th percentile 50 ms**, the simulation in real time. High: 19 fps, median 50 ms.
+- Emulation is not a phone: the GPU and the browser differ. Check a real phone before trusting these numbers.

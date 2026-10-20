@@ -18,6 +18,13 @@ export interface QualityProfile {
   readonly silhouette: number;
   /** Multiplier for burst particle counts. */
   readonly particles: number;
+  /** Ground shadows under ordinary enemies (gods, elites and bosses keep theirs). Off on Low for phones. */
+  readonly enemyShadows: boolean;
+  /**
+   * Draw each enemy once, above the darkness with a night tint, instead of lit below it plus a copy above (D13):
+   * half the sprites of a horde, for phones on Low (spec: phone-play / phone performance).
+   */
+  readonly enemiesAboveDark: boolean;
 }
 
 export const QUALITY: Record<GraphicsQuality, QualityProfile> = {
@@ -30,6 +37,8 @@ export const QUALITY: Record<GraphicsQuality, QualityProfile> = {
     grade: false,
     silhouette: 0.5,
     particles: 0.5,
+    enemyShadows: false,
+    enemiesAboveDark: true,
   },
   medium: {
     lights: 48,
@@ -40,6 +49,8 @@ export const QUALITY: Record<GraphicsQuality, QualityProfile> = {
     grade: true,
     silhouette: 0.42,
     particles: 0.8,
+    enemyShadows: true,
+    enemiesAboveDark: false,
   },
   high: {
     lights: 96,
@@ -50,6 +61,8 @@ export const QUALITY: Record<GraphicsQuality, QualityProfile> = {
     grade: true,
     silhouette: 0.36,
     particles: 1,
+    enemyShadows: true,
+    enemiesAboveDark: false,
   },
 };
 

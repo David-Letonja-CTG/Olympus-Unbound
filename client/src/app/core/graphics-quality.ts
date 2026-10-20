@@ -4,13 +4,14 @@ import { GraphicsQuality } from '../../engine';
 const SOFTWARE_RENDERER = /swiftshader|llvmpipe|software|basic render|softpipe|mesa offscreen/i;
 
 /**
- * The graphics quality to start with (spec: visual-atmosphere / graphics quality levels): Low on software
- * rendering, High on a hardware renderer with plenty of cores, Medium otherwise. Never throws.
+ * The graphics quality to start with (spec: visual-atmosphere / graphics quality levels): Low on a touch device (a
+ * phone, spec: phone-play / phone performance) and on software rendering, High on a hardware renderer with plenty of cores, Medium otherwise. Never throws.
  */
 export function detectQuality(): GraphicsQuality {
   // jsdom (unit tests) has no WebGL.
   if (typeof navigator === 'undefined' || navigator.userAgent.includes('jsdom')) return 'medium';
   try {
+    if (matchMedia?.('(pointer: coarse)').matches) return 'low';
     const canvas = document.createElement('canvas');
     const gl = (canvas.getContext('webgl2') ??
       canvas.getContext('webgl')) as WebGLRenderingContext | null;

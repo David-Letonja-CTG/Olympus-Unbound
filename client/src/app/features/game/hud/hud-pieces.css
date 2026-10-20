@@ -196,3 +196,15 @@ app-hud {
     color: var(--muted);
   }
 }
+
+/*
+ * On a phone the HUD changes only at its ten updates a second: no transitions or endless glows, which would repaint
+ * the overlay every frame on top of the game (spec: phone-play / phone performance).
+ */
+@media (pointer: coarse) {
+  app-hud *,
+  app-hud *::before {
+    transition: none !important;
+    animation-iteration-count: 1 !important;
+  }
+}

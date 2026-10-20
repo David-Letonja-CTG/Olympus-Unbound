@@ -8,7 +8,8 @@
 //   node scripts/docs-media/capture.mjs                   # all scenes, against http://localhost:4200
 //   node scripts/docs-media/capture.mjs tour bosses       # only some scenes (tour: hero.gif and realms.png)
 //   DOCS_MEDIA_URL=http://localhost:4300 node scripts/docs-media/capture.mjs
-import { chromium } from '@playwright/test';
+//   node scripts/docs-media/capture.mjs phone             # a run and god selection on a phone (touch, Low)
+import { chromium, devices } from '@playwright/test';
 import { writeFileSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -498,6 +499,60 @@ const scenes = {
     await host.waitForTimeout(1500);
     await host.screenshot({ path: join(out, 'room.jpg'), quality: 88 });
     await context.close();
+  },
+
+  /**
+   * On a phone (spec: phone-play): a run held sideways with the thumb on the stick, at Low as a phone starts, and god
+   * selection held upright. Pixel 7 emulation (touch), at twice the CSS pixels.
+   */
+  async phone(browser) {
+    const phoneContext = async (device) => {
+      const context = await browser.newContext({ ...devices[device], deviceScaleFactor: 2 });
+      await context.addInitScript(
+        (save) => localStorage.setItem('olympus-unbound/save', JSON.stringify(save)),
+        { ...SAVE, settings: { quality: 'low' } },
+      );
+      return context;
+    };
+    const upright = await phoneContext('Pixel 7');
+    const menu = await upright.newPage();
+    await menu.goto(`${base}/gods`);
+    await menu.getByTestId('god-athena').tap();
+    await menu.waitForTimeout(800);
+    await menu.screenshot({ path: join(out, 'phone-gods.jpg'), quality: 85 });
+    await upright.close();
+
+    const sideways = await phoneContext('Pixel 7 landscape');
+    const page = await sideways.newPage();
+    await page.goto(`${base}/?debug`);
+    await page.getByRole('link', { name: 'Play' }).tap();
+    await page.getByTestId('god-zeus').tap();
+    await page.getByRole('button', { name: 'Continue' }).tap();
+    await page.getByTestId('realm-mount_olympus').tap();
+    await page.getByTestId('seed-input').fill('4242');
+    await page.getByTestId('begin').tap();
+    await page.waitForFunction(() => (window.olympusDebug?.inspect()?.time ?? 0) > 0.3, null, {
+      timeout: 120000,
+    });
+    await page.getByTestId('run-loading').waitFor({ state: 'detached', timeout: 120000 });
+    await send(page, { type: 'godMode', enabled: true });
+    await powerUp(page);
+    await send(page, { type: 'skipTo', seconds: 230 });
+    await page.waitForTimeout(6000);
+    await pickUpgrades(page);
+    // A thumb on the stick, pushing up and to the right.
+    const cdp = await sideways.newCDPSession(page);
+    const touch = (type, x, y) =>
+      cdp.send('Input.dispatchTouchEvent', {
+        type,
+        touchPoints: type === 'touchEnd' ? [] : [{ x, y, id: 1 }],
+      });
+    await touch('touchStart', 130, 250);
+    for (let i = 1; i <= 6; i++) await touch('touchMove', 130 + i * 7, 250 - i * 4);
+    await page.waitForTimeout(1200);
+    await page.screenshot({ path: join(out, 'phone.jpg'), quality: 85 });
+    await touch('touchEnd');
+    await sideways.close();
   },
 
   /** In a run: a level-up choice, the gate after a boss, and the summary at the end. */

@@ -4,21 +4,28 @@ export interface Circle {
   radius: number;
 }
 
+/** One cell's items, each with the first cell (lowest column, then row) it was inserted into. */
+interface Bucket<T> {
+  readonly items: T[];
+  readonly firstX: number[];
+  readonly firstY: number[];
+}
+
 /**
  * Uniform grid of buckets for fast "who is near this point" queries. Rebuilt once per step for moving
  * entities (cheap: clear + insert), built once for static obstacles.
  */
 export class SpatialHash<T extends Circle> {
-  private readonly buckets = new Map<number, T[]>();
-  private readonly pool: T[][] = [];
-  private readonly seen = new Set<T>();
-  private depth = 0;
+  private readonly buckets = new Map<number, Bucket<T>>();
+  private readonly pool: Bucket<T>[] = [];
 
   constructor(private readonly cellSize: number) {}
 
   clear(): void {
     for (const bucket of this.buckets.values()) {
-      bucket.length = 0;
+      bucket.items.length = 0;
+      bucket.firstX.length = 0;
+      bucket.firstY.length = 0;
       this.pool.push(bucket);
     }
     this.buckets.clear();
@@ -35,10 +42,12 @@ export class SpatialHash<T extends Circle> {
         const key = this.key(cx, cy);
         let bucket = this.buckets.get(key);
         if (!bucket) {
-          bucket = this.pool.pop() ?? [];
+          bucket = this.pool.pop() ?? { items: [], firstX: [], firstY: [] };
           this.buckets.set(key, bucket);
         }
-        bucket.push(item);
+        bucket.items.push(item);
+        bucket.firstX.push(minX);
+        bucket.firstY.push(minY);
       }
     }
   }
@@ -52,30 +61,26 @@ export class SpatialHash<T extends Circle> {
     const maxX = this.cell(x + radius);
     const minY = this.cell(y - radius);
     const maxY = this.cell(y + radius);
-    const single = minX === maxX && minY === maxY;
-    // A query started from inside another query's callback gets its own de-duplication set.
-    const seen = this.depth === 0 ? this.seen : new Set<T>();
-    seen.clear();
-    this.depth++;
-    try {
-      for (let cx = minX; cx <= maxX; cx++) {
-        for (let cy = minY; cy <= maxY; cy++) {
-          const bucket = this.buckets.get(this.key(cx, cy));
-          if (!bucket) continue;
-          for (const item of bucket) {
-            if (!single) {
-              if (seen.has(item)) continue;
-              seen.add(item);
-            }
-            const reach = radius + item.radius;
-            const dx = item.x - x;
-            const dy = item.y - y;
-            if (dx * dx + dy * dy <= reach * reach && visit(item) === false) return;
-          }
+    for (let cx = minX; cx <= maxX; cx++) {
+      for (let cy = minY; cy <= maxY; cy++) {
+        const bucket = this.buckets.get(this.key(cx, cy));
+        if (!bucket) continue;
+        const { items, firstX, firstY } = bucket;
+        for (let i = 0; i < items.length; i++) {
+          // An item in several cells is met first in the first cell both ranges share: visit it there only. This
+          // is the order a set of seen items gave, without its cost (spec: phone-play / phone performance).
+          if (
+            cx !== (firstX[i] > minX ? firstX[i] : minX) ||
+            cy !== (firstY[i] > minY ? firstY[i] : minY)
+          )
+            continue;
+          const item = items[i];
+          const reach = radius + item.radius;
+          const dx = item.x - x;
+          const dy = item.y - y;
+          if (dx * dx + dy * dy <= reach * reach && visit(item) === false) return;
         }
       }
-    } finally {
-      this.depth--;
     }
   }
 

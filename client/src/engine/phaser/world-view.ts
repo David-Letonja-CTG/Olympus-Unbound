@@ -83,6 +83,16 @@ class SpritePool {
 
 const lerp = (a: number, b: number, t: number) => a + (b - a) * t;
 
+/**
+ * World units beyond the camera's view (plus a few radii of the figure) within which enemies are drawn. Enemies further
+ * out get no sprites at all: a full horde is mostly off screen, and three sprites each cost a phone dearly (spec:
+ * phone-play / phone performance). The margin covers a frame's camera movement and the party's zoom-out.
+ */
+const CULL_MARGIN = 220;
+
+/** Enemies drawn above the darkness (Low) are dimmed by this multiply tint, about the night's light on a figure. */
+const NIGHT_TINT = 0xb8b4c4;
+
 interface StaticLight {
   readonly x: number;
   readonly y: number;
@@ -204,9 +214,32 @@ export class WorldView {
       lights.add(x, y, 360, 0xffe9c8, 0.95, 10);
     }
 
+    // Last frame's view: the camera is placed after the world is synced; the margin covers the difference.
+    const view = this.scene.cameras.main.worldView;
+    const cull = view.width > 0;
     for (const e of state.enemies) {
       const x = lerp(e.px, e.x, alpha);
       const y = lerp(e.py, e.y, alpha);
+      const reach = CULL_MARGIN + e.radius * 3;
+      if (
+        cull &&
+        (x < view.x - reach ||
+          x > view.right + reach ||
+          y < view.y - reach ||
+          y > view.bottom + reach)
+      ) {
+        // Off screen: no sprites, but its light still reaches into the view.
+        if (e.elite || e.boss)
+          lights.add(
+            x,
+            y,
+            e.boss ? 280 : 150,
+            e.boss ? 0xff5a2a : 0xffcc66,
+            e.boss ? 0.75 : 0.55,
+            e.boss ? 8 : 5,
+          );
+        continue;
+      }
       const vx = (e.x - e.px) * perStep;
       const vy = (e.y - e.py) * perStep;
       const moving = vx * vx + vy * vy > 0.01;
@@ -224,9 +257,11 @@ export class WorldView {
       );
       const bob = r.codeDrawn && moving ? Math.sin(time / 80 + e.id) * e.radius * 0.07 : 0;
       const lean = r.codeDrawn && moving ? Math.max(-1, Math.min(1, vx)) * 0.07 : 0;
+      // Low (phones): the figure itself above the darkness, still in y order, instead of a lit figure and a copy.
+      const aboveDark = this.profile.enemiesAboveDark;
       sprite
         .setPosition(x, y + bob)
-        .setDepth(y)
+        .setDepth(aboveDark ? DEPTH.silhouette + y / 10 : y)
         .setRotation(lean);
       const s = e.status;
       if (e.hitFlash > 0) sprite.setTint(0xffffff).setTintMode(flash);
@@ -238,13 +273,15 @@ export class WorldView {
       // Boss mechanics (spec: boss-encounter / attack warnings): shielded parts in stone grey, a raging boss red.
       else if (e.guarded) sprite.setTint(0x8a8a8a).setTintMode(multiply);
       else if (e.boss?.enraged) sprite.setTint(0xff7a60).setTintMode(multiply);
+      // Above the darkness, a night tint keeps it in the scene; elites and bosses are lit by their own glow.
+      else if (aboveDark && !e.elite && !e.boss) sprite.setTint(NIGHT_TINT).setTintMode(multiply);
       else sprite.clearTint();
 
       // The same figure again above the darkness, partly transparent: every enemy stays readable in the dark
       // and keeps its own colours (spec: visual-atmosphere / readability guarantees).
-      const sil = p.silhouette.get(e.id);
+      const sil = aboveDark ? undefined : p.silhouette.get(e.id);
       sil
-        .setTexture(sprite.texture.key, sprite.frame.name)
+        ?.setTexture(sprite.texture.key, sprite.frame.name)
         .setOrigin(sprite.originX, sprite.originY)
         .setScale(sprite.scaleX, sprite.scaleY)
         .setFlipX(sprite.flipX)
@@ -252,13 +289,14 @@ export class WorldView {
         .setPosition(sprite.x, sprite.y)
         .setDepth(DEPTH.silhouette)
         .setAlpha(Math.min(1, this.profile.silhouette * (e.elite || e.boss ? 1.5 : 1)));
-      if (sprite.isTinted) sil.setTint(sprite.tintTopLeft).setTintMode(sprite.tintMode);
-      else sil.clearTint();
-      p.shadow
-        .get(e.id)
-        .setPosition(x, y + e.radius * 0.75)
-        .setDepth(DEPTH.shadow)
-        .setScale((e.radius * 2.6) / 64);
+      if (sprite.isTinted) sil?.setTint(sprite.tintTopLeft).setTintMode(sprite.tintMode);
+      else sil?.clearTint();
+      if (this.profile.enemyShadows || e.elite || e.boss)
+        p.shadow
+          .get(e.id)
+          .setPosition(x, y + e.radius * 0.75)
+          .setDepth(DEPTH.shadow)
+          .setScale((e.radius * 2.6) / 64);
 
       if (e.elite || e.boss) {
         const pulse = 1 + Math.sin(time / 180 + e.id) * 0.08;

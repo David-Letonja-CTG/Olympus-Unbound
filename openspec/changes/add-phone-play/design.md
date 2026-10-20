@@ -75,6 +75,27 @@ _Alternative rejected:_ "push the stick far to sprint". On a small stick it is e
 - Enemy caps and every simulation rule stay as they are. Rooms mix phones and computers, and the host's simulation must be the same run as a solo one (D5, D16).
 - The default quality is Low when `(pointer: coarse)` matches (`detectQuality`).
 
+### What was measured and done
+
+Measured at Low with the CPU ×4 and 300–400 enemies:
+
+- **Before:** about 18 fps, median 50 ms, p95 100 ms.
+- **Main thread:** about 80% drawing, about 16% the simulation (the spatial hash's de-duplicating set alone was 12%), about 10% the HUD's repaints.
+
+Changes:
+
+- **Spatial hash:** each bucket entry remembers its item's first cell, and an item is visited only in the first cell both ranges share. The results and their order are those of the set (a randomized test against a reference), so runs are unchanged.
+- **Culling:** enemies beyond a margin outside the view get no sprites.
+- **Low (D13 amended):**
+  - Each enemy is drawn once above the light map, y-sorted, with a night tint (elites and bosses untinted), instead of a lit sprite plus a copy. Enemies over tall obstacles show in front of them, as their copies did at half strength.
+  - Ordinary enemies have no ground shadows.
+  - Measured alone, dropping the copies took the median from 50 ms to 33 ms.
+- **HUD on coarse pointers:** no transitions or endless animations.
+
+**After:** 26 fps, median 33.4 ms (two 60 Hz frames), p95 50 ms, the simulation in real time.
+
+Enemy caps and rules are unchanged.
+
 ## Testing
 
 - **Unit:** `stickVector` (dead zone, half drag, clamping, the base following the thumb); `TouchControls` with synthetic pointer events (multi-touch binding, latched taps, sprint toggle, lifting); `TouchScreen` with stubbed `matchMedia`; god selection hides Players when touch-only; the play screen's pause button and rotate overlay; `detectQuality` on coarse pointers.
