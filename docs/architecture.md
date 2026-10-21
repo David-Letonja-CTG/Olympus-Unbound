@@ -247,7 +247,8 @@ A quick run is `pace: 2` plus `xpGain +1`.
 - **Sharing:**
   - `drawShareCard` (`app/core/share-card.ts`) paints a 1200 × 630 PNG on a canvas: the player's name as the headline, the god's portrait before the boss's silhouette, the score to beat.
   - The player's name lives in `SaveData.playerName` (save v9); Settings and the Co-op name field write it, and challenge links carry it as `n`.
-  - `shareRun` uses the Web Share API with files where available; otherwise it downloads the picture and copies the link.
+  - The summary has two buttons, since chat apps such as Messenger keep a share's text and drop its picture. `sharePicture` shares the picture alone (Web Share API with files), else downloads it. `shareLink` shares the dare and the challenge link, else copies them.
+  - `scripts/entry-pages.mjs` gives the shared routes (`challenge`, `coop`, `daily`) their own HTML files in the build, so their links answer 200 and chat apps show the preview card.
 - **Invites:** `inviteLink` (`app/core/rooms/invite.ts`) makes `coop?join=CODE`; the lobby shares it with `shareLink` (share sheet, else clipboard). The Co-op screen reads `join` through `invitedCode`, fills the code in and waits for a tap: joining stays the player's choice.
   - `challengeLink` / `parseChallenge` (`app/core/challenge.ts`) write and read `challenge?g=…&r=…&s=…[&q=1][&t=…]&b=…`, relative to the base URL. The `/challenge` route opens the challenge, and a broken link goes to the menu.
 - **Link preview:** `index.html` carries Open Graph and Twitter tags with absolute URLs on the Pages site and `public/og-image.jpg`. The docs-media script's `og` scene renders that image.

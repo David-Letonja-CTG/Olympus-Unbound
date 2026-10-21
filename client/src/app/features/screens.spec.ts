@@ -10,6 +10,7 @@ import { RunSetup } from '../core/run-setup';
 import { localDate } from '../core/save/glory';
 import { SAVE_KEY, SAVE_STORAGE } from '../core/save/save-store';
 import { parseSeed } from '../core/run-setup';
+import { RunResult } from '../../engine';
 
 function storageWith(save?: object) {
   const data: Record<string, string> = save ? { [SAVE_KEY]: JSON.stringify(save) } : {};
@@ -361,5 +362,47 @@ describe('Daily Trial screens (spec: daily-trial)', () => {
     const h = await open('/glory', returning);
     const trial = TestBed.inject(Progression).trialToday().trial;
     expect(q(h, '[data-testid=glory-trial]')?.textContent).toContain(trial.twist.name);
+  });
+});
+
+describe('run summary sharing (spec: daily-trial / sharing a run)', () => {
+  it('shares the challenge link on its own button, copied where there is no share sheet', async () => {
+    let copied = '';
+    Object.defineProperty(navigator, 'clipboard', {
+      configurable: true,
+      value: { writeText: async (text: string) => void (copied = text) },
+    });
+    try {
+      const h = await open('/', { version: 9, introSeen: true, playerName: 'Ada' });
+      const result: RunResult = {
+        runId: 'run-share',
+        godId: 'zeus',
+        realmId: 'mount_olympus',
+        seed: 77,
+        outcome: 'defeat',
+        timeSeconds: 120,
+        level: 5,
+        kills: 90,
+        gold: 10,
+        realmsCleared: 0,
+        realmReached: 'mount_olympus',
+        players: 1,
+        bots: 0,
+        loadout: { weapons: [], relics: [], skills: [], synergies: [] },
+      };
+      const rewards = TestBed.inject(Progression).recordRun(result);
+      TestBed.inject(RunSetup).lastRun.set({ result, rewards });
+      await h.navigateByUrl('/summary');
+      expect(q(h, '[data-testid=share-picture]')?.textContent).toContain('Share picture');
+      q<HTMLButtonElement>(h, '[data-testid=share-link]')?.click();
+      await new Promise((r) => setTimeout(r, 10));
+      h.detectChanges();
+      expect(copied).toMatch(/^Ada scored [\d,]+ as Zeus in Olympus Unbound\. Can you beat it\? /);
+      expect(copied).toContain('/challenge?g=zeus&r=mount_olympus&s=77');
+      expect(copied).toContain('n=Ada');
+      expect(q(h, '[data-testid=share-status]')?.textContent).toContain('Challenge link copied.');
+    } finally {
+      Reflect.deleteProperty(navigator, 'clipboard');
+    }
   });
 });

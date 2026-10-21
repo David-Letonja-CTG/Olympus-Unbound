@@ -7,7 +7,7 @@ An original mythological horde-survival roguelite that runs entirely in the brow
 <img src="docs/images/hero.gif" width="100%" alt="A run in every realm: Mount Olympus, the Underworld, the Lernaean Marsh, the Aegean Shore and the Labyrinth of Crete">
 
 - **Four gods:** Zeus, Hades, Poseidon and Athena, each with a starting weapon, a divine ability, a passive and an arsenal of their own (Thunderbolt is Zeus's alone, the Soul Scythe Hades's).
-- **Daily Trial:** one run a day, the same for everyone: a god, a realm, a seed and a twist such as Swift Foes or Glass God. Your best today is kept, and **Share** turns any run into a picture and a challenge link that starts the same run for a friend. Co-op rooms have **Invite** links that open the room ready to join.
+- **Daily Trial:** one run a day, the same for everyone: a god, a realm, a seed and a twist such as Swift Foes or Glass God. Your best today is kept, and any run can be shared as a picture and a challenge link that starts the same run for a friend. Co-op rooms have **Invite** links that open the room ready to join.
 - **Quick runs:** realms at twice the pace, with the boss at 3:30 instead of 7:00, and their own high-score table. Made for a break on the phone.
 - **Sprint and dash:** an orb of golden ichor beside your orb of blood; sprint away, or dash through an attack untouched.
 - **Five realms, endless runs:** Mount Olympus, the Underworld, the Lernaean Marsh, the Aegean Shore and the Labyrinth of Crete. Each has its own map, monsters and boss: the Cyclops, Cerberus, the Hydra, Scylla and Asterion. After the Labyrinth comes Olympus again, harder.

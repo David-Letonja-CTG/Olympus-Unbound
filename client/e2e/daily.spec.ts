@@ -27,11 +27,13 @@ test("the Daily Trial: today's run, its best, a share and a challenge link (spec
   await expect(page.getByTestId('summary-trial')).toContainText('New best today');
   await expect(page.getByTestId('summary-high-score')).toHaveCount(0);
 
-  // Desktop Chromium cannot share files: the picture is saved and the challenge link copied.
+  // Desktop Chromium cannot share files: the picture is saved; the challenge link, on its own button, is copied.
   const download = page.waitForEvent('download');
-  await page.getByTestId('share').click();
+  await page.getByTestId('share-picture').click();
   expect((await download).suggestedFilename()).toBe('olympus-unbound.png');
-  await expect(page.getByTestId('share-status')).toContainText('challenge link copied');
+  await expect(page.getByTestId('share-status')).toContainText('Picture saved');
+  await page.getByTestId('share-link').click();
+  await expect(page.getByTestId('share-status')).toContainText('Challenge link copied');
   const copied = await page.evaluate(() => navigator.clipboard.readText());
   const link = copied.match(/https?:\/\/\S+/)?.[0] ?? '';
   expect(link).toContain('/challenge?');

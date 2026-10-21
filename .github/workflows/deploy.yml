@@ -86,7 +86,7 @@ jobs:
           VERSION: ${{ steps.version.outputs.version }}
         run: |
           npx ng build --base-href /
-          cp dist/olympus-unbound/browser/index.html dist/olympus-unbound/browser/404.html
+          node scripts/entry-pages.mjs
           (cd dist/olympus-unbound/browser && zip -qr "$GITHUB_WORKSPACE/olympus-unbound-$VERSION.zip" .)
 
       - name: Attach the zip to the release
@@ -96,14 +96,15 @@ jobs:
         run: gh release upload "$VERSION" "olympus-unbound-$VERSION.zip" --clobber --repo "$GITHUB_REPOSITORY"
 
       # For GitHub Pages: the project site lives under /<repository>/. Pages answers unknown paths with 404.html,
-      # which is the app itself, so deep links such as /play load the game.
+      # which is the app itself, so deep links such as /play load the game; shared addresses (challenge links, room
+      # invites) get pages of their own so chat apps show their preview (scripts/entry-pages.mjs).
       - name: Build for GitHub Pages
         working-directory: client
         env:
           REPOSITORY: ${{ github.event.repository.name }}
         run: |
           npx ng build --base-href "/$REPOSITORY/"
-          cp dist/olympus-unbound/browser/index.html dist/olympus-unbound/browser/404.html
+          node scripts/entry-pages.mjs
 
       - uses: actions/upload-pages-artifact@v5
         with:
@@ -133,7 +134,8 @@ jobs:
             if curl -fsS -o /dev/null --max-time 10 "$SITE" \
               && curl -fsS -o /dev/null --max-time 10 "${SITE}assets/olympus/zeus.png" \
               && curl -fsS -o /dev/null --max-time 10 "${SITE}manifest.webmanifest" \
-              && curl -fsS -o /dev/null --max-time 10 "${SITE}ngsw.json"; then
+              && curl -fsS -o /dev/null --max-time 10 "${SITE}ngsw.json" \
+              && curl -fsS -o /dev/null --max-time 10 "${SITE}challenge?g=zeus"; then
               code=$(curl -s -o /dev/null -w '%{http_code}' --max-time 10 "${SITE}play")
               if curl -s --max-time 10 "${SITE}play" | grep -q '<app-root'; then
                 echo "live at $SITE (deep link answered $code with the app)"
