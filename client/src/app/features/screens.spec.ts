@@ -250,6 +250,19 @@ describe('settings screen', () => {
     expect(JSON.parse(storage.getItem(SAVE_KEY) ?? '{}').settings.damageNumbers).toBe(false);
   });
 
+  it("remembers the player's name for challenges and co-op", async () => {
+    const storage = storageWith();
+    TestBed.configureTestingModule({
+      providers: [provideRouter(routes), { provide: SAVE_STORAGE, useValue: storage }],
+    });
+    const h = await RouterTestingHarness.create('/settings');
+    const name = q<HTMLInputElement>(h, '[data-testid=settings-name]');
+    if (!name) throw new Error('missing name field');
+    name.value = '  Ada ';
+    name.dispatchEvent(new Event('change'));
+    expect(JSON.parse(storage.getItem(SAVE_KEY) ?? '{}').playerName).toBe('Ada');
+  });
+
   it('keeps the credits behind a button, grouped by work', async () => {
     const h = await open('/settings');
     const dialog = q<HTMLDialogElement>(h, '[data-testid=credits]');
@@ -318,6 +331,7 @@ describe('Daily Trial screens (spec: daily-trial)', () => {
 
   it('opens a challenge link and accepts it', async () => {
     const h = await open('/challenge?g=hades&r=the_underworld&s=991&q=1&b=3400', returning);
+    expect(q(h, '[data-testid=challenge-title]')?.textContent).toContain('A challenge');
     expect(q(h, '[data-testid=challenge-god]')?.textContent).toContain('Hades');
     expect(q(h, '[data-testid=challenge-to-beat]')?.textContent).toContain('3,400');
     q<HTMLButtonElement>(h, '[data-testid=challenge-accept]')?.click();
@@ -329,6 +343,12 @@ describe('Daily Trial screens (spec: daily-trial)', () => {
       quick: true,
       toBeat: 3400,
     });
+  });
+
+  it('names who sent the challenge', async () => {
+    const h = await open('/challenge?g=hades&r=the_underworld&s=991&b=3400&n=Ada', returning);
+    expect(q(h, '[data-testid=challenge-title]')?.textContent).toContain('Ada challenges you');
+    expect(text(h)).toContain('Ada played this run');
   });
 
   it('sends a broken challenge link to the main menu', async () => {

@@ -417,11 +417,18 @@ export class RunSummary {
     try {
       const god = this.index.gods.get(v.result.godId);
       const site = new URL(document.baseURI);
+      const realm = this.index.realms.get(v.result.realmId);
+      const boss = realm && this.content.bosses.find((b) => b.id === realm.boss.id);
+      const player = this.progression.playerName();
+      const [godImage, bossImage] = await Promise.all([
+        god ? spriteImageUrl(this.content.assets, god.visual.sprite, 360) : undefined,
+        boss ? spriteImageUrl(this.content.assets, boss.visual.sprite, 400) : undefined,
+      ]);
       const blob = await drawShareCard({
+        player,
         god: v.god,
-        godImage: god
-          ? await spriteImageUrl(this.content.assets, god.visual.sprite, 360)
-          : undefined,
+        godImage,
+        bossImage,
         realm: v.realm,
         kind: v.kind,
         time: v.time,
@@ -432,8 +439,8 @@ export class RunSummary {
         site: (site.host + site.pathname).replace(/\/$/, ''),
       });
       if (!blob) throw new Error('no picture');
-      const link = challengeLink(document.baseURI, v.result);
-      const text = `I scored ${this.fmt(scoreOf(v.result))} as ${v.god} in Olympus Unbound. Can you beat it?`;
+      const link = challengeLink(document.baseURI, v.result, player);
+      const text = `${player ? player + ' scored' : 'I scored'} ${this.fmt(scoreOf(v.result))} as ${v.god} in Olympus Unbound. Can you beat it?`;
       const { outcome, copied } = await shareRun(blob, link, text);
       this.shareStatus.set(
         outcome === 'shared'

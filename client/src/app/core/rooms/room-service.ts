@@ -94,8 +94,8 @@ export class RoomService {
   readonly realmId = signal(this.content.realms[0].id);
   readonly error = signal<string | undefined>(undefined);
   readonly run = signal<RoomRun | undefined>(undefined);
-  /** The name this player goes by in rooms; kept in memory only. */
-  readonly playerName = signal('Hero');
+  /** The name this player goes by in rooms, from the save ("Hero" when none was given). */
+  readonly playerName = signal(this.progression.playerName() || 'Hero');
 
   readonly me = computed(() => this.members().find((m) => m.slot === this.localSlot()));
   readonly canStart = computed(
@@ -176,8 +176,14 @@ export class RoomService {
   }
 
   setName(name: string): void {
-    this.playerName.set(name.slice(0, MAX_NAME));
+    this.rememberName(name);
     this.change({ name: this.name() });
+  }
+
+  /** A new name, kept in the save for the next visit and the share picture (spec: save format version 9). */
+  rememberName(name: string): void {
+    this.playerName.set(name.slice(0, MAX_NAME));
+    this.progression.setPlayerName(name);
   }
 
   setGod(godId: string): void {

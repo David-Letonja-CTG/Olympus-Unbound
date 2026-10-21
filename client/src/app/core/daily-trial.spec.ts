@@ -104,6 +104,14 @@ describe('challenges (spec: daily-trial / challenge links)', () => {
     expect(parseChallenge(new URL(link).searchParams, CONTENT)?.twist?.id).toBe('swift_foes');
   });
 
+  it('names its sender, cleaned, and works without one', () => {
+    const named = challengeLink('https://example.com/', result(), '  Ada  ');
+    expect(parseChallenge(new URL(named).searchParams, CONTENT)?.from).toBe('Ada');
+    const nameless = challengeLink('https://example.com/', result(), '');
+    expect(new URL(nameless).searchParams.has('n')).toBe(false);
+    expect(parseChallenge(new URL(nameless).searchParams, CONTENT)?.from).toBeUndefined();
+  });
+
   it('turns away a broken link', () => {
     const parse = (q: string) => parseChallenge(new URLSearchParams(q), CONTENT);
     expect(parse('g=nobody&r=mount_olympus&s=1')).toBeUndefined();

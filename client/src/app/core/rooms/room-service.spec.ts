@@ -5,6 +5,7 @@ import { PeerLink } from '../../../engine';
 import { routes } from '../../app.routes';
 import { SAVE_KEY, SAVE_STORAGE } from '../save/save-store';
 import { RoomError, RoomListing, RoomNetwork, ROOM_NETWORK } from './room-network';
+import { inviteLink, invitedCode } from './invite';
 import { CODE_ALPHABET, isValidCode, RoomService } from './room-service';
 
 /** Two connected links; messages arrive on the next task, like over a real channel. */
@@ -89,7 +90,7 @@ function setup(save: object = { version: 2, introSeen: true }) {
   });
   // Every player has their own service; here they share one test injector.
   const service = () => TestBed.runInInjectionContext(() => new RoomService());
-  return { network, service };
+  return { network, service, data };
 }
 
 describe('rooms (spec: rooms)', () => {
@@ -238,5 +239,81 @@ describe('co-op screen', () => {
     expect(el.querySelector('[data-testid=member-0]')?.textContent).toContain('Host');
     expect(el.querySelector<HTMLButtonElement>('[data-testid=start-room]')?.disabled).toBe(true);
     expect(el.textContent).toContain('Waiting for players to join');
+  });
+});
+
+describe('invites (spec: rooms / joining a room)', () => {
+  it('links to Co-op with the code, keeping only the test network parameters', () => {
+    expect(inviteLink('https://example.com/Olympus-Unbound/', 'ABC2D')).toBe(
+      'https://example.com/Olympus-Unbound/coop?join=ABC2D',
+    );
+    expect(
+      inviteLink('http://localhost:4200', 'ABC2D', new URLSearchParams('debug&net=local&x=1')),
+    ).toBe('http://localhost:4200/coop?join=ABC2D&debug&net=local');
+    expect(invitedCode(' abc2d ')).toBe('ABC2D');
+    expect(invitedCode('ab1')).toBeUndefined();
+    expect(invitedCode(null)).toBeUndefined();
+  });
+
+  it('fills in the invited code and offers to join it, without joining by itself', async () => {
+    const { network, service } = setup();
+    const host = service();
+    await host.create('zeus');
+    const code = host.code() ?? '';
+    const harness = await RouterTestingHarness.create(`/coop?join=${code.toLowerCase()}`);
+    const el = harness.routeNativeElement as HTMLElement;
+    await settle();
+    harness.detectChanges();
+    expect(el.querySelector('[data-testid=invited]')?.textContent).toContain(code);
+    expect(el.querySelector<HTMLInputElement>('[data-testid=room-code-input]')?.value).toBe(code);
+    const join = el.querySelector<HTMLButtonElement>('[data-testid=join-room]');
+    expect(join?.textContent).toContain(`Join room ${code}`);
+    expect(join?.disabled).toBe(false);
+    expect(host.members()).toHaveLength(1);
+    expect(network.rooms.size).toBe(1);
+  });
+
+  it('ignores a broken invite', async () => {
+    setup();
+    const harness = await RouterTestingHarness.create('/coop?join=zz');
+    const el = harness.routeNativeElement as HTMLElement;
+    expect(el.querySelector('[data-testid=invited]')).toBeNull();
+    expect(el.querySelector<HTMLInputElement>('[data-testid=room-code-input]')?.value).toBe('');
+    expect(el.querySelector<HTMLButtonElement>('[data-testid=join-room]')?.disabled).toBe(true);
+  });
+
+  it("copies the room's invite link where the browser cannot share", async () => {
+    setup();
+    let copied = '';
+    Object.defineProperty(navigator, 'clipboard', {
+      configurable: true,
+      value: { writeText: async (text: string) => void (copied = text) },
+    });
+    try {
+      const harness = await RouterTestingHarness.create('/coop');
+      const el = harness.routeNativeElement as HTMLElement;
+      el.querySelector<HTMLButtonElement>('[data-testid=create-room]')?.click();
+      await settle();
+      harness.detectChanges();
+      const code = el.querySelector('[data-testid=room-code]')?.textContent?.trim() ?? '';
+      el.querySelector<HTMLButtonElement>('[data-testid=invite]')?.click();
+      await settle();
+      harness.detectChanges();
+      expect(copied).toContain(`/coop?join=${code}`);
+      expect(el.querySelector('[data-testid=invite]')?.textContent).toContain('Link copied');
+    } finally {
+      Reflect.deleteProperty(navigator, 'clipboard');
+    }
+  });
+
+  it('remembers the name typed for co-op in the save', async () => {
+    const { data } = setup();
+    const harness = await RouterTestingHarness.create('/coop');
+    const el = harness.routeNativeElement as HTMLElement;
+    const name = el.querySelector<HTMLInputElement>('[data-testid=player-name]');
+    if (!name) throw new Error('no name input');
+    name.value = 'Ada';
+    name.dispatchEvent(new Event('input'));
+    expect(JSON.parse(data[SAVE_KEY]).playerName).toBe('Ada');
   });
 });

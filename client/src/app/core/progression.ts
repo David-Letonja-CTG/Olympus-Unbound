@@ -12,7 +12,7 @@ import { DailyTrial, dailyTrialFor } from './daily-trial';
 import { dailyOf, localDate, questsFor } from './save/glory';
 import { TrialBest } from './save/save-records';
 import { applyRunResult, RunRewards } from './save/rewards';
-import { permanentModifiers, SaveData } from './save/save-data';
+import { cleanName, permanentModifiers, SaveData } from './save/save-data';
 import { SaveStore } from './save/save-store';
 
 /** Today's Daily Trial and how the player has done in it (spec: daily-trial). */
@@ -39,6 +39,8 @@ export class Progression {
   readonly save = this.state.asReadonly();
   readonly gold = computed(() => this.state().gold);
   readonly settings = computed(() => this.state().settings);
+  /** The player's name for rooms and the share picture; empty when none was given (spec: save format version 9). */
+  readonly playerName = computed(() => this.state().playerName);
 
   level(upgrade: PermanentUpgradeDefinition): number {
     return this.state().permanentUpgrades[upgrade.id] ?? 0;
@@ -77,6 +79,12 @@ export class Progression {
   updateSettings(changes: Partial<GameSettings>): void {
     const save = this.state();
     this.commit({ ...save, settings: { ...save.settings, ...changes } });
+  }
+
+  setPlayerName(name: string): void {
+    const save = this.state();
+    const clean = cleanName(name);
+    if (clean !== save.playerName) this.commit({ ...save, playerName: clean });
   }
 
   /** Records that the intro finished or was skipped, so it no longer plays on launch. */
