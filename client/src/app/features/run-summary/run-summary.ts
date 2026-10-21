@@ -3,7 +3,7 @@ import { Router, RouterLink } from '@angular/router';
 import { ContentIndex, GameContent, RunResult } from '../../../engine';
 import { challengeLink } from '../../core/challenge';
 import { scoreOf } from '../../core/save/glory';
-import { drawShareCard, shareRun } from '../../core/share-card';
+import { drawShareCard, shareLink, sharePicture } from '../../core/share-card';
 import { GAME_CONTENT } from '../../core/game-content';
 import { Progression } from '../../core/progression';
 import { RunSetup } from '../../core/run-setup';
@@ -180,8 +180,16 @@ const TITLES = { defeat: 'You have fallen', abandoned: 'Run abandoned' } as cons
 
         <div class="actions sticky">
           <a class="btn" routerLink="/" data-testid="to-menu">Main menu</a>
-          <button class="btn" data-testid="share" [disabled]="sharing()" (click)="share()">
-            Share
+          <button
+            class="btn"
+            data-testid="share-picture"
+            [disabled]="sharing()"
+            (click)="sharePicture()"
+          >
+            Share picture
+          </button>
+          <button class="btn" data-testid="share-link" [disabled]="sharing()" (click)="shareLink()">
+            Share link
           </button>
           @if (inRoom()) {
             <a class="btn btn-primary" routerLink="/coop" data-testid="to-coop">Co-op</a>
@@ -406,10 +414,10 @@ export class RunSummary {
   }
 
   /**
-   * Shares a picture of the run and a challenge link (spec: daily-trial / sharing a run): the share sheet where the
-   * browser can share files, otherwise the picture is saved and the link copied.
+   * Shares the picture of the run alone (spec: daily-trial / sharing a run): the share sheet where the browser can
+   * share files, otherwise it is saved. The challenge link has its own button, as apps drop pictures sent with text.
    */
-  protected async share(): Promise<void> {
+  protected async sharePicture(): Promise<void> {
     const v = this.view();
     if (!v || this.sharing()) return;
     this.sharing.set(true);
@@ -419,13 +427,12 @@ export class RunSummary {
       const site = new URL(document.baseURI);
       const realm = this.index.realms.get(v.result.realmId);
       const boss = realm && this.content.bosses.find((b) => b.id === realm.boss.id);
-      const player = this.progression.playerName();
       const [godImage, bossImage] = await Promise.all([
         god ? spriteImageUrl(this.content.assets, god.visual.sprite, 360) : undefined,
         boss ? spriteImageUrl(this.content.assets, boss.visual.sprite, 400) : undefined,
       ]);
       const blob = await drawShareCard({
-        player,
+        player: this.progression.playerName(),
         god: v.god,
         godImage,
         bossImage,
@@ -439,20 +446,35 @@ export class RunSummary {
         site: (site.host + site.pathname).replace(/\/$/, ''),
       });
       if (!blob) throw new Error('no picture');
-      const link = challengeLink(document.baseURI, v.result, player);
-      const text = `${player ? player + ' scored' : 'I scored'} ${this.fmt(scoreOf(v.result))} as ${v.god} in Olympus Unbound. Can you beat it?`;
-      const { outcome, copied } = await shareRun(blob, link, text);
+      const outcome = await sharePicture(blob);
       this.shareStatus.set(
-        outcome === 'shared'
-          ? 'Shared.'
-          : outcome === 'cancelled'
-            ? undefined
-            : copied
-              ? 'Picture saved, and the challenge link copied.'
-              : 'Picture saved. Challenge link: ' + link,
+        outcome === 'saved' ? 'Picture saved. Share link sends the challenge.' : undefined,
       );
     } catch {
       this.shareStatus.set('Sharing is not available here.');
+    } finally {
+      this.sharing.set(false);
+    }
+  }
+
+  /** Shares the dare and the challenge link (spec: daily-trial / sharing a run): the share sheet, else copied. */
+  protected async shareLink(): Promise<void> {
+    const v = this.view();
+    if (!v || this.sharing()) return;
+    this.sharing.set(true);
+    this.shareStatus.set(undefined);
+    try {
+      const player = this.progression.playerName();
+      const link = challengeLink(document.baseURI, v.result, player);
+      const text = `${player ? player + ' scored' : 'I scored'} ${this.fmt(scoreOf(v.result))} as ${v.god} in Olympus Unbound. Can you beat it?`;
+      const outcome = await shareLink(link, 'Olympus Unbound', text);
+      this.shareStatus.set(
+        outcome === 'copied'
+          ? 'Challenge link copied.'
+          : outcome === 'failed'
+            ? 'Challenge link: ' + link
+            : undefined,
+      );
     } finally {
       this.sharing.set(false);
     }

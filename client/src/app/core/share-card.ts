@@ -235,18 +235,12 @@ export async function drawShareCard(card: ShareCard): Promise<Blob | undefined> 
   return new Promise((resolve) => canvas.toBlob((blob) => resolve(blob ?? undefined), 'image/png'));
 }
 
-/** How the run was shared, for the summary to say. */
-export type ShareOutcome = 'shared' | 'cancelled' | 'saved';
-
 /**
- * Shares a card and its challenge link (spec: daily-trial / sharing a run): the share sheet where the browser can
- * share files, otherwise the picture is saved and the link copied.
+ * Shares the card alone (spec: daily-trial / sharing a run): the share sheet where the browser can share files,
+ * otherwise the picture is saved. No text or link goes with it: apps such as Messenger keep the text of a share and
+ * drop its picture, so the link has its own button (`shareLink`).
  */
-export async function shareRun(
-  blob: Blob,
-  link: string,
-  text: string,
-): Promise<{ outcome: ShareOutcome; copied: boolean }> {
+export async function sharePicture(blob: Blob): Promise<'shared' | 'cancelled' | 'saved'> {
   const file = new File([blob], 'olympus-unbound.png', { type: 'image/png' });
   const nav = navigator as Navigator & {
     canShare?: (data: ShareData) => boolean;
@@ -254,12 +248,11 @@ export async function shareRun(
   };
   if (nav.share && nav.canShare?.({ files: [file] })) {
     try {
-      await nav.share({ files: [file], text: `${text} ${link}`, url: link });
-      return { outcome: 'shared', copied: false };
+      await nav.share({ files: [file] });
+      return 'shared';
     } catch (e) {
-      if (e instanceof DOMException && e.name === 'AbortError')
-        return { outcome: 'cancelled', copied: false };
-      // Any other refusal: fall back to saving and copying.
+      if (e instanceof DOMException && e.name === 'AbortError') return 'cancelled';
+      // Any other refusal: fall back to saving.
     }
   }
   const url = URL.createObjectURL(blob);
@@ -268,12 +261,12 @@ export async function shareRun(
   a.download = file.name;
   a.click();
   setTimeout(() => URL.revokeObjectURL(url), 10_000);
-  return { outcome: 'saved', copied: await copy(`${text} ${link}`) };
+  return 'saved';
 }
 
 /**
- * Shares a link (a room invite, spec: rooms / joining a room): the share sheet where the browser has one, else the
- * clipboard. Cancelling the share sheet is not an error.
+ * Shares a link (a room invite, spec: rooms / joining a room; a challenge, spec: daily-trial / sharing a run): the
+ * share sheet where the browser has one, else the clipboard. Cancelling the share sheet is not an error.
  */
 export async function shareLink(
   url: string,

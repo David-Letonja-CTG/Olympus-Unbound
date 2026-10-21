@@ -31,7 +31,7 @@ flowchart LR
 | The build | `npm run build` in `client/`, with `--base-href` for where the site lives |
 
 - **Paths:** Pages serves a project site under `/Olympus-Unbound/`, so the app never refers to files from the site root. Code loads `assets/...` relative to the `<base href>`, and the global styles reference their fonts and frames from `public/`, so the build bundles them with relative URLs.
-- **Deep links:** a link such as `/Olympus-Unbound/play` has no file behind it. Pages answers with `404.html`, which the build makes a copy of `index.html`, so the app starts and its router takes over.
+- **Deep links:** a link such as `/Olympus-Unbound/play` has no file behind it. Pages answers with `404.html`, which the build makes a copy of `index.html`, so the app starts and its router takes over. The addresses players send each other (`challenge`, `coop`, `daily`) get their own copies (`challenge.html` and so on, made by `scripts/entry-pages.mjs`): Pages serves them for `/challenge?…` with 200 OK, and chat apps only show a link preview for a page that is found.
 - **Link preview (D19):** `index.html` names `https://david-letonja-ctg.github.io/Olympus-Unbound/og-image.jpg` and the same address for `og:url`, absolute as previews require. A fork or another host should change both (in `client/src/index.html`).
 - **Installed and offline (D18):** the production build contains `ngsw-worker.js` and `ngsw.json`, the service worker's list of every file with its hash, and a `manifest.webmanifest` with relative paths. After a visit, the browser keeps the whole game.
   - A new release is noticed at the next launch, or within 30 minutes, and downloaded in the background. The main menu then offers to reload.
@@ -69,7 +69,7 @@ When a release is published, the **Deploy** workflow:
 
 1. checks the tag and waits for CI on its commit;
 2. builds the game for the root of any host and attaches it to the release as `olympus-unbound-<version>.zip`;
-3. builds it again for Pages (`--base-href /Olympus-Unbound/`, plus `404.html`) and deploys it;
+3. builds it again for Pages (`--base-href /Olympus-Unbound/`, plus `404.html` and the shared addresses' pages) and deploys it;
 4. smoke-tests the site: the page, a sprite sheet and a deep link must answer.
 
 **By hand:** *Actions → Deploy → Run workflow* with a version tag redeploys that version, for example to roll back to an older release.
@@ -93,4 +93,5 @@ The zip is the game for the root of a static host: unzip it and serve the folder
 | *no CI run on main for …* | The tag points at a commit that is not on `main`. Release from `main`. |
 | The site loads but shows no fonts, frames or art | Something refers to a file from the site root (`/…`). Load files relative to the base href (`assets/…`) or from `public/` in styles. |
 | Players keep an old version | Their game has not checked yet, or they have not tapped *Reload* on the menu's notice. A check runs at every launch. In an emergency, deleting `ngsw.json` from the site makes the worker step aside on the next visit. |
-| A reload on `/play` shows GitHub's 404 page | `404.html` is missing from the build; the workflow copies it from `index.html`. |
+| A reload on `/play` shows GitHub's 404 page | `404.html` is missing from the build; `scripts/entry-pages.mjs` copies it from `index.html`. |
+| A pasted challenge link shows no preview | The address answers 404: `challenge.html` is missing, or the route is not in `scripts/entry-pages.mjs`. |
