@@ -85,7 +85,7 @@ Player 1 starts on the left of the keyboard and player 2 on the right; players 3
 
 Up to four gods fight one horde, each player in their own browser.
 
-- **Create a room** (*Co-op → Create room*): you get a five-character code, like `K7QXP`, to share with friends. **Join a room** with a friend's code.
+- **Create a room** (*Co-op → Create room*): you get a five-character code, like `K7QXP`, to share with friends. **Invite** in the lobby sends a link to the room (the share sheet on a phone; copied on a computer). Opening it shows Co-op with the code filled in and a **Join room K7QXP** button: one tap joins, nothing joins by itself. **Join a room** also takes a friend's code typed by hand. A broken link just opens Co-op.
 - **Lobby:** everyone picks a name and a god (several players may pick the same god), and guests mark themselves *Ready*. The host picks the realm and starts once everyone is ready. The loading screen lists the party and the room code, and the run starts when everyone has loaded.
 - **Together:** each camera follows its own god, or an ally after you fall. Experience and level are shared, but each player gets their own three offers and picks their own upgrade. The run waits until everyone has chosen (*Waiting for Bo to choose…*).
 - **Reviving:** a fallen god's spirit floats where they fell. Stand beside it for 3 seconds (a ring fills) and they rise with half their health. Stepping away drains the ring. Passing a gate also brings every fallen god along. If every god is down at once, the run ends.
@@ -320,7 +320,7 @@ Every day has one **Daily Trial** (main menu → Daily Trial, marked with a gold
 
 The trial is a solo, full-length run. Every attempt counts, and your best score of the day is kept. It shows on the trial's screen, on the summary ("New best today") and in the Hall of Glory. Trial runs count for quests, achievements and statistics, but stay out of the high-score tables, since they play by other rules. A new trial comes at local midnight.
 
-**Share** (on every run summary) makes a picture of your run: god, realm, time, kills, level, score, and the trial or quick run. On a phone it opens the share sheet; on a computer it saves the picture and copies a **challenge link**. The link starts the same god, realm, seed, length and twist for whoever opens it, and shows the score to beat; their summary says whether they beat it. A challenge with a twist stays out of the high-score tables, and one without a twist counts like any run. The game's address also shows a preview card (title, tagline, picture) when pasted into a chat.
+**Share** (on every run summary) makes a picture of your run as a dare: **ADA CHALLENGES YOU** (your name, from *Settings → Your name* or the Co-op name; without one, *A challenge from Olympus*), the trial or quick run, your god in front of the realm's boss in silhouette, realm, time, kills, level, realms, the **score to beat** and *Can you beat it?* with the game's address. On a phone it opens the share sheet; on a computer it saves the picture and copies a **challenge link**. The link starts the same god, realm, seed, length and twist for whoever opens it, and shows who sent it (*Ada challenges you*) and the score to beat; their summary says whether they beat it. A challenge with a twist stays out of the high-score tables, and one without a twist counts like any run. The game's address also shows a preview card (title, tagline, picture) when pasted into a chat.
 
 ## Admin mode
 

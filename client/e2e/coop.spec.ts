@@ -5,31 +5,40 @@ import { debug, inspect } from './run';
  * Two players in one room (spec: rooms), as two tabs of one browser: `net=local` connects them over a
  * BroadcastChannel instead of the public signalling service, so the test needs no network.
  */
-async function openCoop(page: Page, name: string): Promise<void> {
+async function openCoop(page: Page, name: string, path = '/coop?debug&net=local'): Promise<void> {
   await page.addInitScript(() => {
     if (localStorage.getItem('olympus-unbound/save')) return;
     const save = { version: 2, introSeen: true, settings: { quality: 'low' } };
     localStorage.setItem('olympus-unbound/save', JSON.stringify(save));
   });
-  await page.goto('/coop?debug&net=local');
+  await page.goto(path);
   await page.getByTestId('player-name').fill(name);
 }
 
 test('two players create and join a room, play together, and one leaves', async ({ context }) => {
   test.setTimeout(300_000);
+  await context.grantPermissions(['clipboard-read', 'clipboard-write']);
   const errors: string[] = [];
   const host = await context.newPage();
   const guest = await context.newPage();
   for (const p of [host, guest]) p.on('pageerror', (e) => errors.push(e.message));
 
-  // Lobby: create, join by code, pick a god, get ready, start.
+  // Lobby: create, invite (spec: rooms / joining a room), join from the link, pick a god, get ready, start.
   await openCoop(host, 'Ada');
   await host.getByTestId('create-room').click();
   const code = (await host.getByTestId('room-code').textContent())?.trim() ?? '';
   expect(code).toMatch(/^[A-Z2-9]{5}$/);
 
-  await openCoop(guest, 'Bo');
-  await guest.getByTestId('room-code-input').fill(code.toLowerCase());
+  // Desktop Chromium has no share sheet: Invite copies the link.
+  await host.getByTestId('invite').click();
+  await expect(host.getByTestId('invite')).toContainText('Link copied');
+  const copied = await host.evaluate(() => navigator.clipboard.readText());
+  const invite = new URL(copied.match(/https?:\/\/\S+/)?.[0] ?? '');
+  expect(invite.searchParams.get('join')).toBe(code);
+
+  await openCoop(guest, 'Bo', invite.pathname + invite.search);
+  await expect(guest.getByTestId('invited')).toContainText(code);
+  await expect(guest.getByTestId('room-code-input')).toHaveValue(code);
   await guest.getByTestId('join-room').click();
   await expect(host.getByTestId('member-1')).toContainText('Bo');
   await expect(guest.getByTestId('member-0')).toContainText('Ada');

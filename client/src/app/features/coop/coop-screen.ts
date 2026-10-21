@@ -2,12 +2,17 @@ import {
   ChangeDetectionStrategy,
   Component,
   DestroyRef,
+  ElementRef,
+  afterNextRender,
   computed,
   effect,
   inject,
   signal,
+  viewChild,
 } from '@angular/core';
-import { Router, RouterLink } from '@angular/router';
+import { ActivatedRoute, Router, RouterLink } from '@angular/router';
+import { invitedCode, inviteLink } from '../../core/rooms/invite';
+import { shareLink } from '../../core/share-card';
 import { GAME_CONTENT } from '../../core/game-content';
 import {
   isValidCode,
@@ -19,6 +24,14 @@ import { Connectivity } from '../../core/connectivity';
 import { RunSetup } from '../../core/run-setup';
 import { TouchScreen } from '../../core/touch-screen';
 import { ItemIcon } from '../../shared/item-icon';
+
+/** What the Invite button says after sharing; nothing when the share sheet was cancelled. */
+const INVITE_LABELS = {
+  shared: 'Invite sent',
+  copied: 'Link copied',
+  failed: 'Copy failed',
+  cancelled: undefined,
+} as const;
 
 /**
  * Co-op (spec: rooms): create a room or join one by code, then the lobby — everyone's name, god and readiness, the
@@ -44,8 +57,14 @@ import { ItemIcon } from '../../shared/item-icon';
             <button class="btn btn-small" data-testid="copy-code" (click)="copyCode()">
               {{ copied() ? 'Copied' : 'Copy' }}
             </button>
+            <!-- A link that opens Co-op with this code filled in (spec: rooms / joining a room). -->
+            <button class="btn btn-small btn-primary" data-testid="invite" (click)="invite()">
+              {{ inviteStatus() ?? 'Invite' }}
+            </button>
           </div>
-          <p class="hint">Friends join from <em>Co-op → Join a room</em> with this code.</p>
+          <p class="hint">
+            Send friends the invite link, or the code: they join from <em>Co-op → Join a room</em>.
+          </p>
 
           <ul class="members" aria-label="Members">
             @for (m of members(); track m.slot) {
@@ -161,7 +180,7 @@ import { ItemIcon } from '../../shared/item-icon';
               data-testid="player-name"
               maxlength="16"
               [value]="rooms.playerName()"
-              (input)="rooms.playerName.set($any($event.target).value)"
+              (input)="rooms.rememberName($any($event.target).value)"
             />
           </label>
           <div class="ways">
@@ -177,9 +196,16 @@ import { ItemIcon } from '../../shared/item-icon';
                 Create room
               </button>
             </div>
-            <div class="way">
+            <div class="way" [class.invited]="!!invited()">
               <h2>Join a room</h2>
-              <p>Type the code a friend gave you.</p>
+              @if (invited(); as code) {
+                <p class="invite-note" data-testid="invited">
+                  You were invited to room <strong>{{ code }}</strong
+                  >.
+                </p>
+              } @else {
+                <p>Type the code a friend gave you.</p>
+              }
               <input
                 class="code-input"
                 data-testid="room-code-input"
@@ -192,12 +218,13 @@ import { ItemIcon } from '../../shared/item-icon';
                 (keydown.enter)="join()"
               />
               <button
+                #joinButton
                 class="btn btn-primary"
                 data-testid="join-room"
                 [disabled]="busy() || !codeValid() || !online()"
                 (click)="join()"
               >
-                Join
+                {{ invited() && codeValid() ? 'Join room ' + normalised() : 'Join' }}
               </button>
             </div>
           </div>
@@ -270,6 +297,14 @@ import { ItemIcon } from '../../shared/item-icon';
       letter-spacing: 0.4em;
       text-transform: uppercase;
       text-align: center;
+    }
+    .invited {
+      border: 1px solid var(--gold);
+      box-shadow: 0 0 18px rgba(201, 165, 90, 0.25);
+    }
+    .invite-note strong {
+      color: var(--gold-2);
+      letter-spacing: 0.2em;
     }
     .code-row {
       display: flex;
@@ -402,7 +437,14 @@ export class CoopScreen {
   protected readonly maxMembers = MAX_MEMBERS;
   protected readonly gods = this.content.gods;
   protected readonly realms = this.content.realms;
-  protected readonly codeText = signal('');
+  /** The code an invite link carried, filled in until the player joins (spec: rooms / joining a room). */
+  protected readonly invited = signal<string | undefined>(
+    invitedCode(inject(ActivatedRoute).snapshot.queryParamMap.get('join')),
+  );
+  protected readonly codeText = signal(this.invited() ?? '');
+  protected readonly normalised = computed(() => normaliseCode(this.codeText()));
+  protected readonly inviteStatus = signal<string | undefined>(undefined);
+  private readonly joinButton = viewChild<ElementRef<HTMLButtonElement>>('joinButton');
   protected readonly copied = signal(false);
   protected readonly codeValid = computed(() => isValidCode(normaliseCode(this.codeText())));
   protected readonly busy = computed(() => this.rooms.status() === 'connecting');
@@ -431,6 +473,10 @@ export class CoopScreen {
   });
 
   constructor() {
+    // Invited: the Join button is ready for one tap; nothing joins without it.
+    afterNextRender(() => {
+      if (this.invited()) this.joinButton()?.nativeElement.focus();
+    });
     // The host started the run: everyone goes to it.
     effect(() => {
       if (this.rooms.run()) void this.router.navigate(['/play']);
@@ -464,6 +510,21 @@ export class CoopScreen {
     const code = this.rooms.code();
     if (!code) return;
     void navigator.clipboard?.writeText(code).then(() => this.copied.set(true));
+  }
+
+  /** Shares or copies the room's invite link (spec: rooms / joining a room). */
+  protected async invite(): Promise<void> {
+    const code = this.rooms.code();
+    if (!code) return;
+    const link = inviteLink(document.baseURI, code, new URLSearchParams(location.search));
+    const outcome = await shareLink(
+      link,
+      'Olympus Unbound',
+      `Join my co-op room ${code} in Olympus Unbound:`,
+    );
+    const label = INVITE_LABELS[outcome];
+    this.inviteStatus.set(label);
+    if (label) setTimeout(() => this.inviteStatus.set(undefined), 2500);
   }
 
   /** The god last chosen for a run, else the first. */

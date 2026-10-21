@@ -4,7 +4,13 @@ import { RunResult } from '../../../engine';
 import { isSoftwareRenderer } from '../graphics-quality';
 import { Progression } from '../progression';
 import { applyRunResult } from './rewards';
-import { freshSave, parseSave, permanentModifiers, SAVE_VERSION } from './save-data';
+import {
+  freshSave,
+  MAX_PLAYER_NAME,
+  parseSave,
+  permanentModifiers,
+  SAVE_VERSION,
+} from './save-data';
 import { SAVE_KEY, SAVE_STORAGE, SaveStore } from './save-store';
 
 const result = (overrides: Partial<RunResult> = {}): RunResult => ({
@@ -185,6 +191,32 @@ describe('SaveStore and Progression', () => {
     const { progression } = setup(storage);
     progression.updateSettings({ sfxVolume: 0 });
     expect(JSON.parse(storage.data[SAVE_KEY]).settings.sfxVolume).toBe(0);
+  });
+
+  it("remembers the player's name, trimmed and cut to its length (spec: meta-progression)", () => {
+    const storage = memoryStorage();
+    const { progression } = setup(storage);
+    progression.setPlayerName('  Ada of the very long name  ');
+    expect(progression.playerName()).toBe('Ada of the very');
+    expect(JSON.parse(storage.data[SAVE_KEY]).playerName).toBe('Ada of the very');
+  });
+});
+
+describe('save format v9', () => {
+  it('migrates a version 8 save with no name, keeping its progress', () => {
+    const save = parseSave(JSON.stringify({ version: 8, gold: 120, introSeen: true }), CONTENT);
+    expect(save.version).toBe(SAVE_VERSION);
+    expect(save.playerName).toBe('');
+    expect(save.gold).toBe(120);
+    expect(save.introSeen).toBe(true);
+  });
+
+  it('keeps a saved name and drops one that is not text', () => {
+    const parse = (playerName: unknown) =>
+      parseSave(JSON.stringify({ version: 9, playerName }), CONTENT).playerName;
+    expect(parse('Ada')).toBe('Ada');
+    expect(parse(42)).toBe('');
+    expect(parse('x'.repeat(40))).toHaveLength(MAX_PLAYER_NAME);
   });
 });
 

@@ -1,5 +1,6 @@
 import { GameContent, RunConfig, RunResult, TwistDefinition } from '../../engine';
 import { MAX_SEED } from './run-setup';
+import { cleanName } from './save/save-data';
 
 /** A run to repeat from a link: the same god, realm, seed, length and twist, and a score to beat (spec: daily-trial). */
 export interface Challenge {
@@ -10,6 +11,8 @@ export interface Challenge {
   readonly twist?: TwistDefinition;
   /** The score the sender reached; links carry it as they were made (no server checks it, D1). */
   readonly toBeat?: number;
+  /** Who sent it, when they have a name (spec: daily-trial / challenge links). */
+  readonly from?: string;
 }
 
 /** Quick runs' rules (spec: quick-runs): the realm clock at double speed, double experience. */
@@ -17,16 +20,18 @@ export const QUICK_RULES = { pace: 2, modifiers: [{ stat: 'xpGain' as const, fla
 
 /**
  * The link that replays a finished run for a friend (spec: daily-trial / challenge links), relative to the app's
- * base URL: `challenge?g=…&r=…&s=…[&q=1][&t=…]&b=…`.
+ * base URL: `challenge?g=…&r=…&s=…[&q=1][&t=…]&b=…[&n=…]`, with the sender's name when they have one.
  */
-export function challengeLink(base: string, r: RunResult, twistId?: string): string {
+export function challengeLink(base: string, r: RunResult, name?: string): string {
   const v = r.variant;
   const quick = v?.kind === 'quick' || (v?.kind === 'challenge' && !!v.quick);
-  const twist = twistId ?? (v?.kind === 'daily' || v?.kind === 'challenge' ? v.twistId : undefined);
+  const twist = v?.kind === 'daily' || v?.kind === 'challenge' ? v.twistId : undefined;
   const params = new URLSearchParams({ g: r.godId, r: r.realmId, s: String(r.seed) });
   if (quick) params.set('q', '1');
   if (twist) params.set('t', twist);
   params.set('b', String(Math.floor(scoreFor(r))));
+  const from = cleanName(name);
+  if (from) params.set('n', from);
   return `${base.replace(/\/?$/, '/')}challenge?${params}`;
 }
 
@@ -50,7 +55,16 @@ export function parseChallenge(
   if (twistId && !twist) return undefined;
   const toBeatText = params.get('b') ?? '';
   const toBeat = /^\d+$/.test(toBeatText) ? Number(toBeatText) : undefined;
-  return { godId: god.id, realmId: realm.id, seed, quick: params.get('q') === '1', twist, toBeat };
+  const from = cleanName(params.get('n')) || undefined;
+  return {
+    godId: god.id,
+    realmId: realm.id,
+    seed,
+    quick: params.get('q') === '1',
+    twist,
+    toBeat,
+    from,
+  };
 }
 
 /** What a challenge run plays by: its twist and length, marked as a challenge for the records. */

@@ -1,5 +1,7 @@
-import { ChangeDetectionStrategy, Component } from '@angular/core';
+import { ChangeDetectionStrategy, Component, inject } from '@angular/core';
 import { RouterLink } from '@angular/router';
+import { Progression } from '../../core/progression';
+import { RoomService } from '../../core/rooms/room-service';
 import { CreditsDialog } from '../../shared/credits-dialog';
 import { SettingsControls } from '../../shared/settings-controls';
 
@@ -10,6 +12,20 @@ import { SettingsControls } from '../../shared/settings-controls';
   template: `
     <main class="screen">
       <h1 class="screen-title">Settings</h1>
+      <!-- The name friends see in rooms and on shared pictures (spec: meta-progression / save format version 9). -->
+      <section class="panel">
+        <label class="field">
+          <span>Your name</span>
+          <input
+            data-testid="settings-name"
+            maxlength="16"
+            placeholder="Hero"
+            [value]="progression.playerName()"
+            (change)="rooms.rememberName($any($event.target).value)"
+          />
+        </label>
+        <p class="hint">Shown to friends in co-op rooms and on the pictures you share.</p>
+      </section>
       <section class="panel">
         <app-settings-controls />
       </section>
@@ -76,6 +92,25 @@ import { SettingsControls } from '../../shared/settings-controls';
       margin: 0;
       text-align: right;
     }
+    .field {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+      color: var(--muted);
+    }
+    .field input {
+      font: inherit;
+      color: var(--text);
+      background: rgba(0, 0, 0, 0.45);
+      border: 1px solid var(--line);
+      padding: 8px 10px;
+      min-height: 40px;
+    }
+    .hint {
+      margin: 6px 0 0;
+      color: var(--muted);
+      font-size: 0.85rem;
+    }
     .actions {
       display: flex;
       gap: 12px;
@@ -83,4 +118,7 @@ import { SettingsControls } from '../../shared/settings-controls';
     }
   `,
 })
-export class SettingsScreen {}
+export class SettingsScreen {
+  protected readonly progression = inject(Progression);
+  protected readonly rooms = inject(RoomService);
+}

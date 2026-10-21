@@ -17,8 +17,12 @@ import { ItemIcon } from '../../shared/item-icon';
   template: `
     @if (challenge(); as c) {
       <main class="screen">
-        <h1 class="screen-title">A challenge</h1>
-        <p class="screen-subtitle">Someone played this run and dares you to beat it.</p>
+        <h1 class="screen-title" data-testid="challenge-title">
+          {{ c.from ? c.from + ' challenges you' : 'A challenge' }}
+        </h1>
+        <p class="screen-subtitle">
+          {{ c.from ?? 'Someone' }} played this run and dares you to beat it.
+        </p>
 
         <section class="panel challenge" aria-label="The challenge">
           <div class="who" data-testid="challenge-god">

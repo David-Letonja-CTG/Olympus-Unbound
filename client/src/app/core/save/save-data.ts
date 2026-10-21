@@ -24,7 +24,9 @@ import {
 } from './save-records';
 
 /** Current save format version (D8). Bump it and add a migration when the shape changes. */
-export const SAVE_VERSION = 8;
+export const SAVE_VERSION = 9;
+/** Longest player name (spec: meta-progression / save format version 9; rooms use the same limit). */
+export const MAX_PLAYER_NAME = 16;
 /** How many processed run IDs are remembered to keep rewards idempotent. */
 export const REMEMBERED_RUNS = 20;
 
@@ -65,6 +67,8 @@ export interface SaveData {
   readonly daily: DailyState;
   /** The Daily Trial of the last day played (spec: daily-trial / daily best). */
   readonly dailyTrial: TrialRecord;
+  /** The player's name for rooms and the share picture; empty when none was given. */
+  readonly playerName: string;
 }
 
 export function freshSave(quality: GraphicsQuality = DEFAULT_SETTINGS.quality): SaveData {
@@ -84,6 +88,7 @@ export function freshSave(quality: GraphicsQuality = DEFAULT_SETTINGS.quality): 
     achievementGods: {},
     daily: EMPTY_DAILY,
     dailyTrial: EMPTY_TRIAL,
+    playerName: '',
   };
 }
 
@@ -122,6 +127,8 @@ const MIGRATIONS: Record<number, (save: Raw) => Raw> = {
   6: (save) => ({ ...save, version: 7 }),
   // v8 adds the Daily Trial record (spec: meta-progression / save format version 8), none played.
   7: (save) => ({ ...save, version: 8 }),
+  // v9 remembers the player's name (spec: meta-progression / save format version 9), none yet.
+  8: (save) => ({ ...save, version: 9, playerName: '' }),
 };
 
 /**
@@ -214,7 +221,13 @@ export function parseSave(
     achievementGods: parseGodLists(save['achievementGods'], achievementIds, content),
     daily: parseDaily(save['daily'], content),
     dailyTrial: parseTrial(save['dailyTrial']),
+    playerName: cleanName(save['playerName']),
   };
+}
+
+/** A player name as kept: a trimmed string of at most 16 characters, else none. */
+export function cleanName(v: unknown): string {
+  return typeof v === 'string' ? v.trim().slice(0, MAX_PLAYER_NAME).trim() : '';
 }
 
 /** The modifiers bought permanent upgrades add to every run. */
