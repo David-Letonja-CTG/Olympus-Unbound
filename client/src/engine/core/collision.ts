@@ -16,9 +16,17 @@ export class WorldCollision {
   private readonly grid = new SpatialHash<Circle>(128);
   /** Obstacles that come and go (shifting walls, spec: boss-encounter); few, so checked one by one. */
   private dynamic: readonly Circle[] = [];
+  /** Bumped on every `setDynamic`, so the enemies' flow field knows to stamp the walls again. */
+  dynamicVersion = 0;
 
+  /** Called whenever the obstacles that come and go change (the array may be the same one, changed in place). */
   setDynamic(obstacles: readonly Circle[]): void {
     this.dynamic = obstacles;
+    this.dynamicVersion++;
+  }
+
+  get dynamicObstacles(): readonly Circle[] {
+    return this.dynamic;
   }
 
   /** True when a body overlaps one of the obstacles that come and go. */

@@ -131,7 +131,12 @@ export function updateParts(
         if ((target.x - part.x) ** 2 + (target.y - part.y) ** 2 <= PART_REACH * PART_REACH) {
           const attack = part.def.attacks[part.attackIndex++ % part.def.attacks.length];
           state.emit({ type: 'bossAttack', attack: attack.id, kind: attack.type });
-          placeAttack(state, { x: part.x, y: part.y, id: part.enemyId ?? boss.id }, attack, target);
+          placeAttack(
+            state,
+            { x: part.x, y: part.y, id: part.enemyId ?? boss.id, radius: boss.radius },
+            attack,
+            target,
+          );
         }
       }
     }

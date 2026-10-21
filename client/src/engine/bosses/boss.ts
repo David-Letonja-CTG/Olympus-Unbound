@@ -3,6 +3,7 @@ import { direction, distanceToSegmentSq } from '../core/vector';
 import { BossAttack, BossDefinition, EnemyDefinition } from '../data/types';
 import { RunState } from '../sim/run-state';
 import { BossRuntime, Enemy, Hazard, Player } from '../sim/types';
+import { approach } from '../enemies/behaviors';
 import { initParts, updateParts } from './parts';
 import { raiseWalls, startWalls } from './walls';
 
@@ -124,7 +125,8 @@ export function updateBoss(state: RunState, enemy: Enemy, target: Player, dt: nu
     return;
   }
 
-  const dir = direction(enemy.x, enemy.y, target.x, target.y);
+  // It walks round obstacles and out of its own walls; its charges stay straight (spec: boss-encounter).
+  const dir = approach(state, enemy, target);
   const speed =
     enemy.speed *
     phase.speedMultiplier *
@@ -139,7 +141,13 @@ export function updateBoss(state: RunState, enemy: Enemy, target: Player, dt: nu
   const attack = phase.attacks[boss.attackIndex % phase.attacks.length];
   boss.attackIndex++;
   state.emit({ type: 'bossAttack', attack: attack.id, kind: attack.type });
-  const busy = placeAttack(state, { x: enemy.x, y: enemy.y, id: enemy.id }, attack, target, enemy);
+  const busy = placeAttack(
+    state,
+    { x: enemy.x, y: enemy.y, id: enemy.id, radius: enemy.radius },
+    attack,
+    target,
+    enemy,
+  );
   if (attack.type === 'summon') {
     // No wind-up: the boss moves on to its next attack after a short pause.
     boss.attackTimer = 1;
@@ -166,6 +174,8 @@ export interface AttackOrigin {
   readonly x: number;
   readonly y: number;
   readonly id: number;
+  /** The walker its walls must let out: the boss's radius (spec: boss-encounter / signature mechanics). */
+  readonly radius: number;
 }
 
 /**

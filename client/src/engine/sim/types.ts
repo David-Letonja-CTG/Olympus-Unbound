@@ -217,6 +217,8 @@ export interface Enemy {
   marked?: number;
   /** Seconds left dazed (a charge into a wall): takes extra damage. */
   dazed?: number;
+  /** Whether it saw its target at its last sight test; unset until its first (spec: enemy-spawning / finding the way). */
+  sight?: boolean;
 }
 
 /** A pillar of a shifting wall (spec: boss-encounter / asterion's shifting walls). */

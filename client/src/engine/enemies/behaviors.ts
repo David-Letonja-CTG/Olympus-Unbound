@@ -1,4 +1,4 @@
-import { direction, distance } from '../core/vector';
+import { direction, distance, Vec2 } from '../core/vector';
 import { EnemyBehavior } from '../data/types';
 import { RunState } from '../sim/run-state';
 import { Enemy, Player } from '../sim/types';
@@ -22,12 +22,34 @@ type BehaviorTable = {
   [K in EnemyBehavior['type']]: BehaviorUpdate<Extract<EnemyBehavior, { type: K }>>;
 };
 
-/** Moves toward or away from the target to stay near `range`. */
-function keepRange(enemy: Enemy, target: Player, range: number): Steering {
+/** Each enemy tests its sight this often (steps), staggered by id so the tests spread over the steps. */
+const SIGHT_EVERY = 8;
+
+/**
+ * The way toward `target` (spec: enemy-spawning / finding the way): straight when the enemy sees it, else along
+ * the flow field around obstacles and walls; straight again when the field has no way.
+ */
+export function approach(state: RunState, enemy: Enemy, target: Player): Vec2 {
+  const nav = state.navFor(enemy);
+  if (enemy.sight === undefined || (state.nav.tick + enemy.id) % SIGHT_EVERY === 0)
+    enemy.sight = nav.clearLine(enemy.x, enemy.y, target.x, target.y, enemy.radius);
+  if (!enemy.sight) {
+    const way = { x: 0, y: 0 };
+    if (nav.toward(enemy.x, enemy.y, way)) return way;
+  }
+  return direction(enemy.x, enemy.y, target.x, target.y);
+}
+
+/**
+ * Moves toward or away from the target to stay near `range`. Out of sight, it comes round the obstacles instead,
+ * so it does not shoot into a wall from its comfortable band.
+ */
+function keepRange(state: RunState, enemy: Enemy, target: Player, range: number): Steering {
+  const way = approach(state, enemy, target);
   const dist = distance(enemy.x, enemy.y, target.x, target.y);
   const dir = direction(enemy.x, enemy.y, target.x, target.y);
   if (dist < range * 0.8) return { x: -dir.x, y: -dir.y, speed: 1 };
-  if (dist > range * 1.15) return { x: dir.x, y: dir.y, speed: 1 };
+  if (dist > range * 1.15 || !enemy.sight) return { x: way.x, y: way.y, speed: 1 };
   // In the comfortable band: drift sideways so ranged enemies do not stand perfectly still.
   const side = enemy.id % 2 === 0 ? 1 : -1;
   return { x: -dir.y * side, y: dir.x * side, speed: 0.35 };
@@ -39,7 +61,7 @@ function keepRange(enemy: Enemy, target: Player, range: number): Steering {
  */
 export const ENEMY_BEHAVIORS: BehaviorTable = {
   chaser(state, enemy, behavior, target) {
-    const dir = direction(enemy.x, enemy.y, target.x, target.y);
+    const dir = approach(state, enemy, target);
     const jitter = behavior.jitter ?? 0;
     if (jitter <= 0) return { x: dir.x, y: dir.y, speed: 1 };
     // Deterministic weave from time and id: no randomness needed per step.
@@ -67,7 +89,7 @@ export const ENEMY_BEHAVIORS: BehaviorTable = {
       );
       state.emit({ type: 'enemyShot', x: enemy.x, y: enemy.y });
     }
-    return keepRange(enemy, target, behavior.preferredRange);
+    return keepRange(state, enemy, target, behavior.preferredRange);
   },
 
   charger(state, enemy, behavior, target, dt) {
@@ -93,11 +115,14 @@ export const ENEMY_BEHAVIORS: BehaviorTable = {
         }
         return { x: 0, y: 0, speed: 0 };
       default: {
-        const dir = direction(enemy.x, enemy.y, target.x, target.y);
+        const way = approach(state, enemy, target);
+        // Only at a god it sees: no wind-up into a wall (spec: enemy-spawning / no charge through a wall).
         if (
           enemy.actionTimer <= 0 &&
+          enemy.sight &&
           distance(enemy.x, enemy.y, target.x, target.y) < behavior.triggerRange
         ) {
+          const dir = direction(enemy.x, enemy.y, target.x, target.y);
           enemy.mode = 'windup';
           enemy.modeTimer = behavior.windup;
           enemy.dirX = dir.x;
@@ -105,7 +130,7 @@ export const ENEMY_BEHAVIORS: BehaviorTable = {
           state.emit({ type: 'enemyCharge', enemyId: enemy.id });
           return { x: dir.x, y: dir.y, speed: 0 };
         }
-        return { x: dir.x, y: dir.y, speed: 1 };
+        return { x: way.x, y: way.y, speed: 1 };
       }
     }
   },
@@ -122,6 +147,6 @@ export const ENEMY_BEHAVIORS: BehaviorTable = {
         if (!state.collision.isBlocked(x, y, def.radius)) state.spawnEnemy(def, x, y);
       }
     }
-    return keepRange(enemy, target, behavior.keepDistance);
+    return keepRange(state, enemy, target, behavior.keepDistance);
   },
 };

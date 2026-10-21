@@ -32,6 +32,8 @@ function steer(state: RunState, enemy: Enemy, target: Player, dt: number): Steer
  */
 export function updateEnemies(state: RunState, dt: number): void {
   const decay = Math.exp(-KNOCKBACK_DECAY * dt);
+  state.nav.update(state.players);
+  state.bossNav?.update(state.players);
   for (const enemy of state.enemies) {
     if (enemy.dead) continue;
     enemy.px = enemy.x;

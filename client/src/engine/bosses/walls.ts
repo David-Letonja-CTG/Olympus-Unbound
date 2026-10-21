@@ -6,6 +6,8 @@ import type { AttackOrigin } from './boss';
 /** A pillar's size (the Labyrinth's wall block) and the spacing that closes a wall between pillars. */
 const PILLAR = 24;
 const SPACING = 40;
+/** Room to spare when the boss walks through a gap. */
+const GAP_MARGIN = 24;
 
 /**
  * Warns where walls will rise around `from` (spec: boss-encounter / asterion's shifting walls): pillars along each
@@ -19,15 +21,24 @@ export function startWalls(
 ): void {
   for (const w of state.walls) w.left = Math.min(w.left, attack.windup);
   const turn = state.spawnRng.angle();
+  // Every gap lets the boss through: this much between the pillar centres either side of it (spec: boss-encounter).
+  const opening = 2 * (from.radius + PILLAR) + GAP_MARGIN;
+  // Rings are turned against each other, so their gaps do not line up into a straight way out; but where the boss
+  // cannot walk between two rings, their gaps line up so it can still get out.
+  const stagger = attack.rings.every((ring, i) => i === 0 || ring - attack.rings[i - 1] >= opening);
   attack.rings.forEach((ring, r) => {
     const sector = (Math.PI * 2) / attack.segments;
-    const span = sector * (1 - attack.gapShare);
+    const gap = Math.max(
+      sector * attack.gapShare,
+      2 * Math.asin(Math.min(1, opening / (2 * ring))),
+    );
+    const span = Math.max(0, sector - gap);
     const count = Math.max(1, Math.floor((span * ring) / SPACING) + 1);
     for (let s = 0; s < attack.segments; s++) {
-      // Rings are turned against each other, so their gaps do not line up into a straight way out.
-      const start = turn + s * sector + (r % 2) * sector * 0.5;
+      // Each arc is centred between two gaps; a gap is centred at `start`.
+      const start = turn + s * sector + (stagger ? (r % 2) * sector * 0.5 : 0);
       for (let i = 0; i < count; i++) {
-        const a = start + (count > 1 ? (span * i) / (count - 1) : 0);
+        const a = start + gap / 2 + (count > 1 ? (span * i) / (count - 1) : span / 2);
         const x = from.x + Math.cos(a) * ring;
         const y = from.y + Math.sin(a) * ring;
         if (state.collision.isBlocked(x, y, 4)) continue;
