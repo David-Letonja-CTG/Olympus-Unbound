@@ -283,7 +283,7 @@ Application states are routes (`/`, `/gods`, `/realms`, `/coop`, `/play`, `/summ
 
 ## Performance
 
-Targets: 60 fps at 1080p with ~300 enemies at High. Measured 2026-10-11 (GTX 1660, Chromium, 1920×1080, 331 enemies, lighting and atmosphere on): **High 79 fps, worst frame 14 ms; Medium 78 fps**. Software rendering (no GPU, Low, 960×540, 331 enemies): ~9 fps with the simulation still in real time — enough for CI, not a player target. Simulation step **0.8 ms** with ~300 enemies (Node). Means: global caps (400 enemies, 300 projectiles, 400 pickups with XP merging), spatial hashing, in-place compaction of dead entities, sprite pooling by entity in `WorldView`, a budgeted light map, ≤ 60 pooled damage numbers, separation limited to 4 neighbours, one shared flow field for the whole horde (refreshed ≤ 10 Hz; about 0.03 ms per step in the Labyrinth, measured 2026-10-21) instead of per-enemy pathfinding, one Graphics object per effect layer, HUD at 10 Hz.
+Targets: 60 fps at 1080p with ~300 enemies at High. Measured 2026-10-11 (GTX 1660, Chromium, 1920×1080, 331 enemies, lighting and atmosphere on): **High 79 fps, worst frame 14 ms; Medium 78 fps**. Software rendering (no GPU, Low, 960×540, 331 enemies): ~9 fps with the simulation still in real time — enough for CI, not a player target. Simulation step **0.8 ms** with ~300 enemies (Node). Means: global caps (400 enemies, 300 projectiles, 400 pickups with XP merging), spatial hashing, in-place compaction of dead entities, sprite pooling by entity in `WorldView`, a budgeted light map, ≤ 60 pooled damage numbers, separation limited to 4 neighbours, one shared flow field for the whole horde (refreshed ≤ 10 Hz; about 0.03 ms per step in the Labyrinth, measured 2026-10-21) instead of per-enemy pathfinding, one Graphics object per effect layer, static floor art baked into textures (a Graphics is re-triangulated every frame), HUD at 10 Hz.
 
 **Phones** (measured 2026-10-20 with `node scripts/perf/phone.mjs`, against the development build):
 
@@ -296,4 +296,5 @@ Targets: 60 fps at 1080p with ~300 enemies at High. Measured 2026-10-11 (GTX 166
   - On Low, enemies are drawn once above the darkness (D13 amended), without ordinary ground shadows.
   - On touch devices, the HUD has no transitions or endless glows.
 - After tuning, at Low: **26 fps, median 33 ms, 95th percentile 50 ms**, the simulation in real time. High: 19 fps, median 50 ms.
+- 2026-10-22: a profile showed the arena's marble floors (plazas and temples, hundreds of slab lines in one Graphics) re-triangulated every frame, about a quarter of the main thread. They are now drawn once into canvas textures (`WorldView.bake`) and look the same. Low: 29 → **50 fps, median 17 ms, 95th percentile 33 ms**; High: 20 → **28 fps, median 33 ms**.
 - Emulation is not a phone: the GPU and the browser differ. Check a real phone before trusting these numbers.
