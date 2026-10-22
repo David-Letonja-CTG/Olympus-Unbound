@@ -12,6 +12,7 @@ import { Router } from '@angular/router';
 import { CutsceneCaption, CutsceneEvent, CutsceneSession } from '../../../engine';
 import { CUTSCENE_SESSION_FACTORY, GAME_CONTENT } from '../../core/game-content';
 import { Progression } from '../../core/progression';
+import { TitleGate } from '../../core/title-gate';
 
 /** The skip prompt appears after this delay; keys held from the previous screen cannot skip before it. */
 const PROMPT_DELAY_MS = 1000;
@@ -150,6 +151,7 @@ export class IntroScreen {
   private readonly createSession = inject(CUTSCENE_SESSION_FACTORY);
   private readonly progression = inject(Progression);
   private readonly router = inject(Router);
+  private readonly gate = inject(TitleGate);
   private readonly host = viewChild.required<ElementRef<HTMLElement>>('host');
 
   protected readonly ready = signal(false);
@@ -160,10 +162,9 @@ export class IntroScreen {
   private session: CutsceneSession | undefined;
   private destroyed = false;
   private left = false;
-  private readonly timer: ReturnType<typeof setTimeout>;
+  private timer: ReturnType<typeof setTimeout> | undefined;
 
   constructor() {
-    this.timer = setTimeout(() => this.prompt.set(true), PROMPT_DELAY_MS);
     afterNextRender(() => void this.start());
     inject(DestroyRef).onDestroy(() => {
       this.destroyed = true;
@@ -186,6 +187,11 @@ export class IntroScreen {
   }
 
   private async start(): Promise<void> {
+    // Not behind the title screen: the intro begins with the tap that lets its sound play (spec: run-setup / title
+    // screen).
+    await this.gate.entered;
+    if (this.destroyed) return;
+    this.timer = setTimeout(() => this.prompt.set(true), PROMPT_DELAY_MS);
     try {
       const session = await this.createSession({
         parent: this.host().nativeElement,

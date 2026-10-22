@@ -6,6 +6,7 @@ import { routes } from '../../app.routes';
 import { CUTSCENE_SESSION_FACTORY } from '../../core/game-content';
 import { Progression } from '../../core/progression';
 import { SAVE_KEY, SAVE_STORAGE } from '../../core/save/save-store';
+import { GATE_ENVIRONMENT, TitleGate } from '../../core/title-gate';
 import { IntroScreen } from './intro-screen';
 
 class StubCutscene implements CutsceneSession {
@@ -127,5 +128,34 @@ describe('IntroScreen', () => {
     expect(link?.getAttribute('href')).toBe('/intro');
     await harness.navigateByUrl('/intro');
     expect(TestBed.inject(Router).url).toBe('/intro');
+  });
+});
+
+describe('IntroScreen behind the title screen (spec: run-setup / title screen)', () => {
+  it('starts only once the player has entered', async () => {
+    const created: number[] = [];
+    TestBed.configureTestingModule({
+      providers: [
+        provideRouter(routes),
+        {
+          provide: GATE_ENVIRONMENT,
+          useValue: { activated: false, audible: false, automated: false, asked: false },
+        },
+        {
+          provide: CUTSCENE_SESSION_FACTORY,
+          useValue: async () => {
+            created.push(1);
+            return new StubCutscene();
+          },
+        },
+      ],
+    });
+    const fixture = TestBed.createComponent(IntroScreen);
+    await fixture.whenStable();
+    expect(created).toEqual([]);
+    TestBed.inject(TitleGate).enter();
+    await fixture.whenStable();
+    await new Promise((resolve) => setTimeout(resolve, 0));
+    expect(created).toEqual([1]);
   });
 });
