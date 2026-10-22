@@ -1,5 +1,5 @@
 import { musicIntensity, TierTracker } from './music-intensity';
-import { barNotes, TIERS } from './music-score';
+import { barNotes, HALL_LOOP, hallBarNotes, TIERS } from './music-score';
 
 const calm = { realmTime: 5, bossAt: 420, depth: 0, enemiesNear: 3, bossAwake: false };
 
@@ -79,5 +79,30 @@ describe('the score (spec: music / battle music)', () => {
   it('follows the D minor progression in the bass', () => {
     const roots = [0, 1, 2, 3].map((bar) => barNotes(2, bar).find((n) => n.part === 'bass')?.pitch);
     expect(roots).toEqual([38, 34, 36, 33]);
+  });
+});
+
+describe('the Hall theme (spec: music / the hall theme)', () => {
+  it('loops, the same bar always sounding the same', () => {
+    for (let bar = 0; bar < HALL_LOOP; bar++)
+      expect(hallBarNotes(bar + HALL_LOOP)).toEqual(hallBarNotes(bar));
+  });
+
+  it('is a melody over a pad, its second pass fuller with drum and bass', () => {
+    const parts = (bar: number) => new Set(hallBarNotes(bar).map((n) => n.part));
+    for (let bar = 0; bar < 8; bar++) {
+      expect([...parts(bar)].sort()).toEqual(['choir', 'lyre']);
+      expect(parts(bar + 8)).toEqual(new Set(['choir', 'lyre', 'frame', 'bass']));
+    }
+  });
+
+  it('stays calm and in the instruments’ range, every note inside its bar', () => {
+    for (let bar = 0; bar < HALL_LOOP; bar++)
+      for (const n of hallBarNotes(bar)) {
+        expect(n.beat + n.length).toBeLessThanOrEqual(4);
+        expect(n.velocity).toBeLessThanOrEqual(0.6);
+        if (n.part === 'lyre') expect(n.pitch).toBeGreaterThanOrEqual(45);
+        if (n.part === 'lyre') expect(n.pitch).toBeLessThanOrEqual(84);
+      }
   });
 });

@@ -53,5 +53,7 @@ export type {
 } from './sim/types';
 export { spriteDataUrl, spriteKeys } from './art/sprites';
 export { SEAT_COLORS } from './art/minimap';
+export { createHallMusic } from './audio/hall-music';
+export type { HallMusic } from './audio/hall-music';
 export { BalanceReport } from './analysis/balance-report';
 export type { BalanceOptions, BalanceRow } from './analysis/balance-report';

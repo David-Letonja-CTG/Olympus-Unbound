@@ -1,5 +1,5 @@
 import { MusicTier } from './music-intensity';
-import { barNotes, beatSeconds, MusicNote, MusicPart } from './music-score';
+import { barNotes, beatSeconds, HALL_BPM, hallBarNotes, MusicNote, MusicPart } from './music-score';
 
 /** How often the scheduler wakes, and how far ahead it schedules (seconds). */
 const TICK_MS = 25;
@@ -24,6 +24,9 @@ const LEVEL: Record<MusicPart, number> = {
 
 const freq = (midi: number) => 440 * 2 ** ((midi - 69) / 12);
 
+/** What a player plays: the battle music, which follows the run's tier, or the Hall theme outside runs. */
+export type MusicPiece = 'battle' | 'hall';
+
 /**
  * The battle music (spec: music): asks the score for each bar at the tier the run calls for and plays it with
  * synthesized instruments, scheduled a little ahead on the audio clock. A tier changes only at a bar's start. It has
@@ -43,9 +46,12 @@ export class MusicPlayer {
   private paused = false;
   private ended = false;
 
+  /** `fadeIn`: seconds to rise from silence to the volume (the Hall theme fades in, spec: music / the hall theme). */
   constructor(
     private readonly ctx: BaseAudioContext | undefined,
     volume: number,
+    private readonly piece: MusicPiece = 'battle',
+    fadeIn = 0,
   ) {
     this.volume = volume;
     if (!ctx) return;
@@ -65,7 +71,8 @@ export class MusicPlayer {
       limiter.attack.value = 0.001;
       limiter.release.value = 0.1;
       this.out = ctx.createGain();
-      this.out.gain.value = volume;
+      this.out.gain.value = fadeIn > 0 ? 0 : volume;
+      if (fadeIn > 0) this.out.gain.linearRampToValueAtTime(volume, ctx.currentTime + fadeIn);
       this.mix.connect(glue);
       glue.connect(limiter);
       limiter.connect(this.out);
@@ -126,14 +133,16 @@ export class MusicPlayer {
   }
 
   /**
-   * Plays `count` bars of `tier` from `at` (audio-clock seconds), whatever the run calls for; returns when they end.
+   * Plays `count` bars of `tier` (or of the Hall theme, for a Hall player) from `at` (audio-clock seconds), whatever
+   * the run calls for; returns when they end.
    * For previews and offline renders of the music (docs, tuning).
    */
   playBars(tier: MusicTier, count: number, at: number): number {
     let t = at;
-    const beat = beatSeconds(tier);
+    const hall = this.piece === 'hall';
+    const beat = hall ? 60 / HALL_BPM : beatSeconds(tier);
     for (let i = 0; i < count; i++) {
-      for (const note of barNotes(tier, i)) this.play(note, t, beat);
+      for (const note of hall ? hallBarNotes(i) : barNotes(tier, i)) this.play(note, t, beat);
       t += 4 * beat;
     }
     return t;
@@ -147,10 +156,12 @@ export class MusicPlayer {
     if (this.nextBar < 0 || this.nextBar < now - 0.1) this.nextBar = now + 0.05;
     while (this.nextBar < now + AHEAD) {
       this.tier = this.wanted;
-      const beat = beatSeconds(this.tier);
+      const hall = this.piece === 'hall';
+      const beat = hall ? 60 / HALL_BPM : beatSeconds(this.tier);
       // Nothing is played at volume 0: no nodes are made.
       if (this.volume > 0)
-        for (const note of barNotes(this.tier, this.bar)) this.play(note, this.nextBar, beat);
+        for (const note of hall ? hallBarNotes(this.bar) : barNotes(this.tier, this.bar))
+          this.play(note, this.nextBar, beat);
       this.nextBar += 4 * beat;
       this.bar++;
     }
