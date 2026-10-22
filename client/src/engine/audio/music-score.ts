@@ -154,3 +154,95 @@ export function barNotes(tier: MusicTier, bar: number): MusicNote[] {
 export function beatSeconds(tier: MusicTier): number {
   return 60 / TIERS[tier].bpm;
 }
+
+/** The Hall theme's tempo (spec: music / the hall theme). */
+export const HALL_BPM = 76;
+/** Bars before the theme repeats: the melody once quietly, then again with drum and bass. */
+export const HALL_LOOP = 16;
+
+/** The Hall's chords: D minor, B♭, C, A, D minor, G minor, B♭, A (bass root and the third above it). */
+const HALL_CHORDS: readonly { readonly root: number; readonly third: number }[] = [
+  { root: 38, third: 3 },
+  { root: 34, third: 4 },
+  { root: 36, third: 4 },
+  { root: 33, third: 4 },
+  { root: 38, third: 3 },
+  { root: 43, third: 3 },
+  { root: 34, third: 4 },
+  { root: 33, third: 4 },
+];
+
+/** The Hall's melody, bar by bar: [beat, length in beats, MIDI pitch]. */
+const HALL_MELODY: readonly (readonly [number, number, number])[][] = [
+  [
+    [0, 1.5, 69],
+    [1.5, 0.5, 74],
+    [2, 1, 76],
+    [3, 1, 77],
+  ],
+  [
+    [0, 2, 74],
+    [2, 1, 72],
+    [3, 1, 70],
+  ],
+  [
+    [0, 1.5, 72],
+    [1.5, 0.5, 76],
+    [2, 1, 79],
+    [3, 1, 76],
+  ],
+  [
+    [0, 3, 73],
+    [3, 1, 69],
+  ],
+  [
+    [0, 1.5, 77],
+    [1.5, 0.5, 76],
+    [2, 1, 74],
+    [3, 1, 69],
+  ],
+  [
+    [0, 1, 70],
+    [1, 1, 74],
+    [2, 2, 79],
+  ],
+  [
+    [0, 1, 77],
+    [1, 1, 74],
+    [2, 1, 72],
+    [3, 1, 70],
+  ],
+  [
+    [0, 1, 69],
+    [1, 1, 73],
+    [2, 2, 76],
+  ],
+];
+
+/**
+ * A bar of the Hall theme, played outside runs (spec: music / the hall theme): a lyre melody over a softer lyre
+ * arpeggio and a choir pad; the second pass of the loop adds a frame drum and the bass. Pure, like `barNotes`.
+ */
+export function hallBarNotes(bar: number): MusicNote[] {
+  const at = ((bar % HALL_LOOP) + HALL_LOOP) % HALL_LOOP;
+  const chord = HALL_CHORDS[at % 8];
+  const full = at >= 8;
+  const notes: MusicNote[] = [];
+  const add = (part: MusicPart, beat: number, length: number, pitch: number, velocity: number) =>
+    notes.push({ part, beat, length, pitch, velocity });
+  for (const [beat, length, pitch] of HALL_MELODY[at % 8])
+    add('lyre', beat, length, pitch, beat === 0 ? 0.6 : 0.5);
+  // The arpeggio, an octave under the melody, rising through the chord.
+  const arp = [0, 7, 12, chord.third + 12];
+  arp.forEach((step, i) => add('lyre', i, 0.9, chord.root + 12 + step, 0.22));
+  add('choir', 0, 4, chord.root + 12, 0.22);
+  add('choir', 0, 4, chord.root + 12 + chord.third, 0.16);
+  if (full) {
+    add('frame', 0, 1, 0, 0.4);
+    add('frame', 2, 1, 0, 0.25);
+    if (at % 8 === 7) add('frame', 3.5, 0.5, 0, 0.25);
+    add('bass', 0, 1.9, chord.root, 0.45);
+    add('bass', 2, 1.9, chord.root, 0.35);
+  }
+  return notes;
+}
