@@ -1,0 +1,27 @@
+# A stand-in host stack for testing install.sh (CI, and locally): a PostgreSQL with a superuser, and a Caddy whose admin
+# endpoint listens inside its container and which imports other sites from sites/. SITES_DIR is that folder.
+name: host
+
+services:
+  web:
+    image: caddy:2
+    ports:
+      - "${HTTP_PORT:-8080}:80"
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile:ro
+      - ${SITES_DIR:?set SITES_DIR}:/etc/caddy/sites:ro
+    depends_on:
+      db:
+        condition: service_healthy
+
+  db:
+    image: postgres:18.6
+    environment:
+      POSTGRES_DB: host
+      POSTGRES_USER: host
+      POSTGRES_PASSWORD: host_test # tests only
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U host -d host"]
+      interval: 2s
+      timeout: 3s
+      retries: 30

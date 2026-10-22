@@ -8,12 +8,13 @@ Status values: **Accepted**, **Superseded**, **Deferred**.
 
 ## D1 — The game runs in the browser; a small server serves the shared parts (Accepted, 2026-10-10; revised 2026-10-11 for rooms; revised 2026-10-22 for the game server)
 
-The game runs entirely in the browser and deploys as static files. Saves, progression and every rule of a run stay in the browser (D8): there are no accounts and no cloud saves. *Revised 2026-10-11:* co-op rooms connected browsers directly (D16).
+The game runs entirely in the browser and is built as static files. Saves, progression and every rule of a run stay in the browser (D8): there are no accounts and no cloud saves. *Revised 2026-10-11:* co-op rooms connected browsers directly (D16).
 
 *Revised 2026-10-22:* the owner chose a server of the game's own (D21). Peer-to-peer rooms failed between devices on many home networks, and the owner wanted world leaderboards and matchmaking.
 - **What it does:** carries room traffic, lists public rooms and keeps world high scores.
 - **What it never does:** run game rules or hold saves.
-- **Without it:** the game plays as before when the server is unreachable or a build has none. Solo and local play, saves and the Hall's own tables need no connection; co-op and the world boards say they need the server.
+- **Where the game lives:** the same server serves the game's files, at one address (D21).
+- **Without it:** the game plays as before when the server is unreachable or a build has none (the release zip). Solo and local play, saves and the Hall's own tables need no connection; co-op and the world boards say they need the server.
 
 ## D2 — Three layers: Angular, Phaser, simulation (Accepted, 2026-10-10)
 
@@ -119,7 +120,7 @@ The owner asked for a PWA (`add-pwa`). The game has a web manifest (relative sta
 
 A new release downloads in the background. The player reloads into it from the main menu, never by itself and never during a run. The main menu offers installation where the browser allows it (Chrome's `beforeinstallprompt`), and explains Add to Home Screen in iOS Safari, including that the Home Screen game keeps its own saves.
 
-Still static files only (D1). Saves are unchanged (D8).
+The build is still static files (D1), served by the game server (D21). Saves are unchanged (D8).
 
 *Alternatives considered:*
 
@@ -151,15 +152,16 @@ The owner chose to open the code and keep the game's identity. The source code (
 
 ## D21 — A game server: rooms relay, matchmaking, world leaderboards (Accepted, 2026-10-22)
 
-**Why.** The owner (2026-10-22) found co-op failing between two machines in one house. Browsers on such networks could not connect directly, and the free public relays (PeerJS's, Open Relay) no longer exist. The owner also wanted world leaderboards and matchmaking. All three need a server everyone can reach, so the owner chose one, built like Slovion's but without .NET.
+**Why.** The owner (2026-10-22) found co-op failing between two machines in one house. Browsers on such networks could not connect directly, and the free public relays (PeerJS's, Open Relay) no longer exist. The owner also wanted world leaderboards and matchmaking. All three need a server everyone can reach, so the owner chose one, layered like a modular monolith and not in .NET.
 
 **What it is.**
-- **Shape:** `server/` is one Node.js (TypeScript) service, layered like Slovion's API (`api` → `application` → `domain`, with `infrastructure` implementing the application's ports). Lint enforces the boundaries.
+- **Shape:** `server/` is one Node.js (TypeScript) service, layered as a modular monolith (`api` → `application` → `domain`, with `infrastructure` implementing the application's ports). Lint enforces the boundaries.
 - **Libraries:** Fastify for HTTP, `ws` for WebSockets, PostgreSQL through `pg`.
-- **Hosting:** it runs on **Slovion's VM** (the owner's choice), sharing that stack's Caddy and PostgreSQL server.
-  - It is one container on Slovion's network, at its own address (`olympus.<ip>.sslip.io`), with its own database and role, both covered by Slovion's backups.
-  - The release workflow deploys it over SSH with `deploy/install.sh`, with a health check and rollback, as in Slovion (docs/hosting.md).
-- **The game itself** stays static on GitHub Pages. It reaches the server at the address given when it is built.
+- **Hosting:** it runs on an Oracle Cloud VM the owner already runs another stack on (the owner's choice), sharing that stack's Caddy and PostgreSQL server.
+  - It is one container on that stack's network, at its own address (`olympus.<ip>.sslip.io`), with its own database and role, covered by the host's backups.
+  - The release workflow deploys it over SSH with `deploy/install.sh`, with a health check and rollback (docs/hosting.md). The host's names come from GitHub settings, not the repository.
+- **The game itself** is served by the same server, at the same address (*revised 2026-10-22*, the owner's choice: everything on the VM). The game calls the server at its own origin, so the server allows only that site. GitHub Pages no longer hosts the game.
+  - Saves are per site in the browser (D8), so saves made on the former Pages address stayed there. Nobody was playing yet, so the move made no migration.
 
 **What it does.**
 - **Rooms** (`/rooms`, WebSocket): the host's socket holds the room code. Each guest's socket is paired with it, and the server forwards each message unread, prefixed by the guest's number on the host's side. Rooms live in memory and end when the host leaves.
@@ -173,6 +175,7 @@ The owner chose to open the code and keep the game's identity. The source code (
 
 *Alternatives considered:*
 - **A paid or account-based TURN relay with peer-to-peer:** it fixes co-op only, and gives no leaderboards or matchmaking.
-- **Serverless functions plus a hosted database** (Cloudflare Workers, as parked on 2026-10-19): rejected for Slovion's proven stack, which the owner asked for. Rooms also need long-lived WebSockets.
-- **.NET like Slovion:** the owner asked for another stack. TypeScript also lets the server and the game share the room protocol's shape and the score formula.
+- **Serverless functions plus a hosted database** (Cloudflare Workers, as parked on 2026-10-19): rejected for the owner's existing VM and stack, which the owner asked for. Rooms also need long-lived WebSockets.
+- **.NET:** the owner asked for another stack. TypeScript also lets the server and the game share the room protocol's shape and the score formula.
+- **The game on GitHub Pages, the server elsewhere:** two addresses, cross-site calls and two deploys; the owner wanted everything on the VM.
 - **Running the simulation on the server:** rejected, because D16's host authority already works and server simulation would cost far more CPU.

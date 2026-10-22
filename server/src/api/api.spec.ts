@@ -200,5 +200,8 @@ describe('rooms WebSocket (spec: rooms, matchmaking)', () => {
     const ok = await client(base, 'https://example.github.io');
     expect(ok.ws.readyState).toBe(WebSocket.OPEN);
     await expect(client(base, 'https://evil.example')).rejects.toThrow();
+    // No browser, no origin (a tool or the smoke test): let in.
+    const tool = await client(base);
+    expect(tool.ws.readyState).toBe(WebSocket.OPEN);
   });
 });

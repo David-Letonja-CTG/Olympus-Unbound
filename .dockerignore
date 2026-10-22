@@ -1,0 +1,10 @@
+# The image builds only from client/ and server/ sources (deploy/api.Dockerfile).
+**/node_modules
+**/dist
+**/.angular
+client/test-results
+client/playwright-report
+.git
+.github
+docs
+openspec

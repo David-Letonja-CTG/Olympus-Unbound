@@ -10,7 +10,8 @@ import { attachRoomsSocket } from './rooms-socket.js';
 /**
  * Starts the game server (D21). Configuration comes from the environment (docs/hosting.md):
  *   PORT (8080), HOST (0.0.0.0), DATABASE_URL (none: boards in memory, for local play and tests),
- *   ALLOWED_ORIGINS (comma-separated; none: any), ADMIN_TOKEN, TRUST_PROXY (1 behind Caddy), SCORES_PER_HOUR (30).
+ *   ALLOWED_ORIGINS (comma-separated; none: any), ADMIN_TOKEN, TRUST_PROXY (1 behind Caddy), SCORES_PER_HOUR (30),
+ *   CLIENT_DIR (the built game, served too; the image sets it).
  */
 async function main(): Promise<void> {
   const env = process.env;
@@ -47,6 +48,7 @@ async function main(): Promise<void> {
     trustProxy,
     health,
     logger: true,
+    client: env['CLIENT_DIR'] ? { dir: env['CLIENT_DIR'] } : undefined,
   });
   const closeRooms = attachRoomsSocket(app.server, relay, {
     allowedOrigins: origins.length ? origins : '*',

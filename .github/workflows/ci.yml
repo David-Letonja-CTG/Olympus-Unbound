@@ -142,7 +142,7 @@ jobs:
         run: npm run build
 
   stack:
-    name: Server on a stand-in Slovion stack (install, smoke test)
+    name: Server on a stand-in host stack (install, smoke test)
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v7
@@ -150,11 +150,11 @@ jobs:
       - name: Build the image
         run: docker build -f deploy/api.Dockerfile -t ci/olympus-api:test .
 
-      # Slovion's stack as the game server finds it on the VM: its PostgreSQL, and its Caddy importing sites/.
-      - name: A stand-in Slovion stack
+      # A host stack as the game server finds it on the VM: a PostgreSQL, and a Caddy importing sites/.
+      - name: A stand-in host stack
         run: |
-          mkdir -p "$RUNNER_TEMP/slovion/sites"
-          SITES_DIR="$RUNNER_TEMP/slovion/sites" docker compose -f deploy/test/slovion.compose.yml up -d --wait
+          mkdir -p "$RUNNER_TEMP/host/sites"
+          SITES_DIR="$RUNNER_TEMP/host/sites" docker compose -f deploy/test/host.compose.yml up -d --wait
 
       # The same script the deploy runs on the VM, twice: running it again must change nothing.
       - name: Install the game server
@@ -166,16 +166,23 @@ jobs:
           TAG=test
           POSTGRES_PASSWORD=olympusci12345
           OLYMPUS_ADDRESS=:80
-          SLOVION_DIR=$RUNNER_TEMP/slovion
+          ALLOWED_ORIGINS=http://localhost:8080
+          ADMIN_TOKEN=ci-admin-token
+          HOST_DIR=$RUNNER_TEMP/host
+          HOST_PROJECT=host
+          HOST_DB_USER=host
+          HOST_NETWORK=host_default
           EOF
           bash "$RUNNER_TEMP/olympus/install.sh"
           bash "$RUNNER_TEMP/olympus/install.sh"
 
       - name: Smoke test
+        env:
+          ADMIN_TOKEN: ci-admin-token
         run: bash deploy/smoke-test.sh http://localhost:8080
 
       - name: Logs
         if: failure()
         run: |
-          docker logs slovion-web-1 || true
+          docker logs host-web-1 || true
           docker logs olympus-olympus-api-1 || true

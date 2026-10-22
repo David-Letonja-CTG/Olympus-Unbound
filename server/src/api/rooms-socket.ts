@@ -36,7 +36,9 @@ export function attachRoomsSocket(
   server.on('upgrade', (req, socket, head) => {
     const path = new URL(req.url ?? '/', 'http://localhost').pathname;
     const origin = req.headers.origin;
-    const allowed = o.allowedOrigins === '*' || (origin && o.allowedOrigins.includes(origin));
+    // Browsers always send their page's origin: other sites are refused. A client that is no browser sends none (the
+    // smoke test, tools); it could claim any origin anyway, so the check would not stop it.
+    const allowed = o.allowedOrigins === '*' || !origin || o.allowedOrigins.includes(origin);
     if (path !== '/rooms' || !allowed) {
       socket.write(`HTTP/1.1 ${path !== '/rooms' ? 404 : 403} \r\n\r\n`);
       socket.destroy();

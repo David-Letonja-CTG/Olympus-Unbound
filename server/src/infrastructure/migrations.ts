@@ -1,5 +1,5 @@
 /**
- * The database's migrations, applied in order at startup (as in Slovion) and recorded in `schema_migrations`. Kept as
+ * The database's migrations, applied in order at startup and recorded in `schema_migrations`. Kept as
  * code so the built server carries them. Never edit one that has shipped: add the next.
  */
 export const MIGRATIONS: readonly { readonly id: string; readonly sql: string }[] = [

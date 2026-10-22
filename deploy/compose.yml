@@ -1,12 +1,12 @@
-# The game server on Slovion's VM (D21, docs/hosting.md#the-game-server). It joins the Slovion stack's network:
-# Slovion's Caddy serves it at its own name (sites/olympus.caddy, written by install.sh) and its PostgreSQL holds the
-# `olympus` database. Values come from the .env file next to this file, which the deploy workflow writes from the
-# GitHub "production" environment; nothing secret lives in the repository.
+# The game server on a shared VM (D21, docs/hosting.md#the-game-server): one container serving the game, its API and
+# its rooms. It joins the host stack's network: the host's Caddy serves it at its own name (the site block install.sh
+# writes) and the host's PostgreSQL holds the `olympus` database. Values come from the .env file next to this file,
+# which the deploy workflow writes from GitHub settings; nothing secret lives in the repository.
 #   TAG                image tag (a commit SHA)          IMAGE_PREFIX   e.g. ghcr.io/david-letonja-ctg
 #   POSTGRES_PASSWORD  the olympus role's password (letters and digits)
-#   ALLOWED_ORIGINS    the game's site, e.g. https://david-letonja-ctg.github.io
+#   ALLOWED_ORIGINS    origins allowed to call it from a browser (this site)
 #   ADMIN_TOKEN        hides world board entries (optional)
-#   SLOVION_NETWORK    Slovion's stack network (slovion_default)
+#   HOST_NETWORK       the host stack's network
 name: olympus
 
 x-logging: &logging
@@ -16,7 +16,7 @@ x-logging: &logging
     max-file: "3"
 
 services:
-  # Named apart from Slovion's "api": both answer by service name on the shared network.
+  # A name of its own: every service on the shared network answers by its service name.
   olympus-api:
     image: ${IMAGE_PREFIX:-ghcr.io/david-letonja-ctg}/olympus-api:${TAG:-latest}
     restart: unless-stopped
@@ -27,10 +27,10 @@ services:
       # Behind Caddy: the client's address comes from X-Forwarded-For (limits only; never stored).
       TRUST_PROXY: "1"
     networks:
-      - slovion
+      - host
     logging: *logging
 
 networks:
-  slovion:
-    name: ${SLOVION_NETWORK:-slovion_default}
+  host:
+    name: ${HOST_NETWORK:?set HOST_NETWORK}
     external: true

@@ -2,24 +2,6 @@
 
 How OLYMPUS UNBOUND is put together. Binding decisions are in [decisions.md](decisions.md) (D1–D11); this page explains how they fit.
 
-## Lineage: what came from Slovion
-
-The structure follows the [Slovion](https://github.com/David-Letonja-CTG/Slovion) repository; its domain, backend and renderer were not reused.
-
-| Slovion concept | OLYMPUS UNBOUND equivalent |
-|---|---|
-| Angular application (`client/src/app`) | Angular menus, HUD overlay, dialogs, progression, settings, saves |
-| Framework-free TypeScript engine (`client/src/engine`) | Phaser-free simulation core + a Phaser layer (`engine/phaser`) for loop, input and drawing |
-| Engine ↔ UI boundary (`GameCanvas` + callbacks) | `GameSession`: commands in, events out, ≤ 10 Hz HUD snapshots (D3) |
-| ESLint import boundaries (no Angular in the engine) | Same, plus "only `engine/phaser` imports Phaser", "no `Math.random` in the simulation", "Angular uses only `engine/index.ts`" |
-| Injectable randomness and clocks | Seeded `Rng` streams, fixed 1/60 s steps (D5) |
-| Content as versioned files in `content/` | Typed TypeScript content in `client/src/content/` (D4) |
-| OpenSpec `spec-driven` workflow, `/opsx:*` commands | Same workflow and tooling |
-| `docs/` (vision, architecture, gameplay, content, decisions) | Same set, plus `systems.md` |
-| Vitest unit tests, Playwright E2E, GitHub Actions | Same |
-| Modular-monolith backend (Api → Application → Domain, Infrastructure), PostgreSQL, Docker Compose with Caddy on an OCI VM, release deploys with rollback | The game server (D21): the same layers in Node.js and TypeScript, for rooms, open rooms and world boards only, deployed onto Slovion's own VM, Caddy and PostgreSQL |
-| *Not reused:* .NET, save tokens and server-held saves, Tiled maps, species/quests/journal, Transloco | Saves stay in the browser (D1, D8), procedural arenas, English-only for now (D10) |
-
 ## Overview
 
 ```mermaid
@@ -106,8 +88,8 @@ server/                    the game server (D21)
   src/application/         RoomRelay, Leaderboards, RateLimiter; ports (ScoreStore, Clock)
   src/infrastructure/      PostgresScoreStore + migrations, MemoryScoreStore
   src/api/                 Fastify app (HTTP routes), the /rooms WebSocket, main (configuration)
-deploy/                    the server's image, its container and Caddy site on Slovion's VM, install.sh, smoke test,
-                           and a stand-in Slovion stack for testing (test/)
+deploy/                    the image (the game and its server), its container and Caddy site on the VM, install.sh,
+                           smoke test, and a stand-in host stack for testing (test/)
 docs/  openspec/  .github/workflows/  .claude/
 ```
 
@@ -262,7 +244,7 @@ A quick run is `pace: 2` plus `xpGain +1`.
   - `scripts/entry-pages.mjs` gives the shared routes (`challenge`, `coop`, `daily`) their own HTML files in the build, so their links answer 200 and chat apps show the preview card.
 - **Invites:** `inviteLink` (`app/core/rooms/invite.ts`) makes `coop?join=CODE`; the lobby shares it with `shareLink` (share sheet, else clipboard). The Co-op screen reads `join` through `invitedCode`, fills the code in and waits for a tap: joining stays the player's choice.
   - `challengeLink` / `parseChallenge` (`app/core/challenge.ts`) write and read `challenge?g=…&r=…&s=…[&q=1][&t=…]&b=…`, relative to the base URL. The `/challenge` route opens the challenge, and a broken link goes to the menu.
-- **Link preview:** `index.html` carries Open Graph and Twitter tags with absolute URLs on the Pages site and `public/og-image.jpg`. The docs-media script's `og` scene renders that image.
+- **Link preview:** `index.html` carries Open Graph and Twitter tags with absolute URLs on the game's address and `public/og-image.jpg`. The docs-media script's `og` scene renders that image.
 
 ## Simulation step order
 
@@ -312,7 +294,7 @@ Targets: 60 fps at 1080p with ~300 enemies at High. Measured 2026-10-11 (GTX 166
 
 ## The game server (D21)
 
-`server/` is one Node.js service in TypeScript, layered like Slovion's API. It carries rooms, lists open rooms and keeps the world boards. It runs no game rules and holds no saves.
+`server/` is one Node.js service in TypeScript, layered as a modular monolith. It serves the game's files, carries rooms, lists open rooms and keeps the world boards. It runs no game rules and holds no saves.
 
 ```mermaid
 flowchart TB

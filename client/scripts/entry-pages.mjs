@@ -1,7 +1,7 @@
 // Gives every address the game shares a page of its own in the production build (spec: daily-trial / link preview).
-// Static hosts answer an unknown path with their 404 page; GitHub Pages' 404.html is the game, so deep links play,
-// but chat apps show no preview for a "not found" answer. GitHub Pages serves `challenge.html` for `/challenge`
-// (query kept) with 200 OK, so each shared address gets a copy of index.html, and 404.html still catches the rest.
+// Chat apps show no preview for a "not found" answer. The game server (and static hosts such as GitHub Pages) serve
+// `challenge.html` for `/challenge` (query kept) with 200 OK, so each shared address gets a copy of index.html.
+// 404.html, also the game, catches the other deep links on static hosts that answer unknown paths with it.
 //
 //   cd client
 //   npx ng build && node scripts/entry-pages.mjs

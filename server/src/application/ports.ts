@@ -1,6 +1,6 @@
 import type { Board, ScoreEntry } from '../domain/score.js';
 
-/** Time, injected so rules are tested without waiting (as in Slovion). */
+/** Time, injected so rules are tested without waiting. */
 export interface Clock {
   now(): Date;
 }
