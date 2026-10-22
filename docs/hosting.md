@@ -2,7 +2,7 @@
 
 OLYMPUS UNBOUND is a static site (D1). Each published GitHub Release goes live on **GitHub Pages** at **https://david-letonja-ctg.github.io/Olympus-Unbound/**, and the built game is attached to the release as a zip anyone can host.
 
-Co-op rooms, the open rooms and the world boards go through the **game server** (D21). It runs as a Docker Compose stack on an Oracle Cloud VM and is deployed by the same releases ([The game server](#the-game-server)). Until the server is set up, releases publish the game without co-op and world boards.
+Co-op rooms, the open rooms and the world boards go through the **game server** (D21). It runs on Slovion's Oracle Cloud VM, sharing its Caddy and PostgreSQL, and is deployed by the same releases ([The game server](#the-game-server)). Until the server is set up, releases publish the game without co-op and world boards.
 
 - [How it fits together](#how-it-fits-together)
 - [One-time setup](#one-time-setup)
@@ -101,84 +101,86 @@ The zip is the game for the root of a static host: unzip it and serve the folder
 
 ## The game server
 
-The game server (D21) runs on one **Oracle Cloud (OCI) Always Free** Arm VM as a Docker Compose stack, exactly as Slovion does: Caddy (HTTPS), the API, and PostgreSQL. Publishing a release deploys it before the game.
+The game server (D21) runs on **Slovion's VM** (an Oracle Cloud Always Free Arm VM), next to Slovion, and shares its Caddy and its PostgreSQL server (Slovion's D12, revised 2026-10-22):
+
+- **Container:** `olympus-api` in `/opt/slovion/olympus`, on Slovion's stack network (`slovion_default`).
+- **Database:** `olympus`, with its own `olympus` role, on Slovion's PostgreSQL. Slovion's daily backup dumps it too.
+- **Address:** `olympus.138-2-144-201.sslip.io`, the VM's IP through sslip.io, with its own HTTPS certificate. Slovion's Caddy serves it from `/opt/slovion/sites/olympus.caddy`.
 
 ```mermaid
 flowchart LR
   Player["The game<br/>(github.io)"] -- "HTTPS · WSS" --> Web
-  subgraph VM["OCI Always Free VM — /opt/olympus"]
-    Web["web<br/>Caddy: certificates, proxy"] -- "/api, /rooms, /health" --> Api["api<br/>Node.js game server"] --> Db[("db<br/>PostgreSQL 18")]
-    Timer["olympus-backup.timer<br/>03:30 UTC"] -- "pg_dump" --> Db
+  subgraph VM["Slovion's VM (OCI Always Free)"]
+    Web["Slovion's Caddy<br/>+ sites/olympus.caddy"]
+    Web -- "Slovion's site" --> SApi["Slovion's API"]
+    Web -- "olympus.… : /api, /rooms, /health" --> OApi["olympus-api<br/>/opt/slovion/olympus"]
+    SApi --> Db[("Slovion's PostgreSQL<br/>slovion · olympus")]
+    OApi --> Db
   end
-  Timer -- "upload" --> Bucket[("Object Storage bucket")]
-  CI["Deploy workflow"] -- "images" --> GHCR[("ghcr.io")]
-  CI -- "SSH" --> VM
+  CI["Olympus deploy workflow"] -- "image" --> GHCR[("ghcr.io")]
+  CI -- "SSH as slovion: install.sh" --> VM
 ```
 
 | Piece | Where it is defined |
 |---|---|
 | API image | [`deploy/api.Dockerfile`](../deploy/api.Dockerfile) |
-| Web image (Caddy) | [`deploy/web.Dockerfile`](../deploy/web.Dockerfile), [`deploy/Caddyfile`](../deploy/Caddyfile) |
-| The stack | [`deploy/compose.yml`](../deploy/compose.yml) |
-| VM setup (run once) | [`deploy/bootstrap.sh`](../deploy/bootstrap.sh) |
-| Daily backup | [`deploy/backup.sh`](../deploy/backup.sh), a timer installed by the bootstrap |
+| The container on the VM | [`deploy/compose.yml`](../deploy/compose.yml) |
+| Its site in Slovion's Caddy | [`deploy/olympus.caddy`](../deploy/olympus.caddy) |
+| Install or update on the VM: database role and database, container, site, Caddy reload | [`deploy/install.sh`](../deploy/install.sh) |
+| A stand-in Slovion stack for testing `install.sh` | [`deploy/test/`](../deploy/test/) |
 | Smoke test (CI, deploys, by hand) | [`deploy/smoke-test.sh`](../deploy/smoke-test.sh) |
 
 ### Configuration
 
-The deploy writes these to `/opt/olympus/.env` on the VM, so nothing secret is in the repository:
-
 | Name | Kind | What it is |
 |---|---|---|
-| `SERVER_ADDRESS` | repository variable | the server's host name, e.g. `203-0-113-7.sslip.io`. Setting it turns the server deploy on, and the game is built to use it |
-| `DEPLOY_HOST` | `production` secret | the VM's public IP |
-| `DEPLOY_USER` | `production` secret | `olympus` |
-| `DEPLOY_SSH_KEY` | `production` secret | the private deploy key |
+| `SERVER_ADDRESS` | repository variable | `olympus.138-2-144-201.sslip.io`. Setting it turns the server deploy on, and the game is built to use it |
+| `DEPLOY_HOST` | `production` secret | the VM's IP (as Slovion's) |
+| `DEPLOY_USER` | `production` secret | `slovion`: Slovion's deploy user, in the `docker` group |
+| `DEPLOY_SSH_KEY` | `production` secret | Olympus's own deploy key, authorized for `slovion` on the VM |
 | `DEPLOY_KNOWN_HOSTS` | `production` secret | the VM's SSH host keys (`ssh-keyscan`) |
-| `POSTGRES_PASSWORD` | `production` secret | the database password (letters and digits) |
-| `BACKUP_URL` | `production` secret | the bucket's pre-authenticated write URL (ends with `/o/`), optional |
-| `ADMIN_TOKEN` | `production` secret | hides world board entries, optional |
+| `POSTGRES_PASSWORD` | `production` secret | the `olympus` role's password (12+ letters and digits). `install.sh` sets it on every deploy |
+| `ADMIN_TOKEN` | `production` secret | hides world board entries |
 
 `ALLOWED_ORIGINS` is set by the workflow to `https://<owner>.github.io`: only the game's site may call the server from a browser.
 
 ### One-time setup
 
-The steps are Slovion's ([its hosting guide](https://github.com/David-Letonja-CTG/Slovion/blob/main/docs/hosting.md#one-time-setup)), with these names:
-
-1. **The VM:** an OCI `VM.Standard.A1.Flex` with Ubuntu 24.04 aarch64 and a public IP. Open ingress TCP 80 and 443 in the VCN's security list. Slovion's VM can't share ports 80 and 443, so use a second VM; Always Free covers 4 OCPUs in total.
-2. **The backup bucket** (optional): `olympus-backups`, with a write link (pre-authenticated request).
-3. **Prepare the VM:**
+1. **Slovion first:** Slovion's release with the shared-VM support (Slovion's `sites/` import, admin endpoint inside the container, backups of every database) must be live on the VM.
+2. **A deploy key for Olympus,** authorized for Slovion's deploy user. Log in as `ubuntu` with your own key:
    ```bash
    ssh-keygen -t ed25519 -N "" -C olympus-deploy -f olympus-deploy
-   scp deploy/bootstrap.sh ubuntu@<ip>:
-   ssh ubuntu@<ip> "sudo bash bootstrap.sh '$(cat olympus-deploy.pub)'"
+   ssh ubuntu@138.2.144.201 "sudo tee -a /home/slovion/.ssh/authorized_keys" < olympus-deploy.pub
    ```
-4. **The GitHub settings:**
+3. **The GitHub settings:**
    ```bash
    repo=David-Letonja-CTG/Olympus-Unbound
    gh api -X PUT "repos/$repo/environments/production" > /dev/null
-   gh secret set DEPLOY_HOST        --env production --repo $repo --body "<ip>"
-   gh secret set DEPLOY_USER        --env production --repo $repo --body olympus
+   gh secret set DEPLOY_HOST        --env production --repo $repo --body 138.2.144.201
+   gh secret set DEPLOY_USER        --env production --repo $repo --body slovion
    gh secret set DEPLOY_SSH_KEY     --env production --repo $repo < olympus-deploy
-   ssh-keyscan -t ed25519,ecdsa,rsa <ip> 2>/dev/null | gh secret set DEPLOY_KNOWN_HOSTS --env production --repo $repo
+   ssh-keyscan -t ed25519,ecdsa,rsa 138.2.144.201 2>/dev/null | gh secret set DEPLOY_KNOWN_HOSTS --env production --repo $repo
    openssl rand -hex 24 | gh secret set POSTGRES_PASSWORD --env production --repo $repo
    openssl rand -hex 24 | gh secret set ADMIN_TOKEN       --env production --repo $repo
-   gh secret set BACKUP_URL         --env production --repo $repo     # optional; paste the write URL
-   gh variable set SERVER_ADDRESS   --repo $repo --body "<ip with dashes>.sslip.io"
+   gh variable set SERVER_ADDRESS   --repo $repo --body olympus.138-2-144-201.sslip.io
    rm olympus-deploy olympus-deploy.pub
    ```
-5. **Publish a release.** The server deploys first, with a health check, a smoke test and a rollback on failure. Then the game goes to Pages, built with `https://SERVER_ADDRESS`.
+4. **Publish a release.**
+   - **Server first:** the server deploys through `install.sh`, with a health check, a smoke test and a rollback on failure.
+   - **Then the game** goes to Pages, built with `https://SERVER_ADDRESS`.
 
 ### Operations
 
-- **Logs:** `ssh olympus@<ip> 'cd /opt/olympus && docker compose logs --tail 200 api'`
-- **Hide an entry:** `curl -X POST -H "Authorization: Bearer $ADMIN_TOKEN" https://SERVER_ADDRESS/api/admin/scores/<id>/hide`. The id is in `/api/leaderboards/<board>`.
-- **Restore a backup:** copy the dump to the VM, then `docker compose exec -T db pg_restore -U olympus -d olympus --clean < file.dump`.
-- **Locally:** `cd server && npm run serve` runs the server with boards in memory. Or build the stack as CI does, from the repository root:
+- **Logs:** `ssh slovion@138.2.144.201 'cd /opt/slovion/olympus && docker compose logs --tail 200 olympus-api'`
+- **Hide an entry:** `curl -X POST -H "Authorization: Bearer $ADMIN_TOKEN" https://olympus.138-2-144-201.sslip.io/api/admin/scores/<id>/hide`. The id is in `/api/leaderboards/<board>`.
+- **Backups:** Slovion's daily backup dumps `olympus` as `/opt/slovion/backups/olympus-<time>.dump` and uploads it to Slovion's bucket.
+- **Restore a backup:** `docker exec -i slovion-db-1 pg_restore -U slovion -d olympus --clean --if-exists < olympus-<time>.dump`
+- **Locally,** without a database: `cd server && npm run serve`. Or run the VM's setup against a stand-in Slovion stack, as CI does:
   ```bash
   docker build -f deploy/api.Dockerfile -t local/olympus-api:test .
-  docker build -f deploy/web.Dockerfile -t local/olympus-web:test .
-  docker compose -f deploy/compose.yml --env-file <file with SITE_ADDRESS=:80, POSTGRES_PASSWORD, HTTP_PORT=8088, IMAGE_PREFIX=local, TAG=test> up -d --wait
-  bash deploy/smoke-test.sh http://localhost:8088
+  SITES_DIR=/tmp/slovion/sites docker compose -f deploy/test/slovion.compose.yml up -d --wait
+  # copy compose.yml, olympus.caddy, install.sh to a folder with a .env (IMAGE_PREFIX=local, TAG=test,
+  # POSTGRES_PASSWORD, OLYMPUS_ADDRESS=:80, SLOVION_DIR=/tmp/slovion), then:
+  bash install.sh && bash deploy/smoke-test.sh http://localhost:8080
   ```
 - **Downloaded builds:** the zip attached to a release has no server address. Hosted elsewhere, it would be another site, which the server does not allow.

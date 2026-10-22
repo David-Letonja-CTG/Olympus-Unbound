@@ -17,7 +17,7 @@ The structure follows the [Slovion](https://github.com/David-Letonja-CTG/Slovion
 | OpenSpec `spec-driven` workflow, `/opsx:*` commands | Same workflow and tooling |
 | `docs/` (vision, architecture, gameplay, content, decisions) | Same set, plus `systems.md` |
 | Vitest unit tests, Playwright E2E, GitHub Actions | Same |
-| Modular-monolith backend (Api → Application → Domain, Infrastructure), PostgreSQL, Docker Compose with Caddy on an OCI VM, release deploys with rollback | The game server (D21): the same layers and hosting in Node.js and TypeScript, for rooms, open rooms and world boards only |
+| Modular-monolith backend (Api → Application → Domain, Infrastructure), PostgreSQL, Docker Compose with Caddy on an OCI VM, release deploys with rollback | The game server (D21): the same layers in Node.js and TypeScript, for rooms, open rooms and world boards only, deployed onto Slovion's own VM, Caddy and PostgreSQL |
 | *Not reused:* .NET, save tokens and server-held saves, Tiled maps, species/quests/journal, Transloco | Saves stay in the browser (D1, D8), procedural arenas, English-only for now (D10) |
 
 ## Overview
@@ -106,7 +106,8 @@ server/                    the game server (D21)
   src/application/         RoomRelay, Leaderboards, RateLimiter; ports (ScoreStore, Clock)
   src/infrastructure/      PostgresScoreStore + migrations, MemoryScoreStore
   src/api/                 Fastify app (HTTP routes), the /rooms WebSocket, main (configuration)
-deploy/                    the server's Docker images, Compose stack, Caddyfile, VM bootstrap, backup, smoke test
+deploy/                    the server's image, its container and Caddy site on Slovion's VM, install.sh, smoke test,
+                           and a stand-in Slovion stack for testing (test/)
 docs/  openspec/  .github/workflows/  .claude/
 ```
 

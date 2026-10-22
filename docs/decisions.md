@@ -156,7 +156,9 @@ The owner chose to open the code and keep the game's identity. The source code (
 **What it is.**
 - **Shape:** `server/` is one Node.js (TypeScript) service, layered like Slovion's API (`api` → `application` → `domain`, with `infrastructure` implementing the application's ports). Lint enforces the boundaries.
 - **Libraries:** Fastify for HTTP, `ws` for WebSockets, PostgreSQL through `pg`.
-- **Hosting:** it runs as a Docker Compose stack: Caddy for TLS, the API, and PostgreSQL. The stack lives on an Oracle Cloud Always Free VM and is deployed by the release workflow with a health check and rollback, as in Slovion (docs/hosting.md).
+- **Hosting:** it runs on **Slovion's VM** (the owner's choice), sharing that stack's Caddy and PostgreSQL server.
+  - It is one container on Slovion's network, at its own address (`olympus.<ip>.sslip.io`), with its own database and role, both covered by Slovion's backups.
+  - The release workflow deploys it over SSH with `deploy/install.sh`, with a health check and rollback, as in Slovion (docs/hosting.md).
 - **The game itself** stays static on GitHub Pages. It reaches the server at the address given when it is built.
 
 **What it does.**

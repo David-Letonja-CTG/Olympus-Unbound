@@ -126,15 +126,25 @@ create index scores_board on scores (board, board_date, score desc) where not hi
   - **No server:** co-op says the game server is unavailable instead of offering rooms.
 - **PeerJS** is removed (dependency, `peer-network.ts`, lint rule). `LocalNetwork` (`?net=local`) stays for the docs capture script.
 
-## Deployment (as Slovion, docs/hosting.md)
+## Deployment (on Slovion's VM, docs/hosting.md)
 
-- **Files:** `deploy/api.Dockerfile` (multi-stage Node 22 Alpine, non-root, healthcheck), `deploy/compose.yml` (web = Caddy, api, db = PostgreSQL 18), `deploy/Caddyfile` (TLS for `SITE_ADDRESS`, proxies `/api/*`, `/rooms` and `/health`), and `deploy/bootstrap.sh`, `deploy/backup.sh` and `deploy/smoke-test.sh`, adapted from Slovion.
-- **CORS:** the API allows the Pages origin (`ALLOWED_ORIGINS`) and `localhost` in development.
+The owner chose to share Slovion's VM and database server (Slovion's D12 revised; Slovion#41).
+
+- **Files:**
+  - `deploy/api.Dockerfile`: multi-stage Node 24 Alpine, non-root, with a healthcheck.
+  - `deploy/compose.yml`: one service, `olympus-api`, on the external network `slovion_default`, with `DATABASE_URL` pointing at `db`.
+  - `deploy/olympus.caddy`: its site block.
+  - `deploy/install.sh`, run on the VM as `slovion`:
+    1. creates or updates the `olympus` role (password from the secret) and the `olympus` database through `slovion-db-1`;
+    2. runs `docker compose up --wait`;
+    3. writes `/opt/slovion/sites/olympus.caddy` when it has changed, and reloads Caddy through its container-local admin endpoint (`docker exec slovion-web-1 caddy reload`).
+- **What Slovion provides:** the sites import, the admin endpoint and a backup of every database.
+- **CORS:** the API allows the Pages origin (`ALLOWED_ORIGINS`), and any origin in development.
 - **CI** adds three jobs:
   - `server`: format, lint, unit tests, and integration tests against a PostgreSQL service.
-  - `stack`: builds the images, starts the stack on plain HTTP and runs the smoke test.
+  - `stack`: builds the image, starts a stand-in Slovion stack (`deploy/test/`), runs `install.sh` twice, then the smoke test.
   - The e2e job starts the server too (memory store).
-- **Deploy:** a `server` job runs before Pages when the `production` environment has `DEPLOY_HOST` set. It builds and pushes multi-arch images to ghcr.io, copies `compose.yml` and the `.env` over SSH, restarts, and waits for `https://SITE_ADDRESS/health`, rolling back on failure. The Pages build reads `vars.SERVER_URL`.
+- **Deploy:** a `server-image` and a `server-deploy` job run before Pages when `SERVER_ADDRESS` is set. They build and push the multi-arch image to ghcr.io, copy the files to `/opt/slovion/olympus` and run `install.sh`. Then they wait for `https://SERVER_ADDRESS/health`, roll back on failure, and run the smoke test. The Pages build reads `vars.SERVER_ADDRESS`.
 
 ## Tests
 

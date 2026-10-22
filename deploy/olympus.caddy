@@ -1,0 +1,22 @@
+# The game server's site in Slovion's Caddy (D21): install.sh replaces OLYMPUS_ADDRESS with the server's name
+# (olympus.<ip>.sslip.io, HTTPS with its own certificate) and writes this to Slovion's sites/. The game itself is on
+# GitHub Pages and calls this site across origins (the API allows ALLOWED_ORIGINS).
+OLYMPUS_ADDRESS {
+	encode zstd gzip
+
+	header {
+		X-Content-Type-Options nosniff
+		Referrer-Policy no-referrer
+		-Server
+	}
+
+	# The API, its health check and the rooms WebSocket (Caddy upgrades WebSockets on its own).
+	@server path /api/* /health /rooms
+	handle @server {
+		reverse_proxy olympus-api:8080
+	}
+
+	handle {
+		respond "Olympus Unbound game server. Play at the game's own site." 404
+	}
+}

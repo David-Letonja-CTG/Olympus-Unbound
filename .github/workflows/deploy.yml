@@ -1,8 +1,8 @@
 name: Deploy
 
 # Puts a release online (docs/hosting.md): when a GitHub Release (not a pre-release) is published, or by hand for an
-# existing version tag. The game server (D21) goes to its VM first, when the repository variable SERVER_ADDRESS is
-# set; then the game goes to GitHub Pages, built with that server's address. The built game is also attached to the
+# existing version tag. The game server (D21) goes to Slovion's VM first, when the repository variable SERVER_ADDRESS
+# is set; then the game goes to GitHub Pages, built with that server's address. The built game is also attached to the
 # release as a zip. Merges to main only run CI.
 on:
   release:
@@ -119,11 +119,11 @@ jobs:
 
   deploy:
     name: Deploy to GitHub Pages
-    needs: [build, server-images, server-deploy]
+    needs: [build, server-image, server-deploy]
     # After the game server, or without one (SERVER_ADDRESS unset skips both); never after a failed image build or deploy.
     if: >-
       always() && needs.build.result == 'success'
-      && contains(fromJSON('["success", "skipped"]'), needs.server-images.result)
+      && contains(fromJSON('["success", "skipped"]'), needs.server-image.result)
       && contains(fromJSON('["success", "skipped"]'), needs.server-deploy.result)
     runs-on: ubuntu-latest
     permissions:
@@ -159,8 +159,8 @@ jobs:
           echo "::error::$SITE did not serve the game within 2 minutes"
           exit 1
 
-  server-images:
-    name: Build the game server images
+  server-image:
+    name: Build the game server image
     # Only when the game server is set up (docs/hosting.md): the repository variable SERVER_ADDRESS.
     if: vars.SERVER_ADDRESS != '' && (github.event_name == 'workflow_dispatch' || !github.event.release.prerelease)
     needs: build # the version check and CI check run there first
@@ -176,7 +176,7 @@ jobs:
         with:
           ref: refs/tags/${{ needs.build.outputs.version }}
 
-      - name: Image names
+      - name: Image name
         id: meta
         env:
           OWNER: ${{ github.repository_owner }}
@@ -207,37 +207,23 @@ jobs:
           cache-from: type=gha,scope=api
           cache-to: type=gha,scope=api,mode=max
 
-      - name: Web image
-        uses: docker/build-push-action@v7
-        with:
-          context: .
-          file: deploy/web.Dockerfile
-          platforms: linux/arm64,linux/amd64
-          push: true
-          tags: |
-            ${{ steps.meta.outputs.prefix }}/olympus-web:${{ steps.meta.outputs.tag }}
-            ${{ steps.meta.outputs.prefix }}/olympus-web:${{ needs.build.outputs.version }}
-            ${{ steps.meta.outputs.prefix }}/olympus-web:latest
-          cache-from: type=gha,scope=web
-          cache-to: type=gha,scope=web,mode=max
-
   server-deploy:
-    name: Deploy the game server
-    needs: [build, server-images]
+    name: Deploy the game server (on Slovion's VM)
+    needs: [build, server-image]
     runs-on: ubuntu-latest
     environment:
       name: production
       url: https://${{ vars.SERVER_ADDRESS }}/health
     env:
       TARGET: ${{ secrets.DEPLOY_USER }}@${{ secrets.DEPLOY_HOST }}
-      PREFIX: ${{ needs.server-images.outputs.prefix }}
-      TAG: ${{ needs.server-images.outputs.tag }}
+      PREFIX: ${{ needs.server-image.outputs.prefix }}
+      TAG: ${{ needs.server-image.outputs.tag }}
       VERSION: ${{ needs.build.outputs.version }}
-      SITE_ADDRESS: ${{ vars.SERVER_ADDRESS }}
+      SERVER_ADDRESS: ${{ vars.SERVER_ADDRESS }}
     steps:
       - uses: actions/checkout@v7
         with:
-          ref: ${{ needs.server-images.outputs.tag }}
+          ref: ${{ needs.server-image.outputs.tag }}
 
       - name: SSH key and pinned host key
         env:
@@ -249,11 +235,10 @@ jobs:
           printf '%s\n' "$DEPLOY_KNOWN_HOSTS" > ~/.ssh/known_hosts
           chmod 600 ~/.ssh/id_ed25519 ~/.ssh/known_hosts
 
-      # The game's site may call the server; nothing else in a browser may (CORS, WebSocket origin).
+      # Only the game's site may call the server from a browser (CORS, WebSocket origin).
       - name: Configuration for this version
         env:
           POSTGRES_PASSWORD: ${{ secrets.POSTGRES_PASSWORD }}
-          BACKUP_URL: ${{ secrets.BACKUP_URL }}
           ADMIN_TOKEN: ${{ secrets.ADMIN_TOKEN }}
           OWNER: ${{ github.repository_owner }}
         run: |
@@ -262,15 +247,17 @@ jobs:
             echo "IMAGE_PREFIX=$PREFIX"
             echo "TAG=$TAG"
             echo "VERSION=$VERSION"
-            echo "SITE_ADDRESS=$SITE_ADDRESS"
+            echo "OLYMPUS_ADDRESS=$SERVER_ADDRESS"
             echo "POSTGRES_PASSWORD=$POSTGRES_PASSWORD"
-            echo "BACKUP_URL=$BACKUP_URL"
             echo "ADMIN_TOKEN=$ADMIN_TOKEN"
             echo "ALLOWED_ORIGINS=https://${OWNER,,}.github.io"
+            echo "SLOVION_DIR=/opt/slovion"
           } > env.next
 
-      - name: Copy the stack to the VM
-        run: scp -q deploy/compose.yml deploy/backup.sh env.next "$TARGET:/opt/olympus/"
+      - name: Copy to the VM
+        run: |
+          ssh "$TARGET" "mkdir -p /opt/slovion/olympus"
+          scp -q deploy/compose.yml deploy/olympus.caddy deploy/install.sh env.next "$TARGET:/opt/slovion/olympus/"
 
       - name: Start the new version
         env:
@@ -281,26 +268,24 @@ jobs:
           printf '%s\n' "$REGISTRY_TOKEN" | ssh "$TARGET" "docker login ghcr.io -u '$REGISTRY_USER' --password-stdin >/dev/null"
           ssh "$TARGET" bash -s <<'EOF'
           set -euo pipefail
-          cd /opt/olympus
-          chmod +x backup.sh
+          cd /opt/slovion/olympus
           if [ -f .env ]; then cp .env .env.previous; fi
           mv env.next .env
           chmod 600 .env
-          docker compose pull --quiet
-          docker compose up -d --remove-orphans
+          bash install.sh
           EOF
 
       - name: Wait for the health check
         id: health
         run: |
           for _ in $(seq 1 36); do
-            if curl -fsS -o /dev/null --max-time 5 "https://$SITE_ADDRESS/health"; then
+            if curl -fsS -o /dev/null --max-time 5 "https://$SERVER_ADDRESS/health"; then
               echo "healthy"
               exit 0
             fi
             sleep 5
           done
-          echo "::error::https://$SITE_ADDRESS/health did not answer 200 within 3 minutes"
+          echo "::error::https://$SERVER_ADDRESS/health did not answer 200 within 3 minutes"
           exit 1
 
       - name: Roll back to the previous version
@@ -308,34 +293,33 @@ jobs:
         run: |
           ssh "$TARGET" bash -s <<'EOF'
           set -euo pipefail
-          cd /opt/olympus
-          docker compose logs --tail 100 api web || true
+          cd /opt/slovion/olympus
+          docker compose logs --tail 100 olympus-api || true
           if [ -f .env.previous ]; then
             cp .env.previous .env
-            docker compose up -d --remove-orphans
+            bash install.sh
             echo "rolled back to $(grep '^TAG=' .env)"
           else
             echo "no previous version to roll back to"
           fi
           EOF
 
+      - name: Smoke test
+        run: bash deploy/smoke-test.sh "https://$SERVER_ADDRESS"
+
       - name: Remove old images
         if: success()
         run: |
           ssh "$TARGET" bash -s <<'EOF'
           set -euo pipefail
-          cd /opt/olympus
+          cd /opt/slovion/olympus
           # The first deploy has no .env.previous; grep must not end the script then.
           previous="$(grep '^TAG=' .env.previous 2>/dev/null | cut -d= -f2 || true)"
           keep=" $(grep '^TAG=' .env | cut -d= -f2) $previous "
-          docker images --format '{{.Repository}}:{{.Tag}}' | { grep -E '/olympus-(api|web):' || true; } | while read -r image; do
+          docker images --format '{{.Repository}}:{{.Tag}}' | { grep -E '/olympus-api:' || true; } | while read -r image; do
             case "$keep" in *" ${image##*:} "*) ;; *) docker rmi "$image" >/dev/null || true ;; esac
           done
-          docker image prune -f >/dev/null
           EOF
-
-      - name: Smoke test
-        run: bash deploy/smoke-test.sh "https://$SITE_ADDRESS"
 
       - name: Sign out of the registry
         if: always()
