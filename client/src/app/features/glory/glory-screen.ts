@@ -3,12 +3,15 @@ import {
   Component,
   computed,
   DestroyRef,
+  effect,
   inject,
   signal,
 } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import { AchievementDefinition, GameContent } from '../../../engine';
+import { Connectivity } from '../../core/connectivity';
 import { GAME_CONTENT } from '../../core/game-content';
+import { WorldEntry, WorldScores } from '../../core/world-scores';
 import { Progression } from '../../core/progression';
 import { ScoreEntry } from '../../core/save/save-records';
 import { formatTime, ItemIcon } from '../../shared/item-icon';
@@ -23,8 +26,8 @@ interface AchievementView {
 }
 
 /**
- * The Hall of Glory (spec: glory / hall of glory): today's quests, the solo and co-op high scores with a filter per
- * god, and every achievement.
+ * The Hall of Glory (spec: glory / hall of glory): today's quests, the high scores of this device and of the world
+ * (spec: world-leaderboards) with a filter per god, and every achievement.
  */
 @Component({
   selector: 'app-glory-screen',
@@ -55,6 +58,12 @@ interface AchievementView {
             Not played yet today.
           }
         </p>
+        @if (worldBestToday(); as w) {
+          <!-- Spec: world-leaderboards / world tables. -->
+          <p class="trial-best" data-testid="glory-trial-world">
+            World best today <strong>{{ fmt(w.score) }}</strong> by {{ w.names.join(', ') }}
+          </p>
+        }
       </section>
 
       <section class="panel quests" aria-labelledby="quests-title" data-testid="glory-quests">
@@ -91,6 +100,29 @@ interface AchievementView {
         <section class="panel scores" aria-labelledby="scores-title">
           <div class="head">
             <h2 id="scores-title">High scores</h2>
+            @if (world.available) {
+              <!-- This device's tables and the world's (spec: world-leaderboards / world tables). -->
+              <div class="tabs scope" role="tablist" aria-label="Whose scores">
+                <button
+                  role="tab"
+                  class="tab"
+                  [attr.aria-selected]="scope() === 'device'"
+                  data-testid="scores-device"
+                  (click)="scope.set('device')"
+                >
+                  This device
+                </button>
+                <button
+                  role="tab"
+                  class="tab"
+                  [attr.aria-selected]="scope() === 'world'"
+                  data-testid="scores-world"
+                  (click)="scope.set('world')"
+                >
+                  World
+                </button>
+              </div>
+            }
             <div class="tabs" role="tablist" aria-label="Mode">
               @for (m of modes; track m.id) {
                 <button
@@ -136,43 +168,77 @@ interface AchievementView {
                 <th class="num">Kills</th>
                 <th class="num">Lv</th>
                 <th class="num">Score</th>
-                <th>Date</th>
+                <th>{{ scope() === 'world' ? 'Player' : 'Date' }}</th>
               </tr>
             </thead>
-            <tbody>
-              @for (e of scores(); track e.runId; let i = $index) {
-                <tr>
-                  <td>{{ i + 1 }}</td>
-                  <td class="god">
-                    <app-item-icon [sprite]="godSprite(e.godId)" [size]="20" />
-                    {{ godName(e.godId) }}
-                    @if (e.bots > 0) {
-                      <span class="party"
-                        >+{{ e.bots }} {{ e.bots === 1 ? 'ally' : 'allies' }}</span
-                      >
-                    } @else if (e.players > 1) {
-                      <span class="party">×{{ e.players }}</span>
-                    }
-                  </td>
-                  <td>{{ realmName(e.realmId) }}</td>
-                  <td class="num">{{ e.realmsCleared }}</td>
-                  <td class="num">{{ time(e.timeSeconds) }}</td>
-                  <td class="num">{{ fmt(e.kills) }}</td>
-                  <td class="num">{{ e.level }}</td>
-                  <td class="num score">{{ fmt(e.score) }}</td>
-                  <td>{{ date(e.endedAt) }}</td>
-                </tr>
-              } @empty {
-                <tr>
-                  <td colspan="9" class="empty">
-                    No {{ mode() === 'coop' ? 'co-op ' : '' }}runs{{
-                      mode() === 'allies' ? ' with allies' : ''
-                    }}
-                    here yet. Glory awaits.
-                  </td>
-                </tr>
-              }
-            </tbody>
+            @if (scope() === 'world') {
+              <tbody data-testid="world-table">
+                @for (e of worldEntries(); track e.id) {
+                  <tr>
+                    <td>{{ e.rank }}</td>
+                    <td class="god">
+                      <app-item-icon [sprite]="godSprite(e.godId)" [size]="20" />
+                      {{ godName(e.godId) }}
+                      @if (e.bots > 0) {
+                        <span class="party"
+                          >+{{ e.bots }} {{ e.bots === 1 ? 'ally' : 'allies' }}</span
+                        >
+                      } @else if (e.players > 1) {
+                        <span class="party">×{{ e.players }}</span>
+                      }
+                    </td>
+                    <td>{{ realmName(e.realmId) }}</td>
+                    <td class="num">{{ e.realmsCleared }}</td>
+                    <td class="num">{{ time(e.timeSeconds) }}</td>
+                    <td class="num">{{ fmt(e.kills) }}</td>
+                    <td class="num">{{ e.level }}</td>
+                    <td class="num score">{{ fmt(e.score) }}</td>
+                    <td class="player">{{ e.names.join(', ') }}</td>
+                  </tr>
+                } @empty {
+                  <tr>
+                    <td colspan="9" class="empty" data-testid="world-status">
+                      {{ worldStatus() }}
+                    </td>
+                  </tr>
+                }
+              </tbody>
+            } @else {
+              <tbody>
+                @for (e of scores(); track e.runId; let i = $index) {
+                  <tr>
+                    <td>{{ i + 1 }}</td>
+                    <td class="god">
+                      <app-item-icon [sprite]="godSprite(e.godId)" [size]="20" />
+                      {{ godName(e.godId) }}
+                      @if (e.bots > 0) {
+                        <span class="party"
+                          >+{{ e.bots }} {{ e.bots === 1 ? 'ally' : 'allies' }}</span
+                        >
+                      } @else if (e.players > 1) {
+                        <span class="party">×{{ e.players }}</span>
+                      }
+                    </td>
+                    <td>{{ realmName(e.realmId) }}</td>
+                    <td class="num">{{ e.realmsCleared }}</td>
+                    <td class="num">{{ time(e.timeSeconds) }}</td>
+                    <td class="num">{{ fmt(e.kills) }}</td>
+                    <td class="num">{{ e.level }}</td>
+                    <td class="num score">{{ fmt(e.score) }}</td>
+                    <td>{{ date(e.endedAt) }}</td>
+                  </tr>
+                } @empty {
+                  <tr>
+                    <td colspan="9" class="empty">
+                      No {{ mode() === 'coop' ? 'co-op ' : '' }}runs{{
+                        mode() === 'allies' ? ' with allies' : ''
+                      }}
+                      here yet. Glory awaits.
+                    </td>
+                  </tr>
+                }
+              </tbody>
+            }
           </table>
           <p class="hint">Score: kills + 2 per second + 10 per level + 1,000 per realm cleared.</p>
         </section>
@@ -219,6 +285,12 @@ interface AchievementView {
     .glory {
       gap: 16px;
       padding-top: 28px;
+    }
+    .player {
+      max-width: 14em;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
     }
     .head {
       display: flex;
@@ -403,12 +475,61 @@ export class GloryScreen {
   ];
   protected readonly mode = signal<Mode>('solo');
   protected readonly god = signal<string | undefined>(undefined);
+  protected readonly world = inject(WorldScores);
+  private readonly online = inject(Connectivity).online;
+  /** This device's tables, or the world's (spec: world-leaderboards / world tables). */
+  protected readonly scope = signal<'device' | 'world'>('device');
+  private readonly worldState = signal<{
+    status: 'loading' | 'ready' | 'error';
+    entries: readonly WorldEntry[];
+  }>({ status: 'loading', entries: [] });
+  protected readonly worldEntries = computed(() => this.worldState().entries);
+  protected readonly worldStatus = computed(() => {
+    if (!this.online()) return 'The world tables need an internet connection.';
+    switch (this.worldState().status) {
+      case 'loading':
+        return 'Loading the world tables…';
+      case 'error':
+        return 'The game server is unavailable. Try again later.';
+      default:
+        return 'No runs in the world here yet. Be the first.';
+    }
+  });
+  /** The best Daily Trial score in the world today. */
+  protected readonly worldBestToday = signal<WorldEntry | undefined>(undefined);
+  private worldRequest = 0;
   /** Ticks every half minute so the quests and their countdown follow the clock. */
   private readonly now = signal(new Date());
 
   constructor() {
     const timer = setInterval(() => this.now.set(new Date()), 30_000);
     inject(DestroyRef).onDestroy(() => clearInterval(timer));
+    // The world table follows the chosen mode and god; a late answer to an older choice is dropped.
+    effect(() => {
+      if (this.scope() !== 'world' || !this.online()) return;
+      void this.loadWorld(this.mode(), this.god());
+    });
+    if (this.world.available && this.online()) void this.loadWorldBestToday();
+  }
+
+  private async loadWorld(mode: Mode, godId: string | undefined): Promise<void> {
+    const request = ++this.worldRequest;
+    this.worldState.set({ status: 'loading', entries: [] });
+    try {
+      const entries = await this.world.board(mode, { godId });
+      if (request === this.worldRequest) this.worldState.set({ status: 'ready', entries });
+    } catch {
+      if (request === this.worldRequest) this.worldState.set({ status: 'error', entries: [] });
+    }
+  }
+
+  private async loadWorldBestToday(): Promise<void> {
+    try {
+      const [best] = await this.world.board('daily', { date: this.trial().trial.date });
+      this.worldBestToday.set(best);
+    } catch {
+      // The trial panel simply shows no world line.
+    }
   }
 
   protected readonly quests = computed(() => {

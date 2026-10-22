@@ -3,6 +3,7 @@ import { RouterOutlet } from '@angular/router';
 import { debugEnabled } from './core/debug-mode';
 import { MenuSound } from './core/menu-sound';
 import { TitleGate } from './core/title-gate';
+import { WorldScores } from './core/world-scores';
 import { TitleScreen } from './shared/title-screen';
 
 @Component({
@@ -25,6 +26,8 @@ export class App {
     debugEnabled();
     // The Hall theme and the controls' sounds outside runs (spec: music / the hall theme; hud / menu sounds).
     inject(MenuSound);
+    // Runs finished offline go to the world boards now (spec: world-leaderboards / submitting runs).
+    void inject(WorldScores).flush();
     // No zoom anywhere (owner's choice, 2026-10-20): Safari pinches through its own gesture events, whatever the
     // viewport and touch-action say.
     if (typeof document !== 'undefined') {

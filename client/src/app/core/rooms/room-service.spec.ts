@@ -4,7 +4,14 @@ import { RouterTestingHarness } from '@angular/router/testing';
 import { PeerLink } from '../../../engine';
 import { routes } from '../../app.routes';
 import { SAVE_KEY, SAVE_STORAGE } from '../save/save-store';
-import { RoomError, RoomListing, RoomNetwork, ROOM_NETWORK } from './room-network';
+import {
+  OpenRoom,
+  PublicListing,
+  RoomError,
+  RoomListing,
+  RoomNetwork,
+  ROOM_NETWORK,
+} from './room-network';
 import { inviteLink, invitedCode } from './invite';
 import { CODE_ALPHABET, isValidCode, RoomService } from './room-service';
 
@@ -45,10 +52,31 @@ function linkPair(): [PeerLink, PeerLink] {
 
 class FakeNetwork implements RoomNetwork {
   readonly rooms = new Map<string, (link: PeerLink) => void>();
-  async open(code: string, onGuest: (link: PeerLink) => void): Promise<RoomListing> {
+  /** Public listings by room code, as the server would keep them (spec: matchmaking). */
+  readonly listings = new Map<string, { version: string; listing: PublicListing }>();
+  async open(
+    code: string,
+    version: string,
+    onGuest: (link: PeerLink) => void,
+  ): Promise<RoomListing> {
     if (this.rooms.has(code)) throw new RoomError('taken');
     this.rooms.set(code, onGuest);
-    return { close: () => void this.rooms.delete(code) };
+    return {
+      publish: (listing) => {
+        if (listing) this.listings.set(code, { version, listing });
+        else this.listings.delete(code);
+      },
+      close: () => {
+        this.rooms.delete(code);
+        this.listings.delete(code);
+      },
+    };
+  }
+  async openRooms(version: string): Promise<readonly OpenRoom[]> {
+    return [...this.listings]
+      .filter(([, l]) => l.version === version && l.listing.players < l.listing.seats)
+      .map(([code, l]) => ({ code, ...l.listing }))
+      .sort((a, b) => b.players - a.players);
   }
   async join(code: string): Promise<PeerLink> {
     const onGuest = this.rooms.get(code);
@@ -315,5 +343,97 @@ describe('invites (spec: rooms / joining a room)', () => {
     name.value = 'Ada';
     name.dispatchEvent(new Event('input'));
     expect(JSON.parse(data[SAVE_KEY]).playerName).toBe('Ada');
+  });
+});
+
+describe('matchmaking (spec: matchmaking)', () => {
+  it('lists a public lobby with its host, god, realm and seats, and withdraws it on start', async () => {
+    const { service, network } = setup();
+    const host = service();
+    await host.create('hades');
+    expect(network.listings.size).toBe(0);
+    host.setPublic(true);
+    const code = host.code() as string;
+    expect(network.listings.get(code)?.listing).toEqual({
+      name: 'Hero',
+      godId: 'hades',
+      realmId: host.realmId(),
+      players: 1,
+      seats: 4,
+    });
+    const guest = service();
+    expect(await guest.join(code, 'zeus')).toBe(true);
+    await settle();
+    expect(network.listings.get(code)?.listing.players).toBe(2);
+    guest.setReady(true);
+    await settle();
+    host.start();
+    expect(network.listings.has(code)).toBe(false);
+  });
+
+  it('withdraws the listing when the host turns Public off or leaves', async () => {
+    const { service, network } = setup();
+    const host = service();
+    await host.create('zeus');
+    host.setPublic(true);
+    host.setPublic(false);
+    expect(network.listings.size).toBe(0);
+    host.setPublic(true);
+    host.leave();
+    expect(network.listings.size).toBe(0);
+  });
+
+  it('Quick Play joins the fullest open room', async () => {
+    const { service } = setup();
+    const small = service();
+    await small.create('zeus');
+    small.setPublic(true);
+    const big = service();
+    await big.create('hades');
+    big.setPublic(true);
+    const friend = service();
+    await friend.join(big.code() as string, 'athena');
+    await settle();
+    const player = service();
+    await player.quickPlay('poseidon');
+    await settle();
+    expect(player.status()).toBe('lobby');
+    expect(player.code()).toBe(big.code());
+    expect(big.members()).toHaveLength(3);
+  });
+
+  it('Quick Play opens a public room when none is waiting', async () => {
+    const { service, network } = setup();
+    const player = service();
+    await player.quickPlay('zeus');
+    expect(player.role()).toBe('host');
+    expect(player.isPublic()).toBe(true);
+    expect(network.listings.has(player.code() as string)).toBe(true);
+  });
+
+  it('Quick Play moves on when a room refuses (it filled meanwhile)', async () => {
+    const { service, network } = setup();
+    const open = service();
+    await open.create('zeus');
+    open.setPublic(true);
+    // A room listed as open whose host has already started: it refuses.
+    const started = service();
+    await started.create('hades');
+    started.setPublic(true);
+    const code = started.code() as string;
+    const listing = network.listings.get(code)!;
+    const seat = service();
+    await seat.join(code, 'athena');
+    await settle();
+    seat.setReady(true);
+    await settle();
+    started.start();
+    network.listings.set(code, { ...listing, listing: { ...listing.listing, players: 3 } });
+    const player = service();
+    await player.quickPlay('poseidon');
+    await settle();
+    expect(player.status()).toBe('lobby');
+    expect(player.code()).toBe(open.code());
+    expect(player.error()).toBeUndefined();
   });
 });

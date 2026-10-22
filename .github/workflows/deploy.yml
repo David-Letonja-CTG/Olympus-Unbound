@@ -1,8 +1,9 @@
 name: Deploy
 
-# Puts a release online on GitHub Pages (docs/hosting.md): when a GitHub Release (not a pre-release) is published, or
-# by hand for an existing version tag. The built game is also attached to the release as a zip. Merges to main only
-# run CI.
+# Puts a release online (docs/hosting.md): when a GitHub Release (not a pre-release) is published, or by hand for an
+# existing version tag. The game server (D21) goes to Slovion's VM first, when the repository variable SERVER_ADDRESS
+# is set; then the game goes to GitHub Pages, built with that server's address. The built game is also attached to the
+# release as a zip. Merges to main only run CI.
 on:
   release:
     types: [published]
@@ -98,12 +99,18 @@ jobs:
       # For GitHub Pages: the project site lives under /<repository>/. Pages answers unknown paths with 404.html,
       # which is the app itself, so deep links such as /play load the game; shared addresses (challenge links, room
       # invites) get pages of their own so chat apps show their preview (scripts/entry-pages.mjs).
+      # With the game server's address when there is one (D21); without, co-op and the world boards are not offered.
       - name: Build for GitHub Pages
         working-directory: client
         env:
           REPOSITORY: ${{ github.event.repository.name }}
+          SERVER_ADDRESS: ${{ vars.SERVER_ADDRESS }}
         run: |
-          npx ng build --base-href "/$REPOSITORY/"
+          if [ -n "$SERVER_ADDRESS" ]; then
+            npx ng build --base-href "/$REPOSITORY/" --define "OLYMPUS_SERVER='https://$SERVER_ADDRESS'"
+          else
+            npx ng build --base-href "/$REPOSITORY/"
+          fi
           node scripts/entry-pages.mjs
 
       - uses: actions/upload-pages-artifact@v5
@@ -112,7 +119,12 @@ jobs:
 
   deploy:
     name: Deploy to GitHub Pages
-    needs: build
+    needs: [build, server-image, server-deploy]
+    # After the game server, or without one (SERVER_ADDRESS unset skips both); never after a failed image build or deploy.
+    if: >-
+      always() && needs.build.result == 'success'
+      && contains(fromJSON('["success", "skipped"]'), needs.server-image.result)
+      && contains(fromJSON('["success", "skipped"]'), needs.server-deploy.result)
     runs-on: ubuntu-latest
     permissions:
       pages: write
@@ -146,3 +158,169 @@ jobs:
           done
           echo "::error::$SITE did not serve the game within 2 minutes"
           exit 1
+
+  server-image:
+    name: Build the game server image
+    # Only when the game server is set up (docs/hosting.md): the repository variable SERVER_ADDRESS.
+    if: vars.SERVER_ADDRESS != '' && (github.event_name == 'workflow_dispatch' || !github.event.release.prerelease)
+    needs: build # the version check and CI check run there first
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+    outputs:
+      prefix: ${{ steps.meta.outputs.prefix }}
+      tag: ${{ steps.meta.outputs.tag }}
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          ref: refs/tags/${{ needs.build.outputs.version }}
+
+      - name: Image name
+        id: meta
+        env:
+          OWNER: ${{ github.repository_owner }}
+        run: |
+          echo "prefix=ghcr.io/${OWNER,,}" >> "$GITHUB_OUTPUT"
+          echo "tag=$(git rev-parse HEAD)" >> "$GITHUB_OUTPUT"
+
+      - uses: docker/setup-buildx-action@v4
+
+      - uses: docker/login-action@v4
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      # TypeScript compiles on the runner and the runtime installs only JavaScript, so arm64 needs no emulation.
+      - name: API image
+        uses: docker/build-push-action@v7
+        with:
+          context: .
+          file: deploy/api.Dockerfile
+          platforms: linux/arm64,linux/amd64
+          push: true
+          tags: |
+            ${{ steps.meta.outputs.prefix }}/olympus-api:${{ steps.meta.outputs.tag }}
+            ${{ steps.meta.outputs.prefix }}/olympus-api:${{ needs.build.outputs.version }}
+            ${{ steps.meta.outputs.prefix }}/olympus-api:latest
+          cache-from: type=gha,scope=api
+          cache-to: type=gha,scope=api,mode=max
+
+  server-deploy:
+    name: Deploy the game server (on Slovion's VM)
+    needs: [build, server-image]
+    runs-on: ubuntu-latest
+    environment:
+      name: production
+      url: https://${{ vars.SERVER_ADDRESS }}/health
+    env:
+      TARGET: ${{ secrets.DEPLOY_USER }}@${{ secrets.DEPLOY_HOST }}
+      PREFIX: ${{ needs.server-image.outputs.prefix }}
+      TAG: ${{ needs.server-image.outputs.tag }}
+      VERSION: ${{ needs.build.outputs.version }}
+      SERVER_ADDRESS: ${{ vars.SERVER_ADDRESS }}
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          ref: ${{ needs.server-image.outputs.tag }}
+
+      - name: SSH key and pinned host key
+        env:
+          DEPLOY_SSH_KEY: ${{ secrets.DEPLOY_SSH_KEY }}
+          DEPLOY_KNOWN_HOSTS: ${{ secrets.DEPLOY_KNOWN_HOSTS }}
+        run: |
+          install -d -m 700 ~/.ssh
+          printf '%s\n' "$DEPLOY_SSH_KEY" > ~/.ssh/id_ed25519
+          printf '%s\n' "$DEPLOY_KNOWN_HOSTS" > ~/.ssh/known_hosts
+          chmod 600 ~/.ssh/id_ed25519 ~/.ssh/known_hosts
+
+      # Only the game's site may call the server from a browser (CORS, WebSocket origin).
+      - name: Configuration for this version
+        env:
+          POSTGRES_PASSWORD: ${{ secrets.POSTGRES_PASSWORD }}
+          ADMIN_TOKEN: ${{ secrets.ADMIN_TOKEN }}
+          OWNER: ${{ github.repository_owner }}
+        run: |
+          umask 077
+          {
+            echo "IMAGE_PREFIX=$PREFIX"
+            echo "TAG=$TAG"
+            echo "VERSION=$VERSION"
+            echo "OLYMPUS_ADDRESS=$SERVER_ADDRESS"
+            echo "POSTGRES_PASSWORD=$POSTGRES_PASSWORD"
+            echo "ADMIN_TOKEN=$ADMIN_TOKEN"
+            echo "ALLOWED_ORIGINS=https://${OWNER,,}.github.io"
+            echo "SLOVION_DIR=/opt/slovion"
+          } > env.next
+
+      - name: Copy to the VM
+        run: |
+          ssh "$TARGET" "mkdir -p /opt/slovion/olympus"
+          scp -q deploy/compose.yml deploy/olympus.caddy deploy/install.sh env.next "$TARGET:/opt/slovion/olympus/"
+
+      - name: Start the new version
+        env:
+          REGISTRY_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          REGISTRY_USER: ${{ github.actor }}
+        run: |
+          # The token travels on stdin, never on a command line.
+          printf '%s\n' "$REGISTRY_TOKEN" | ssh "$TARGET" "docker login ghcr.io -u '$REGISTRY_USER' --password-stdin >/dev/null"
+          ssh "$TARGET" bash -s <<'EOF'
+          set -euo pipefail
+          cd /opt/slovion/olympus
+          if [ -f .env ]; then cp .env .env.previous; fi
+          mv env.next .env
+          chmod 600 .env
+          bash install.sh
+          EOF
+
+      - name: Wait for the health check
+        id: health
+        run: |
+          for _ in $(seq 1 36); do
+            if curl -fsS -o /dev/null --max-time 5 "https://$SERVER_ADDRESS/health"; then
+              echo "healthy"
+              exit 0
+            fi
+            sleep 5
+          done
+          echo "::error::https://$SERVER_ADDRESS/health did not answer 200 within 3 minutes"
+          exit 1
+
+      - name: Roll back to the previous version
+        if: failure() && steps.health.outcome == 'failure'
+        run: |
+          ssh "$TARGET" bash -s <<'EOF'
+          set -euo pipefail
+          cd /opt/slovion/olympus
+          docker compose logs --tail 100 olympus-api || true
+          if [ -f .env.previous ]; then
+            cp .env.previous .env
+            bash install.sh
+            echo "rolled back to $(grep '^TAG=' .env)"
+          else
+            echo "no previous version to roll back to"
+          fi
+          EOF
+
+      - name: Smoke test
+        run: bash deploy/smoke-test.sh "https://$SERVER_ADDRESS"
+
+      - name: Remove old images
+        if: success()
+        run: |
+          ssh "$TARGET" bash -s <<'EOF'
+          set -euo pipefail
+          cd /opt/slovion/olympus
+          # The first deploy has no .env.previous; grep must not end the script then.
+          previous="$(grep '^TAG=' .env.previous 2>/dev/null | cut -d= -f2 || true)"
+          keep=" $(grep '^TAG=' .env | cut -d= -f2) $previous "
+          docker images --format '{{.Repository}}:{{.Tag}}' | { grep -E '/olympus-api:' || true; } | while read -r image; do
+            case "$keep" in *" ${image##*:} "*) ;; *) docker rmi "$image" >/dev/null || true ;; esac
+          done
+          EOF
+
+      - name: Sign out of the registry
+        if: always()
+        run: ssh "$TARGET" "docker logout ghcr.io >/dev/null" || true

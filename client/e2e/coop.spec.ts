@@ -2,10 +2,10 @@ import { expect, Page, test } from '@playwright/test';
 import { debug, inspect } from './run';
 
 /**
- * Two players in one room (spec: rooms), as two tabs of one browser: `net=local` connects them over a
- * BroadcastChannel instead of the public signalling service, so the test needs no network.
+ * Two players in one room (spec: rooms), as two tabs of one browser, connected through the game server that
+ * Playwright starts (D21, playwright.config.ts).
  */
-async function openCoop(page: Page, name: string, path = '/coop?debug&net=local'): Promise<void> {
+async function openCoop(page: Page, name: string, path = '/coop?debug'): Promise<void> {
   await page.addInitScript(() => {
     if (localStorage.getItem('olympus-unbound/save')) return;
     const save = { version: 2, introSeen: true, settings: { quality: 'low' } };

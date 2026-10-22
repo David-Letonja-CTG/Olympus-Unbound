@@ -1,0 +1,36 @@
+# The game server on Slovion's VM (D21, docs/hosting.md#the-game-server). It joins the Slovion stack's network:
+# Slovion's Caddy serves it at its own name (sites/olympus.caddy, written by install.sh) and its PostgreSQL holds the
+# `olympus` database. Values come from the .env file next to this file, which the deploy workflow writes from the
+# GitHub "production" environment; nothing secret lives in the repository.
+#   TAG                image tag (a commit SHA)          IMAGE_PREFIX   e.g. ghcr.io/david-letonja-ctg
+#   POSTGRES_PASSWORD  the olympus role's password (letters and digits)
+#   ALLOWED_ORIGINS    the game's site, e.g. https://david-letonja-ctg.github.io
+#   ADMIN_TOKEN        hides world board entries (optional)
+#   SLOVION_NETWORK    Slovion's stack network (slovion_default)
+name: olympus
+
+x-logging: &logging
+  driver: json-file
+  options:
+    max-size: 10m
+    max-file: "3"
+
+services:
+  # Named apart from Slovion's "api": both answer by service name on the shared network.
+  olympus-api:
+    image: ${IMAGE_PREFIX:-ghcr.io/david-letonja-ctg}/olympus-api:${TAG:-latest}
+    restart: unless-stopped
+    environment:
+      DATABASE_URL: postgres://olympus:${POSTGRES_PASSWORD:?set POSTGRES_PASSWORD}@db:5432/olympus
+      ALLOWED_ORIGINS: ${ALLOWED_ORIGINS:-}
+      ADMIN_TOKEN: ${ADMIN_TOKEN:-}
+      # Behind Caddy: the client's address comes from X-Forwarded-For (limits only; never stored).
+      TRUST_PROXY: "1"
+    networks:
+      - slovion
+    logging: *logging
+
+networks:
+  slovion:
+    name: ${SLOVION_NETWORK:-slovion_default}
+    external: true

@@ -1,0 +1,7 @@
+# Slovion's Caddy as far as the game server sees it (deploy/test/slovion.compose.yml): admin inside the container,
+# other sites imported from sites/. Slovion's own site is left out; the game server's is served on :80.
+{
+	admin localhost:2019
+}
+
+import /etc/caddy/sites/*.caddy

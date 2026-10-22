@@ -12,7 +12,6 @@ const noAngular = [
     group: ['**/content', '**/content/*'],
     message: 'The engine receives content through createGameSession; it must not import it (D4).',
   },
-  { group: ['peerjs'], message: 'The engine talks to rooms only through PeerLink (D16).' },
 ];
 
 /** Angular sees the engine only through its public surface (D3). */
@@ -53,24 +52,6 @@ module.exports = defineConfig([
   },
   {
     files: ['src/app/**/*.ts'],
-    ignores: ['src/app/core/rooms/peer-network.ts'],
-    rules: {
-      'no-restricted-imports': [
-        'error',
-        {
-          patterns: [
-            ...appBoundaries,
-            {
-              group: ['peerjs'],
-              message: 'Only core/rooms/peer-network.ts uses PeerJS, loaded lazily (D16).',
-            },
-          ],
-        },
-      ],
-    },
-  },
-  {
-    files: ['src/app/core/rooms/peer-network.ts'],
     rules: { 'no-restricted-imports': ['error', { patterns: appBoundaries }] },
   },
   {

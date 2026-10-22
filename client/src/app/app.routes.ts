@@ -4,8 +4,6 @@ import { Progression } from './core/progression';
 import { RoomService } from './core/rooms/room-service';
 import { RunSetup } from './core/run-setup';
 
-import { CoopScreen } from './features/coop/coop-screen';
-
 import { MainMenu } from './features/main-menu/main-menu';
 import { RealmSelection } from './features/realm-selection/realm-selection';
 
@@ -34,7 +32,12 @@ export const routes: Routes = [
     loadComponent: () => import('./features/intro/intro-screen').then((m) => m.IntroScreen),
     title: 'Olympus Unbound',
   },
-  { path: 'coop', component: CoopScreen, title: 'Co-op · Olympus Unbound' },
+  {
+    path: 'coop',
+    // Lazy: rooms, matchmaking and the room network load when a player opens Co-op.
+    loadComponent: () => import('./features/coop/coop-screen').then((m) => m.CoopScreen),
+    title: 'Co-op · Olympus Unbound',
+  },
   {
     path: 'daily',
     loadComponent: () =>

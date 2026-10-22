@@ -34,8 +34,9 @@ const INVITE_LABELS = {
 } as const;
 
 /**
- * Co-op (spec: rooms): create a room or join one by code, then the lobby — everyone's name, god and readiness, the
- * realm, and the host's start. The room's run opens on the play screen.
+ * Co-op (spec: rooms, matchmaking): Quick Play, the open rooms, creating a room or joining one by code, then the
+ * lobby — everyone's name, god and readiness, the realm, whether it is public, and the host's start. The room's run
+ * opens on the play screen.
  */
 @Component({
   selector: 'app-coop-screen',
@@ -123,6 +124,23 @@ const INVITE_LABELS = {
               </p>
             }
           </div>
+          @if (rooms.role() === 'host') {
+            <!-- Listed for others to find (spec: matchmaking / public rooms). -->
+            <label class="public-switch">
+              <input
+                type="checkbox"
+                data-testid="public-room"
+                [checked]="rooms.isPublic()"
+                (change)="rooms.setPublic($any($event.target).checked)"
+              />
+              <span>
+                <strong>Public room</strong>
+                <span class="hint"
+                  >Anyone can find it under Open rooms and join with Quick Play.</span
+                >
+              </span>
+            </label>
+          }
 
           <h2>Your god</h2>
           <div class="gods" role="radiogroup" aria-label="Your god">
@@ -166,6 +184,17 @@ const INVITE_LABELS = {
           }
         </div>
         <p class="waiting" role="status">{{ waiting() }}</p>
+      } @else if (!rooms.available) {
+        <!-- Rooms need the game server, and this build has none (spec: game-server). -->
+        <section class="panel start">
+          <p class="error" role="status" data-testid="no-server">
+            Co-op needs the game server, which this version of the game does not have. Solo runs and
+            bot allies play as usual.
+          </p>
+        </section>
+        <div class="actions sticky">
+          <a class="btn" routerLink="/">Back</a>
+        </div>
       } @else {
         <section class="panel start">
           @if (!online()) {
@@ -184,6 +213,19 @@ const INVITE_LABELS = {
             />
           </label>
           <div class="ways">
+            <!-- Spec: matchmaking / quick play. -->
+            <div class="way">
+              <h2>Quick Play</h2>
+              <p>Join a game that is waiting for players, or open one for others.</p>
+              <button
+                class="btn btn-primary"
+                data-testid="quick-play"
+                [disabled]="busy() || rooms.searching() || !online()"
+                (click)="quickPlay()"
+              >
+                {{ rooms.searching() ? 'Looking for a game…' : 'Quick Play' }}
+              </button>
+            </div>
             <div class="way">
               <h2>Create a room</h2>
               <p>Get a code to share with your friends.</p>
@@ -227,6 +269,52 @@ const INVITE_LABELS = {
                 {{ invited() && codeValid() ? 'Join room ' + normalised() : 'Join' }}
               </button>
             </div>
+          </div>
+          <!-- Spec: matchmaking / open rooms. -->
+          <div class="open-rooms" data-testid="open-rooms">
+            <div class="open-head">
+              <h2>Open rooms</h2>
+              <button
+                class="btn btn-small"
+                data-testid="refresh-rooms"
+                [disabled]="!online()"
+                (click)="refreshRooms()"
+              >
+                Refresh
+              </button>
+            </div>
+            @if (rooms.openRoomsError(); as e) {
+              <p class="hint">{{ e }}</p>
+            } @else if (rooms.openRooms(); as list) {
+              @if (list.length === 0) {
+                <p class="hint" data-testid="no-open-rooms">
+                  No open rooms right now. Quick Play opens one for others to join.
+                </p>
+              } @else {
+                <ul class="room-list">
+                  @for (r of openRoomViews(); track r.code) {
+                    <li [attr.data-testid]="'open-room-' + r.code">
+                      <app-item-icon [sprite]="r.sprite" [size]="40" />
+                      <span class="who">
+                        <span class="name">{{ r.name }}</span>
+                        <span class="god-name">{{ r.godName }} · {{ r.realmName }}</span>
+                      </span>
+                      <span class="seats">{{ r.players }} / {{ r.seats }}</span>
+                      <button
+                        class="btn btn-small"
+                        [attr.data-testid]="'join-open-' + r.code"
+                        [disabled]="busy() || !online()"
+                        (click)="joinOpen(r.code)"
+                      >
+                        Join
+                      </button>
+                    </li>
+                  }
+                </ul>
+              }
+            } @else {
+              <p class="hint">Looking for open rooms…</p>
+            }
           </div>
           @if (busy()) {
             <p class="status" role="status">Connecting…</p>
@@ -424,6 +512,59 @@ const INVITE_LABELS = {
       margin: 0;
       color: var(--danger);
     }
+    .public-switch {
+      display: flex;
+      align-items: flex-start;
+      gap: 10px;
+      cursor: pointer;
+    }
+    .public-switch input {
+      margin-top: 4px;
+      width: 18px;
+      height: 18px;
+      accent-color: var(--gold);
+    }
+    .public-switch .hint {
+      display: block;
+      font-size: 0.9rem;
+    }
+    .open-rooms {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+    .open-head {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+    }
+    .room-list {
+      list-style: none;
+      margin: 0;
+      padding: 0;
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+    .room-list li {
+      display: grid;
+      grid-template-columns: auto 1fr auto auto;
+      align-items: center;
+      gap: 12px;
+      padding: 6px 10px;
+      border: 1px solid var(--line);
+      background: rgba(0, 0, 0, 0.25);
+    }
+    .room-list .who {
+      display: flex;
+      flex-direction: column;
+    }
+    .room-list .god-name,
+    .room-list .seats {
+      color: var(--muted);
+      font-size: 0.9rem;
+    }
   `,
 })
 export class CoopScreen {
@@ -462,6 +603,18 @@ export class CoopScreen {
   protected readonly emptySeats = computed(() =>
     Array.from({ length: MAX_MEMBERS - this.rooms.members().length }, (_, i) => i),
   );
+  /** The open rooms with their god's and realm's names and pictures. */
+  protected readonly openRoomViews = computed(() =>
+    (this.rooms.openRooms() ?? []).map((r) => {
+      const god = this.content.gods.find((g) => g.id === r.godId);
+      return {
+        ...r,
+        godName: god?.name ?? r.godId,
+        sprite: god?.visual.sprite ?? r.godId,
+        realmName: this.content.realms.find((x) => x.id === r.realmId)?.name ?? r.realmId,
+      };
+    }),
+  );
   protected readonly realmName = computed(
     () => this.content.realms.find((r) => r.id === this.rooms.realmId())?.name ?? '',
   );
@@ -476,6 +629,8 @@ export class CoopScreen {
     // Invited: the Join button is ready for one tap; nothing joins without it.
     afterNextRender(() => {
       if (this.invited()) this.joinButton()?.nativeElement.focus();
+      if (this.rooms.available && this.online() && this.rooms.status() === 'idle')
+        void this.rooms.refreshOpenRooms();
     });
     // The host started the run: everyone goes to it.
     effect(() => {
@@ -504,6 +659,19 @@ export class CoopScreen {
 
   protected leave(): void {
     this.rooms.leave();
+  }
+
+  protected quickPlay(): void {
+    void this.rooms.quickPlay(this.startingGod());
+  }
+
+  protected refreshRooms(): void {
+    void this.rooms.refreshOpenRooms();
+  }
+
+  protected joinOpen(code: string): void {
+    if (this.busy()) return;
+    void this.rooms.join(code, this.startingGod());
   }
 
   protected copyCode(): void {

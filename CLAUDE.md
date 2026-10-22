@@ -3,6 +3,7 @@
 OLYMPUS UNBOUND is an original mythological horde-survival roguelite: the player is a god fighting ever-growing hordes in procedurally generated mythological realms, building weapons, armour, relics and synergies, defeating a boss, and earning lasting progress. You are the lead architect and development agent. Fun first, sound architecture second, extensible without unnecessary complexity.
 
 - Vision and roadmap: `docs/product-vision.md`
+- The game server: `server/` (Node.js, TypeScript; D21); its hosting: `deploy/`, `docs/hosting.md`
 - Binding decisions (D1–D11): `docs/decisions.md` — if a task conflicts with one, raise it; do not silently override
 - How it is built (diagrams, boundaries, frame, state ownership, performance): `docs/architecture.md`
 - Rules and formulas: `docs/systems.md`; the game as players see it: `docs/gameplay.md`; content files, packs, cutscenes and checklists: `docs/content.md`; the look: `docs/art-direction.md`
@@ -13,7 +14,11 @@ Read the relevant doc before working on a feature.
 
 ## Hard rules
 
-1. **Frontend-only** (D1, D16). No backend of our own, REST, database, accounts, cloud saves or data stored online. Static build only. Co-op rooms connect browsers directly (WebRTC via PeerJS, only in `app/core/rooms/peer-network.ts`); the host's simulation is the authority.
+1. **The game runs in the browser; the server only shares** (D1, D16, D21).
+   - The game is a static build: saves, progression and every rule of a run stay in the browser, with no accounts and no cloud saves.
+   - The game server (`server/`) relays room messages unread, lists public rooms and keeps world boards. It never runs game rules.
+   - The host's simulation is the authority in rooms.
+   - Everything but co-op and the world boards works without the server.
 2. **Layer boundaries** (D2, D3) — lint-enforced:
    - Angular (`client/src/app`) imports the engine **only** via `client/src/engine/index.ts`, never Phaser.
    - Only `client/src/engine/phaser/` imports Phaser. The simulation (`engine/*` except `phaser/`, `audio/`) imports no Angular, RxJS, Phaser or app code.
@@ -47,9 +52,16 @@ node scripts/docs-media/capture.mjs   # regenerate docs/images from the running 
 node scripts/perf/phone.mjs           # frame times of a full horde under phone emulation (npm start first; see the script)
 node scripts/serve-dist.mjs 4322      # serve the production build (npm run build first): the service worker only runs there
 node scripts/pwa-icons.mjs            # re-render the installed app's icons (public/icons)
+
+cd server
+npm ci
+npm run serve             # the game server on :8080 (PORT=4330 for the dev client; boards in memory without DATABASE_URL)
+npm run check             # prettier check, eslint (layer rules), Vitest, build
+DATABASE_URL=postgres://… npm test   # also the PostgreSQL tests (empties that database)
+bash deploy/smoke-test.sh http://localhost:8080   # checks a running stack (from the repository root)
 ```
 
-Unit tests are `*.spec.ts` next to the code (Vitest through `ng test`, jsdom). Test-only helpers live in `engine/testing/` (fixtures, autopilot) and are excluded from the app build. Engine tests may use the real content (`engine/testing/content.ts`).
+The client's development build talks to the game server at `http://localhost:4330` (`OLYMPUS_SERVER`, angular.json); `npm run e2e` starts it. Unit tests are `*.spec.ts` next to the code (Vitest through `ng test`, jsdom). Test-only helpers live in `engine/testing/` (fixtures, autopilot) and are excluded from the app build. Engine tests may use the real content (`engine/testing/content.ts`).
 
 ## Conventions
 

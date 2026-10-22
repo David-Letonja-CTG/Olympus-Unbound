@@ -180,3 +180,13 @@ To change the save format: bump `SAVE_VERSION`, add `MIGRATIONS[oldVersion]`, ex
 ## Balance report — `engine/analysis/`
 
 `BalanceReport(content, { gods, runsPerGod, minutes, realmId })` queues runs (god × seeds 1…n, no modifiers); `advance(steps)` plays them with `autopilot` and `armsFirst` choices; `rows()` averages realms cleared, level, kills, time, alive-at-end share and per-weapon taken share and damage share. The admin screen calls `advance(900)` per `setTimeout`.
+
+## Game server — `server/` (D21)
+
+- **Rooms:** messages are relayed unread (design: Rooms over WebSocket), and a room ends with its host.
+- **Limits:** frames ≤ 256 KiB, ≤ 600 frames per 5 s per socket, ≤ 16 sockets per address, ≤ 8 guests per room. Seats stay the host's (4), and runs are limited to 30 per address per hour.
+- **Open rooms:** public, unstarted rooms with a free seat and the same game version, fullest first, at most 50. Quick Play tries them in order, then opens a public room.
+- **World boards:** the score is recomputed by the server (kills + 2/s + 10/level + 1,000/realm). Each run counts once (run ID).
+- **Refused runs:** non-whole or negative figures; level 0 or above 400; more than 6 h; more than 60 kills/s; more than one realm per 90 s; 1–4 players with fewer bots than players (co-op needs 2 humans); names of 1–16 characters; snake_case ids; a daily date within a day of the server's.
+- **Sending:** runs that enter a Hall table go to that board, and Daily Trial runs go to that day's board. Twisted challenges are not sent. Co-op runs are sent by the host.
+- **Offline queue:** runs that could not be sent wait in `localStorage` (20 at most) and are sent at the next start. Refused ones (400) are dropped; unreachable, busy (429) and failed (5xx) ones are kept.

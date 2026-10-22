@@ -4,6 +4,8 @@ import { RouterLink } from '@angular/router';
 import { AppUpdate } from '../../core/app-update';
 import { InstallPrompt } from '../../core/install-prompt';
 import { GAME_CONTENT } from '../../core/game-content';
+import { GameServer } from '../../core/game-server';
+import { roomsOffered } from '../../core/rooms/room-network';
 import { nextGoal } from '../../core/next-goal';
 import { Progression } from '../../core/progression';
 import { ItemIcon } from '../../shared/item-icon';
@@ -32,7 +34,10 @@ import { ItemIcon } from '../../shared/item-icon';
             <span class="dot" aria-hidden="true"></span>
           }
         </a>
-        <a class="btn" routerLink="/coop" data-testid="menu-coop">Co-op</a>
+        <!-- Rooms need the game server; a build without one does not offer them (spec: game-server). -->
+        @if (coopOffered) {
+          <a class="btn" routerLink="/coop" data-testid="menu-coop">Co-op</a>
+        }
         <a class="btn" routerLink="/progression">Progression</a>
         <a class="btn" routerLink="/glory" data-testid="menu-glory">Glory</a>
         <a class="btn" routerLink="/settings">Settings</a>
@@ -336,6 +341,7 @@ export class MainMenu {
   private readonly content = inject(GAME_CONTENT);
   protected readonly update = inject(AppUpdate);
   protected readonly install = inject(InstallPrompt);
+  protected readonly coopOffered = roomsOffered(inject(GameServer));
 
   /** Recomputed whenever the save changes; the date is read then (quests change at local midnight). */
   protected readonly trial = computed(() => {
