@@ -42,7 +42,7 @@ When the boss's health reaches 0 it SHALL die once and drop its rewards; the rea
 - **THEN** the run continues, its gold grows by the realm's boss gold, and a gate opens where the Cyclops fell
 
 ### Requirement: Signature mechanics
-Every boss SHALL have a signature mechanic beyond its health. Mechanics SHALL be boss data using shared rules: sweeps (cones), lashes (lines), boss parts (attacking on their own, and optionally damageable, ordered, regrowing and holding zones), guarding and exposure, shifting walls, rage and anchoring.
+Every boss SHALL have a signature mechanic beyond its health. Mechanics SHALL be boss data using shared rules: sweeps (cones), lashes (lines), boss parts (attacking on their own, and optionally damageable, ordered, regrowing and holding zones), guarding and exposure, shifting walls, rage and anchoring. A walking boss SHALL find its way like other enemies (spec: enemy-spawning / finding the way). Every gap in a ring of shifting walls SHALL be wide enough for the boss that raised it.
 
 #### Scenario: The Cyclops rages
 - **WHEN** the `cyclops` falls below 50% health
@@ -83,6 +83,10 @@ Every boss SHALL have a signature mechanic beyond its health. Mechanics SHALL be
 #### Scenario: Bull rush into a wall
 - **WHEN** Asterion's charge runs into a wall
 - **THEN** the charge stops, he is dazed for 2.5 seconds and takes extra damage meanwhile
+
+#### Scenario: Asterion leaves his walls
+- **WHEN** Asterion's walls rise in rings around him and a god stands outside them
+- **THEN** Asterion walks out through the gaps toward the god, rather than staying in the rings
 
 ### Requirement: Attack warnings
 Every boss attack that deals damage SHALL show its shape on the ground (circle, cone, line or rising wall) for its whole wind-up, filling as it nears, and SHALL flash in its last quarter-second. Shielded parts, the next part to cut, an exposed or dazed boss and a raging boss SHALL each look distinct. Warnings SHALL stay readable above the night at every quality level (D13).
