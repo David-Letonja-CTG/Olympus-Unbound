@@ -1,7 +1,17 @@
 import { Injectable, InjectionToken, inject } from '@angular/core';
 
-/** Set at build time (angular.json `define`; the deploy workflow passes the real address). Absent in unit tests. */
+/**
+ * Set at build time (angular.json `define`): an address, `'same-origin'` when the game server also serves the game
+ * (its image, D21), or `''` for none. Absent in unit tests.
+ */
 declare const OLYMPUS_SERVER: string | undefined;
+
+/** The server's address from the build's setting: `'same-origin'` is wherever the game was loaded from. */
+export function serverUrlOf(setting: string | undefined, origin: string | undefined): string {
+  const value = typeof setting === 'string' ? setting : '';
+  if (value === 'same-origin') return origin ?? '';
+  return value.replace(/\/+$/, '');
+}
 
 /** How long a request to the game server may take before it counts as unreachable. */
 const TIMEOUT_MS = 8000;
@@ -12,7 +22,11 @@ const TIMEOUT_MS = 8000;
  */
 export const GAME_SERVER_URL = new InjectionToken<string>('GAME_SERVER_URL', {
   providedIn: 'root',
-  factory: () => (typeof OLYMPUS_SERVER === 'string' ? OLYMPUS_SERVER : '').replace(/\/+$/, ''),
+  factory: () =>
+    serverUrlOf(
+      typeof OLYMPUS_SERVER === 'string' ? OLYMPUS_SERVER : undefined,
+      typeof location === 'undefined' ? undefined : location.origin,
+    ),
 });
 
 /** A request the game server refused or could not answer. */

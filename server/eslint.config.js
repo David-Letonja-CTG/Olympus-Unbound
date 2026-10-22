@@ -2,7 +2,7 @@
 import js from '@eslint/js';
 import tseslint from 'typescript-eslint';
 
-/** The layers (D21): domain ← application ← infrastructure, and api composes them. Like Slovion's architecture tests. */
+/** The layers (D21): domain ← application ← infrastructure, and api composes them. */
 const layer = (files, forbidden, message) => ({
   files,
   // Tests compose the layers.

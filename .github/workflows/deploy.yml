@@ -1,9 +1,8 @@
 name: Deploy
 
 # Puts a release online (docs/hosting.md): when a GitHub Release (not a pre-release) is published, or by hand for an
-# existing version tag. The game server (D21) goes to Slovion's VM first, when the repository variable SERVER_ADDRESS
-# is set; then the game goes to GitHub Pages, built with that server's address. The built game is also attached to the
-# release as a zip. Merges to main only run CI.
+# existing version tag. The game server (D21) serves the game, its API and its rooms from the VM at SERVER_ADDRESS.
+# The built game is also attached to the release as a zip. Merges to main only run CI.
 on:
   release:
     types: [published]
@@ -18,7 +17,7 @@ permissions:
 
 # One deploy at a time; a newer one waits instead of cancelling a deploy halfway.
 concurrency:
-  group: deploy-pages
+  group: deploy
   cancel-in-progress: false
 
 env:
@@ -96,73 +95,9 @@ jobs:
           VERSION: ${{ steps.version.outputs.version }}
         run: gh release upload "$VERSION" "olympus-unbound-$VERSION.zip" --clobber --repo "$GITHUB_REPOSITORY"
 
-      # For GitHub Pages: the project site lives under /<repository>/. Pages answers unknown paths with 404.html,
-      # which is the app itself, so deep links such as /play load the game; shared addresses (challenge links, room
-      # invites) get pages of their own so chat apps show their preview (scripts/entry-pages.mjs).
-      # With the game server's address when there is one (D21); without, co-op and the world boards are not offered.
-      - name: Build for GitHub Pages
-        working-directory: client
-        env:
-          REPOSITORY: ${{ github.event.repository.name }}
-          SERVER_ADDRESS: ${{ vars.SERVER_ADDRESS }}
-        run: |
-          if [ -n "$SERVER_ADDRESS" ]; then
-            npx ng build --base-href "/$REPOSITORY/" --define "OLYMPUS_SERVER='https://$SERVER_ADDRESS'"
-          else
-            npx ng build --base-href "/$REPOSITORY/"
-          fi
-          node scripts/entry-pages.mjs
-
-      - uses: actions/upload-pages-artifact@v5
-        with:
-          path: client/dist/olympus-unbound/browser
-
-  deploy:
-    name: Deploy to GitHub Pages
-    needs: [build, server-image, server-deploy]
-    # After the game server, or without one (SERVER_ADDRESS unset skips both); never after a failed image build or deploy.
-    if: >-
-      always() && needs.build.result == 'success'
-      && contains(fromJSON('["success", "skipped"]'), needs.server-image.result)
-      && contains(fromJSON('["success", "skipped"]'), needs.server-deploy.result)
-    runs-on: ubuntu-latest
-    permissions:
-      pages: write
-      id-token: write
-    environment:
-      name: github-pages
-      url: ${{ steps.deployment.outputs.page_url }}
-    steps:
-      - name: Deploy
-        id: deployment
-        uses: actions/deploy-pages@v5
-
-      # The site, a deep link, the game's own files and the installed app's manifest and file list answer (D18).
-      - name: Smoke test
-        env:
-          SITE: ${{ steps.deployment.outputs.page_url }}
-        run: |
-          for _ in $(seq 1 24); do
-            if curl -fsS -o /dev/null --max-time 10 "$SITE" \
-              && curl -fsS -o /dev/null --max-time 10 "${SITE}assets/olympus/zeus.png" \
-              && curl -fsS -o /dev/null --max-time 10 "${SITE}manifest.webmanifest" \
-              && curl -fsS -o /dev/null --max-time 10 "${SITE}ngsw.json" \
-              && curl -fsS -o /dev/null --max-time 10 "${SITE}challenge?g=zeus"; then
-              code=$(curl -s -o /dev/null -w '%{http_code}' --max-time 10 "${SITE}play")
-              if curl -s --max-time 10 "${SITE}play" | grep -q '<app-root'; then
-                echo "live at $SITE (deep link answered $code with the app)"
-                exit 0
-              fi
-            fi
-            sleep 5
-          done
-          echo "::error::$SITE did not serve the game within 2 minutes"
-          exit 1
-
   server-image:
-    name: Build the game server image
-    # Only when the game server is set up (docs/hosting.md): the repository variable SERVER_ADDRESS.
-    if: vars.SERVER_ADDRESS != '' && (github.event_name == 'workflow_dispatch' || !github.event.release.prerelease)
+    name: Build the game server image (with the game)
+    if: github.event_name == 'workflow_dispatch' || !github.event.release.prerelease
     needs: build # the version check and CI check run there first
     runs-on: ubuntu-latest
     permissions:
@@ -208,7 +143,7 @@ jobs:
           cache-to: type=gha,scope=api,mode=max
 
   server-deploy:
-    name: Deploy the game server (on Slovion's VM)
+    name: Deploy the game server
     needs: [build, server-image]
     runs-on: ubuntu-latest
     environment:
@@ -235,12 +170,14 @@ jobs:
           printf '%s\n' "$DEPLOY_KNOWN_HOSTS" > ~/.ssh/known_hosts
           chmod 600 ~/.ssh/id_ed25519 ~/.ssh/known_hosts
 
-      # Only the game's site may call the server from a browser (CORS, WebSocket origin).
+      # The game and its server share one address: only that site may call the server from a browser.
       - name: Configuration for this version
         env:
           POSTGRES_PASSWORD: ${{ secrets.POSTGRES_PASSWORD }}
           ADMIN_TOKEN: ${{ secrets.ADMIN_TOKEN }}
-          OWNER: ${{ github.repository_owner }}
+          HOST_DIR: ${{ vars.HOST_DIR }}
+          HOST_PROJECT: ${{ vars.HOST_PROJECT }}
+          HOST_DB_USER: ${{ vars.HOST_DB_USER }}
         run: |
           umask 077
           {
@@ -248,16 +185,19 @@ jobs:
             echo "TAG=$TAG"
             echo "VERSION=$VERSION"
             echo "OLYMPUS_ADDRESS=$SERVER_ADDRESS"
+            echo "ALLOWED_ORIGINS=https://$SERVER_ADDRESS"
             echo "POSTGRES_PASSWORD=$POSTGRES_PASSWORD"
             echo "ADMIN_TOKEN=$ADMIN_TOKEN"
-            echo "ALLOWED_ORIGINS=https://${OWNER,,}.github.io"
-            echo "SLOVION_DIR=/opt/slovion"
+            echo "HOST_DIR=$HOST_DIR"
+            echo "HOST_PROJECT=$HOST_PROJECT"
+            echo "HOST_DB_USER=$HOST_DB_USER"
+            echo "HOST_NETWORK=${HOST_PROJECT}_default"
           } > env.next
 
       - name: Copy to the VM
         run: |
-          ssh "$TARGET" "mkdir -p /opt/slovion/olympus"
-          scp -q deploy/compose.yml deploy/olympus.caddy deploy/install.sh env.next "$TARGET:/opt/slovion/olympus/"
+          ssh "$TARGET" "mkdir -p olympus"
+          scp -q deploy/compose.yml deploy/olympus.caddy deploy/install.sh env.next "$TARGET:olympus/"
 
       - name: Start the new version
         env:
@@ -268,7 +208,7 @@ jobs:
           printf '%s\n' "$REGISTRY_TOKEN" | ssh "$TARGET" "docker login ghcr.io -u '$REGISTRY_USER' --password-stdin >/dev/null"
           ssh "$TARGET" bash -s <<'EOF'
           set -euo pipefail
-          cd /opt/slovion/olympus
+          cd ~/olympus
           if [ -f .env ]; then cp .env .env.previous; fi
           mv env.next .env
           chmod 600 .env
@@ -293,7 +233,7 @@ jobs:
         run: |
           ssh "$TARGET" bash -s <<'EOF'
           set -euo pipefail
-          cd /opt/slovion/olympus
+          cd ~/olympus
           docker compose logs --tail 100 olympus-api || true
           if [ -f .env.previous ]; then
             cp .env.previous .env
@@ -304,7 +244,10 @@ jobs:
           fi
           EOF
 
+      # The test's own world board entry is hidden again with the admin token.
       - name: Smoke test
+        env:
+          ADMIN_TOKEN: ${{ secrets.ADMIN_TOKEN }}
         run: bash deploy/smoke-test.sh "https://$SERVER_ADDRESS"
 
       - name: Remove old images
@@ -312,7 +255,7 @@ jobs:
         run: |
           ssh "$TARGET" bash -s <<'EOF'
           set -euo pipefail
-          cd /opt/slovion/olympus
+          cd ~/olympus
           # The first deploy has no .env.previous; grep must not end the script then.
           previous="$(grep '^TAG=' .env.previous 2>/dev/null | cut -d= -f2 || true)"
           keep=" $(grep '^TAG=' .env | cut -d= -f2) $previous "

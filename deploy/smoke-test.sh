@@ -1,7 +1,8 @@
 #!/usr/bin/env bash
-# Checks a running game server stack from the outside (D21). Usage: deploy/smoke-test.sh http://localhost:8080
-# Used by CI against the stack built from a pull request, and usable against production (it adds one world board
-# entry under the name "Smoke Test" on the solo board; hide it with the admin route if wanted).
+# Checks a running game server from the outside (D21): the game, its API and its rooms at one address.
+# Usage: deploy/smoke-test.sh http://localhost:8080
+# Used by CI and by every deploy. It adds a world board entry named "Smoke Test" on the solo board; with ADMIN_TOKEN
+# set (deploys), it hides that entry again at the end.
 set -euo pipefail
 
 base="${1:?usage: smoke-test.sh <base URL>}"
@@ -34,7 +35,13 @@ check "the same run counts once" bash -c "curl -fsS -H 'content-type: applicatio
 check "the solo board lists it" bash -c "curl -fsS '$base/api/leaderboards/solo?limit=50' | grep -q 'Smoke Test'"
 check "an impossible run is refused" bash -c "[ \"\$(curl -s -o /dev/null -w '%{http_code}' -H 'content-type: application/json' -d '{\"board\":\"solo\"}' '$base/api/scores')\" = 400 ]"
 check "/api/rooms answers" bash -c "curl -fsS '$base/api/rooms?version=smoke' | grep -q '\"rooms\"'"
-check "unknown paths are 404" bash -c "[ \"\$(curl -s -o /dev/null -w '%{http_code}' '$base/nope')\" = 404 ]"
+check "/ serves the game" bash -c "curl -fsS '$base/' | grep -q '<app-root'"
+check "/play (deep link) serves the game" bash -c "curl -fsS '$base/play' | grep -q '<app-root'"
+check "a challenge link has its own page" bash -c "curl -fsS '$base/challenge?g=zeus' | grep -q '<app-root'"
+check "hashed bundles are immutable" bash -c "js=\$(curl -fsS '$base/' | grep -o 'main-[A-Za-z0-9_-]\{8\}\.js' | head -n 1); [ -n \"\$js\" ] && curl -fsS -o /dev/null -D - '$base/'\"\$js\" | tr -d '\r' | grep -qi 'immutable'"
+check "the installed app's file list is served" curl -fsS -o /dev/null "$base/ngsw.json"
+check "unknown API paths are 404" bash -c "[ \"\$(curl -s -o /dev/null -w '%{http_code}' '$base/api/nope')\" = 404 ]"
+check "missing files are 404" bash -c "[ \"\$(curl -s -o /dev/null -w '%{http_code}' '$base/main-MISSING0.js')\" = 404 ]"
 # A host and a guest meet on the rooms WebSocket and pass a message (Node's own WebSocket).
 check "a room pairs a host and a guest" node -e "
   const url = process.argv[1].replace(/^http/, 'ws') + '/rooms';
@@ -58,6 +65,16 @@ check "a room pairs a host and a guest" node -e "
     guest.onmessage = (g) => { if (JSON.parse(g.data).t === 'joined') guest.send(new Uint8Array([42])); };
   };
 " "$base"
+
+# With ADMIN_TOKEN (deploys), the test's own entries are hidden again, so players never see them.
+if [ -n "${ADMIN_TOKEN:-}" ]; then
+  for id in $(curl -fsS "$base/api/leaderboards/solo?limit=50" | node -e "
+    let s = ''; process.stdin.on('data', (d) => (s += d)).on('end', () => {
+      for (const e of JSON.parse(s).entries) if (e.names.includes('Smoke Test')) console.log(e.id);
+    });"); do
+    check "the test's entry $id is hidden" curl -fsS -o /dev/null -X POST -H "Authorization: Bearer $ADMIN_TOKEN" "$base/api/admin/scores/$id/hide"
+  done
+fi
 
 if [ "$failures" -gt 0 ]; then
   echo "$failures check(s) failed"

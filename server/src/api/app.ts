@@ -5,6 +5,7 @@ import type { Leaderboards } from '../application/leaderboards.js';
 import type { RateLimiter } from '../application/rate-limiter.js';
 import type { RoomRelay } from '../application/room-relay.js';
 import { isVersion } from '../domain/ids.js';
+import { serveClient, type ClientFilesOptions } from './client-files.js';
 
 export interface AppOptions {
   readonly leaderboards: Leaderboards;
@@ -20,6 +21,8 @@ export interface AppOptions {
   /** Checks what the server depends on (the database) for `/health`. */
   readonly health?: () => Promise<void>;
   readonly logger?: boolean;
+  /** The built game, served at this address too (D21); absent in development and tests. */
+  readonly client?: ClientFilesOptions;
 }
 
 /** A board entry as the game shows it (spec: world-leaderboards / world tables). */
@@ -97,6 +100,8 @@ export async function buildApp(o: AppOptions): Promise<FastifyInstance> {
       return reply.code((await o.leaderboards.hide(req.params.id)) ? 204 : 404).send();
     });
   }
+
+  if (o.client) await serveClient(app, o.client);
 
   return app;
 }
