@@ -8,8 +8,8 @@ test('the intro plays on first launch, can be skipped, and does not play again',
   page.on('pageerror', (e) => errors.push(e.message));
 
   await page.goto('/');
-  await expect(page).toHaveURL(/\/intro$/);
-  // Software rendering (CI) loads slowly: wait for the first caption.
+  // Software rendering (CI) and a cold dev server load slowly: wait for the intro and its first caption.
+  await expect(page).toHaveURL(/\/intro$/, { timeout: 30_000 });
   await expect(page.getByTestId('intro-caption').first()).toBeVisible({ timeout: 30_000 });
   await expect(page.getByTestId('intro-skip')).toBeVisible();
 

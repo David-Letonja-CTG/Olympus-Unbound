@@ -1,5 +1,5 @@
 import { expect, test } from '@playwright/test';
-import { debug, inspect, openAsReturningPlayer } from './run';
+import { debug, fillSeed, inspect, openAsReturningPlayer } from './run';
 
 test('a quick run: the boss at 3:30, and its own table in the Hall of Glory (spec: quick-runs)', async ({
   page,
@@ -9,7 +9,7 @@ test('a quick run: the boss at 3:30, and its own table in the Hall of Glory (spe
   await page.getByTestId('god-zeus').click();
   await page.getByRole('button', { name: 'Continue' }).click();
   await page.getByTestId('length-quick').click();
-  await page.getByTestId('seed-input').fill('31337');
+  await fillSeed(page, '31337');
   await page.getByTestId('begin').click();
   await expect(page.getByTestId('run-loading')).toHaveCount(0, { timeout: 120_000 });
   await expect

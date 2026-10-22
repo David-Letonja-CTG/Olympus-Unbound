@@ -1,5 +1,5 @@
 import { expect, test } from '@playwright/test';
-import { debug, inspect, openAsReturningPlayer, startRun } from './run';
+import { debug, fillSeed, inspect, openAsReturningPlayer, startRun } from './run';
 
 test('the vertical slice: menu → Zeus → Olympus → level-up → elite → boss → gate → realm 2 → death → summary → menu', async ({
   page,
@@ -186,7 +186,7 @@ test('a solo run with bot allies plays as a party (spec: bot-allies)', async ({ 
   await page.getByTestId('add-ally-hades').click();
   await page.getByTestId('ally-0-hard').click();
   await page.getByRole('button', { name: 'Continue' }).click();
-  await page.getByTestId('seed-input').fill('777');
+  await fillSeed(page, '777');
   await page.getByTestId('begin').click();
   await expect(page.getByTestId('party-member')).toHaveCount(2, { timeout: 30_000 });
   await expect(page.getByTestId('run-loading')).toHaveCount(0, { timeout: 120_000 });
@@ -245,7 +245,7 @@ test('two players share one keyboard and one screen (spec: co-op / local co-op o
   await page.getByTestId('add-player').click();
   await page.getByTestId('add-player-athena').click();
   await page.getByRole('button', { name: 'Continue' }).click();
-  await page.getByTestId('seed-input').fill('847291');
+  await fillSeed(page, '847291');
   await page.getByTestId('begin').click();
   await expect(page.getByTestId('party-member')).toHaveCount(2, { timeout: 30_000 });
   await expect(page.getByTestId('run-loading')).toHaveCount(0, { timeout: 120_000 });
