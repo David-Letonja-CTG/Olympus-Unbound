@@ -16,7 +16,6 @@
 - [x] 3.3 Deploy workflow: VM only, no Pages
 - [x] 3.4 Smoke test checks the game, deep links, caching and 404s, and hides its own board entry
 
-## 4. Docs and switch
+## 4. Docs
 
 - [x] 4.1 hosting.md, D1, D18, D21, architecture, README, CLAUDE.md
-- [ ] 4.2 After the release is live on the VM: switch GitHub Pages off and remove its environment
