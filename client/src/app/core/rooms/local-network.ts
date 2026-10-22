@@ -1,5 +1,5 @@
 import { PeerLink } from '../../../engine';
-import { RoomError, RoomListing, RoomNetwork } from './room-network';
+import { OpenRoom, RoomError, RoomListing, RoomNetwork } from './room-network';
 
 const CHANNEL = 'olympus-unbound-rooms';
 /** Generous: on a busy test runner the host tab is in the background and answers late. */
@@ -12,11 +12,15 @@ type Envelope =
   | { kind: 'close'; to: string; from: string };
 
 /**
- * Rooms between tabs of one browser over a `BroadcastChannel` (`?debug&net=local`), so end-to-end tests can play a
- * room without the public signalling service. Debug builds and tests only.
+ * Rooms between tabs of one browser over a `BroadcastChannel` (`?debug&net=local`), so the docs capture script can
+ * play a room without the game server. Debug builds only.
  */
 export class LocalNetwork implements RoomNetwork {
-  async open(code: string, onGuest: (link: PeerLink) => void): Promise<RoomListing> {
+  async open(
+    code: string,
+    _version: string,
+    onGuest: (link: PeerLink) => void,
+  ): Promise<RoomListing> {
     const channel = new BroadcastChannel(CHANNEL);
     const id = randomId();
     const links: (() => void)[] = [];
@@ -29,11 +33,17 @@ export class LocalNetwork implements RoomNetwork {
       onGuest(link);
     });
     return {
+      // No server between tabs: nothing is listed.
+      publish: () => undefined,
       close() {
         for (const close of links) close();
         channel.close();
       },
     };
+  }
+
+  async openRooms(): Promise<readonly OpenRoom[]> {
+    return [];
   }
 
   join(code: string): Promise<PeerLink> {

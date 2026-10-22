@@ -6,9 +6,14 @@ Status values: **Accepted**, **Superseded**, **Deferred**.
 
 ---
 
-## D1 — Frontend-only, static game (Accepted, 2026-10-10; revised 2026-10-11 for rooms)
+## D1 — The game runs in the browser; a small server serves the shared parts (Accepted, 2026-10-10; revised 2026-10-11 for rooms; revised 2026-10-22 for the game server)
 
-The game runs entirely in the browser and deploys as static files. No backend of our own, REST API, database, accounts, cloud saves or data stored online. Persistent data lives in browser storage (D8). *Revised 2026-10-11:* co-op rooms may connect players' browsers directly (WebRTC data channels); a public signalling service only introduces them by room code (D16). Without rooms the game makes no network connection.
+The game runs entirely in the browser and deploys as static files. Saves, progression and every rule of a run stay in the browser (D8): there are no accounts and no cloud saves. *Revised 2026-10-11:* co-op rooms connected browsers directly (D16).
+
+*Revised 2026-10-22:* the owner chose a server of the game's own (D21). Peer-to-peer rooms failed between devices on many home networks, and the owner wanted world leaderboards and matchmaking.
+- **What it does:** carries room traffic, lists public rooms and keeps world high scores.
+- **What it never does:** run game rules or hold saves.
+- **Without it:** the game plays as before when the server is unreachable or a build has none. Solo and local play, saves and the Hall's own tables need no connection; co-op and the world boards say they need the server.
 
 ## D2 — Three layers: Angular, Phaser, simulation (Accepted, 2026-10-10)
 
@@ -86,11 +91,13 @@ Every character (gods, enemies, bosses, cutscene actors) is drawn from sprite sh
 
 *Alternatives considered:* existing packs (none has the Greek roster or a god in a dark pre-rendered style); mixing packs (inconsistent, rejected by the owner); recasting the roster around Flare's generic creatures (rejected: monsters must be from Greek myth); rendering CC0 low-poly 3D models (a more stylised, toy-like look).
 
-## D16 — Rooms: peer-to-peer, the host's game is the authority (Accepted, 2026-10-11)
+## D16 — Rooms: the host's game is the authority (Accepted, 2026-10-11; revised 2026-10-22)
 
-Co-op rooms connect the players' browsers directly over WebRTC data channels, using PeerJS (MIT) and its public signalling service to find the host by a five-character room code. The host's browser runs the only `RunSimulation`. Guests send their input each step, and receive the world as binary snapshots at 20 Hz together with the events, their own HUD, choices and result. They draw it 100 ms behind with interpolation, and predict their own movement. The scene runs on a `RunDriver` (local simulation, or a guest's replica), and the views read a `WorldFrame`, so nothing in the scene or the views knows which one it has. PeerJS is used only by `app/core/rooms/peer-network.ts`, loaded when a room is opened (lint), and the engine sees rooms only as `PeerLink`s. Rooms last one run, there is no joining mid-run, and a host who leaves ends the run for everyone (as abandoned).
+*Revised 2026-10-22:* rooms travel through the game server (D21) instead of WebRTC. The server relays every message between the host and each guest and understands none of them, so everything below about the host's authority, snapshots and prediction is unchanged. PeerJS is gone. The engine still sees rooms only as `PeerLink`s, and `app/core/rooms/server-network.ts` provides them.
 
-*Alternatives considered:* lockstep, with every browser simulating and exchanging only inputs (rejected: `Math.sin`/`cos` may differ between browsers, so the runs would drift apart); a relay or game server of our own (rejected by D1); host migration and reconnection (deferred).
+*As first accepted:* co-op rooms connected the players' browsers directly over WebRTC data channels, using PeerJS (MIT) and its public signalling service to find the host by a five-character room code. The host's browser runs the only `RunSimulation`. Guests send their input each step, and receive the world as binary snapshots at 20 Hz together with the events, their own HUD, choices and result. They draw it 100 ms behind with interpolation, and predict their own movement. The scene runs on a `RunDriver` (local simulation, or a guest's replica), and the views read a `WorldFrame`, so nothing in the scene or the views knows which one it has. The room network is loaded when a room is opened, and the engine sees rooms only as `PeerLink`s. Rooms last one run, there is no joining mid-run, and a host who leaves ends the run for everyone (as abandoned).
+
+*Alternatives considered:* lockstep, with every browser simulating and exchanging only inputs (rejected: `Math.sin`/`cos` may differ between browsers, so the runs would drift apart); a relay or game server of our own (rejected by D1 in 2026-10, then chosen in D21); host migration and reconnection (deferred).
 
 ## D17 — Phones: touch controls in the Phaser layer, runs in landscape (Accepted, 2026-10-20)
 
@@ -131,7 +138,7 @@ To bring players back each day and let them bring friends (`add-daily-play`), th
 
 *Alternatives considered:*
 
-- A global daily leaderboard. Rejected for now: it needs a server; a parked plan exists.
+- A global daily leaderboard. Rejected for now: it needs a server; a parked plan exists. *Revised 2026-10-22:* the game server (D21) now keeps a world board per day. The trial itself and challenge links are unchanged.
 - One attempt a day. Rejected: it punishes a bad first try, so every attempt counts and the best is kept.
 - Seeds from the UTC date. Rejected: the trial changes at local midnight like the daily quests, so players in other time zones may play a different trial at the same moment. Sharing names the date.
 
@@ -141,3 +148,29 @@ The owner chose to open the code and keep the game's identity. The source code (
 
 *Alternatives considered:* all rights reserved (no reuse at all); GPL-3.0 (reuse only in open-source work); MIT for everything (others could ship a near-identical game).
 
+
+## D21 — A game server: rooms relay, matchmaking, world leaderboards (Accepted, 2026-10-22)
+
+**Why.** The owner (2026-10-22) found co-op failing between two machines in one house. Browsers on such networks could not connect directly, and the free public relays (PeerJS's, Open Relay) no longer exist. The owner also wanted world leaderboards and matchmaking. All three need a server everyone can reach, so the owner chose one, built like Slovion's but without .NET.
+
+**What it is.**
+- **Shape:** `server/` is one Node.js (TypeScript) service, layered like Slovion's API (`api` → `application` → `domain`, with `infrastructure` implementing the application's ports). Lint enforces the boundaries.
+- **Libraries:** Fastify for HTTP, `ws` for WebSockets, PostgreSQL through `pg`.
+- **Hosting:** it runs as a Docker Compose stack: Caddy for TLS, the API, and PostgreSQL. The stack lives on an Oracle Cloud Always Free VM and is deployed by the release workflow with a health check and rollback, as in Slovion (docs/hosting.md).
+- **The game itself** stays static on GitHub Pages. It reaches the server at the address given when it is built.
+
+**What it does.**
+- **Rooms** (`/rooms`, WebSocket): the host's socket holds the room code. Each guest's socket is paired with it, and the server forwards each message unread, prefixed by the guest's number on the host's side. Rooms live in memory and end when the host leaves.
+- **Matchmaking** (`/api/rooms`): a host may make its lobby public. The server lists public rooms of the same game version that have not started. **Quick Play** joins the fullest one or opens a public room.
+- **World leaderboards** (`/api/scores`, `/api/leaderboards`), stored in PostgreSQL:
+  - **Boards:** solo, with allies, co-op and quick, as in the Hall, and one Daily Trial board per date.
+  - **Checks:** the server recomputes the score from the run's figures, checks that they are plausible, takes each run once (its run ID), and limits submissions per address. An admin token can hide entries.
+  - **Stored:** the player's chosen name and the run's figures; no addresses.
+
+**What it does not do.** It runs no game rules: a run's truth stays in the host's browser (D16). It keeps no saves and needs no accounts. Its absence breaks nothing but co-op and the world boards.
+
+*Alternatives considered:*
+- **A paid or account-based TURN relay with peer-to-peer:** it fixes co-op only, and gives no leaderboards or matchmaking.
+- **Serverless functions plus a hosted database** (Cloudflare Workers, as parked on 2026-10-19): rejected for Slovion's proven stack, which the owner asked for. Rooms also need long-lived WebSockets.
+- **.NET like Slovion:** the owner asked for another stack. TypeScript also lets the server and the game share the room protocol's shape and the score formula.
+- **Running the simulation on the server:** rejected, because D16's host authority already works and server simulation would cost far more CPU.

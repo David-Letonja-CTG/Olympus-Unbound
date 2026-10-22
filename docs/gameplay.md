@@ -104,6 +104,13 @@ Runs take place at night. The arena is dark beyond your light; braziers ring the
 
 Every run has battle music, composed and played by the game itself: a lyre and frame drum while the realm is young (**Calm**), then war drums and bass (**Stirring**), a rock beat with power chords (**Battle**), driving metal with double kick and palm-muted riffs (**Fury**), and, while a boss is awake, the fastest and heaviest tier with a choir (**Titan**). It rises with the realm's time toward its boss, with every realm cleared and with the foes crowding around your god, and eases back down slowly when the field clears. A change waits for the end of the bar, so it lands on the beat. The music is quieter while paused, carries on through the gate, and fades out when the run ends. **Settings → Music** (also in the pause menu) sets its volume, apart from the sound effects.
 
+**Co-op online** goes through the game's server, so it works on any network, even two devices in one house.
+- **Quick Play** joins the fullest room that is waiting for players, or opens a public one and waits there.
+- **Open rooms** lists the public rooms with their host, god, realm and seats.
+- **Public:** a host can make the lobby public, so others find it.
+
+The Hall of Glory shows each high-score table for **This device** and for the **World**, with every player's chosen name. It also shows the world's best Daily Trial score of the day. Runs finished offline are sent the next time the game starts online.
+
 Outside runs, the menus have a theme of their own: a calm lyre melody over a choir, joined by a frame drum and bass the second time round. It fades out as a run (or the intro) begins and returns afterwards, at the same Music volume. Browsers only allow sound after your first click, key or touch, so it starts then. When the game opens and the browser is still holding sound back (on a phone, always), a title screen comes first: the crest and the name rise out of the dark among drifting embers, and **Tap to enter** (on a computer, **Click or press any key**) lets the game in with a flash of light, the music starting as the menu appears. On first launch the intro plays after it, with its sound. Buttons, links and options on the menus make a soft pluck when pressed, and a screen's main button (Play, Begin, Continue) a brighter chime, at the **Sound effects** volume.
 
 ## The HUD

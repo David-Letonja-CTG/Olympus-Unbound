@@ -69,9 +69,16 @@ jobs:
         with:
           node-version: 24
           cache: npm
-          cache-dependency-path: client/package-lock.json
+          cache-dependency-path: |
+            client/package-lock.json
+            server/package-lock.json
 
       - name: Install
+        run: npm ci
+
+      # Playwright starts the game server too (boards in memory): rooms and world boards (D21).
+      - name: Install the game server
+        working-directory: server
         run: npm ci
 
       - name: Install browser
@@ -88,3 +95,79 @@ jobs:
           name: playwright-report
           path: client/playwright-report
           retention-days: 7
+
+  server:
+    name: Server (format, lint, test, build)
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: server
+    # A real database for the PostgreSQL tests (D21).
+    services:
+      postgres:
+        image: postgres:18.6
+        env:
+          POSTGRES_USER: olympus
+          POSTGRES_PASSWORD: olympus_ci # CI only
+          POSTGRES_DB: olympus
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U olympus -d olympus"
+          --health-interval 5s --health-timeout 3s --health-retries 20
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 24
+          cache: npm
+          cache-dependency-path: server/package-lock.json
+
+      - name: Install
+        run: npm ci
+
+      - name: Check formatting
+        run: npm run format:check
+
+      - name: Lint
+        run: npm run lint
+
+      - name: Test
+        env:
+          DATABASE_URL: postgres://olympus:olympus_ci@localhost:5432/olympus
+        run: npm test
+
+      - name: Build
+        run: npm run build
+
+  stack:
+    name: Server stack (images, smoke test)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+
+      - name: Build the images
+        run: |
+          docker build -f deploy/api.Dockerfile -t ci/olympus-api:test .
+          docker build -f deploy/web.Dockerfile -t ci/olympus-web:test .
+
+      # The production stack on plain HTTP, as docs/hosting.md runs it, checked from the outside.
+      - name: Start the stack
+        run: |
+          cat > ci.env <<'EOF'
+          SITE_ADDRESS=:80
+          POSTGRES_PASSWORD=olympusci
+          HTTP_PORT=8080
+          HTTPS_PORT=8443
+          IMAGE_PREFIX=ci
+          TAG=test
+          EOF
+          docker compose -f deploy/compose.yml --env-file ci.env up -d --wait
+
+      - name: Smoke test
+        run: bash deploy/smoke-test.sh http://localhost:8080
+
+      - name: Logs
+        if: failure()
+        run: docker compose -f deploy/compose.yml --env-file ci.env logs

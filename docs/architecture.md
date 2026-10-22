@@ -17,7 +17,8 @@ The structure follows the [Slovion](https://github.com/David-Letonja-CTG/Slovion
 | OpenSpec `spec-driven` workflow, `/opsx:*` commands | Same workflow and tooling |
 | `docs/` (vision, architecture, gameplay, content, decisions) | Same set, plus `systems.md` |
 | Vitest unit tests, Playwright E2E, GitHub Actions | Same |
-| *Not reused:* .NET backend, PostgreSQL, REST, save tokens, Tiled maps, species/quests/journal, Transloco | Frontend-only (D1), procedural arenas, English-only for now (D10) |
+| Modular-monolith backend (Api → Application → Domain, Infrastructure), PostgreSQL, Docker Compose with Caddy on an OCI VM, release deploys with rollback | The game server (D21): the same layers and hosting in Node.js and TypeScript, for rooms, open rooms and world boards only |
+| *Not reused:* .NET, save tokens and server-held saves, Tiled maps, species/quests/journal, Transloco | Saves stay in the browser (D1, D8), procedural arenas, English-only for now (D10) |
 
 ## Overview
 
@@ -38,6 +39,7 @@ flowchart LR
   end
   Content[("Typed content<br/>client/src/content")]
   Storage[("localStorage<br/>versioned save")]
+  Server["Game server (server/, D21)<br/>rooms relay · open rooms · world boards"]
   Menus --> Play
   Play -- "commands" --> Session
   Session -- "events · HUD ≤10 Hz" --> Play
@@ -49,6 +51,7 @@ flowchart LR
   Content --> Menus
   Play -- "run result" --> Prog
   Prog <--> Storage
+  Menus -- "rooms (WebSocket) · open rooms · world boards (HTTPS)" --> Server
 ```
 
 ## Repository layout
@@ -58,7 +61,8 @@ client/
   src/app/                 Angular
     core/                  Progression, RunSetup, SaveStore + save model/rewards/glory, injection tokens, debug and
                            admin flags, TouchScreen, the installed app (AppUpdate, InstallPrompt, Connectivity),
-                           rooms (RoomService lobby, RoomNetwork: PeerJS or BroadcastChannel)
+                           rooms (RoomService lobby, Quick Play; RoomNetwork: ServerNetwork through the game
+                           server, or BroadcastChannel), GameServer (address, requests), WorldScores
     features/              main-menu, god-selection, realm-selection, coop (lobby), game (play screen, HUD,
                            dialogs, loading), run-summary, progression, glory (Hall of Glory), admin (statistics,
                            balance report), settings
@@ -97,6 +101,12 @@ client/
   ngsw-config.json         what the service worker keeps (D18)
   public/manifest.webmanifest, public/icons/   the installable app
   e2e/                     Playwright tests
+server/                    the game server (D21)
+  src/domain/              room codes, listings, score figures and their checks (pure)
+  src/application/         RoomRelay, Leaderboards, RateLimiter; ports (ScoreStore, Clock)
+  src/infrastructure/      PostgresScoreStore + migrations, MemoryScoreStore
+  src/api/                 Fastify app (HTTP routes), the /rooms WebSocket, main (configuration)
+deploy/                    the server's Docker images, Compose stack, Caddyfile, VM bootstrap, backup, smoke test
 docs/  openspec/  .github/workflows/  .claude/
 ```
 
@@ -117,7 +127,7 @@ CutsceneSession.subscribe(listener)  loadProgress | ready | captions | uiInput |
 CutsceneSession.skip() / destroy()
 ```
 
-`createGameSession` dynamically imports the Phaser layer, so the ~1.45 MB Phaser chunk loads only when a run starts (menus: ~375 kB initial); PeerJS (~90 kB) loads only when a room is opened or joined. `debug` is true only in development builds opened with `?debug` (used by Playwright).
+`createGameSession` dynamically imports the Phaser layer, so the ~1.45 MB Phaser chunk loads only when a run starts (menus: ~375 kB initial); the room network loads only when a room is opened or joined. `debug` is true only in development builds opened with `?debug` (used by Playwright).
 
 ## A frame
 
@@ -215,7 +225,7 @@ flowchart LR
   GD -- "input 60 Hz · choose · loaded" --> RH
 ```
 
-- **Lobby** (`app/core/rooms/room-service.ts`): the host opens a room through a `RoomNetwork` and keeps the member list (seat, name, god, ready). Guests send `hello` (with the room version: protocol, snapshot format and a hash of the content), then `update`s. `start` gives every member the same run ID, realm, seed and party in seat order. `RoomNetwork` is PeerJS in production (`peer-network.ts`, a lazy chunk) or a `BroadcastChannel` between tabs with `?debug&net=local` (E2E). The session receives the links as `RoomSeat` (`room` in `GameSessionOptions`).
+- **Lobby** (`app/core/rooms/room-service.ts`): the host opens a room through a `RoomNetwork` and keeps the member list (seat, name, god, ready). Guests send `hello` (with the room version: protocol, snapshot format and a hash of the content), then `update`s. `start` gives every member the same run ID, realm, seed and party in seat order. `RoomNetwork` is `ServerNetwork` (`server-network.ts`, a lazy chunk), through the game server (see below), or a `BroadcastChannel` between tabs with `?debug&net=local` (docs capture). A public lobby publishes its listing (`RoomListing.publish`), and `quickPlay` joins the fullest open room or opens a public one (spec: matchmaking). The session receives the links as `RoomSeat` (`room` in `GameSessionOptions`).
 - **Driver:** `ArenaScene` runs on a `RunDriver` (`engine/net/driver.ts`). `LocalDriver` steps the simulation (solo, or with a `RoomHost` for a host). On a shared screen (`GameSessionOptions.local`, one `ControlScheme` per local seat) `InputReader` reads one input per scheme (keys by `KeyboardEvent.code`, gamepads by number), `LocalDriver` passes them in seat order, forwards every local player's choices and accepts their answers, and `focus()`/`spread()` frame the living local gods for the camera. `GuestDriver` (`engine/net/guest.ts`) builds a `WorldFrame` between the two snapshots around *newest − 100 ms*, and releases each frame's events when the drawn time reaches it. It moves the guest's own god at once with the same movement and collision rules, and corrects it by the host's error at the acknowledged input. The views (`WorldView`, `Effects`) read only `WorldFrame`, which `RunState` satisfies as it is.
 - **Host:** `RoomHost` (`engine/net/host.ts`) applies each guest's inputs one per step, in order (none queued: the god stands still). It routes each choice to its player and sends frames, HUDs (every 10th with the result so far) and `ended`. A closed link calls `RunSimulation.leave`.
 - **Loading:** after the scene is built, a room's run waits in the `party` stage until every guest has loaded (host) or the first frame has come (guest). In rooms, pause and lost focus do not stop the run.
@@ -298,3 +308,62 @@ Targets: 60 fps at 1080p with ~300 enemies at High. Measured 2026-10-11 (GTX 166
 - After tuning, at Low: **26 fps, median 33 ms, 95th percentile 50 ms**, the simulation in real time. High: 19 fps, median 50 ms.
 - 2026-10-22: a profile showed the arena's marble floors (plazas and temples, hundreds of slab lines in one Graphics) re-triangulated every frame, about a quarter of the main thread. They are now drawn once into canvas textures (`WorldView.bake`) and look the same. Low: 29 → **50 fps, median 17 ms, 95th percentile 33 ms**; High: 20 → **28 fps, median 33 ms**.
 - Emulation is not a phone: the GPU and the browser differ. Check a real phone before trusting these numbers.
+
+## The game server (D21)
+
+`server/` is one Node.js service in TypeScript, layered like Slovion's API. It carries rooms, lists open rooms and keeps the world boards. It runs no game rules and holds no saves.
+
+```mermaid
+flowchart TB
+  Api["<b>api</b><br/>Fastify routes, /rooms WebSocket,<br/>configuration (main.ts)"]
+  App["<b>application</b><br/>RoomRelay (rooms in memory), Leaderboards,<br/>RateLimiter · ports: ScoreStore, Clock"]
+  Domain["<b>domain</b><br/>room codes, listings, score figures,<br/>checks, the glory score"]
+  Infra["<b>infrastructure</b><br/>PostgresScoreStore (pg, migrations),<br/>MemoryScoreStore (tests, local)"]
+  Api --> App --> Domain
+  Api --> Infra
+  Infra --> App
+  Infra --> Domain
+```
+
+- **Dependencies:** `domain` imports nothing, `application` only `domain`, and `infrastructure` implements `application`'s ports. `api` composes everything. ESLint enforces these rules (`server/eslint.config.js`); tests may cross them.
+- **Rooms** (`/rooms`, design: Rooms over WebSocket):
+  - **Pairing:** a host's socket opens a code, each guest's socket joins it, and the relay pairs them.
+  - **Binary frames** go host → guest as `[u32 guest][payload]` and guest → host as `payload`, which the host receives with the guest's number. The relay never reads a payload.
+  - **Codec:** the game encodes its messages with `client/src/app/core/rooms/wire.ts`: JSON plus the snapshots' `ArrayBuffer`s.
+  - **Ending:** a room ends with its host, and its guests are closed with code 4001.
+- **Limits:** frame size, frames per 5 s, sockets per address, guests per room, and runs per address per hour. Addresses are held in memory only.
+- **Routes:**
+
+| Route | What |
+|---|---|
+| `GET /health` | 200 when the database answers |
+| `GET /api/rooms?version=` | open public rooms of a game version, fullest first |
+| `POST /api/scores` | a finished run: checked, scored by the server, each run once |
+| `GET /api/leaderboards/:board?date=&god=&limit=` | the best of a board (`solo`, `allies`, `coop`, `quick`, `daily` + date) |
+| `POST /api/admin/scores/:id/hide` | hides an entry (`Authorization: Bearer ADMIN_TOKEN`) |
+
+**A room through the server:**
+
+```mermaid
+sequenceDiagram
+  participant H as Host (ServerNetwork)
+  participant R as RoomRelay
+  participant G as Guest (ServerNetwork)
+  H->>R: {t:"host", code, version}
+  R-->>H: {t:"hosting"}
+  G->>R: {t:"join", code}
+  R-->>G: {t:"joined"}
+  R-->>H: {t:"guest", guest: 1}
+  G->>R: payload (hello)
+  R-->>H: [1][payload]
+  H->>R: [1][payload] (welcome, lobby, frames…)
+  R-->>G: payload
+```
+
+**Data:** PostgreSQL holds one table, `scores`: run ID (unique), board and date, names, god, realm, party, figures, score, version, time and a hidden flag. Migrations run at startup (`infrastructure/migrations.ts`). Rooms and listings live only in memory.
+
+**The game's side:**
+- `GameServer` (`app/core/game-server.ts`) knows the address from the build (`OLYMPUS_SERVER`). Without one, co-op and the World tables are not offered.
+- `WorldScores` sends finished runs (co-op by the host, with the party's names) and queues those it could not send.
+
+**Deployment:** `deploy/` and [hosting.md](hosting.md#the-game-server).

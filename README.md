@@ -74,13 +74,13 @@ flowchart LR
 
 - **Angular owns the application**, **Phaser hosts and draws the game**, and a **Phaser-free simulation owns every gameplay rule**. The rules are testable in Node and deterministic per seed.
 - **Content is typed data**: new weapons, enemies, relics or realms reuse behaviors instead of new code.
-- **No backend**: progress is a versioned save in the browser. Co-op rooms connect browsers directly, and the host's simulation is the authority.
+- **Progress in the browser**: a versioned save, no accounts. A small game server (D21) relays co-op rooms, lists open rooms for Quick Play and keeps the world leaderboards. The host's simulation is the authority, and everything else plays without it.
 
 | Area | Technology |
 |---|---|
 | Application | Angular 22 (standalone, signals, zoneless) |
 | Game | Phaser 4 + TypeScript simulation core |
-| Co-op | WebRTC via PeerJS |
+| Co-op, matchmaking, world boards | Game server: Node.js, Fastify, `ws`, PostgreSQL (`server/`), Docker Compose with Caddy |
 | Art | Blender renders of CC-BY / CC0 models, code-drawn world and effects |
 | Tests | Vitest, Playwright |
 | Workflow | [OpenSpec](https://github.com/Fission-AI/OpenSpec) |

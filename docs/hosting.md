@@ -1,12 +1,15 @@
 # Hosting
 
-OLYMPUS UNBOUND is a static site (D1): no server of its own, no database. Each published GitHub Release goes live on **GitHub Pages** at **https://david-letonja-ctg.github.io/Olympus-Unbound/**, and the built game is attached to the release as a zip anyone can host. Co-op rooms connect players' browsers directly (D16); only the public PeerJS service introduces them.
+OLYMPUS UNBOUND is a static site (D1). Each published GitHub Release goes live on **GitHub Pages** at **https://david-letonja-ctg.github.io/Olympus-Unbound/**, and the built game is attached to the release as a zip anyone can host.
+
+Co-op rooms, the open rooms and the world boards go through the **game server** (D21). It runs as a Docker Compose stack on an Oracle Cloud VM and is deployed by the same releases ([The game server](#the-game-server)). Until the server is set up, releases publish the game without co-op and world boards.
 
 - [How it fits together](#how-it-fits-together)
 - [One-time setup](#one-time-setup)
 - [Releasing](#releasing)
 - [Hosting the zip elsewhere](#hosting-the-zip-elsewhere)
 - [Troubleshooting](#troubleshooting)
+- [The game server](#the-game-server)
 
 ## How it fits together
 
@@ -95,3 +98,87 @@ The zip is the game for the root of a static host: unzip it and serve the folder
 | Players keep an old version | Their game has not checked yet, or they have not tapped *Reload* on the menu's notice. A check runs at every launch. In an emergency, deleting `ngsw.json` from the site makes the worker step aside on the next visit. |
 | A reload on `/play` shows GitHub's 404 page | `404.html` is missing from the build; `scripts/entry-pages.mjs` copies it from `index.html`. |
 | A pasted challenge link shows no preview | The address answers 404: `challenge.html` is missing, or the route is not in `scripts/entry-pages.mjs`. |
+
+## The game server
+
+The game server (D21) runs on one **Oracle Cloud (OCI) Always Free** Arm VM as a Docker Compose stack, exactly as Slovion does: Caddy (HTTPS), the API, and PostgreSQL. Publishing a release deploys it before the game.
+
+```mermaid
+flowchart LR
+  Player["The game<br/>(github.io)"] -- "HTTPS · WSS" --> Web
+  subgraph VM["OCI Always Free VM — /opt/olympus"]
+    Web["web<br/>Caddy: certificates, proxy"] -- "/api, /rooms, /health" --> Api["api<br/>Node.js game server"] --> Db[("db<br/>PostgreSQL 18")]
+    Timer["olympus-backup.timer<br/>03:30 UTC"] -- "pg_dump" --> Db
+  end
+  Timer -- "upload" --> Bucket[("Object Storage bucket")]
+  CI["Deploy workflow"] -- "images" --> GHCR[("ghcr.io")]
+  CI -- "SSH" --> VM
+```
+
+| Piece | Where it is defined |
+|---|---|
+| API image | [`deploy/api.Dockerfile`](../deploy/api.Dockerfile) |
+| Web image (Caddy) | [`deploy/web.Dockerfile`](../deploy/web.Dockerfile), [`deploy/Caddyfile`](../deploy/Caddyfile) |
+| The stack | [`deploy/compose.yml`](../deploy/compose.yml) |
+| VM setup (run once) | [`deploy/bootstrap.sh`](../deploy/bootstrap.sh) |
+| Daily backup | [`deploy/backup.sh`](../deploy/backup.sh), a timer installed by the bootstrap |
+| Smoke test (CI, deploys, by hand) | [`deploy/smoke-test.sh`](../deploy/smoke-test.sh) |
+
+### Configuration
+
+The deploy writes these to `/opt/olympus/.env` on the VM, so nothing secret is in the repository:
+
+| Name | Kind | What it is |
+|---|---|---|
+| `SERVER_ADDRESS` | repository variable | the server's host name, e.g. `203-0-113-7.sslip.io`. Setting it turns the server deploy on, and the game is built to use it |
+| `DEPLOY_HOST` | `production` secret | the VM's public IP |
+| `DEPLOY_USER` | `production` secret | `olympus` |
+| `DEPLOY_SSH_KEY` | `production` secret | the private deploy key |
+| `DEPLOY_KNOWN_HOSTS` | `production` secret | the VM's SSH host keys (`ssh-keyscan`) |
+| `POSTGRES_PASSWORD` | `production` secret | the database password (letters and digits) |
+| `BACKUP_URL` | `production` secret | the bucket's pre-authenticated write URL (ends with `/o/`), optional |
+| `ADMIN_TOKEN` | `production` secret | hides world board entries, optional |
+
+`ALLOWED_ORIGINS` is set by the workflow to `https://<owner>.github.io`: only the game's site may call the server from a browser.
+
+### One-time setup
+
+The steps are Slovion's ([its hosting guide](https://github.com/David-Letonja-CTG/Slovion/blob/main/docs/hosting.md#one-time-setup)), with these names:
+
+1. **The VM:** an OCI `VM.Standard.A1.Flex` with Ubuntu 24.04 aarch64 and a public IP. Open ingress TCP 80 and 443 in the VCN's security list. Slovion's VM can't share ports 80 and 443, so use a second VM; Always Free covers 4 OCPUs in total.
+2. **The backup bucket** (optional): `olympus-backups`, with a write link (pre-authenticated request).
+3. **Prepare the VM:**
+   ```bash
+   ssh-keygen -t ed25519 -N "" -C olympus-deploy -f olympus-deploy
+   scp deploy/bootstrap.sh ubuntu@<ip>:
+   ssh ubuntu@<ip> "sudo bash bootstrap.sh '$(cat olympus-deploy.pub)'"
+   ```
+4. **The GitHub settings:**
+   ```bash
+   repo=David-Letonja-CTG/Olympus-Unbound
+   gh api -X PUT "repos/$repo/environments/production" > /dev/null
+   gh secret set DEPLOY_HOST        --env production --repo $repo --body "<ip>"
+   gh secret set DEPLOY_USER        --env production --repo $repo --body olympus
+   gh secret set DEPLOY_SSH_KEY     --env production --repo $repo < olympus-deploy
+   ssh-keyscan -t ed25519,ecdsa,rsa <ip> 2>/dev/null | gh secret set DEPLOY_KNOWN_HOSTS --env production --repo $repo
+   openssl rand -hex 24 | gh secret set POSTGRES_PASSWORD --env production --repo $repo
+   openssl rand -hex 24 | gh secret set ADMIN_TOKEN       --env production --repo $repo
+   gh secret set BACKUP_URL         --env production --repo $repo     # optional; paste the write URL
+   gh variable set SERVER_ADDRESS   --repo $repo --body "<ip with dashes>.sslip.io"
+   rm olympus-deploy olympus-deploy.pub
+   ```
+5. **Publish a release.** The server deploys first, with a health check, a smoke test and a rollback on failure. Then the game goes to Pages, built with `https://SERVER_ADDRESS`.
+
+### Operations
+
+- **Logs:** `ssh olympus@<ip> 'cd /opt/olympus && docker compose logs --tail 200 api'`
+- **Hide an entry:** `curl -X POST -H "Authorization: Bearer $ADMIN_TOKEN" https://SERVER_ADDRESS/api/admin/scores/<id>/hide`. The id is in `/api/leaderboards/<board>`.
+- **Restore a backup:** copy the dump to the VM, then `docker compose exec -T db pg_restore -U olympus -d olympus --clean < file.dump`.
+- **Locally:** `cd server && npm run serve` runs the server with boards in memory. Or build the stack as CI does, from the repository root:
+  ```bash
+  docker build -f deploy/api.Dockerfile -t local/olympus-api:test .
+  docker build -f deploy/web.Dockerfile -t local/olympus-web:test .
+  docker compose -f deploy/compose.yml --env-file <file with SITE_ADDRESS=:80, POSTGRES_PASSWORD, HTTP_PORT=8088, IMAGE_PREFIX=local, TAG=test> up -d --wait
+  bash deploy/smoke-test.sh http://localhost:8088
+  ```
+- **Downloaded builds:** the zip attached to a release has no server address. Hosted elsewhere, it would be another site, which the server does not allow.

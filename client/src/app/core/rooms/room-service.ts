@@ -3,7 +3,8 @@ import { Modifier, PartySeat, PeerLink, RoomSeat, RunConfig, roomVersion } from 
 import { GAME_CONTENT } from '../game-content';
 import { Progression } from '../progression';
 import { randomSeed } from '../run-setup';
-import { RoomError, RoomListing, ROOM_NETWORK } from './room-network';
+import { GameServer } from '../game-server';
+import { OpenRoom, RoomError, RoomListing, roomsOffered, ROOM_NETWORK } from './room-network';
 
 export const MAX_MEMBERS = 4;
 /** Room codes avoid letters and digits that look alike (spec: rooms / creating a room). */
@@ -63,7 +64,7 @@ const MESSAGES: Record<RefusalReason | RoomError['reason'] | 'closed' | 'timeout
   version: 'That room plays a different version of the game.',
   taken: 'Could not open a room. Try again.',
   'not-found': 'No room has that code.',
-  unreachable: 'Could not connect to the room. Check the connection and try again.',
+  unreachable: 'Could not reach the game server. Check the connection and try again.',
   unsupported: 'This browser cannot play in rooms.',
   closed: 'The host closed the room.',
   timeout: 'The room did not answer. Try again.',
@@ -85,6 +86,8 @@ export class RoomService {
   private readonly content = inject(GAME_CONTENT);
   private readonly progression = inject(Progression);
   private readonly version = roomVersion(this.content);
+  /** Rooms need the game server (D21); a build without one does not offer them (spec: game-server). */
+  readonly available = roomsOffered(inject(GameServer));
 
   readonly status = signal<'idle' | 'connecting' | 'lobby' | 'playing'>('idle');
   readonly role = signal<'host' | 'guest' | undefined>(undefined);
@@ -94,6 +97,13 @@ export class RoomService {
   readonly realmId = signal(this.content.realms[0].id);
   readonly error = signal<string | undefined>(undefined);
   readonly run = signal<RoomRun | undefined>(undefined);
+  /** The host listed the lobby for matchmaking (spec: matchmaking / public rooms). */
+  readonly isPublic = signal(false);
+  /** The open rooms last fetched; undefined before the first fetch, or when it failed. */
+  readonly openRooms = signal<readonly OpenRoom[] | undefined>(undefined);
+  readonly openRoomsError = signal<string | undefined>(undefined);
+  /** Quick Play is looking for a room (spec: matchmaking / quick play). */
+  readonly searching = signal(false);
   /** The name this player goes by in rooms, from the save ("Hero" when none was given). */
   readonly playerName = signal(this.progression.playerName() || 'Hero');
 
@@ -109,6 +119,8 @@ export class RoomService {
   private listing: RoomListing | undefined;
   private readonly guests = new Map<number, Guest>();
   private hostLink: PeerLink | undefined;
+  /** Resolves a join waiting for the host's answer: true when welcomed, false when refused or lost. */
+  private answered: ((welcomed: boolean) => void) | undefined;
   /** Bumped on leaving; late callbacks of an old room are ignored. */
   private generation = 0;
 
@@ -123,7 +135,9 @@ export class RoomService {
       for (let attempt = 0; attempt < 3 && !listing; attempt++) {
         code = randomCode();
         try {
-          listing = await network.open(code, (link) => this.welcome(generation, link));
+          listing = await network.open(code, this.version, (link) =>
+            this.welcome(generation, link),
+          );
         } catch (e) {
           if (!(e instanceof RoomError && e.reason === 'taken')) throw e;
         }
@@ -141,9 +155,60 @@ export class RoomService {
     }
   }
 
-  /** Joins the room `code` (spec: rooms / joining a room). */
-  async join(code: string, godId: string): Promise<void> {
+  /** Joins the room `code` (spec: rooms / joining a room); true once the host has let this player in. */
+  join(code: string, godId: string): Promise<boolean> {
+    return new Promise<boolean>((resolve) => void this.knock(code, godId, resolve));
+  }
+
+  /** Lists or withdraws the lobby for matchmaking; the host's choice (spec: matchmaking / public rooms). */
+  setPublic(on: boolean): void {
+    if (this.role() !== 'host') return;
+    this.isPublic.set(on);
+    this.publishListing();
+  }
+
+  /** Fetches the open rooms of this game version (spec: matchmaking / open rooms). */
+  async refreshOpenRooms(): Promise<void> {
+    this.openRoomsError.set(undefined);
+    try {
+      const network = await this.loadNetwork();
+      this.openRooms.set(await network.openRooms(this.version));
+    } catch {
+      this.openRooms.set(undefined);
+      this.openRoomsError.set(MESSAGES.unreachable);
+    }
+  }
+
+  /**
+   * Quick Play (spec: matchmaking / quick play): joins the open room with the most players, the next one if that
+   * one has filled or started meanwhile, or else opens a public room and waits there.
+   */
+  async quickPlay(godId: string): Promise<void> {
+    if (this.searching()) return;
+    this.searching.set(true);
+    try {
+      await this.refreshOpenRooms();
+      if (this.openRoomsError()) {
+        this.error.set(this.openRoomsError());
+        return;
+      }
+      for (const room of this.openRooms() ?? []) {
+        if (await this.join(room.code, godId)) return;
+      }
+      await this.create(godId);
+      if (this.status() === 'lobby') this.setPublic(true);
+    } finally {
+      this.searching.set(false);
+    }
+  }
+
+  private async knock(
+    code: string,
+    godId: string,
+    answered: (welcomed: boolean) => void,
+  ): Promise<void> {
     const generation = this.reset();
+    this.answered = answered;
     this.status.set('connecting');
     try {
       const network = await this.loadNetwork();
@@ -230,6 +295,8 @@ export class RoomService {
       });
     });
     this.status.set('playing');
+    // Started: no longer open to anyone (spec: matchmaking / public rooms).
+    this.listing?.publish(undefined);
     this.run.set({
       code,
       config: {
@@ -265,11 +332,20 @@ export class RoomService {
     this.localSlot.set(0);
     this.run.set(undefined);
     this.error.set(undefined);
+    this.isPublic.set(false);
+    this.answer(false);
     return ++this.generation;
+  }
+
+  private answer(welcomed: boolean): void {
+    const answered = this.answered;
+    this.answered = undefined;
+    answered?.(welcomed);
   }
 
   private fail(generation: number, reason: unknown): void {
     if (generation !== this.generation) return;
+    this.answer(false);
     const key =
       reason instanceof RoomError
         ? reason.reason
@@ -360,6 +436,24 @@ export class RoomService {
       realmId: this.realmId(),
     };
     for (const g of this.guests.values()) this.send(g.link, message);
+    this.publishListing();
+  }
+
+  /** The lobby as others see it in the open rooms, while it is public and waiting. */
+  private publishListing(): void {
+    if (this.role() !== 'host' || !this.listing) return;
+    const host = this.members().find((m) => m.host);
+    if (!this.isPublic() || this.status() !== 'lobby' || !host) {
+      this.listing.publish(undefined);
+      return;
+    }
+    this.listing.publish({
+      name: host.name,
+      godId: host.godId,
+      realmId: this.realmId(),
+      players: this.members().length,
+      seats: MAX_MEMBERS,
+    });
   }
 
   // -- Guest -------------------------------------------------------------------------------------------------
@@ -370,6 +464,7 @@ export class RoomService {
         clearTimeout(timer);
         this.localSlot.set(m.slot);
         this.status.set('lobby');
+        this.answer(true);
         return;
       case 'refused':
         clearTimeout(timer);

@@ -20,6 +20,7 @@ import {
   LoadStage,
   RunConfig,
   RunOutcome,
+  roomVersion,
   ControlScheme,
   UiInput,
   UpgradeChoice,
@@ -28,6 +29,7 @@ import { debugEnabled } from '../../core/debug-mode';
 import { GAME_CONTENT, GAME_SESSION_FACTORY } from '../../core/game-content';
 import { Progression } from '../../core/progression';
 import { RoomService } from '../../core/rooms/room-service';
+import { WorldScores } from '../../core/world-scores';
 import { ALLY_SKILLS, RunSetup } from '../../core/run-setup';
 import { TouchScreen } from '../../core/touch-screen';
 import { challengeRun, QUICK_RULES } from '../../core/challenge';
@@ -280,6 +282,7 @@ export class PlayScreen {
   private readonly progression = inject(Progression);
   protected readonly setup = inject(RunSetup);
   private readonly rooms = inject(RoomService);
+  private readonly worldScores = inject(WorldScores);
   private readonly router = inject(Router);
   /** A room's run (spec: rooms), fixed for this screen; absent for a solo run. */
   protected readonly room = this.rooms.run();
@@ -531,6 +534,14 @@ export class PlayScreen {
     }
   }
 
+  /** The players' names for the world boards: a room's members, or this device's players (bots are not players). */
+  private humanNames(): string[] {
+    if (this.room) return this.room.members.map((m) => m.name);
+    const me = this.progression.playerName() || 'Hero';
+    if (this.setup.special()) return [me];
+    return [me, ...this.setup.players().map((_, i) => `Player ${i + 2}`)];
+  }
+
   private onEvent(event: GameEvent): void {
     switch (event.type) {
       case 'hud':
@@ -570,6 +581,13 @@ export class PlayScreen {
         this.choices.set([]);
         this.ended.set(event.result.outcome);
         const rewards = this.progression.recordRun(event.result);
+        // The world boards too (spec: world-leaderboards); a room's run is the host's to send.
+        this.worldScores.submit(
+          event.result,
+          this.humanNames(),
+          roomVersion(this.content),
+          !!this.room && this.room.localSeat !== 0,
+        );
         this.setup.lastRun.set({ result: event.result, rewards, inRoom: !!this.room });
         this.later(() => void this.router.navigate(['/summary']), END_DELAY_MS);
         return;

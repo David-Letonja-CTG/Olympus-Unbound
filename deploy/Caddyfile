@@ -1,0 +1,26 @@
+# The game server's front (docs/hosting.md). SITE_ADDRESS is a host name (HTTPS with an automatic certificate, HTTP
+# redirects to it), e.g. 203-0-113-7.sslip.io, or ":80" for plain HTTP in tests. The API is the compose service
+# "api"; the game itself is on GitHub Pages and calls it across origins (the API allows ALLOWED_ORIGINS).
+{
+	admin off
+}
+
+{$SITE_ADDRESS} {
+	encode zstd gzip
+
+	header {
+		X-Content-Type-Options nosniff
+		Referrer-Policy no-referrer
+		-Server
+	}
+
+	# The API, its health check and the rooms WebSocket (Caddy upgrades WebSockets on its own).
+	@server path /api/* /health /rooms
+	handle @server {
+		reverse_proxy api:8080
+	}
+
+	handle {
+		respond "Olympus Unbound game server. Play at the game's own site." 404
+	}
+}

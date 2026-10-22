@@ -54,6 +54,14 @@ export default defineConfig({
   ],
   webServer: [
     {
+      // The game server (D21), boards in memory: rooms, open rooms and world boards for the tests.
+      command: 'npm --prefix ../server run serve',
+      url: 'http://localhost:4330/health',
+      env: { PORT: '4330', HOST: '127.0.0.1' },
+      reuseExistingServer: !ci,
+      timeout: 120_000,
+    },
+    {
       command: `npm start -- --port ${port}`,
       url: `http://localhost:${port}`,
       reuseExistingServer: !ci,
@@ -61,7 +69,8 @@ export default defineConfig({
     },
     {
       // Always a fresh build: a stale one would test an older game.
-      command: `npm run build && node scripts/serve-dist.mjs ${pwaPort} --test`,
+      // Built like a release, with the game server's address (here the test server's).
+      command: `npx ng build --define "OLYMPUS_SERVER='http://localhost:4330'" && node scripts/serve-dist.mjs ${pwaPort} --test`,
       url: `http://localhost:${pwaPort}`,
       reuseExistingServer: false,
       timeout: 300_000,
