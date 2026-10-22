@@ -2,14 +2,24 @@ import { ChangeDetectionStrategy, Component, inject } from '@angular/core';
 import { RouterOutlet } from '@angular/router';
 import { debugEnabled } from './core/debug-mode';
 import { MenuSound } from './core/menu-sound';
+import { TitleGate } from './core/title-gate';
+import { TitleScreen } from './shared/title-screen';
 
 @Component({
   selector: 'app-root',
-  imports: [RouterOutlet],
+  imports: [RouterOutlet, TitleScreen],
   changeDetection: ChangeDetectionStrategy.OnPush,
-  template: '<router-outlet />',
+  template: `
+    <router-outlet />
+    <!-- Until the first tap, click or key: browsers allow no sound before it (spec: run-setup / title screen). -->
+    @if (gate.open()) {
+      <app-title-screen />
+    }
+  `,
 })
 export class App {
+  protected readonly gate = inject(TitleGate);
+
   constructor() {
     // Remember `?debug` from the first page for the whole session (development builds only).
     debugEnabled();
