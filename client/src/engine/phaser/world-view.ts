@@ -436,6 +436,33 @@ export class WorldView {
     lights.add(pl.x, pl.y, 150 + 120 * pl.revive, 0x9fdcff, 0.55 + 0.4 * pl.revive, 6);
   }
 
+  /**
+   * Draws `paint` (world coordinates inside the box) once into a canvas texture and places it as an image. A
+   * Graphics is triangulated again every frame; static floors cost one sprite this way (spec: phone-play / phone
+   * performance). Canvas textures survive a lost WebGL context. Keys start with `arena-ground-`, so the scene drops
+   * them with the ground when the realm changes.
+   */
+  private bake(
+    key: string,
+    x: number,
+    y: number,
+    width: number,
+    height: number,
+    paint: (g: Phaser.GameObjects.Graphics) => void,
+  ): void {
+    const scene = this.scene;
+    if (scene.textures.exists(key)) scene.textures.remove(key);
+    const g = scene.make.graphics({}, false);
+    g.translateCanvas(-x, -y);
+    paint(g);
+    g.generateTexture(key, Math.ceil(width), Math.ceil(height));
+    g.destroy();
+    scene.add
+      .image(x, y, key)
+      .setOrigin(0)
+      .setDepth(DEPTH.ground + 1000);
+  }
+
   private drawArena(arena: ArenaData, config: MapGenConfig, ground: HTMLCanvasElement): void {
     const scene = this.scene;
     // Ground: painted for this run behind the loading screen (ground-canvas.ts), plus a tiled grain overlay.
@@ -455,76 +482,92 @@ export class WorldView {
     // Marble floors: concentric courses of worn slabs.
     const marble =
       config.terrain.types.find((t) => t.id === config.terrain.plaza)?.color ?? 0xcccccc;
-    const floors = scene.add.graphics().setDepth(DEPTH.ground + 1000);
+    // Drawn once into textures: a Graphics is re-triangulated every frame, and these never change (performance).
+    let piece = 0;
     for (const pz of arena.plazas) {
-      floors.fillStyle(0x000000, 0.28);
-      floors.fillCircle(pz.x + 5, pz.y + 7, pz.radius + 8);
-      floors.fillStyle(shade(marble, 0.78), 1);
-      floors.fillCircle(pz.x, pz.y, pz.radius + 4);
-      floors.fillStyle(marble, 1);
-      floors.fillCircle(pz.x, pz.y, pz.radius - 4);
-      const rings = Math.max(2, Math.floor(pz.radius / 48));
-      for (let r = 1; r <= rings; r++) {
-        const radius = (pz.radius / (rings + 1)) * r;
-        floors.lineStyle(2, shade(marble, 0.7), 0.85);
-        floors.strokeCircle(pz.x, pz.y, radius);
-        const slabs = 6 * r;
-        for (let i = 0; i < slabs; i++) {
-          const a = (i / slabs) * Math.PI * 2 + r * 0.3;
-          const inner = (pz.radius / (rings + 1)) * (r - 1);
-          floors.lineBetween(
-            pz.x + Math.cos(a) * inner,
-            pz.y + Math.sin(a) * inner,
-            pz.x + Math.cos(a) * radius,
-            pz.y + Math.sin(a) * radius,
-          );
-        }
-      }
-      floors.lineStyle(4, shade(marble, 0.55), 0.95);
-      floors.strokeCircle(pz.x, pz.y, pz.radius - 4);
+      const reach = pz.radius + 16;
+      this.bake(
+        `${groundKey}-floor-${piece++}`,
+        pz.x - reach,
+        pz.y - reach,
+        reach * 2,
+        reach * 2,
+        (floors) => {
+          floors.fillStyle(0x000000, 0.28);
+          floors.fillCircle(pz.x + 5, pz.y + 7, pz.radius + 8);
+          floors.fillStyle(shade(marble, 0.78), 1);
+          floors.fillCircle(pz.x, pz.y, pz.radius + 4);
+          floors.fillStyle(marble, 1);
+          floors.fillCircle(pz.x, pz.y, pz.radius - 4);
+          const rings = Math.max(2, Math.floor(pz.radius / 48));
+          for (let r = 1; r <= rings; r++) {
+            const radius = (pz.radius / (rings + 1)) * r;
+            floors.lineStyle(2, shade(marble, 0.7), 0.85);
+            floors.strokeCircle(pz.x, pz.y, radius);
+            const slabs = 6 * r;
+            for (let i = 0; i < slabs; i++) {
+              const a = (i / slabs) * Math.PI * 2 + r * 0.3;
+              const inner = (pz.radius / (rings + 1)) * (r - 1);
+              floors.lineBetween(
+                pz.x + Math.cos(a) * inner,
+                pz.y + Math.sin(a) * inner,
+                pz.x + Math.cos(a) * radius,
+                pz.y + Math.sin(a) * radius,
+              );
+            }
+          }
+          floors.lineStyle(4, shade(marble, 0.55), 0.95);
+          floors.strokeCircle(pz.x, pz.y, pz.radius - 4);
+        },
+      );
     }
 
     // Temples: a stylobate of three worn steps, a floor of slabs, cracks across it.
     for (const t of arena.temples) {
-      for (let step = 3; step >= 1; step--) {
-        const m = step * 10;
-        floors.fillStyle(shade(marble, 0.62 + 0.08 * (3 - step)), 1);
-        floors.fillRect(
-          t.x - t.width / 2 - m,
-          t.y - t.depth / 2 - m,
-          t.width + 2 * m,
-          t.depth + 2 * m,
-        );
-        floors.lineStyle(2, shade(marble, 0.5), 0.9);
-        floors.strokeRect(
-          t.x - t.width / 2 - m,
-          t.y - t.depth / 2 - m,
-          t.width + 2 * m,
-          t.depth + 2 * m,
-        );
-      }
-      floors.fillStyle(marble, 1);
-      floors.fillRect(t.x - t.width / 2, t.y - t.depth / 2, t.width, t.depth);
-      floors.lineStyle(1.5, shade(marble, 0.72), 0.8);
-      const slab = 56;
-      for (let x = t.x - t.width / 2 + slab; x < t.x + t.width / 2; x += slab)
-        floors.lineBetween(x, t.y - t.depth / 2, x, t.y + t.depth / 2);
-      for (let y = t.y - t.depth / 2 + slab / 2; y < t.y + t.depth / 2; y += slab / 2)
-        floors.lineBetween(t.x - t.width / 2, y, t.x + t.width / 2, y);
-      // A few cracks, from the arena's seed so the same temple always breaks the same way.
-      floors.lineStyle(2, shade(marble, 0.45), 0.7);
-      let h = (arena.seed * 2654435761) >>> 0;
-      const next = () => (h = (Math.imul(h ^ (h >>> 15), 2246822519) + 1) >>> 0) / 4294967296;
-      for (let c = 0; c < 5; c++) {
-        let x = t.x + (next() - 0.5) * t.width * 0.9;
-        let y = t.y + (next() - 0.5) * t.depth * 0.9;
-        for (let k = 0; k < 4; k++) {
-          const nx = x + (next() - 0.5) * 60;
-          const ny = y + (next() - 0.5) * 60;
-          floors.lineBetween(x, y, nx, ny);
-          [x, y] = [nx, ny];
+      // The steps reach 30 beyond the floor and the cracks wander up to 120 past it.
+      const mx = t.width / 2 + 130;
+      const my = t.depth / 2 + 130;
+      this.bake(`${groundKey}-floor-${piece++}`, t.x - mx, t.y - my, mx * 2, my * 2, (floors) => {
+        for (let step = 3; step >= 1; step--) {
+          const m = step * 10;
+          floors.fillStyle(shade(marble, 0.62 + 0.08 * (3 - step)), 1);
+          floors.fillRect(
+            t.x - t.width / 2 - m,
+            t.y - t.depth / 2 - m,
+            t.width + 2 * m,
+            t.depth + 2 * m,
+          );
+          floors.lineStyle(2, shade(marble, 0.5), 0.9);
+          floors.strokeRect(
+            t.x - t.width / 2 - m,
+            t.y - t.depth / 2 - m,
+            t.width + 2 * m,
+            t.depth + 2 * m,
+          );
         }
-      }
+        floors.fillStyle(marble, 1);
+        floors.fillRect(t.x - t.width / 2, t.y - t.depth / 2, t.width, t.depth);
+        floors.lineStyle(1.5, shade(marble, 0.72), 0.8);
+        const slab = 56;
+        for (let x = t.x - t.width / 2 + slab; x < t.x + t.width / 2; x += slab)
+          floors.lineBetween(x, t.y - t.depth / 2, x, t.y + t.depth / 2);
+        for (let y = t.y - t.depth / 2 + slab / 2; y < t.y + t.depth / 2; y += slab / 2)
+          floors.lineBetween(t.x - t.width / 2, y, t.x + t.width / 2, y);
+        // A few cracks, from the arena's seed so the same temple always breaks the same way.
+        floors.lineStyle(2, shade(marble, 0.45), 0.7);
+        let h = (arena.seed * 2654435761) >>> 0;
+        const next = () => (h = (Math.imul(h ^ (h >>> 15), 2246822519) + 1) >>> 0) / 4294967296;
+        for (let c = 0; c < 5; c++) {
+          let x = t.x + (next() - 0.5) * t.width * 0.9;
+          let y = t.y + (next() - 0.5) * t.depth * 0.9;
+          for (let k = 0; k < 4; k++) {
+            const nx = x + (next() - 0.5) * 60;
+            const ny = y + (next() - 0.5) * 60;
+            floors.lineBetween(x, y, nx, ny);
+            [x, y] = [nx, ny];
+          }
+        }
+      });
     }
 
     // Cliffs: a deep shadow just inside the playable edge.

@@ -12,8 +12,10 @@ test("the Daily Trial: today's run, its best, a share and a challenge link (spec
   // The menu points at today's trial until it is played.
   await expect(page.getByTestId('next-goal')).toContainText("Today's Daily Trial");
   await page.getByTestId('menu-daily-trial').click();
-  const twist = (await page.getByTestId('trial-twist').locator('h2').textContent())?.trim() ?? '';
-  expect(twist).not.toBe('');
+  // Read the twist once the screen has written it (reading at once raced it on a slow run).
+  const twistHeading = page.getByTestId('trial-twist').locator('h2');
+  await expect(twistHeading).toHaveText(/\S/);
+  const twist = ((await twistHeading.textContent()) ?? '').trim();
   await page.getByTestId('trial-begin').click();
   await expect(page.getByTestId('loading-twist')).toContainText(twist);
   await expect(page.getByTestId('run-loading')).toHaveCount(0, { timeout: 120_000 });

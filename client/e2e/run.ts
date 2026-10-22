@@ -49,7 +49,7 @@ export async function startRun(page: Page, seed = '847291'): Promise<void> {
   await page.getByRole('link', { name: 'Play' }).click();
   await page.getByTestId('god-zeus').click();
   await page.getByRole('button', { name: 'Continue' }).click();
-  await page.getByTestId('seed-input').fill(seed);
+  await fillSeed(page, seed);
   await page.getByTestId('begin').click();
   // The game (a lazy chunk) boots and its loading screen (art, then the painted realm) ends before the clock
   // starts; without a GPU (CI) or with parallel workers, booting, painting and the first frames are slow.
@@ -66,4 +66,17 @@ export function debug(page: Page, action: DebugAction): Promise<void> {
 
 export function inspect(page: Page): Promise<Snapshot | undefined> {
   return page.evaluate(() => (window as DebugWindow).olympusDebug?.inspect());
+}
+
+/**
+ * Types `seed` on the realm screen. The field gets its random seed as the screen opens; filling before that lands
+ * can append to it instead of replacing it (seen on CI: "3478163579777"), so wait for it and check the result.
+ */
+export async function fillSeed(page: Page, seed: string): Promise<void> {
+  const input = page.getByTestId('seed-input');
+  await expect(input).not.toHaveValue('');
+  await expect(async () => {
+    await input.fill(seed);
+    await expect(input).toHaveValue(seed, { timeout: 1000 });
+  }).toPass();
 }
