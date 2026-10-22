@@ -7,6 +7,7 @@ import { disarm, quietContent, quietSim } from '../testing/fixtures';
 import { RunSimulation, STEP } from '../sim/run-simulation';
 import { Enemy, HitSource, NO_INPUT, PlayerInput } from '../sim/types';
 import { pauseOf, spawnBoss } from './boss';
+import { startWalls } from './walls';
 
 const run = (sim: RunSimulation, seconds: number, input: PlayerInput = NO_INPUT) => {
   for (let i = 0; i < Math.round(seconds / STEP); i++) sim.step(STEP, [input]);
@@ -291,5 +292,54 @@ describe('snapshots carry boss mechanics', () => {
     expect(cone?.arc).toBeCloseTo(0.8, 3);
     expect(cone?.timer).toBeCloseTo(1, 1);
     expect(snap.enemies.filter((e) => e.def.id.startsWith('scylla_tentacle'))).toHaveLength(4);
+  });
+});
+
+describe('Asterion finds his way (spec: boss-encounter / asterion leaves his walls)', () => {
+  it('leaves every gap in his rings wide enough for him, in every phase', () => {
+    const asterion = CONTENT.bosses.find((b) => b.id === 'asterion')!;
+    const attacks = asterion.phases.flatMap((ph) => ph.attacks.filter((a) => a.type === 'walls'));
+    expect(attacks.length).toBeGreaterThanOrEqual(3);
+    for (const attack of attacks) {
+      const { sim, boss } = withBoss('asterion');
+      sim.state.hazards.length = 0;
+      startWalls(sim.state, boss, attack, 1);
+      for (const ring of attack.rings) {
+        const angles = sim.state.hazards
+          .filter((h) => Math.abs(Math.hypot(h.x - boss.x, h.y - boss.y) - ring) < 1)
+          .map((h) => Math.atan2(h.y - boss.y, h.x - boss.x))
+          .sort((a, b) => a - b);
+        const chords = angles.map((a, i) => {
+          const next = i + 1 < angles.length ? angles[i + 1] : angles[0] + Math.PI * 2;
+          return 2 * ring * Math.sin((next - a) / 2);
+        });
+        const fits = chords.filter((c) => c >= 2 * (boss.radius + 24));
+        expect(fits.length).toBe(attack.segments);
+      }
+    }
+  });
+
+  it.each([
+    [-1, 0],
+    [0, 1],
+    [0.7, -0.7],
+    [1, 0.3],
+  ])('walks out of his walls to a god standing outside them (%d, %d)', (dx, dy) => {
+    const { sim, boss, p } = withBoss('asterion');
+    sim.state.godMode = true;
+    boss.boss!.attackIndex = 0;
+    boss.boss!.attackTimer = 0;
+    sim.step(STEP, [NO_INPUT]);
+    const centre = { x: boss.x, y: boss.y };
+    run(sim, 1.5);
+    expect(sim.state.walls.length).toBeGreaterThan(10);
+    // Nothing else to do but walk: no more attacks while the walls stand.
+    boss.boss!.attackTimer = 99;
+    const length = Math.hypot(dx, dy);
+    p.x = p.px = centre.x + (dx / length) * 450;
+    p.y = p.py = centre.y + (dy / length) * 450;
+    run(sim, 9);
+    expect(sim.state.walls.length).toBeGreaterThan(10);
+    expect(Math.hypot(boss.x - p.x, boss.y - p.y)).toBeLessThan(boss.radius + p.radius + 40);
   });
 });

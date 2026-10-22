@@ -1,6 +1,8 @@
+import { WorldCollision } from '../core/collision';
 import { disarm, quietSim, spawnNear } from '../testing/fixtures';
 import { RunSimulation, STEP } from '../sim/run-simulation';
 import { NO_INPUT } from '../sim/types';
+import { NavField } from './navigation';
 
 const run = (sim: RunSimulation, seconds: number) => {
   for (let i = 0; i < Math.round(seconds / STEP); i++) sim.step(STEP, [NO_INPUT]);
@@ -88,5 +90,46 @@ describe('enemy behaviors', () => {
     expect(afterFirst).toBeLessThan(player.stats.maxHealth);
     run(sim, 0.5);
     expect(player.health).toBe(afterFirst);
+  });
+});
+
+/** Stands a closed wall of blocks `dx` from the god, from `dy0` to `dy1` (spec: enemy-spawning / finding the way). */
+function wallNear(sim: RunSimulation, dx: number, dy0: number, dy1: number): void {
+  const p = sim.state.players[0];
+  const blocks = [];
+  for (let dy = dy0; dy <= dy1; dy += 40) blocks.push({ x: p.x + dx, y: p.y + dy, radius: 24 });
+  sim.state.collision = new WorldCollision(sim.state.arena.bounds, blocks);
+  sim.state.nav = new NavField(sim.state.collision);
+}
+
+describe('finding the way (spec: enemy-spawning / finding the way)', () => {
+  it('a chaser walks round the end of a wall to the god', () => {
+    const sim = quietSim();
+    disarm(sim);
+    wallNear(sim, 150, -300, 300);
+    const satyr = spawnNear(sim, 'satyr', 400, 0);
+    const p = sim.state.players[0];
+    run(sim, 12);
+    expect(Math.hypot(satyr.x - p.x, satyr.y - p.y)).toBeLessThan(60);
+  });
+
+  it('a charger does not charge at a god behind a wall', () => {
+    const sim = quietSim();
+    disarm(sim);
+    wallNear(sim, 150, -300, 300);
+    const charger = spawnNear(sim, 'minotaur', 300, 0);
+    charger.actionTimer = 0;
+    run(sim, 0.5);
+    expect(charger.mode).toBe('move');
+  });
+
+  it('a chaser in the open walks straight at the god', () => {
+    const sim = quietSim();
+    disarm(sim);
+    const satyr = spawnNear(sim, 'satyr', 400, 300);
+    const p = sim.state.players[0];
+    const before = Math.atan2(satyr.y - p.y, satyr.x - p.x);
+    run(sim, 1);
+    expect(Math.atan2(satyr.y - p.y, satyr.x - p.x)).toBeCloseTo(before, 1);
   });
 });

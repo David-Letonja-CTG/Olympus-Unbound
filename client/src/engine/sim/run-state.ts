@@ -1,6 +1,7 @@
 import type { BotSkill } from './bots';
 import { WorldFrame } from './world-frame';
 import { WorldCollision } from '../core/collision';
+import { CLEARANCE, NavField } from '../enemies/navigation';
 import { Rng } from '../core/rng';
 import { SpatialHash } from '../core/spatial-hash';
 import { Modifier } from '../core/stats';
@@ -119,6 +120,10 @@ export class RunState implements WorldFrame {
   realm: RealmDefinition;
   arena: ArenaData;
   collision: WorldCollision;
+  /** The way to the gods around obstacles and walls (spec: enemy-spawning / finding the way). */
+  nav: NavField;
+  /** A boss's own field, with room for its body; made when a boss first walks. */
+  bossNav?: NavField;
   readonly god: GodDefinition;
   readonly party: readonly PartySeat[];
   /** The realm clock's speed (spec: quick-runs / quick pace); 1 for a full run. */
@@ -211,6 +216,7 @@ export class RunState implements WorldFrame {
       bossHealth: 1 + coop.bossHealthPerPlayer * others,
     };
     this.collision = new WorldCollision(arena.bounds, arena.obstacles);
+    this.nav = new NavField(this.collision);
     const rng = new Rng(`run:${config.seed}`);
     this.spawnRng = rng.fork('spawn');
     this.combatRng = rng.fork('combat');
@@ -232,6 +238,20 @@ export class RunState implements WorldFrame {
 
   alivePlayers(): Player[] {
     return this.players.filter((p) => p.alive);
+  }
+
+  /**
+   * The flow field for `enemy` (spec: enemy-spawning / finding the way). A boss gets one with more room around
+   * obstacles, so it is not led through gaps its body cannot pass.
+   */
+  navFor(enemy: Enemy): NavField {
+    if (!enemy.boss) return this.nav;
+    const clearance = Math.max(CLEARANCE, Math.round(enemy.radius * 0.6));
+    if (this.bossNav?.clearance !== clearance) {
+      this.bossNav = new NavField(this.collision, clearance);
+      this.bossNav.update(this.players);
+    }
+    return this.bossNav;
   }
 
   nearestPlayer(x: number, y: number): Player | undefined {
@@ -333,6 +353,8 @@ export class RunState implements WorldFrame {
     this.realm = realm;
     this.arena = arena;
     this.collision = new WorldCollision(arena.bounds, arena.obstacles);
+    this.nav = new NavField(this.collision);
+    this.bossNav = undefined;
     this.realmTime = 0;
     this.boss = undefined;
     this.bossDefeated = false;
