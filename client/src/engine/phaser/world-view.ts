@@ -3,6 +3,7 @@ import { ArenaData } from '../maps/generate-arena';
 import { Element, LightSource, MapGenConfig } from '../data/types';
 import { STEP } from '../sim/run-state';
 import { FramePlayer, WorldFrame } from '../sim/world-frame';
+import { WalkHold } from './walk-hold';
 import { applySprite, SpriteResolver } from './assets';
 import { ATMOSPHERE_DEPTH, LightMap, QualityProfile } from './atmosphere';
 import { DETAIL_TEXTURE, SHADOW_TEXTURE, shade } from './textures';
@@ -75,6 +76,8 @@ class SpritePool {
       if (this.seen.has(id)) continue;
       sprite.setVisible(false);
       sprite.anims.stop();
+      // Forget it, so the next figure given this sprite starts its animation even if it is the same one.
+      sprite.anims.currentAnim = null;
       this.active.delete(id);
       this.free.push(sprite);
     }
@@ -118,6 +121,9 @@ export class WorldView {
     SpritePool
   >;
   private readonly staticLights: StaticLight[] = [];
+  /** Which enemies are drawn walking (no restart of their walk on every short stop). */
+  private readonly walk = new WalkHold();
+  private walkPruned = 0;
   private profile!: QualityProfile;
 
   constructor(
@@ -171,6 +177,10 @@ export class WorldView {
   }
 
   sync(state: WorldFrame, alpha: number, time: number, lights: LightMap): void {
+    if (time - this.walkPruned > 1000) {
+      this.walk.prune(time);
+      this.walkPruned = time;
+    }
     // Movement per step, whatever the gap between the previous and current positions (a guest's snapshots, D16).
     const perStep = STEP / state.span;
     const flash = Phaser.TintModes.FILL;
@@ -242,7 +252,7 @@ export class WorldView {
       }
       const vx = (e.x - e.px) * perStep;
       const vy = (e.y - e.py) * perStep;
-      const moving = vx * vx + vy * vy > 0.01;
+      const moving = this.walk.walking(e.id, vx * vx + vy * vy > 0.01, time);
       const r = this.resolver.resolve(e.def.visual.sprite);
       const scale = e.radius / e.def.radius;
       const sprite = p.enemy.get(e.id);
