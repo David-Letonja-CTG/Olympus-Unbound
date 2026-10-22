@@ -52,7 +52,7 @@ describe('flow field (spec: enemy-spawning / finding the way)', () => {
     expect(walk(nav, collision, { x: 500, y: 800 }, goal)).toBeGreaterThan(0);
     // The path goes round an end: longer than the straight line.
     const cell = nav.cellAt(500, 800);
-    expect(nav.dist[cell] * NAV_CELL).toBeGreaterThan(700);
+    expect((nav.dist[cell] / 10) * NAV_CELL).toBeGreaterThan(700);
   });
 
   it('gives no way where no god can be reached, and none at the god', () => {
