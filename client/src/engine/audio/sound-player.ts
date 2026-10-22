@@ -1,4 +1,5 @@
 import { RECORDED, SampleLayer } from './recorded';
+import { unlockOnGesture } from './unlock';
 
 /**
  * Sound effects behind one small interface (D9): gameplay asks for a cue, this module decides how it sounds. Every
@@ -57,7 +58,10 @@ export type SoundCue =
   | 'gate'
   | 'realm'
   | 'victory'
-  | 'defeat';
+  | 'defeat'
+  // The menus (spec: hud / menu sounds).
+  | 'menuSelect'
+  | 'menuConfirm';
 
 type Bus = 'weapon' | 'impact' | 'enemy' | 'player' | 'ui';
 
@@ -507,6 +511,23 @@ export const CUES: Record<SoundCue, Cue> = {
       o('triangle', 262, 196, 1.2, 0.09, { delay: 0.64, detune: 10 }),
     ],
   },
+  // A menu control: a soft lyre pluck with a faint high overtone.
+  menuSelect: {
+    bus: 'ui',
+    vary: 0,
+    voices: [note(880, 0, 0.14, 0.05), note(1760, 0, 0.08, 0.015, 'sine')],
+  },
+  // A screen's main action: two rising plucks, D then A, a little hall around them.
+  menuConfirm: {
+    bus: 'ui',
+    reverb: 0.25,
+    vary: 0,
+    voices: [
+      note(587, 0, 0.16, 0.06),
+      note(880, 0.08, 0.3, 0.06),
+      note(1760, 0.08, 0.15, 0.015, 'sine'),
+    ],
+  },
 };
 
 /** Most voices sounding at once per bus; the horde must not drown the player's own weapons. */
@@ -547,7 +568,11 @@ export class SoundPlayer {
   private readonly voices = new Map<Bus, number>();
   private listener = { x: 0, y: 0, halfWidth: 0 };
 
-  constructor(private volume: number) {
+  /** `resumeWhen`: whether sound is wanted now (the menus' player sleeps during runs). */
+  constructor(
+    private volume: number,
+    resumeWhen: () => boolean = () => true,
+  ) {
     try {
       const ctx = new AudioContext();
       this.context = ctx;
@@ -575,18 +600,10 @@ export class SoundPlayer {
         gain.connect(limiter);
         this.buses.set(bus, gain);
       }
-      void ctx.resume().catch(() => undefined);
-      // Browsers keep audio suspended until the first key press, click or touch (e.g. an intro on first launch); iOS
-      // Safari unlocks only from a touch's end (spec: phone-play / the phone screen).
-      const unlock = () => {
-        void this.context?.resume().catch(() => undefined);
-        window.removeEventListener('keydown', unlock);
-        window.removeEventListener('pointerdown', unlock);
-        window.removeEventListener('touchend', unlock);
-      };
-      window.addEventListener('keydown', unlock);
-      window.addEventListener('pointerdown', unlock);
-      window.addEventListener('touchend', unlock);
+      if (resumeWhen()) void ctx.resume().catch(() => undefined);
+      // Browsers keep audio suspended until a key press, click or touch they count (e.g. an intro on first launch);
+      // phones count a touch's end, not its start (spec: phone-play / the phone screen).
+      unlockOnGesture(ctx, resumeWhen);
     } catch {
       // No audio available (old browser or tests): stay silent.
       this.context = undefined;

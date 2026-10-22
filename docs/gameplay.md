@@ -104,7 +104,7 @@ Runs take place at night. The arena is dark beyond your light; braziers ring the
 
 Every run has battle music, composed and played by the game itself: a lyre and frame drum while the realm is young (**Calm**), then war drums and bass (**Stirring**), a rock beat with power chords (**Battle**), driving metal with double kick and palm-muted riffs (**Fury**), and, while a boss is awake, the fastest and heaviest tier with a choir (**Titan**). It rises with the realm's time toward its boss, with every realm cleared and with the foes crowding around your god, and eases back down slowly when the field clears. A change waits for the end of the bar, so it lands on the beat. The music is quieter while paused, carries on through the gate, and fades out when the run ends. **Settings → Music** (also in the pause menu) sets its volume, apart from the sound effects.
 
-Outside runs, the menus have a theme of their own: a calm lyre melody over a choir, joined by a frame drum and bass the second time round. It fades out as a run (or the intro) begins and returns afterwards, at the same Music volume. Browsers only allow sound after your first click, key or touch, so it starts then.
+Outside runs, the menus have a theme of their own: a calm lyre melody over a choir, joined by a frame drum and bass the second time round. It fades out as a run (or the intro) begins and returns afterwards, at the same Music volume. Browsers only allow sound after your first click, key or touch, so it starts then. Buttons, links and options on the menus make a soft pluck when pressed, and a screen's main button (Play, Begin, Continue) a brighter chime, at the **Sound effects** volume.
 
 ## The HUD
 
