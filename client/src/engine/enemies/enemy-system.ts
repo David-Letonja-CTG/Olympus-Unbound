@@ -13,6 +13,8 @@ const FACING_THRESHOLD = 0.35;
 const KNOCKBACK_DECAY = 9;
 /** At most this many neighbours push an enemy apart per step (keeps big hordes cheap). */
 const SEPARATION_NEIGHBOURS = 4;
+/** How fast an enemy turns toward a new heading (radians per second): an about-turn takes a quarter second. */
+const TURN_RATE = 12;
 
 function steer(state: RunState, enemy: Enemy, target: Player, dt: number): Steering {
   const behavior: EnemyBehavior = enemy.def.behavior;
@@ -32,6 +34,8 @@ function steer(state: RunState, enemy: Enemy, target: Player, dt: number): Steer
  */
 export function updateEnemies(state: RunState, dt: number): void {
   const decay = Math.exp(-KNOCKBACK_DECAY * dt);
+  const turnCos = Math.cos(TURN_RATE * dt);
+  const turnSin = Math.sin(TURN_RATE * dt);
   state.nav.update(state.players);
   state.bossNav?.update(state.players);
   for (const enemy of state.enemies) {
@@ -53,8 +57,16 @@ export function updateEnemies(state: RunState, dt: number): void {
         const stunned = enemy.status.stun > 0;
         const s = stunned ? { x: 0, y: 0, speed: 0 } : steer(state, enemy, target, dt);
         const speed = enemy.speed * s.speed * speedMultiplier(enemy);
-        enemy.x += s.x * speed * dt;
-        enemy.y += s.y * speed * dt;
+        if (speed > 0) {
+          // Walking turns smoothly; a charger's wind-up and dash keep their line (spec: enemy-spawning / finding the way).
+          if (enemy.mode === 'move') turnToward(enemy, s.x, s.y, turnCos, turnSin);
+          else {
+            enemy.headX = s.x;
+            enemy.headY = s.y;
+          }
+          enemy.x += enemy.headX * speed * dt;
+          enemy.y += enemy.headY * speed * dt;
+        }
         // Turn only on a clear sideways heading, so an enemy straight above or below its target does not flicker.
         if (Math.abs(s.x) > FACING_THRESHOLD) enemy.facing = s.x > 0 ? 1 : -1;
       }
@@ -112,4 +124,22 @@ function separate(state: RunState): void {
       return;
     });
   }
+}
+
+/**
+ * Turns the enemy's heading toward the unit vector (x, y) by at most the angle whose cosine and sine are given:
+ * no snapping between the straight way and the way round, or between closing in and backing off.
+ */
+function turnToward(enemy: Enemy, x: number, y: number, cos: number, sin: number): void {
+  const hx = enemy.headX;
+  const hy = enemy.headY;
+  if ((hx === 0 && hy === 0) || hx * x + hy * y >= cos) {
+    enemy.headX = x;
+    enemy.headY = y;
+    return;
+  }
+  // Toward the wanted side; a heading exactly reversed turns one fixed way (D5).
+  const side = hx * y - hy * x >= 0 ? sin : -sin;
+  enemy.headX = hx * cos - hy * side;
+  enemy.headY = hx * side + hy * cos;
 }

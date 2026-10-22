@@ -206,6 +206,9 @@ export interface Enemy {
   actionTimer: number;
   dirX: number;
   dirY: number;
+  /** The way it walks, turned toward what its behavior wants at a limited rate; (0, 0) before its first step. */
+  headX: number;
+  headY: number;
   hitFlash: number;
   facing: number;
   dead: boolean;

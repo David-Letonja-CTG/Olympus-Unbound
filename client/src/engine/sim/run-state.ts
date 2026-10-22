@@ -419,6 +419,8 @@ export class RunState implements WorldFrame {
       actionTimer: this.spawnRng.range(0.5, 2),
       dirX: 0,
       dirY: 0,
+      headX: 0,
+      headY: 0,
       hitFlash: 0,
       facing: 1,
       dead: false,

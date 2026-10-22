@@ -133,3 +133,34 @@ describe('finding the way (spec: enemy-spawning / finding the way)', () => {
     expect(Math.atan2(satyr.y - p.y, satyr.x - p.x)).toBeCloseTo(before, 1);
   });
 });
+
+describe('turning (spec: enemy-spawning / finding the way)', () => {
+  it('a chaser whose god passes it turns round over about a quarter second, not in one step', () => {
+    const sim = quietSim();
+    disarm(sim);
+    const p = sim.state.players[0];
+    const satyr = spawnNear(sim, 'corrupted_hoplite', 400, 0);
+    run(sim, 0.5);
+    expect(satyr.headX).toBeCloseTo(-1, 2);
+    // The god is now on the other side.
+    p.x = p.px = satyr.x + 200;
+    p.y = p.py = satyr.y;
+    sim.step(STEP, [NO_INPUT]);
+    expect(satyr.headX).toBeLessThan(-0.9);
+    run(sim, 0.1);
+    expect(satyr.headX).toBeLessThan(0.5);
+    run(sim, 0.25);
+    expect(satyr.headX).toBeCloseTo(1, 2);
+  });
+
+  it('a charger dashes along its line from the first step', () => {
+    const sim = quietSim();
+    disarm(sim);
+    const charger = spawnNear(sim, 'minotaur', 300, 0);
+    charger.actionTimer = 0;
+    run(sim, 1);
+    expect(charger.mode).toBe('dash');
+    expect(charger.headX).toBeCloseTo(charger.dirX, 6);
+    expect(charger.headY).toBeCloseTo(charger.dirY, 6);
+  });
+});

@@ -14,15 +14,18 @@ const SIGHT_STEP = 24;
 /** Blocked cells this close to either end of a sight line do not count (a body pressed against a wall). */
 const SIGHT_SLACK = 24;
 
-const DIAGONAL = Math.SQRT2;
+// Step costs in tenths of a cell: integers, so the pass is a bucket queue in linear time (10 and 14 ≈ 1 and √2).
+const STRAIGHT = 10;
+const DIAGONAL = 14;
+const BUCKETS = DIAGONAL + 1;
 // Neighbour offsets: the four sides first, then the corners.
 const DX = [1, -1, 0, 0, 1, 1, -1, -1];
 const DY = [0, 0, 1, -1, 1, -1, 1, -1];
 
 /**
  * A flow field toward the gods (spec: enemy-spawning / finding the way). The playable area is cut into cells; a
- * Dijkstra pass from every living god's cell gives each open cell its distance to the nearest god by path, around
- * obstacles and standing walls. A walker steps toward its lowest neighbour. One pass serves the whole horde, so a
+ * shortest-path pass from every living god's cell gives each open cell its distance to the nearest god by path,
+ * around obstacles and standing walls. A walker steps toward its lowest neighbour. One pass serves the whole horde, so a
  * bigger horde costs nothing more per enemy. Arrays are allocated once per realm (performance, D5).
  */
 export class NavField {
@@ -33,9 +36,10 @@ export class NavField {
   /** Static obstacles only, and static plus standing walls. */
   private readonly fixed: Uint8Array;
   readonly blocked: Uint8Array;
+  /** Distance to the nearest god by path, in tenths of a cell; Infinity where none can be reached. */
   readonly dist: Float64Array;
-  private readonly heapCell: Int32Array;
-  private readonly heapKey: Float64Array;
+  /** Cells waiting at each distance modulo `BUCKETS` (reused; they keep their capacity). */
+  private readonly buckets: number[][] = Array.from({ length: BUCKETS }, () => []);
   private readonly sources = new Int32Array(8);
   private sourceCount = 0;
   private wallsVersion = -1;
@@ -57,9 +61,6 @@ export class NavField {
     this.fixed = new Uint8Array(n);
     this.blocked = new Uint8Array(n);
     this.dist = new Float64Array(n).fill(Infinity);
-    // Lazy deletion: a cell may sit in the heap once per neighbour that improved it.
-    this.heapCell = new Int32Array(n * 8 + 8);
-    this.heapKey = new Float64Array(n * 8 + 8);
     for (const o of collision.obstacles) this.stamp(this.fixed, o.x, o.y, o.radius);
   }
 
@@ -184,66 +185,42 @@ export class NavField {
     }
   }
 
-  /** Dijkstra from the gods' cells (seeds even when blocked: a god hugging a wall). */
+  /**
+   * Shortest paths from the gods' cells (seeds even when blocked: a god hugging a wall). Dial's algorithm: with
+   * integer step costs ≤ 14 the open cells wait in 15 buckets by distance, so no heap is needed. A cell improved
+   * after it was queued is met again later and skipped (its distance no longer matches the bucket's).
+   */
   private flood(): void {
     const dist = this.dist;
     dist.fill(Infinity);
-    let size = 0;
+    const buckets = this.buckets;
+    let pending = 0;
     for (let i = 0; i < this.sourceCount; i++) {
       const s = this.sources[i];
       if (dist[s] === 0) continue;
       dist[s] = 0;
-      size = this.push(size, s, 0);
+      buckets[0].push(s);
+      pending++;
     }
-    while (size > 0) {
-      const cell = this.heapCell[0];
-      const key = this.heapKey[0];
-      size = this.pop(size);
-      if (key > dist[cell]) continue;
-      const c = cell % this.cols;
-      const r = (cell - c) / this.cols;
-      for (let k = 0; k < 8; k++) {
-        const n = this.neighbour(c, r, k);
-        if (n < 0 || this.blocked[n]) continue;
-        const d = key + (k < 4 ? 1 : DIAGONAL);
-        if (d < dist[n]) {
-          dist[n] = d;
-          size = this.push(size, n, d);
+    for (let d = 0; pending > 0; d++) {
+      const bucket = buckets[d % BUCKETS];
+      while (bucket.length > 0) {
+        const cell = bucket.pop() as number;
+        pending--;
+        if (dist[cell] !== d) continue;
+        const c = cell % this.cols;
+        const r = (cell - c) / this.cols;
+        for (let k = 0; k < 8; k++) {
+          const n = this.neighbour(c, r, k);
+          if (n < 0 || this.blocked[n]) continue;
+          const nd = d + (k < 4 ? STRAIGHT : DIAGONAL);
+          if (nd < dist[n]) {
+            dist[n] = nd;
+            buckets[nd % BUCKETS].push(n);
+            pending++;
+          }
         }
       }
     }
-  }
-
-  private push(size: number, cell: number, key: number): number {
-    let i = size;
-    while (i > 0) {
-      const parent = (i - 1) >> 1;
-      if (this.heapKey[parent] <= key) break;
-      this.heapCell[i] = this.heapCell[parent];
-      this.heapKey[i] = this.heapKey[parent];
-      i = parent;
-    }
-    this.heapCell[i] = cell;
-    this.heapKey[i] = key;
-    return size + 1;
-  }
-
-  private pop(size: number): number {
-    const last = size - 1;
-    const cell = this.heapCell[last];
-    const key = this.heapKey[last];
-    let i = 0;
-    for (;;) {
-      let child = 2 * i + 1;
-      if (child >= last) break;
-      if (child + 1 < last && this.heapKey[child + 1] < this.heapKey[child]) child++;
-      if (this.heapKey[child] >= key) break;
-      this.heapCell[i] = this.heapCell[child];
-      this.heapKey[i] = this.heapKey[child];
-      i = child;
-    }
-    this.heapCell[i] = cell;
-    this.heapKey[i] = key;
-    return last;
   }
 }
