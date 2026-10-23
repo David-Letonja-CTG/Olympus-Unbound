@@ -64,6 +64,8 @@ client/
     enemies/               behaviors, enemy system
     bosses/                boss behavior, telegraphed hazards
     spawning/              SpawnDirector
+    chaos/                 the Director of Chaos: Observer (pressure), ChaosDirector (pacing, selection, lifecycle,
+                           realm state, report), ENCOUNTER_BEHAVIORS, boons
     progression/           loadout, stat refresh, synergies, level-up offers
     art/                   code-drawn art (Canvas 2D): canvas helpers, characters, world objects, icons
     cutscene/              CutsceneTimeline (pure timing of cutscenes)
@@ -217,6 +219,26 @@ flowchart LR
 
 `CutsceneTimeline` answers which cues fire between two times, the eased camera and fade at a time, and the active captions. `CutsceneScene` builds the realm's arena from the scene's seed and plays cues (spawn, move, remove, horde, strike, light, burst, shake, sound) with the same `WorldView`, `LightMap`, `Atmosphere` and `Effects` as a run; no simulation runs. `IntroScreen` (route `/intro`) shows loading, captions and the skip prompt; the root route's guard sends a player who has not seen the intro there once per page load.
 
+## The Director of Chaos
+
+`ChaosDirector` (`engine/chaos/director.ts`, spec: director-of-chaos) lives in `RunSimulation` for the whole run and steps after the spawn director. It owns its encounters, cooldowns, realm state and memory of decisions; the encounters' effects are ordinary run state the other systems already read: monsters it spawns (with `champion` set for hunters), hazards from `placeAttack`, pickups for rewards, `Player.boons` (through `collectModifiers`), `RunState.omen` (enemy speed in the enemy system, spawn rate in the spawn director, darkness for the light map) and `RunState.sites` (markers). Behaviors (`ENCOUNTER_BEHAVIORS`) are one rule per kind; the scheduler never asks which kind it runs.
+
+```mermaid
+stateDiagram-v2
+  [*] --> telegraph: selected (eligible, weighted, chaos stream)
+  telegraph --> active: warning over
+  active --> resolving: an ending (announced, pieces cleared)
+  resolving --> completed: success (reward, realm state, once)
+  resolving --> failed: failure (realm state, once)
+  telegraph --> cancelled: gate, boss
+  active --> cancelled: gate, no room
+  resolving --> cancelled
+```
+
+- **Rooms:** the host's simulation alone directs. Guests get the markers, darkness and champion flag in the snapshot (format 6), the encounters and their blessings in their HUD, and the announcements and `encounter`/`escaped`/`blessed` events in the frames. Stepping into a shrine or altar is any god's position on the host, so no message was added.
+- **Presentation:** `Effects` draws markers and champions above the light map with pointers; `LightMap.setDarkness` eases the ambient toward night violet, keeping 40% of it; the minimap marks them; the HUD lists encounters and blessings (`hud.encounters`, `hud.boons`).
+- **Debugging:** `DebugAction` `director` (on/off) and `encounter` (start one); `RunSimulation.directorReport()` and `inspect().director`; `?debug&director` shows the report over the run (`DirectorPanel`). `RunRules.director: false` turns it off for a run.
+
 ## Run rules and variants
 
 `RunConfig.rules` changes how a run plays on top of the content, as deterministic data (D5):
@@ -248,7 +270,7 @@ A quick run is `pace: 2` plus `xpGain +1`.
 
 ## Simulation step order
 
-`RunSimulation.step` does nothing unless the phase is `playing`. Then, in order: players (movement, collision, regen, ability) → revives → spawn director → enemies (flow field refresh, status, behavior or boss, knockback, separation, world collision, contact damage; grid rebuilt) → weapons → projectiles → enemy projectiles → hazards → pickups → remove dead → a fallen boss opens the gate (its gold counts even if the party falls in the same step) → defeat when every god is down → the gate (standing, countdown, travel) → open a pending level-up/chest choice.
+`RunSimulation.step` does nothing unless the phase is `playing`. Then, in order: players (movement, collision, regen, ability) → revives → spawn director → Director of Chaos (boons, encounters, observation, a decision) → enemies (flow field refresh, status, behavior or boss, knockback, separation, world collision, contact damage; grid rebuilt) → weapons → projectiles → enemy projectiles → hazards → pickups → remove dead → a fallen boss opens the gate (its gold counts even if the party falls in the same step) → defeat when every god is down → the gate (standing, countdown, travel) → open a pending level-up/chest choice.
 
 ## State ownership and phases
 
@@ -257,6 +279,7 @@ A quick run is `pace: 2` plus `xpGain +1`.
 | Selected god, realm, seed; last run result and rewards | Angular `RunSetup` (memory) |
 | Gold, permanent upgrades, codex, statistics, settings (incl. graphics quality), intro seen | Angular `Progression` over `SaveStore` (localStorage) |
 | Run phase, timer, entities, loadout, stats, XP, run gold | `RunSimulation` |
+| Director of Chaos: pressure, encounters under way, cooldowns, realm state (corruption, grudge), decisions; realm modifiers (`omen`), world markers (`sites`), blessings on gods | `ChaosDirector` and `RunState` (simulation, one per run) |
 | Sprites, particles, camera, input devices, sounds | Phaser layer |
 
 Application states are routes (`/`, `/gods`, `/realms`, `/coop`, `/play`, `/summary`, `/progression`, `/settings`); guards keep `/play` and `/summary` unreachable without a setup (or a room's started run) or a result. A room's lobby lives in `RoomService` (memory) and lasts until its run ends. Run phases: `playing ⇄ choosing`, `playing|choosing → paused → back`, `* → ended` (terminal, entered once).
@@ -269,7 +292,7 @@ Application states are routes (`/`, `/gods`, `/realms`, `/coop`, `/play`, `/summ
 
 | Level | Tool | What |
 |---|---|---|
-| Simulation | Vitest (`ng test`), Node + jsdom | RNG, stats, collision, arena generation, damage/status, every weapon and enemy behavior, spawning, offers, synergies, boss attacks, run phases, co-op, deterministic replays, headless autopilot runs through the gate and to defeat, endless realms and reviving, content validation; rooms over in-memory links (`engine/testing/memory-link.ts`): snapshots, host + guest, prediction, leaving |
+| Simulation | Vitest (`ng test`), Node + jsdom | the Director of Chaos (determinism, eligibility, pacing and recovery, lifecycle, endings once, cleanup, the grudge chain, adaptive bounds, blessings, contracts, snapshots), RNG, stats, collision, arena generation, damage/status, every weapon and enemy behavior, spawning, offers, synergies, boss attacks, run phases, co-op, deterministic replays, headless autopilot runs through the gate and to defeat, endless realms and reviving, content validation; rooms over in-memory links (`engine/testing/memory-link.ts`): snapshots, host + guest, prediction, leaving |
 | Angular | Vitest + TestBed, stubbed `GAME_SESSION_FACTORY`, `ROOM_NETWORK` and storage | save parsing/migration, rewards, progression, screens, guards, PlayScreen ↔ session, the lobby protocol |
 | Browser | Playwright (Chromium, dev server, `?debug`; `E2E_NO_GPU=1` for software rendering) | the Daily Trial (from the menu to its summary, Share saving the picture and copying the link, the Hall showing the best, the challenge link starting the same run), a quick run (the boss at 3:30, the Quick table), the installed game offline (a production build served by `scripts/serve-dist.mjs`, whose connections are dropped once the service worker has every file: a deep link, the Co-op screen offline, a solo run), the intro (first launch, skip, no replay, replay from the menu), a run on a phone (Pixel 7 sideways: moving, dashing and pausing by touch, the HUD clear of the thumbs, a choice by tap), the full vertical-slice path, defeat, pause/abandon, buying upgrades and persistence, a room played by two tabs (`net=local`; the guest joins from the host's invite link) |
 | Assets | `npm run assets:check` | every external file has an allowed licence entry, every entry has a file |

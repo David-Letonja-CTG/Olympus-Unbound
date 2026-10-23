@@ -1,6 +1,6 @@
 import Phaser from 'phaser';
 import { Element } from '../data/types';
-import { WorldFrame } from '../sim/world-frame';
+import { FrameSite, WorldFrame } from '../sim/world-frame';
 import { SimEvent } from '../sim/types';
 import { LightMap } from './atmosphere';
 import { GATE_STAND_SECONDS } from '../sim/realms';
@@ -35,6 +35,15 @@ interface FloatingNumber {
 }
 
 const MAX_NUMBERS = 60;
+/** The Director's colours (spec: director-of-chaos): violet for threats, pale gold for blessings. */
+const OMEN = 0xb07cff;
+const BLESSING = 0xfff0c0;
+const SITE_COLOR: Record<FrameSite['kind'], number> = {
+  rift: OMEN,
+  arrival: 0xff6a8a,
+  shrine: BLESSING,
+  altar: 0xd9b8ff,
+};
 /** A warning flashes in its last quarter-second (spec: boss-encounter / the moment to dash). */
 const FLASH_SECONDS = 0.25;
 const ROMAN = ['I', 'II', 'III', 'IV', 'V', 'VI'];
@@ -233,6 +242,39 @@ export class Effects {
       case 'pickup':
         if (event.kind === 'chest') this.burst(this.sparks, event.x, event.y, 24, 0xffd34d);
         return;
+      case 'encounter':
+        // A warning flares where it will happen (spec: director-of-chaos / fairness).
+        if (event.phase === 'telegraph' && (event.x || event.y)) {
+          this.add({
+            kind: 'burst',
+            x: event.x,
+            y: event.y,
+            radius: 160,
+            angle: 0,
+            arc: 0,
+            color: OMEN,
+            ttl: 0.7,
+          });
+          this.burst(this.sparks, event.x, event.y, 24, OMEN);
+        }
+        return;
+      case 'escaped':
+        this.label(event.x, event.y - 40, 'Escaped', '#d9b8ff', 1.3, 1.2, -40);
+        this.burst(this.puffs, event.x, event.y, 30, OMEN);
+        return;
+      case 'blessed':
+        this.add({
+          kind: 'burst',
+          x: event.x,
+          y: event.y,
+          radius: 130,
+          angle: 0,
+          arc: 0,
+          color: BLESSING,
+          ttl: 0.6,
+        });
+        this.burst(this.sparks, event.x, event.y, 26, BLESSING);
+        return;
       default:
         return;
     }
@@ -262,6 +304,8 @@ export class Effects {
       if (boss && !boss.dead) this.drawPointer(boss, 0xff3a1a, camera);
       if (state.gate) this.drawPointer(state.gate, 0xffd27a, camera);
       if (state.merchant) this.drawPointer(state.merchant, 0xffb347, camera);
+      for (const site of state.sites) this.drawPointer(site, SITE_COLOR[site.kind], camera);
+      for (const e of state.enemies) if (e.champion && !e.dead) this.drawPointer(e, OMEN, camera);
     }
     for (let i = this.numbers.length - 1; i >= 0; i--) {
       const n = this.numbers[i];
@@ -659,6 +703,7 @@ export class Effects {
       g.strokeCircle(m.x, m.y, m.radius - 7);
     }
     this.drawBossMarks(state, lights);
+    this.drawSites(state, lights);
     if (state.players.length < 2) return;
     for (const p of state.players) {
       if (p.alive || p.left) continue;
@@ -719,6 +764,90 @@ export class Effects {
       }
     }
     if (!marked) this.markLabel.setVisible(false);
+  }
+
+  /**
+   * The Director's markers and champions, above the darkness (spec: director-of-chaos, D13): a turning violet rift, a
+   * pulsing arrival mark that fills as the arrival nears, a shrine's pillar of pale gold, an altar's turning ring. Each
+   * shows the time it has left as an arc.
+   */
+  private drawSites(state: WorldFrame, lights: LightMap): void {
+    const g = this.marks;
+    const t = this.clock;
+    for (const s of state.sites) {
+      const color = SITE_COLOR[s.kind];
+      const r = s.radius;
+      const pulse = 0.5 + Math.sin(t * 5) * 0.5;
+      switch (s.kind) {
+        case 'rift':
+          g.fillStyle(0x2a0f4a, 0.45);
+          g.fillCircle(s.x, s.y, r);
+          for (let i = 0; i < 3; i++) {
+            const a = -t * (2.2 + i * 0.6) + (i * Math.PI * 2) / 3;
+            g.lineStyle(4 - i, i === 0 ? 0xe8d4ff : color, 0.85);
+            g.beginPath();
+            g.arc(s.x, s.y, r * (0.35 + i * 0.22), a, a + Math.PI * 1.2);
+            g.strokePath();
+          }
+          lights.add(s.x, s.y, r * 2.6, color, 0.7, 6);
+          break;
+        case 'arrival': {
+          const fill = s.total > 0 ? Math.min(1, Math.max(0, 1 - s.left / s.total)) : 1;
+          g.fillStyle(color, 0.12 + 0.25 * fill);
+          g.fillCircle(s.x, s.y, r * fill);
+          g.lineStyle(3, color, 0.6 + 0.35 * pulse);
+          g.strokeCircle(s.x, s.y, r);
+          // An exclamation mark: a bar and a dot.
+          g.fillStyle(0xffffff, 0.9);
+          g.fillRect(s.x - 3, s.y - 20, 6, 22);
+          g.fillCircle(s.x, s.y + 10, 3.5);
+          lights.add(s.x, s.y, r * 2.2, color, 0.6, 6);
+          break;
+        }
+        case 'shrine':
+          g.fillStyle(color, 0.1 + 0.08 * pulse);
+          g.fillCircle(s.x, s.y, r);
+          g.lineStyle(3, color, 0.9);
+          g.strokeCircle(s.x, s.y, r);
+          g.lineStyle(2, 0xffffff, 0.35 + 0.4 * pulse);
+          g.strokeCircle(s.x, s.y, r * (0.4 + 0.25 * pulse));
+          g.fillStyle(0xffffff, 0.22);
+          g.fillRect(s.x - 7, s.y - 90, 14, 90);
+          lights.add(s.x, s.y, 260, color, 0.95, 8);
+          break;
+        case 'altar':
+          g.fillStyle(0x3a1f5a, 0.25);
+          g.fillCircle(s.x, s.y, r);
+          g.lineStyle(3, color, 0.9);
+          g.strokeCircle(s.x, s.y, r);
+          for (let i = 0; i < 4; i++) {
+            const a = t * 1.4 + (i * Math.PI) / 2;
+            g.fillStyle(0xffd27a, 0.9);
+            g.fillCircle(s.x + Math.cos(a) * r * 0.6, s.y + Math.sin(a) * r * 0.6, 4);
+          }
+          lights.add(s.x, s.y, 220, color, 0.85, 8);
+          break;
+      }
+      // The time it has left.
+      if (s.total > 0 && s.kind !== 'arrival') {
+        g.lineStyle(4, 0xffffff, 0.75);
+        g.beginPath();
+        g.arc(
+          s.x,
+          s.y,
+          r + 9,
+          -Math.PI / 2,
+          -Math.PI / 2 + Math.min(1, s.left / s.total) * Math.PI * 2,
+        );
+        g.strokePath();
+      }
+    }
+    for (const e of state.enemies) {
+      if (!e.champion || e.dead) continue;
+      g.lineStyle(4, OMEN, 0.55 + Math.sin(t * 4) * 0.25);
+      g.strokeCircle(e.x, e.y, e.radius + 14);
+      lights.add(e.x, e.y, 200, OMEN, 0.7, 5);
+    }
   }
 
   /** An arrow on the screen's edge toward something off-screen: the boss, or the open gate. */

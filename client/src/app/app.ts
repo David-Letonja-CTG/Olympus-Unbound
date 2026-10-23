@@ -1,6 +1,6 @@
 import { ChangeDetectionStrategy, Component, inject } from '@angular/core';
 import { RouterOutlet } from '@angular/router';
-import { debugEnabled } from './core/debug-mode';
+import { directorPanelEnabled } from './core/debug-mode';
 import { MenuSound } from './core/menu-sound';
 import { TitleGate } from './core/title-gate';
 import { WorldScores } from './core/world-scores';
@@ -22,8 +22,8 @@ export class App {
   protected readonly gate = inject(TitleGate);
 
   constructor() {
-    // Remember `?debug` from the first page for the whole session (development builds only).
-    debugEnabled();
+    // Remember `?debug` (and `&director`) from the first page for the whole session (development builds only).
+    directorPanelEnabled();
     // The Hall theme and the controls' sounds outside runs (spec: music / the hall theme; hud / menu sounds).
     inject(MenuSound);
     // Runs finished offline go to the world boards now (spec: world-leaderboards / submitting runs).

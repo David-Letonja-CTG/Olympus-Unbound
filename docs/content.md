@@ -11,6 +11,7 @@ All game content is typed TypeScript in `client/src/content/` (decision D4). The
 | `realms.ts` | realms: map generation, spawn timeline, events, scaling, elites, boss, rewards |
 | `assets.ts` | external art manifest: files with licences, sprite key → frame/animation (D12) |
 | `cutscenes/intro.ts` | the intro scene: actors, cues and captions (D14) |
+| `chaos.ts` | the Director of Chaos: its balance, encounters and boons |
 | `index.ts` | balance, permanent upgrades, and the assembled `CONTENT` |
 
 ## Conventions
@@ -37,6 +38,8 @@ All game content is typed TypeScript in `client/src/content/` (decision D4). The
 **New ware or companion:** `content/merchant.ts`. A ware of an existing kind (`companion`, `weaponLevel`, `heal`) is data: name, description, price, effect, icon. A companion is an existing rendered sheet with a warm `tint` and `scale` (D15), an `icon`, speed, `hunt`, `reach` and an `attack` (a weapon-like definition of any behavior but `orbit`; give its id a voice in `ATTACK_SOUNDS`), optionally `heal`. A new kind of ware (an armour upgrade, a relic, a reroll…) is one entry in `WARE_RULES` (`sim/merchant.ts`: its targets and how it applies) plus its effect type, with tests.
 
 **New boss mechanic:** a boss is data in `content/bosses.ts`: phases (attacks, `speedMultiplier`, `pauseMultiplier`, `enraged`), and optionally `parts` (heads, tentacles: place, attacks, pause, delay, health, order, regrow, zone, fromPhase), `guard`, `exposed`, `chargeStun`, `anchored`. Attacks: `slam`, `boulder`, `charge`, `summon`, `sweep`, `lash`, `walls` (parts may not charge, summon or raise walls). A genuinely new kind of attack is a new case in `placeAttack` (`bosses/boss.ts`) with its warning shape and tests.
+
+**New encounter for the Director of Chaos:** an `EncounterDefinition` in `content/chaos.ts` using one of the behaviors — `invasion` (stages, elite, stage gap, time limit, stage cap; enemies default to the realm's current spawn phase), `eclipse` (seconds, enemy speed and spawn-rate multipliers, darkness, champion), `hunt` (health and speed multipliers, escape time, slam/boulder/lash attacks, pause, titles by element), `shrine` (boons, seconds, radius, distance), `contract` (the encounter it offers, which must be `offered: true`, risk text, bonus). Give it `name`, `objective` and `announce` (`{where}` and `{hunter}` are filled in), `major` (big threats warn at least 1 s), `telegraph`, `weight`, `cooldown`, `perRealm`, `from`, optional `realms`, `minDepth`, `pressure` band, `requires` (corruption, max corruption, grudge, elites slain) and `tags` (`relief`, `durable`, `movement` for the adaptive rules), and every ending its behavior reaches (`ENCOUNTER_ENDINGS`: text with `{boon}`, `success`, optional reward — gold, chest, boon, heal — and realm-state changes). `validateContent` checks all of it. A genuinely new kind of encounter is one entry in `ENCOUNTER_BEHAVIORS` (`engine/chaos/behaviors.ts`: begin, warn, start, update, cleanup, hud) plus its content type and endings, with tests; the Director itself does not change. **New boon:** id, name, description, seconds, modifiers, `relief` for defensive ones, an icon in `ICONS` (`boon_*`), and a shrine or reward that grants it.
 
 **New god:** a `GodDefinition` (base stats, starting weapon, ability as a weapon-like definition, passive modifiers, affinities, sprite) → it appears in god selection automatically.
 
@@ -152,6 +155,10 @@ Headless checks (autopilot):
 - **No permanent upgrades:** the kiting bot falls around 01:30–03:00. It is a weak player, so these numbers set a floor, not the real pacing.
 
 Tune with playtests once the new realms exist. Each realm adds its own timeline and scaling on top of these factors.
+
+## Balance notes (2026-10-23, the Director of Chaos)
+
+First encounter at 0:45 of a realm, then about one a minute: 20 s after any encounter, 50 s after a major one, with a 40 s ramp and the chance halved at full pressure. Majors only at pressure ≤ 0.5. Headless autopilot runs (Zeus, Hades, Poseidon, Athena, 1,000 s) saw 6–14 encounters, pressure averaging 0.3, and the Director's chests and gold let the (weak) autopilot survive as long or longer than with it off (Zeus 115–186 s against 125–175 s; Athena 182 s against 132 s). Invasion stages 10/14/10 (an elite last) in 75 s; hunters 1.6× (vengeful 2.6×, champions 3×) an elite's health, escaping after 60/75/90 s; eclipses ×1.18 speed and ×1.5 spawns for 50 s; blessings 30–40 s. Gold rewards grow by half per realm cleared, like the merchant's prices.
 
 ## Balance notes (2026-10-12, the Labyrinth)
 

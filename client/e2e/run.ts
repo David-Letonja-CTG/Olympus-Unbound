@@ -8,7 +8,9 @@ type DebugAction =
   | { type: 'travel' }
   | { type: 'godMode'; enabled: boolean }
   | { type: 'summonMerchant' }
-  | { type: 'grantGold'; amount: number };
+  | { type: 'grantGold'; amount: number }
+  | { type: 'director'; enabled: boolean }
+  | { type: 'encounter'; id: string };
 
 export interface Snapshot {
   phase: string;

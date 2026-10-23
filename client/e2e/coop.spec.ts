@@ -98,6 +98,12 @@ test('two players create and join a room, play together, and one leaves', async 
     .poll(async () => (await inspect(host))?.party[1].alive, { timeout: 15_000 })
     .toBe(true);
 
+  // The Director of Chaos runs on the host; the guest sees its encounters (spec: director-of-chaos / rooms).
+  await debug(host, { type: 'encounter', id: 'eclipse_of_olympus' });
+  await expect(guest.getByTestId('hud-encounters')).toContainText('Eclipse of Olympus', {
+    timeout: 15_000,
+  });
+
   // Through the gate together: both load the next realm, and the run goes on there (spec: endless-run).
   await debug(host, { type: 'travel' });
   // The host's loading screen waits for the guest; the guest's may already have faded when checked.
@@ -107,6 +113,8 @@ test('two players create and join a room, play together, and one leaves', async 
   await expect.poll(async () => (await inspect(guest))?.depth).toBe(1);
   await expect.poll(async () => (await inspect(host))?.depth).toBe(1);
   await expect(guest.getByTestId('hud-realm')).toContainText('2 ·');
+  // Passing the gate called the eclipse off.
+  await expect(guest.getByTestId('hud-encounters')).toHaveCount(0);
 
   // The pause menu does not stop a room's run. (The clock may still stop for a new round of choices: kills keep
   // bringing experience, so this checks the run's phase, not its time.)

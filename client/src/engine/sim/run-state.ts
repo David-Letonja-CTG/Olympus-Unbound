@@ -18,6 +18,7 @@ export type { RunRules } from '../data/types';
 import { ArenaData } from '../maps/generate-arena';
 import {
   BossRuntime,
+  ChaosSite,
   Companion,
   Enemy,
   Hazard,
@@ -144,6 +145,8 @@ export class RunState implements WorldFrame {
   readonly offerRng: Rng;
   /** Where the merchant appears (spec: merchant): its own stream, so it never shifts spawns or loot (D5). */
   readonly merchantRng: Rng;
+  /** The Director of Chaos's decisions and places (spec: director-of-chaos): its own stream (D5). */
+  readonly chaosRng: Rng;
 
   /** The run's clock (HUD, results). */
   time = 0;
@@ -154,6 +157,9 @@ export class RunState implements WorldFrame {
   /** The gate to the next realm, open once the realm's boss has fallen. */
   gate: Gate | undefined;
   kills = 0;
+  /** Elites slain in the run, and health the gods have lost: what the Director observes (spec: director-of-chaos). */
+  eliteKills = 0;
+  damageTaken = 0;
   gold = 0;
   level = 1;
   xp = 0;
@@ -179,6 +185,13 @@ export class RunState implements WorldFrame {
   merchant: Merchant | undefined;
   /** Players who stepped into the merchant's ring and wait for their shop, in order. */
   readonly shopQueue: number[] = [];
+  /**
+   * The realm's temporary modifiers while an encounter holds them (spec: director-of-chaos / eclipse): monsters' walking
+   * speed and the spawn rate (rules), and how dark it is (drawn only). 1, 1, 0 otherwise.
+   */
+  readonly omen = { enemySpeed: 1, spawnRate: 1, darkness: 0 };
+  /** The Director's markers in the world: rifts, arrival marks, shrines, altars. */
+  readonly sites: ChaosSite[] = [];
   readonly enemyGrid = new SpatialHash<Enemy>(96);
   readonly events: SimEvent[] = [];
 
@@ -223,6 +236,12 @@ export class RunState implements WorldFrame {
     this.lootRng = rng.fork('loot');
     this.offerRng = rng.fork('offers');
     this.merchantRng = rng.fork('merchant');
+    this.chaosRng = rng.fork('chaos');
+  }
+
+  /** How dark an encounter makes the realm, 0–1 (WorldFrame). */
+  get darkness(): number {
+    return this.omen.darkness;
   }
 
   id(): number {
@@ -370,6 +389,11 @@ export class RunState implements WorldFrame {
     this.shopQueue.length = 0;
     this.walls.length = 0;
     this.zones.length = 0;
+    // The Director cancels its encounters before travel; nothing of theirs may reach the next realm.
+    this.sites.length = 0;
+    this.omen.enemySpeed = 1;
+    this.omen.spawnRate = 1;
+    this.omen.darkness = 0;
   }
 
   /** Spawns an enemy unless the global cap is reached (bosses ignore the cap). */

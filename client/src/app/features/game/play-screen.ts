@@ -14,6 +14,7 @@ import { Router } from '@angular/router';
 import {
   DebugAction,
   DebugSnapshot,
+  DirectorReport,
   GameEvent,
   GameSession,
   HudSnapshot,
@@ -25,7 +26,7 @@ import {
   UiInput,
   UpgradeChoice,
 } from '../../../engine';
-import { debugEnabled } from '../../core/debug-mode';
+import { debugEnabled, directorPanelEnabled } from '../../core/debug-mode';
 import { GAME_CONTENT, GAME_SESSION_FACTORY } from '../../core/game-content';
 import { Progression } from '../../core/progression';
 import { RoomService } from '../../core/rooms/room-service';
@@ -34,6 +35,7 @@ import { ALLY_SKILLS, RunSetup } from '../../core/run-setup';
 import { TouchScreen } from '../../core/touch-screen';
 import { challengeRun, QUICK_RULES } from '../../core/challenge';
 import { trialRun } from '../../core/daily-trial';
+import { DirectorPanel } from './director-panel';
 import { Announcement, Hud } from './hud/hud';
 import { LevelUpDialog } from './level-up-dialog';
 import { PauseMenu } from './pause-menu';
@@ -68,7 +70,7 @@ declare global {
  */
 @Component({
   selector: 'app-play-screen',
-  imports: [Hud, LevelUpDialog, PauseMenu, RunLoading],
+  imports: [DirectorPanel, Hud, LevelUpDialog, PauseMenu, RunLoading],
   changeDetection: ChangeDetectionStrategy.OnPush,
   host: {
     '(contextmenu)': '$event.preventDefault()',
@@ -108,6 +110,9 @@ declare global {
           <span aria-hidden="true"></span><span aria-hidden="true"></span>
         </button>
       }
+    }
+    @if (director(); as report) {
+      <app-director-panel [report]="report" data-testid="director-panel" />
     }
     @if (choice(); as c) {
       <app-level-up-dialog [choice]="c" [player]="chooser()" (chosen)="choose(c, $event)" />
@@ -408,6 +413,9 @@ export class PlayScreen {
     return hud.waitingFor.join(', ');
   });
 
+  /** The Director's report over a debug run opened with `?debug&director` (spec: director-of-chaos / debugging). */
+  protected readonly director = signal<DirectorReport | undefined>(undefined);
+
   private session: GameSession | undefined;
   private destroyed = false;
   private announcementId = 0;
@@ -528,6 +536,12 @@ export class PlayScreen {
           hud: () => this.hud(),
           inspect: () => session.inspect(),
         };
+        if (directorPanelEnabled()) {
+          const poll = setInterval(() => {
+            if (this.destroyed) clearInterval(poll);
+            else this.director.set(session.inspect()?.director);
+          }, 500);
+        }
       }
     } catch (e) {
       this.error.set(e instanceof Error ? e.message : String(e));

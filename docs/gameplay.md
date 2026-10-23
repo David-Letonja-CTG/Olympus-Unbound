@@ -292,6 +292,25 @@ Twice in every realm (at 2:30 and 5:30) a merchant arrives a short walk from the
 
 **Companions** hunt foes near their god, cannot be hurt, follow you through gates and wait where you fall. Their hits count as yours (your might, critical chance and element bonuses apply). Up to three, one of each.
 
+## The Director of Chaos
+
+A game master watches every run: how hurt the gods are, how hard they are pressed, how fast they kill, whether they stand still. From about 0:45 of each realm it starts **encounters** that suit the moment, never two great threats at once, none while you are already overwhelmed, and none but a shrine while the realm's boss is awake. Every threat is announced in violet, marked in the world above the darkness, pointed at from the screen's edge and listed at the top left with what to do and how long is left.
+
+| Encounter | What happens | Win | Lose |
+|---|---|---|---|
+| **Monster Invasion** | A rift tears open beyond the view ("to the west"); six seconds later the realm's own monsters pour out of it in three waves, an elite last | defeat every invader in 75 s: gold and a treasure chest where the last one fell; corruption falls | the survivors stay; corruption rises |
+| **The Hunter** | An arrival is marked; an elite of the realm, named after your strongest element ("Stormbreaker the Minotaur" for lightning), hunts you, stopping to slam the ground with a red warning | slay it: gold | outlast it for 60 s and it escapes, holding a **grudge** |
+| **The Vengeful Hunter** | Only with a grudge: the hunter returns, stronger, throwing stones as well | slay it: the grudge is settled, a chest and more gold; corruption falls | it escapes again and the corruption deepens |
+| **Eclipse of Olympus** | Only once corruption has spread: the light fails, monsters move faster and come more often, and after 12 s a champion rises | slay the champion to break it at once (gold, a chest, Fury of Ares) | endure 50 s and its champion withdraws (a little gold) |
+| **Divine Shrine** | A shrine of pale gold rises a short walk away (further if you have stood still) | step in before it fades: every living god is blessed | it fades, no harm done |
+| **Divine Contracts** | An altar offers a deal; the HUD shows its objective, risk and reward | step in to accept for the party | walk on: the offer is withdrawn, no harm done |
+
+**Blessings** last 30–40 s and show at the top left with their time: *Aegis of Athena* (+4 armour, +3 health a second; likelier when you are struggling), *Fury of Ares* (+25% damage), *Swiftness of Hermes* (+25% speed, weapons 15% faster), *Radiance of Apollo* (pick up from twice as far, +30% experience).
+
+**Contracts:** *Champion's Challenge* (after three elites slain) calls a champion three times an elite's strength for 90 s; *Purge the Corruption* (with high corruption) opens a great invasion that, repelled, cleanses most of it and heals the party.
+
+**The realm remembers.** Failures spread **corruption** (each deeper realm adds some too), which brings eclipses and purges; escaped hunters hold a grudge until you settle it. The Director adapts only what it chooses, never the fight's numbers: a party in trouble is offered relief, a party mowing hordes down meets tougher foes more often, a party standing still is given reasons to move, each at most once every 90 seconds. In a room the host's game directs for everyone.
+
 ## Rewards and progression
 
 - Gold collected in the run is kept when you fall, including each boss's gold (**+250** for the Cyclops); **half** (rounded down) when abandoned.

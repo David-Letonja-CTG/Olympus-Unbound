@@ -626,6 +626,8 @@ export interface BalanceConfig {
   readonly perfectDodge: { readonly surge: number; readonly damage: number };
   /** The Wandering Merchant (spec: merchant). */
   readonly merchant: MerchantBalance;
+  /** The Director of Chaos (spec: director-of-chaos). */
+  readonly director: DirectorBalance;
   /** Reviving a fallen ally (spec: co-op / reviving allies). */
   readonly revive: {
     /** How close a living ally must stand to the spirit. */
@@ -662,6 +664,9 @@ export interface GameContent {
   readonly companions: readonly CompanionDefinition[];
   /** A Daily Trial's rule for the day (spec: daily-trial / twists). */
   readonly twists: readonly TwistDefinition[];
+  /** What the Director of Chaos may start, and the blessings it grants (spec: director-of-chaos). */
+  readonly encounters: readonly EncounterDefinition[];
+  readonly boons: readonly BoonDefinition[];
 }
 
 // ---------------------------------------------------------------------------------------------------------------
@@ -680,6 +685,8 @@ export interface RunRules {
     readonly speed?: number;
     readonly spawnRate?: number;
   };
+  /** The Director of Chaos starts encounters (default true); off for debugging and regression runs. */
+  readonly director?: boolean;
 }
 
 /** A Daily Trial's twist: a named rule for one run (spec: daily-trial / twists). */
@@ -688,7 +695,7 @@ export interface TwistDefinition {
   readonly name: string;
   readonly description: string;
   /** Gods' modifiers and enemy multipliers only; the pace stays the realm's own. */
-  readonly rules: Omit<RunRules, 'pace'>;
+  readonly rules: Omit<RunRules, 'pace' | 'director'>;
 }
 
 // ---------------------------------------------------------------------------------------------------------------
@@ -778,4 +785,230 @@ export interface QuestDefinition {
   readonly description: string;
   readonly goal: Goal;
   readonly gold: number;
+}
+
+// ---------------------------------------------------------------------------------------------------------------
+// The Director of Chaos (spec: director-of-chaos)
+
+/** A timed blessing: stat modifiers for some seconds of the run (spec: director-of-chaos / divine blessings). */
+export interface BoonDefinition {
+  readonly id: string;
+  readonly name: string;
+  readonly description: string;
+  readonly seconds: number;
+  readonly modifiers: readonly Modifier[];
+  /** A defensive boon, weighted up while the party struggles. */
+  readonly relief?: boolean;
+  readonly visual: Visual;
+}
+
+/** What an encounter's ending gives the party; gold grows with the realms cleared. */
+export interface EncounterReward {
+  readonly gold?: number;
+  /** A treasure chest where the encounter ended. */
+  readonly chest?: boolean;
+  /** A boon for every living god. */
+  readonly boon?: string;
+  /** Healing for every living god, as a fraction of maximum health. */
+  readonly heal?: number;
+}
+
+/** Changes to the run's realm state, clamped to its ranges (spec: director-of-chaos / realm state). */
+export interface RealmStateChange {
+  readonly corruption?: number;
+  readonly grudge?: number;
+}
+
+/** One way an encounter can end: announced, rewarded and remembered once. */
+export interface EncounterOutcome {
+  /** Completed (true) or failed (false). */
+  readonly success: boolean;
+  readonly text: string;
+  readonly reward?: EncounterReward;
+  readonly changes?: RealmStateChange;
+}
+
+/**
+ * How an encounter plays: one reusable rule per type in `chaos/behaviors.ts` (`ENCOUNTER_BEHAVIORS`). Enemy ids are
+ * optional: without them the realm's own kinds are used (its current spawn phase, its elites), so every realm keeps
+ * its identity.
+ */
+export type EncounterBehavior =
+  /** A rift, then stages of invaders; the last stage may bring an elite. Ends: `repelled`, `overrun`. */
+  | {
+      readonly type: 'invasion';
+      readonly stages: readonly { readonly count: number; readonly enemy?: string }[];
+      readonly elite: boolean;
+      /** Seconds before the next stage comes even if the last one still fights. */
+      readonly stageGap: number;
+      /** Seconds to repel it. */
+      readonly timeLimit: number;
+      /** Most invaders in one stage after scaling by the party and depth. */
+      readonly maxCount: number;
+    }
+  /** Darkness, faster and more frequent monsters, then a champion. Ends: `broken` (champion slain), `endured`. */
+  | {
+      readonly type: 'eclipse';
+      readonly seconds: number;
+      readonly enemySpeed: number;
+      readonly spawnRate: number;
+      /** 0–1: how far the light dims toward night (drawn only). */
+      readonly darkness: number;
+      /** The champion is marked `warn` seconds before it arrives `at` seconds into the eclipse, with `health` × an elite's. */
+      readonly champion: { readonly at: number; readonly warn: number; readonly health: number };
+    }
+  /** One hunter of the realm's elites that pursues the gods. Ends: `slain`, `escaped`. */
+  | {
+      readonly type: 'hunt';
+      readonly health: number;
+      readonly speed: number;
+      /** Seconds after it arrives before it escapes. */
+      readonly escapeAfter: number;
+      /** Telegraphed attacks in turn, through the boss attack rules (slam, boulder, lash). */
+      readonly attacks: readonly BossAttack[];
+      readonly pause: number;
+      /** Its title by the party's most damaging element, e.g. "Stormbreaker". */
+      readonly titles: Readonly<Record<Element, string>>;
+    }
+  /** A shrine that blesses the party when a god steps in. Ends: `received`, `faded`. */
+  | {
+      readonly type: 'shrine';
+      readonly boons: readonly string[];
+      readonly seconds: number;
+      readonly radius: number;
+      /** How far from a god it rises (further when the gods stand still). */
+      readonly distance: number;
+    }
+  /**
+   * An altar offering an encounter with a bonus; stepping in accepts it for the party, letting it fade declines it.
+   * Ends: `accepted`, `declined`.
+   */
+  | {
+      readonly type: 'contract';
+      readonly offers: string;
+      readonly seconds: number;
+      readonly radius: number;
+      readonly distance: number;
+      /** What the offered encounter risks, in words for the HUD. */
+      readonly risk: string;
+      /** Added to the offered encounter's successful ending. */
+      readonly bonus: EncounterReward;
+    };
+
+/** The endings each behavior can reach; an encounter's `outcomes` must define every one (content validation). */
+export const ENCOUNTER_ENDINGS: Readonly<Record<EncounterBehavior['type'], readonly string[]>> = {
+  invasion: ['repelled', 'overrun'],
+  eclipse: ['broken', 'endured'],
+  hunt: ['slain', 'escaped'],
+  shrine: ['received', 'faded'],
+  contract: ['accepted', 'declined'],
+};
+
+/** Tags the adaptive rules read (spec: director-of-chaos / adaptive rules). */
+export type EncounterTag = 'relief' | 'durable' | 'movement';
+
+export interface EncounterDefinition {
+  readonly id: string;
+  readonly name: string;
+  /** What the party must do, for the HUD. */
+  readonly objective: string;
+  /** Announced when its warning starts. */
+  readonly announce: string;
+  readonly behavior: EncounterBehavior;
+  /** A big threat: one at a time, with a longer gap after it, never under high pressure. */
+  readonly major: boolean;
+  /** Seconds of warning before it can hurt anyone. */
+  readonly telegraph: number;
+  readonly weight: number;
+  /** Seconds after it ends before it may be chosen again. */
+  readonly cooldown: number;
+  /** At most this many times in one realm. */
+  readonly perRealm: number;
+  /** The earliest realm time it may start. */
+  readonly from: number;
+  readonly minDepth?: number;
+  /** Only in these realms; absent: every realm. */
+  readonly realms?: readonly string[];
+  /** Only while the pressure is within this band. */
+  readonly pressure?: { readonly min?: number; readonly max?: number };
+  /** What the realm state must be. */
+  readonly requires?: {
+    readonly corruption?: number;
+    readonly maxCorruption?: number;
+    readonly grudge?: number;
+    /** Elites slain in the run. */
+    readonly elitesSlain?: number;
+  };
+  readonly tags?: readonly EncounterTag[];
+  /** Started only by a contract, never chosen on its own. */
+  readonly offered?: boolean;
+  /** Its endings by key; each behavior names the keys it ends with. */
+  readonly outcomes: Readonly<Record<string, EncounterOutcome>>;
+}
+
+/** The Director's pacing, pressure model and adaptive rules (spec: director-of-chaos). */
+export interface DirectorBalance {
+  /** Seconds between observations, and between decisions. */
+  readonly observe: number;
+  readonly think: number;
+  /** Realm seconds before the first encounter. */
+  readonly firstAt: number;
+  /** Seconds after any encounter ends, and after a major one, before the next may start. */
+  readonly gap: number;
+  readonly majorGap: number;
+  /** Seconds of quiet after the gap over which the chance to start grows to 1. */
+  readonly ramp: number;
+  readonly maxActive: number;
+  /** A resolving encounter's seconds (its outcome shown, its pieces cleared). */
+  readonly resolve: number;
+  readonly pressure: {
+    readonly weights: {
+      readonly threat: number;
+      readonly damage: number;
+      readonly health: number;
+      readonly boss: number;
+      readonly encounters: number;
+    };
+    /** Threats within this distance of a living god count. */
+    readonly radius: number;
+    /** Weighted threats that make the threat factor 1 (a monster 1, an elite 5, the boss 12, a hazard 3). */
+    readonly threatScale: number;
+    /** Damage per second, as a share of the party's maximum health, that makes the damage factor 1. */
+    readonly damageScale: number;
+    /** Seconds over which recent damage fades by half. */
+    readonly damageHalfLife: number;
+    /** Above `high` the pressure is high; majors start only at or below `major`, others at or below `minor`. */
+    readonly high: number;
+    readonly major: number;
+    readonly minor: number;
+    /** Seconds of high pressure that open a recovery window, and its length. */
+    readonly recoveryAfter: number;
+    readonly recovery: number;
+  };
+  readonly adapt: {
+    /** At most one adaptive nudge per this many seconds. */
+    readonly every: number;
+    /** The weight multiplier an adaptive rule gives. */
+    readonly boost: number;
+    /** Kills per second over `killWindow` seconds that mark a dominant party. */
+    readonly fastKills: number;
+    readonly killWindow: number;
+    /** Every living god within `stillRadius` of where it was `stillSeconds` ago: the party stands still. */
+    readonly stillSeconds: number;
+    readonly stillRadius: number;
+    /** Average health share below which the party struggles. */
+    readonly lowHealth: number;
+    /** Pressure below which a fast-killing party counts as dominant. */
+    readonly calm: number;
+  };
+  /** Weight multiplier for the encounter chosen last. */
+  readonly novelty: number;
+  /** Decisions and outcomes kept for the debug report. */
+  readonly memory: number;
+  /** Corruption added on entering each deeper realm. */
+  readonly corruptionPerRealm: number;
+  readonly maxCorruption: number;
+  readonly maxGrudge: number;
+  /** Gold rewards × (1 + goldPerRealm × realms cleared). */
+  readonly goldPerRealm: number;
 }

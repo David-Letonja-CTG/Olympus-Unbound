@@ -16,3 +16,20 @@ export function debugEnabled(): boolean {
     return false;
   }
 }
+
+const DIRECTOR_KEY = 'olympus-unbound/director-panel';
+
+/**
+ * The Director of Chaos's report over debug runs (spec: director-of-chaos / debugging): opening any page with
+ * `?debug&director` shows it for the rest of the tab's session.
+ */
+export function directorPanelEnabled(): boolean {
+  if (!debugEnabled()) return false;
+  try {
+    if (new URLSearchParams(globalThis.location?.search ?? '').has('director'))
+      sessionStorage.setItem(DIRECTOR_KEY, '1');
+    return sessionStorage.getItem(DIRECTOR_KEY) === '1';
+  } catch {
+    return false;
+  }
+}

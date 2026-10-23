@@ -59,6 +59,8 @@ interface ReplicaFrame {
   merchant: Snapshot['merchant'];
   walls: Snapshot['walls'];
   zones: Snapshot['zones'];
+  sites: Snapshot['sites'];
+  darkness: number;
   depth: number;
   span: number;
 }
@@ -91,6 +93,8 @@ export class GuestDriver implements RunDriver {
     merchant: undefined,
     walls: [],
     zones: [],
+    sites: [],
+    darkness: 0,
     depth: 0,
     span: STEP,
   };
@@ -573,6 +577,8 @@ export class GuestDriver implements RunDriver {
       merchant: b.merchant,
       walls: b.walls,
       zones: b.zones,
+      sites: b.sites,
+      darkness: b.darkness,
       depth: b.depth,
       span: b.time > a.time ? b.time - a.time : STEP,
     };

@@ -38,8 +38,13 @@ export type { PartySeat, RunConfig, RunVariant } from './sim/run-state';
 export type { PeerLink } from './net/link';
 export { NET_VERSION, roomVersion } from './net/protocol';
 export type { DebugAction } from './sim/run-simulation';
+export type { Decision, DirectorReport, Mood, OutcomeRecord } from './chaos/director';
+export type { PressureFactors } from './chaos/observe';
 export type {
   AnnouncementKind,
+  EncounterPhase,
+  HudBoon,
+  HudEncounter,
   HudItem,
   HudPartyMember,
   HudSnapshot,

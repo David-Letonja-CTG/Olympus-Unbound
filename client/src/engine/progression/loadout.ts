@@ -36,6 +36,8 @@ export function collectModifiers(state: RunState, player: Player): Modifier[] {
     if (skill) mods.push(...scaleModifiers(skill.modifiers, level));
   }
   for (const synergy of loadout.synergies) mods.push(...synergy.modifiers);
+  // Blessings while they last (spec: director-of-chaos / divine blessings).
+  for (const boon of player.boons) mods.push(...boon.def.modifiers);
   return mods;
 }
 

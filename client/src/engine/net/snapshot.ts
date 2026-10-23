@@ -3,7 +3,7 @@ import { ContentIndex } from '../data/content-index';
 import { SNAPSHOT_FORMAT } from './protocol';
 import { Element, ELEMENTS, EnemyDefinition, GodDefinition } from '../data/types';
 import { RunState } from '../sim/run-state';
-import { PickupKind, RunPhase, Zone } from '../sim/types';
+import { PickupKind, RunPhase, SiteKind, Zone } from '../sim/types';
 import {
   FrameEnemy,
   FrameHazard,
@@ -13,6 +13,7 @@ import {
   FramePickup,
   FramePlayer,
   FrameProjectile,
+  FrameSite,
 } from '../sim/world-frame';
 
 /** Quarter pixels: ±8191 px, twice the largest arena. */
@@ -21,6 +22,9 @@ const RADIUS = 8;
 const TIMER = 100;
 const PHASES: readonly RunPhase[] = ['playing', 'choosing', 'paused', 'ended'];
 const PICKUPS: readonly PickupKind[] = ['xp', 'gold', 'heal', 'chest'];
+const SITES: readonly SiteKind[] = ['rift', 'arrival', 'shrine', 'altar'];
+/** Hundredths of a second in 16 bits: up to about 11 minutes. */
+const LONG_TIMER = 100;
 
 export interface SnapPlayer extends FramePlayer {
   readonly god: GodDefinition;
@@ -70,6 +74,9 @@ export interface Snapshot {
   readonly walls: FrameWall[];
   readonly zones: Zone[];
   readonly merchant: { x: number; y: number; radius: number; leavesIn: number } | undefined;
+  /** The Director's markers and an eclipse's darkness (spec: director-of-chaos / rooms). */
+  readonly sites: FrameSite[];
+  readonly darkness: number;
 }
 
 export interface SnapCompanion extends FrameCompanion {
@@ -96,6 +103,8 @@ const FLAG = {
   dazed: 4096,
   enraged: 8192,
   exposed: 16384,
+  // A hunter or champion of the Director (spec: director-of-chaos).
+  champion: 32768,
   orbit: 1,
   // A player who left the room.
   gone: 4,
@@ -148,6 +157,7 @@ export function encodeSnapshot(state: RunState, phase: RunPhase, waiting = false
     w.f32(merchant.radius);
     w.f32(merchant.leavesIn);
   }
+  w.u8(Math.round(Math.max(0, Math.min(1, state.omen.darkness)) * 255));
   w.u8(names.size);
   for (const s of names.keys()) w.str(s);
 
@@ -191,7 +201,8 @@ export function encodeSnapshot(state: RunState, phase: RunPhase, waiting = false
         (e.marked !== undefined ? FLAG.marked : 0) |
         ((e.dazed ?? 0) > 0 ? FLAG.dazed : 0) |
         (e.boss?.enraged ? FLAG.enraged : 0) |
-        ((e.boss?.exposed ?? 0) > 0 ? FLAG.exposed : 0),
+        ((e.boss?.exposed ?? 0) > 0 ? FLAG.exposed : 0) |
+        (e.champion ? FLAG.champion : 0),
     );
     w.u8(Math.round(Math.max(0, Math.min(1, e.health / e.maxHealth)) * 255));
     w.i8(Math.round(e.dirX * 127));
@@ -274,6 +285,17 @@ export function encodeSnapshot(state: RunState, phase: RunPhase, waiting = false
     w.i8(Math.round(c.facingX * 127));
     w.u8(c.moving ? FLAG.moving : 0);
   }
+
+  w.u8(state.sites.length);
+  for (const s of state.sites) {
+    w.u32(s.id);
+    w.u8(SITES.indexOf(s.kind));
+    w.pos(s.x);
+    w.pos(s.y);
+    w.u16(Math.round(s.radius * RADIUS));
+    w.u16(Math.round(Math.max(0, s.left) * LONG_TIMER));
+    w.u16(Math.round(Math.max(0, s.total) * LONG_TIMER));
+  }
   return w.finish();
 }
 
@@ -295,6 +317,7 @@ export function decodeSnapshot(buffer: ArrayBuffer, index: ContentIndex): Snapsh
     header & HEADER.merchant
       ? { x: r.f32(), y: r.f32(), radius: r.f32(), leavesIn: r.f32() }
       : undefined;
+  const darkness = r.u8() / 255;
   const names: string[] = [];
   for (let n = r.u8(); n > 0; n--) names.push(r.str());
 
@@ -359,6 +382,7 @@ export function decodeSnapshot(buffer: ArrayBuffer, index: ContentIndex): Snapsh
         : undefined,
       guarded: on(FLAG.guarded) === 1 || undefined,
       dazed: on(FLAG.dazed) ? 1 : undefined,
+      champion: on(FLAG.champion) === 1 || undefined,
       mode: on(FLAG.windup) ? 'windup' : 'move',
       hitFlash: on(FLAG.hit),
       status: {
@@ -477,7 +501,21 @@ export function decodeSnapshot(buffer: ArrayBuffer, index: ContentIndex): Snapsh
     if (def) companions.push({ id, ownerId, def, x, y, px: x, py: y, facingX, moving });
   }
 
+  const sites: FrameSite[] = [];
+  for (let n = r.u8(); n > 0; n--)
+    sites.push({
+      id: r.u32(),
+      kind: SITES[r.u8()] ?? 'rift',
+      x: r.pos(),
+      y: r.pos(),
+      radius: r.u16() / RADIUS,
+      left: r.u16() / LONG_TIMER,
+      total: r.u16() / LONG_TIMER,
+    });
+
   return {
+    sites,
+    darkness,
     companions,
     merchant,
     walls,

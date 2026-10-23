@@ -23,11 +23,26 @@ function frame(parts: Partial<Record<keyof WorldFrame, unknown>>): WorldFrame {
     enemies: [],
     boss: undefined,
     gate: undefined,
+    sites: [],
     ...parts,
   } as unknown as WorldFrame;
 }
 
 describe('minimap marks (spec: hud / minimap)', () => {
+  it('marks the Director’s sites and champions (spec: director-of-chaos)', () => {
+    const marks = minimapMarks(
+      frame({
+        enemies: [enemy(1, 10, { champion: true })],
+        sites: [
+          { id: 1, kind: 'rift', x: 5, y: 5, radius: 70, left: 3, total: 6 },
+          { id: 2, kind: 'shrine', x: 9, y: 9, radius: 54, left: 3, total: 6 },
+        ],
+      }),
+      0,
+    );
+    expect(marks.map((m) => m.kind)).toEqual(['omen', 'omen', 'shrine']);
+  });
+
   it('marks enemies, elites, the boss and the gate', () => {
     const marks = minimapMarks(
       frame({

@@ -1,3 +1,4 @@
+import { Rng } from '../core/rng';
 import { EnemyDefinition, SpawnEvent, SpawnPhase } from '../data/types';
 import { spawnBoss } from '../bosses/boss';
 import { RunState } from '../sim/run-state';
@@ -40,7 +41,8 @@ export class SpawnDirector {
       (bossActive ? state.realm.boss.spawnRateMultiplier : 1) *
       state.partyScale.spawnRate *
       depth.spawnRate *
-      state.enemyRules.spawnRate;
+      state.enemyRules.spawnRate *
+      state.omen.spawnRate;
     const maxAlive = Math.round(phase.maxAlive * state.partyScale.maxAlive * depth.maxAlive);
 
     this.accumulator += rate * dt;
@@ -90,10 +92,15 @@ export class SpawnDirector {
       this.eventIndex++;
   }
 
-  /** A valid position just outside the visible area, inside the map and not in an obstacle (or none). */
-  spawnPosition(radius: number): { x: number; y: number } | undefined {
+  /**
+   * A valid position just outside the visible area, inside the map and not in an obstacle (or none). The Director
+   * passes its own stream (spec: director-of-chaos), so its places never shift the timeline's spawns.
+   */
+  spawnPosition(
+    radius: number,
+    rng: Rng = this.state.spawnRng,
+  ): { x: number; y: number } | undefined {
     const state = this.state;
-    const rng = state.spawnRng;
     // Around one living player's view — a random one in co-op, so pressure follows everyone — and never
     // inside any player's view (spec: enemy-spawning / fair spawn positions).
     const living = state.players.filter((p) => p.alive);

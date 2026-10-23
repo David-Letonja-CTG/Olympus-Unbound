@@ -303,6 +303,13 @@ app-hud {
     color: #b3ecff;
   }
 
+  .announcement.kind-omen {
+    color: #d9b8ff;
+    text-shadow:
+      0 1px 0 #000,
+      0 0 12px rgba(150, 90, 255, 0.7);
+  }
+
   /*
    * The bronze frieze along the bottom, with a Greek key border (spec: hud / local players on the hud). One player's
    * pieces stand on it; two players split it.

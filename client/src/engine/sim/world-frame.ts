@@ -1,5 +1,6 @@
 import { CompanionDefinition, Element, EnemyDefinition } from '../data/types';
 import {
+  ChaosSite,
   Companion,
   Enemy,
   Hazard,
@@ -38,6 +39,10 @@ export interface WorldFrame {
     | undefined;
   /** Realms cleared. */
   readonly depth: number;
+  /** The Director's markers: rifts, arrival marks, shrines and altars (spec: director-of-chaos). */
+  readonly sites: readonly FrameSite[];
+  /** How far an eclipse has dimmed the realm, 0–1. */
+  readonly darkness: number;
   /** Seconds between every entity's previous (`px`/`py`) and current position: one step, or a snapshot gap. */
   readonly span: number;
 }
@@ -83,6 +88,7 @@ export type FrameEnemy = Readonly<
     | 'marked'
     | 'dazed'
     | 'part'
+    | 'champion'
   >
 > & {
   readonly def: Pick<EnemyDefinition, 'radius' | 'visual' | 'behavior'>;
@@ -123,5 +129,7 @@ export type FrameHazard = Readonly<
     | 'wall'
   >
 >;
+
+export type FrameSite = Readonly<ChaosSite>;
 
 export type FrameWall = Readonly<Pick<Wall, 'id' | 'x' | 'y' | 'radius' | 'age' | 'left'>>;

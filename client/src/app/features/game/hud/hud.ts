@@ -5,15 +5,22 @@ import {
   input,
   ViewEncapsulation,
 } from '@angular/core';
-import { ControlScheme, HudPartyMember, HudSnapshot, SEAT_COLORS } from '../../../../engine';
+import {
+  AnnouncementKind,
+  ControlScheme,
+  HudPartyMember,
+  HudSnapshot,
+  SEAT_COLORS,
+} from '../../../../engine';
 import { formatTime, ItemIcon } from '../../../shared/item-icon';
 import { GodPlaque, Medallion, PlaquePlace } from './god-plaque';
+import { HudOmens } from './omens';
 import { AbilitySlot, DashPip, HealthVessel, keysFor, Loadout, StaminaVessel } from './hud-pieces';
 
 export interface Announcement {
   readonly id: number;
   readonly text: string;
-  readonly kind: 'elite' | 'boss' | 'synergy' | 'info';
+  readonly kind: AnnouncementKind;
 }
 
 /** How the players at this screen share it (spec: hud / local players on the hud). */
@@ -30,6 +37,7 @@ export type HudLayout = 'frieze' | 'duo' | 'corners';
   selector: 'app-hud',
   imports: [
     ItemIcon,
+    HudOmens,
     GodPlaque,
     Medallion,
     HealthVessel,
@@ -78,6 +86,8 @@ export type HudLayout = 'frieze' | 'duo' | 'corners';
           }
         </ul>
       }
+      <!-- The Director's encounters and this god's blessings (spec: hud / encounters on the hud). -->
+      <app-hud-omens [encounters]="h.encounters" [boons]="h.boons" />
     </div>
 
     @if (h.boss; as boss) {
