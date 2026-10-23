@@ -636,6 +636,11 @@ const ICONS: Record<string, [string, 'square' | 'round' | 'diamond' | 'hex', num
   ware_serpent: ['fork', 'round', 0x9be88a],
   ware_whetstone: ['sword', 'round', 0xc9d4e0],
   merchant: ['coin', 'hex', 0xffd27a],
+  // Blessings of the Director's shrines (spec: director-of-chaos / divine blessings).
+  boon_aegis: ['shield', 'round', 0xbfe0ff],
+  boon_fury: ['fist', 'round', 0xff6b6b],
+  boon_swiftness: ['boot', 'round', 0x7ee0a1],
+  boon_radiance: ['owl', 'round', 0xffe066],
 };
 
 /**

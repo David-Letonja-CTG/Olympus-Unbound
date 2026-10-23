@@ -1,6 +1,7 @@
 import type { RunVariant } from './run-state';
 import { StatBlock } from '../core/stats';
 import {
+  BoonDefinition,
   CompanionDefinition,
   GodDefinition,
   ArmourDefinition,
@@ -102,7 +103,34 @@ export interface Player {
   surge: number;
   /** This dash has already counted as a perfect dodge. */
   dodged: boolean;
+  /** Timed blessings and the seconds each has left (spec: director-of-chaos / divine blessings). */
+  boons: ActiveBoon[];
 }
+
+/** A blessing on a god: its modifiers count until `left` runs out. */
+export interface ActiveBoon {
+  readonly def: BoonDefinition;
+  left: number;
+}
+
+/** What a marker in the world is (spec: director-of-chaos): a rift, an arrival mark, a shrine or an altar. */
+export type SiteKind = 'rift' | 'arrival' | 'shrine' | 'altar';
+
+/** A marker of an encounter in the world, drawn above the darkness with a pointer. */
+export interface ChaosSite {
+  readonly id: number;
+  readonly kind: SiteKind;
+  x: number;
+  y: number;
+  readonly radius: number;
+  /** Seconds left, and in all (for its ring). */
+  left: number;
+  readonly total: number;
+}
+
+/** Where an encounter is in its life (spec: director-of-chaos / encounter lifecycle). */
+export type EncounterPhase =
+  'telegraph' | 'active' | 'resolving' | 'completed' | 'failed' | 'cancelled';
 
 /** An animal fighting beside its god (spec: merchant / companions). */
 export interface Companion {
@@ -222,6 +250,8 @@ export interface Enemy {
   dazed?: number;
   /** Whether it saw its target at its last sight test; unset until its first (spec: enemy-spawning / finding the way). */
   sight?: boolean;
+  /** A hunter or champion of the Director's encounters: marked and pointed at (spec: director-of-chaos). */
+  champion?: boolean;
 }
 
 /** A pillar of a shifting wall (spec: boss-encounter / asterion's shifting walls). */
@@ -416,7 +446,8 @@ export interface RunResult {
   readonly loadout: LoadoutSummary;
 }
 
-export type AnnouncementKind = 'elite' | 'boss' | 'synergy' | 'info';
+/** `omen`: the Director of Chaos's warnings and outcomes (spec: hud / encounters on the hud). */
+export type AnnouncementKind = 'elite' | 'boss' | 'synergy' | 'info' | 'omen';
 
 export type SimEvent =
   | {
@@ -486,6 +517,18 @@ export type SimEvent =
       width: number;
     }
   | { type: 'gateOpened'; to: string; x: number; y: number }
+  /** An encounter changed phase (spec: director-of-chaos); `success` once it has ended. */
+  | {
+      type: 'encounter';
+      id: string;
+      phase: EncounterPhase;
+      success?: boolean;
+      x: number;
+      y: number;
+    }
+  /** A hunter or champion left the battle alive. */
+  | { type: 'escaped'; x: number; y: number }
+  | { type: 'blessed'; playerId: number; boonId: string; x: number; y: number }
   | { type: 'realmEntered'; realmId: string; depth: number }
   | { type: 'runEnded'; result: RunResult };
 
@@ -546,6 +589,38 @@ export interface HudSnapshot {
   readonly gate?: { readonly to: string; readonly closesIn: number };
   /** Every god still in the run, in seat order (spec: hud / party health). */
   readonly party: readonly HudPartyMember[];
+  /** The Director's encounters under way (spec: hud / encounters on the hud). */
+  readonly encounters: readonly HudEncounter[];
+  /** This god's blessings. */
+  readonly boons: readonly HudBoon[];
+}
+
+/** One encounter as the HUD shows it. */
+export interface HudEncounter {
+  readonly uid: number;
+  readonly id: string;
+  readonly name: string;
+  readonly phase: EncounterPhase;
+  /** What the party must do; during the warning, what is coming. */
+  readonly objective: string;
+  /** Foes left, where that matters. */
+  readonly left?: number;
+  /** Seconds until its next turn (arrival, end, escape, fading). */
+  readonly seconds?: number;
+  /** A contract's terms. */
+  readonly risk?: string;
+  readonly reward?: string;
+  readonly major: boolean;
+}
+
+export interface HudBoon {
+  readonly id: string;
+  readonly name: string;
+  readonly description: string;
+  readonly sprite: string;
+  readonly color: number;
+  readonly left: number;
+  readonly seconds: number;
 }
 
 export interface HudPartyMember {

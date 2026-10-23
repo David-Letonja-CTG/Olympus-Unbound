@@ -5,8 +5,8 @@ import { RunSimulation } from '../sim/run-simulation';
 import { Enemy } from '../sim/types';
 
 /**
- * Real content with a quiet, small Mount Olympus: no spawns, no events, no obstacles and a far-away boss, so tests
- * place exactly the enemies they need.
+ * Real content with a quiet, small Mount Olympus: no spawns, no events, no obstacles, a far-away boss and no Director
+ * encounters, so tests place exactly the enemies they need (Director tests add the encounters back).
  */
 export function quietContent(changes: Partial<RealmDefinition> = {}): GameContent {
   const realm = CONTENT.realms.find((r) => r.id === MOUNT_OLYMPUS_ID) as RealmDefinition;
@@ -27,7 +27,7 @@ export function quietContent(changes: Partial<RealmDefinition> = {}): GameConten
     boss: { ...realm.boss, at: 1e9 },
     ...changes,
   };
-  return { ...CONTENT, realms: [quiet] };
+  return { ...CONTENT, realms: [quiet], encounters: [] };
 }
 
 export function quietSim(

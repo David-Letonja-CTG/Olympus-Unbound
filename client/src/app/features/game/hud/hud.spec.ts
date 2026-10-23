@@ -31,6 +31,8 @@ const base: HudSnapshot = {
   waitingFor: [],
   realm: { name: 'Mount Olympus', number: 1 },
   party: [],
+  encounters: [],
+  boons: [],
 };
 
 function render(
@@ -248,5 +250,69 @@ describe('UI palette', () => {
     expect(el.querySelector('.dash-key')).toBeNull();
     expect(el.querySelector('[data-testid=hud-health]')).toBeTruthy();
     expect(el.querySelector('[data-testid=hud-level]')).toBeTruthy();
+  });
+
+  it("shows the Director's encounters, a contract's terms and blessings (spec: hud / encounters on the hud)", () => {
+    expect(render(base).querySelector('[data-testid=hud-encounters]')).toBeNull();
+    expect(render(base).querySelector('[data-testid=hud-boons]')).toBeNull();
+    const el = render({
+      ...base,
+      encounters: [
+        {
+          uid: 1,
+          id: 'monster_invasion',
+          name: 'Monster Invasion',
+          phase: 'active',
+          objective: 'Repel the invaders',
+          left: 12,
+          seconds: 39.2,
+          major: true,
+        },
+        {
+          uid: 2,
+          id: 'champion_contract',
+          name: "Champion's Challenge",
+          phase: 'active',
+          objective: 'Step into the altar to call a champion',
+          seconds: 14.5,
+          risk: 'A champion hunts you for 90 s',
+          reward: '+120 gold · a treasure chest',
+          major: true,
+        },
+      ],
+      boons: [
+        {
+          id: 'swiftness_of_hermes',
+          name: 'Swiftness of Hermes',
+          description: '+25% movement speed.',
+          sprite: 'boon_swiftness',
+          color: 0x7ee0a1,
+          left: 11.4,
+          seconds: 30,
+        },
+      ],
+    });
+    const items = el.querySelectorAll('[data-testid=hud-encounters] li');
+    expect(items.length).toBe(2);
+    expect(items[0].textContent).toContain('Monster Invasion');
+    expect(items[0].textContent).toContain('Repel the invaders');
+    expect(items[0].textContent).toContain('12 left · 40 s');
+    expect(items[1].textContent).toContain('Risk: A champion hunts you for 90 s');
+    expect(items[1].textContent).toContain('Reward: +120 gold · a treasure chest');
+    expect(items[1].textContent).toContain('15 s');
+    expect(el.querySelector('[data-testid=hud-boons]')?.textContent).toContain(
+      'Swiftness of Hermes · 12 s',
+    );
+  });
+
+  it('gives Director announcements their own style', () => {
+    const fixture = TestBed.createComponent(Hud);
+    fixture.componentRef.setInput('hud', base);
+    fixture.componentRef.setInput('announcements', [
+      { id: 1, text: 'An eclipse falls', kind: 'omen' },
+    ]);
+    fixture.detectChanges();
+    const el = fixture.nativeElement as HTMLElement;
+    expect(el.querySelector('.announcement.kind-omen')?.textContent).toContain('An eclipse falls');
   });
 });

@@ -216,6 +216,7 @@ export class ArenaScene extends Phaser.Scene {
     this.effects.update(world, driver.phase === 'playing' ? dt : 0, camera, this.lightMap);
     this.minimap.update(world, driver.localId, camera, this.game.loop.delta);
     this.atmosphere.update(camera, view, dt);
+    this.lightMap.setDarkness(world.darkness, dt);
     this.lightMap.render(view);
 
     this.hudTimer += this.game.loop.rawDelta;
@@ -357,6 +358,18 @@ export class ArenaScene extends Phaser.Scene {
         return;
       case 'gateOpened':
         sound.play('gate');
+        return;
+      case 'encounter':
+        // The Director's warnings, triumphs and failures (spec: director-of-chaos).
+        if (event.phase === 'telegraph') sound.play(event.id.includes('shrine') ? 'gate' : 'elite');
+        else if (event.phase === 'completed' && event.success) sound.play('synergy');
+        else if (event.phase === 'failed') sound.play('rumble');
+        return;
+      case 'escaped':
+        sound.play('whoosh', event);
+        return;
+      case 'blessed':
+        if (driver.localIds.includes(event.playerId)) sound.play('levelUp');
         return;
       case 'realmEntered':
         sound.play('realm');

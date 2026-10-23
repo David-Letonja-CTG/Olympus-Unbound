@@ -3,7 +3,17 @@ import { WorldFrame } from '../sim/world-frame';
 
 /** What the minimap shows at a world position (spec: hud / minimap). */
 export type MinimapMarkKind =
-  'enemy' | 'elite' | 'boss' | 'gate' | 'merchant' | 'player' | 'self' | 'fallen';
+  | 'enemy'
+  | 'elite'
+  | 'boss'
+  | 'gate'
+  | 'merchant'
+  | 'player'
+  | 'self'
+  | 'fallen'
+  /** The Director's threats (rifts, arrivals, altars, champions) and blessings (spec: director-of-chaos). */
+  | 'omen'
+  | 'shrine';
 
 export interface MinimapMark {
   readonly kind: MinimapMarkKind;
@@ -24,11 +34,13 @@ export function minimapMarks(world: WorldFrame, localId: number): MinimapMark[] 
   const marks: MinimapMark[] = [];
   for (const e of world.enemies) {
     if (e.dead || e.boss) continue;
-    marks.push({ kind: e.elite ? 'elite' : 'enemy', x: e.x, y: e.y });
+    marks.push({ kind: e.champion ? 'omen' : e.elite ? 'elite' : 'enemy', x: e.x, y: e.y });
   }
   marks.sort((a, b) => (a.kind === b.kind ? 0 : a.kind === 'enemy' ? -1 : 1));
   if (world.gate) marks.push({ kind: 'gate', x: world.gate.x, y: world.gate.y });
   if (world.merchant) marks.push({ kind: 'merchant', x: world.merchant.x, y: world.merchant.y });
+  for (const s of world.sites)
+    marks.push({ kind: s.kind === 'shrine' ? 'shrine' : 'omen', x: s.x, y: s.y });
   if (world.boss && !world.boss.dead)
     marks.push({ kind: 'boss', x: world.boss.x, y: world.boss.y });
   const players = world.players.map((p, seat) => ({ p, seat })).filter(({ p }) => !p.left);

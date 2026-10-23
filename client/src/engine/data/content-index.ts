@@ -1,8 +1,12 @@
 import {
   ArmourDefinition,
+  BoonDefinition,
   BossDefinition,
   BossPartDefinition,
   CompanionDefinition,
+  EncounterDefinition,
+  EncounterReward,
+  ENCOUNTER_ENDINGS,
   EnemyDefinition,
   GameContent,
   GodDefinition,
@@ -63,6 +67,8 @@ export class ContentIndex {
   readonly realms: ReadonlyMap<string, RealmDefinition>;
   readonly wares: ReadonlyMap<string, WareDefinition>;
   readonly companions: ReadonlyMap<string, CompanionDefinition>;
+  readonly encounters: ReadonlyMap<string, EncounterDefinition>;
+  readonly boons: ReadonlyMap<string, BoonDefinition>;
 
   constructor(readonly content: GameContent) {
     this.gods = byId(content.gods);
@@ -75,6 +81,8 @@ export class ContentIndex {
     this.realms = byId(content.realms);
     this.wares = byId(content.wares);
     this.companions = byId(content.companions);
+    this.encounters = byId(content.encounters);
+    this.boons = byId(content.boons);
   }
 
   god(id: string): GodDefinition {
@@ -122,6 +130,8 @@ export function validateContent(content: GameContent): string[] {
     ['realm', content.realms],
     ['permanent upgrade', content.permanentUpgrades],
     ['twist', content.twists],
+    ['encounter', content.encounters],
+    ['boon', content.boons],
   ];
   for (const [kind, items] of groups) {
     const seen = new Set<string>();
@@ -314,11 +324,104 @@ export function validateContent(content: GameContent): string[] {
     if ('pace' in twist.rules) errors.push(`${where} must not change the pace.`);
   }
 
+  errors.push(...validateDirector(content, index));
   errors.push(...validateManifest(content.assets));
   for (const cutscene of content.cutscenes) errors.push(...validateCutscene(cutscene, index));
 
   if (content.gods.length === 0) errors.push('Content needs at least one god.');
   if (content.realms.length === 0) errors.push('Content needs at least one realm.');
+  return errors;
+}
+
+/**
+ * The Director's content (spec: director-of-chaos): every ending a behavior can reach is defined, references resolve,
+ * contracts offer encounters that only contracts start, major encounters warn first, and the balance is sane.
+ */
+function validateDirector(content: GameContent, index: ContentIndex): string[] {
+  const errors: string[] = [];
+  const reward = (where: string, r: EncounterReward | undefined) => {
+    if (r?.boon && !index.boons.has(r.boon))
+      errors.push(`${where} grants unknown boon "${r.boon}".`);
+    if (r?.gold !== undefined && !(r.gold >= 0)) errors.push(`${where} has negative gold.`);
+    if (r?.heal !== undefined && !(r.heal > 0 && r.heal <= 1))
+      errors.push(`${where} heals outside (0, 1].`);
+  };
+  for (const e of content.encounters) {
+    const where = `Encounter "${e.id}"`;
+    const b = e.behavior;
+    const endings = ENCOUNTER_ENDINGS[b.type];
+    for (const key of endings)
+      if (!e.outcomes[key]) errors.push(`${where} has no "${key}" ending.`);
+    for (const [key, outcome] of Object.entries(e.outcomes)) {
+      if (!endings.includes(key)) errors.push(`${where} has an ending "${key}" it never reaches.`);
+      reward(`${where} ending "${key}"`, outcome.reward);
+    }
+    if (!(e.weight >= 0)) errors.push(`${where} needs a weight of 0 or more.`);
+    if (!e.offered && !(e.weight > 0)) errors.push(`${where} is never chosen nor offered.`);
+    if (!(e.cooldown >= 0) || !(e.perRealm >= 1))
+      errors.push(`${where} needs a cooldown of 0 or more and at least one start per realm.`);
+    if (!(e.telegraph > 0)) errors.push(`${where} needs a warning.`);
+    if (e.major && !(e.telegraph >= 1)) errors.push(`${where} is major: it warns at least 1 s.`);
+    const band = e.pressure;
+    if (band && ((band.min ?? 0) < 0 || (band.max ?? 1) > 1 || (band.min ?? 0) > (band.max ?? 1)))
+      errors.push(`${where} has a pressure band outside 0–1 or reversed.`);
+    for (const realm of e.realms ?? [])
+      if (!index.realms.has(realm)) errors.push(`${where} names unknown realm "${realm}".`);
+    switch (b.type) {
+      case 'invasion':
+        if (b.stages.length === 0) errors.push(`${where} has no stages.`);
+        for (const stage of b.stages) {
+          if (!(stage.count > 0)) errors.push(`${where} has an empty stage.`);
+          if (stage.enemy && !index.enemies.has(stage.enemy))
+            errors.push(`${where} spawns unknown enemy "${stage.enemy}".`);
+        }
+        if (!(b.timeLimit > 0) || !(b.stageGap > 0) || !(b.maxCount > 0))
+          errors.push(`${where} needs a time limit, a stage gap and a stage cap.`);
+        break;
+      case 'eclipse':
+        if (!(b.seconds > b.champion.at)) errors.push(`${where} ends before its champion comes.`);
+        if (!(b.darkness >= 0 && b.darkness <= 1)) errors.push(`${where} darkness is not 0–1.`);
+        if (!(b.enemySpeed > 0 && b.spawnRate > 0))
+          errors.push(`${where} needs positive multipliers.`);
+        break;
+      case 'hunt':
+        if (b.attacks.length === 0 || !(b.pause > 0))
+          errors.push(`${where} needs attacks and a pause.`);
+        for (const a of b.attacks)
+          if (a.type !== 'slam' && a.type !== 'boulder' && a.type !== 'lash')
+            errors.push(`${where} cannot ${a.type}: hunters slam, throw stones or lash.`);
+        if (!(b.escapeAfter > 0) || !(b.health > 0) || !(b.speed > 0))
+          errors.push(`${where} needs an escape time and positive multipliers.`);
+        break;
+      case 'shrine':
+        if (b.boons.length === 0) errors.push(`${where} offers no boon.`);
+        for (const id of b.boons)
+          if (!index.boons.has(id)) errors.push(`${where} offers unknown boon "${id}".`);
+        if (!(b.seconds > 0) || !(b.radius > 0)) errors.push(`${where} needs a time and a radius.`);
+        break;
+      case 'contract': {
+        const offered = index.encounters.get(b.offers);
+        if (!offered) errors.push(`${where} offers unknown encounter "${b.offers}".`);
+        else if (!offered.offered || offered.behavior.type === 'contract')
+          errors.push(`${where} must offer an encounter that only contracts start.`);
+        reward(`${where} bonus`, b.bonus);
+        if (!(b.seconds > 0) || !(b.radius > 0)) errors.push(`${where} needs a time and a radius.`);
+        break;
+      }
+    }
+  }
+  for (const boon of content.boons) {
+    if (!(boon.seconds > 0)) errors.push(`Boon "${boon.id}" needs a duration.`);
+    for (const m of boon.modifiers)
+      if (!(STAT_IDS as readonly string[]).includes(m.stat))
+        errors.push(`Boon "${boon.id}" changes unknown stat "${m.stat}".`);
+  }
+  const d = content.balance.director;
+  if (!(d.observe > 0 && d.think > 0 && d.resolve > 0))
+    errors.push('The Director needs positive intervals.');
+  if (!(d.maxActive >= 1)) errors.push('The Director needs room for one encounter.');
+  if (!(d.pressure.major <= d.pressure.minor && d.pressure.minor <= 1))
+    errors.push('The Director’s thresholds must rise: major ≤ minor ≤ 1.');
   return errors;
 }
 

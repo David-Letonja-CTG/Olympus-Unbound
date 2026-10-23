@@ -1,5 +1,6 @@
 import { CutsceneCaption } from './data/cutscene';
 import { GameContent } from './data/types';
+import type { DirectorReport } from './chaos/director';
 import { PeerLink } from './net/link';
 import { DebugAction } from './sim/run-simulation';
 import { RunConfig } from './sim/run-state';
@@ -135,6 +136,8 @@ export interface DebugSnapshot {
   readonly party: readonly { readonly x: number; readonly y: number; readonly alive: boolean }[];
   /** Realms cleared. */
   readonly depth: number;
+  /** What the Director of Chaos knows (solo runs and a room's host; spec: director-of-chaos / debugging). */
+  readonly director?: DirectorReport;
 }
 
 /** A running game. Created by `createGameSession`; the only handle the application has on gameplay. */

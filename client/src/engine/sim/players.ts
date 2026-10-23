@@ -44,6 +44,7 @@ export function createPlayer(state: RunState, slot: number, x: number, y: number
     dashY: 0,
     surge: 0,
     dodged: false,
+    boons: [],
   };
   player.loadout.weapons.push(createWeapon(state.index.weapon(god.startingWeapon), stats));
   refreshPlayer(state, player);

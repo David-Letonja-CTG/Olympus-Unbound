@@ -1,3 +1,4 @@
+import { ChaosDirector, DirectorReport } from '../chaos/director';
 import { killEnemy } from '../combat/damage';
 import { ContentIndex } from '../data/content-index';
 import { GameContent } from '../data/types';
@@ -52,7 +53,11 @@ export type DebugAction =
   /** The merchant arrives now (spec: merchant). */
   | { type: 'summonMerchant' }
   | { type: 'grantGold'; amount: number }
-  | { type: 'travel' };
+  | { type: 'travel' }
+  /** Switches the Director of Chaos on or off (spec: director-of-chaos / debugging). */
+  | { type: 'director'; enabled: boolean }
+  /** Starts an encounter now, whatever the Director would choose. */
+  | { type: 'encounter'; id: string };
 
 /**
  * One run of the game, independent of rendering (D2). Owns the run phase and calls the systems in a fixed order;
@@ -61,6 +66,8 @@ export type DebugAction =
 export class RunSimulation {
   readonly state: RunState;
   private director: SpawnDirector;
+  /** The Director of Chaos: one per run, across its realms (spec: director-of-chaos). */
+  readonly chaos: ChaosDirector;
   private currentPhase: RunPhase = 'playing';
   private pausedFrom: RunPhase = 'playing';
   /** The open choices of the current round, one per living player (spec: co-op / own upgrades). */
@@ -80,6 +87,7 @@ export class RunSimulation {
       this.state.players.push(createPlayer(this.state, slot, 0, 0));
     this.placeParty();
     this.director = new SpawnDirector(this.state);
+    this.chaos = new ChaosDirector(this.state);
     for (const p of this.state.players) if (p.bot) this.brains.set(p.id, newBrain(p.bot, p.slot));
   }
 
@@ -139,6 +147,7 @@ export class RunSimulation {
     holdParty(state);
     updateRevives(state, dt);
     this.director.update(dt);
+    this.chaos.update(dt, this.director);
     updateEnemies(state, dt);
     updateWeapons(state, dt);
     updateCompanions(state, dt);
@@ -222,6 +231,8 @@ export class RunSimulation {
    */
   private travel(): void {
     const state = this.state;
+    // Encounters end before the realm does: spoils of one already won are gathered with the rest.
+    this.chaos.leaveRealm();
     const gatherer = state.players.find((p) => p.alive) ?? state.players[0];
     for (const pickup of state.pickups) collect(state, gatherer, pickup, true);
     const depth = state.depth + 1;
@@ -241,6 +252,7 @@ export class RunSimulation {
     this.placeParty();
     placeCompanions(state);
     this.director = new SpawnDirector(state);
+    this.chaos.enterRealm();
     state.emit({ type: 'realmEntered', realmId: realm.id, depth });
     state.emit({
       type: 'announcement',
@@ -448,6 +460,17 @@ export class RunSimulation {
       case 'summonMerchant':
         if (!state.merchant) arriveMerchant(state);
         return;
+      case 'director':
+        this.chaos.enabled = action.enabled;
+        return;
+      case 'encounter': {
+        const def = state.index.encounters.get(action.id);
+        if (def && this.currentPhase !== 'ended') {
+          this.chaos.spawner = this.director;
+          this.chaos.start(def);
+        }
+        return;
+      }
       case 'spawnStress':
         for (let i = 0; i < action.count; i++) {
           const pos = this.director.spawnPosition(14);
@@ -456,6 +479,11 @@ export class RunSimulation {
         }
         return;
     }
+  }
+
+  /** What the Director of Chaos knows now (debug sessions and tests; spec: director-of-chaos / debugging). */
+  directorReport(): DirectorReport {
+    return this.chaos.report();
   }
 
   /** The HUD of one player (default: the first). */
@@ -576,6 +604,16 @@ export class RunSimulation {
           stamina: p.stamina / stamina.max,
           ability: p.ability.stats.cooldown > 0 ? 1 - p.abilityTimer / p.ability.stats.cooldown : 1,
         })),
+      encounters: this.chaos.hud(),
+      boons: player.boons.map((b) => ({
+        id: b.def.id,
+        name: b.def.name,
+        description: b.def.description,
+        sprite: b.def.visual.sprite,
+        color: b.def.visual.color,
+        left: Math.max(0, b.left),
+        seconds: b.def.seconds,
+      })),
     };
   }
 

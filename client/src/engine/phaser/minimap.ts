@@ -134,6 +134,16 @@ export class Minimap {
           g.fillTriangle(x, y - 5, x + 4, y, x - 4, y);
           g.fillTriangle(x, y + 5, x + 4, y, x - 4, y);
           break;
+        case 'omen':
+          g.lineStyle(2, 0xb07cff, 1);
+          g.strokeCircle(x, y, 4.5);
+          g.fillStyle(0xb07cff, 1);
+          g.fillCircle(x, y, 2);
+          break;
+        case 'shrine':
+          g.lineStyle(2, 0xfff0c0, 1);
+          g.strokeCircle(x, y, 4.5);
+          break;
         case 'boss':
           g.fillStyle(0xff3b1f, 1);
           g.fillCircle(x, y, 5);

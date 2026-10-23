@@ -128,6 +128,8 @@ export class LightMap {
   private height = 0;
   private budget = 16;
   private resolution = 0.25;
+  /** How far an eclipse has dimmed the ambient light, eased toward the run's value (spec: director-of-chaos). */
+  private darkness = 0;
 
   constructor(
     private readonly scene: Phaser.Scene,
@@ -165,6 +167,11 @@ export class LightMap {
     this.image.setTexture(key);
   }
 
+  /** Eases the darkness toward `target` (0–1) over about a second, so an eclipse falls and lifts smoothly. */
+  setDarkness(target: number, dt: number): void {
+    this.darkness += (target - this.darkness) * Math.min(1, dt * 1.5);
+  }
+
   /** Adds a light for this frame. Higher `priority` survives the budget first (the player, the boss). */
   add(x: number, y: number, radius: number, color: number, intensity: number, priority = 0): void {
     this.lights.push({ x, y, radius, color, intensity, priority });
@@ -191,7 +198,7 @@ export class LightMap {
     const sy = this.height / view.height;
     const t = this.texture;
     t.clear();
-    t.fill(this.ambient, 1);
+    t.fill(this.darkness > 0.001 ? dim(this.ambient, this.darkness) : this.ambient, 1);
     for (const l of visible.slice(0, this.budget)) {
       t.stamp(LIGHT_TEXTURE, undefined, (l.x - view.x) * sx, (l.y - view.y) * sy, {
         scaleX: (l.radius * 2 * sx) / LIGHT_TEXTURE_SIZE,
@@ -205,6 +212,23 @@ export class LightMap {
     this.image.setPosition(view.x, view.y).setDisplaySize(view.width, view.height);
     this.lights.length = 0;
   }
+}
+
+/**
+ * The night violet an eclipse dims toward. It keeps at least 40% of the realm's ambient light, so everything that must
+ * be read stays readable (D13).
+ */
+const ECLIPSE_NIGHT = 0x1a1030;
+const ECLIPSE_FLOOR = 0.4;
+
+function dim(ambient: number, darkness: number): number {
+  const k = Math.min(1 - ECLIPSE_FLOOR, darkness * (1 - ECLIPSE_FLOOR));
+  const mix = (shift: number) => {
+    const a = (ambient >> shift) & 0xff;
+    const b = (ECLIPSE_NIGHT >> shift) & 0xff;
+    return Math.round(a + (b - a) * k) << shift;
+  };
+  return mix(16) | mix(8) | mix(0);
 }
 
 /** Fog, embers, vignette, colour grading and bloom, switched by quality at any time (spec: visual-atmosphere). */

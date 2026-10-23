@@ -1,6 +1,7 @@
 import type { BalanceConfig, GameContent, PermanentUpgradeDefinition } from '../engine';
 import { ACHIEVEMENTS, DAILY_QUESTS } from './achievements';
 import { ASSETS } from './assets';
+import { BOONS, DIRECTOR, ENCOUNTERS } from './chaos';
 import { COMPANIONS, MERCHANT, WARES } from './merchant';
 import { TWISTS } from './daily';
 import { INTRO } from './cutscenes/intro';
@@ -60,6 +61,7 @@ export const BALANCE: BalanceConfig = {
     dashGrace: 0.05,
   },
   merchant: MERCHANT,
+  director: DIRECTOR,
   perfectDodge: { surge: 3, damage: 0.3 },
 };
 
@@ -128,4 +130,6 @@ export const CONTENT: GameContent = {
   wares: WARES,
   companions: COMPANIONS,
   twists: TWISTS,
+  encounters: ENCOUNTERS,
+  boons: BOONS,
 };

@@ -179,3 +179,13 @@ The owner chose to open the code and keep the game's identity. The source code (
 - **.NET:** the owner asked for another stack. TypeScript also lets the server and the game share the room protocol's shape and the score formula.
 - **The game on GitHub Pages, the server elsewhere:** two addresses, cross-site calls and two deploys; the owner wanted everything on the VM.
 - **Running the simulation on the server:** rejected, because D16's host authority already works and server simulation would cost far more CPU.
+
+## D22 — The Director of Chaos steers choices, never numbers (Accepted, 2026-10-23)
+
+The owner asked for a deterministic game master that makes runs reactive (`add-director-of-chaos`). It lives in the simulation (D2), draws on its own seeded stream (D5) and runs only on a room's host (D16).
+
+- **What it may change:** which encounter starts and when, where its markers and monsters appear, and the realm state it remembers (corruption, grudge). Encounters bring their own declared strength (a hunter's ×1.6 health is part of the encounter, the same for every party).
+- **What it may not:** the numbers of a fight in progress, or any monster's, hunter's or god's stats in answer to how a party plays. Adaptation only weights its choices, at most once per 90 s, and says why in its report.
+- **Content:** encounters and boons are data over five reusable behaviors (D4); the lifecycle, eligibility and endings are the Director's alone.
+
+*Alternatives considered:* dynamic difficulty that scales enemy health or damage with performance (rejected: it punishes good play and hides the rules); a scripting language for events (rejected: five behaviors cover the specified encounters, and data with typed behaviors is checked by the compiler); a director on the server (rejected by D1/D21: the server runs no rules).

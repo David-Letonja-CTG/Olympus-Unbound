@@ -4,7 +4,7 @@ import { HudSnapshot, RunResult, SimEvent, UpgradeChoice } from '../sim/types';
 /** Bumped whenever the messages below change; part of the room version (design: Protocol). */
 export const NET_VERSION = 2;
 /** Bumped whenever the binary snapshot layout (snapshot.ts) changes. */
-export const SNAPSHOT_FORMAT = 5;
+export const SNAPSHOT_FORMAT = 6;
 
 /** What a guest's game sends to the host during a run (D16). */
 export type GuestMessage =

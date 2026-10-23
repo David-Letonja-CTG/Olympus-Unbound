@@ -1,3 +1,4 @@
+import type { DirectorReport } from '../chaos/director';
 import { ContentIndex } from '../data/content-index';
 import { RealmDefinition } from '../data/types';
 import { ArenaData } from '../maps/generate-arena';
@@ -21,6 +22,8 @@ export interface DriverSnapshot {
   readonly players: number;
   readonly party: readonly { readonly x: number; readonly y: number; readonly alive: boolean }[];
   readonly depth: number;
+  /** The Director of Chaos's report (local runs only; spec: director-of-chaos / debugging). */
+  readonly director?: DirectorReport;
 }
 
 /**
@@ -248,6 +251,7 @@ export class LocalDriver implements RunDriver {
       players: state.players.filter((pl) => !pl.left).length,
       party: state.players.map((pl) => ({ x: pl.x, y: pl.y, alive: pl.alive })),
       depth: state.depth,
+      director: this.sim.directorReport(),
     };
   }
 

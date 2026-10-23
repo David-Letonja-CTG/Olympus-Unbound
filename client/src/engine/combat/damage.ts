@@ -118,6 +118,7 @@ export function killEnemy(state: RunState, enemy: Enemy): void {
   enemy.dead = true;
   enemy.health = 0;
   state.kills++;
+  if (enemy.elite) state.eliteKills++;
   state.emit({
     type: 'kill',
     x: enemy.x,
@@ -159,6 +160,7 @@ export function damagePlayer(state: RunState, player: Player, damage: number): v
   if (!player.alive || player.invulnerable > 0 || state.godMode) return;
   const amount = Math.max(1, damage - player.stats.armor);
   player.health -= amount;
+  state.damageTaken += amount;
   player.hurtFlash = 0.25;
   player.invulnerable = state.balance.player.invulnerableAfterHit;
   state.emit({ type: 'playerHurt', playerId: player.id, amount, x: player.x, y: player.y });
