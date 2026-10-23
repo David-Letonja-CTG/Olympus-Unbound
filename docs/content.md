@@ -145,18 +145,21 @@ Same autopilot probe: Poseidon first ended runs earlier than Zeus (two at 02:11)
 
 Autopilot probe (6 seeds; adding her spear to the pool changes everyone's first offers, so gods are compared within one probe): Athena first ended runs earlier than Zeus (mean 173 s vs 217 s), so she gained 10 health (125 → 135) and her spear 4 damage (22 → 26); now mean 185 s, median ≈187 s against Zeus's median ≈172 s.
 
-## Balance notes (2026-10-11, endless runs)
+## Balance notes (2026-10-23, endless runs)
 
-`balance.endless`, per realm cleared:
+`balance.endless`, per realm cleared (health and damage compound):
 
 | Factor | Value |
 |---|---|
-| Enemy health | +60% |
-| Enemy damage | +25% |
-| Spawn rate | +12% |
-| Enemies alive at once | +12% |
-| Boss health | +70% |
-| Boss attack damage | +25% |
+| Enemy health | ×3 |
+| Enemy damage | ×1.5 |
+| Spawn rate | +25% |
+| Enemies alive at once | +25% |
+| Boss health | ×2.4 |
+| Boss attack damage | ×1.5 |
+| Spawn timeline head start | 120 s, at most 180 s |
+
+The owner found realm 2 far too easy. With the old +60% a fresh realm-2 enemy had less health than the last of realm 1 (its own ×1.84 growth). The headless bot (god mode) took 3000–4000 damage a minute at the end of realm 1 and 0–150 in realm 2. With these values it takes 30–1000 in realm 2 and 150–6500 in realm 3. Health growth must stay ≥ every realm's `scaling.max` (content validation).
 
 `balance.revive`: reach 70, 3 s, 50% health, 2 s invulnerable. Mount Olympus's `rewards.bossGold` is the old victory bonus, 250.
 

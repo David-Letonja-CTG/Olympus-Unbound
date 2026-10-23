@@ -153,11 +153,12 @@ A run's `party` lists 1–4 seats (god, name, the player's own permanent upgrade
 |---|---|
 | Realm order | content order from the starting realm, wrapping (`realmAt`) |
 | Arena seed | the run's seed in the first realm, then `realmSeed(seed, depth)` |
-| Realm time | timeline, events, boss time and per-minute scaling restart in every realm; the run clock (`time`) does not |
+| Realm time | timeline, events, boss time and per-minute scaling restart in every realm (spawn phases with the head start); the run clock (`time`) does not |
 | Boss defeated | `realm.rewards.bossGold` added to the run's gold; a gate opens where the boss fell |
 | Gate | radius 70; travels after a living god has stood in it for 2 s in a row, or 60 s after opening |
 | Travel | pickups gathered (quietly), enemies/projectiles/hazards cleared, fallen gods (not left) raised at 50%, party placed on the plaza, new director |
-| Depth `d` (realms cleared) | enemy health ×(1 + 0.6·d), damage ×(1 + 0.25·d), spawn rate and enemies alive ×(1 + 0.12·d), boss health ×(1 + 0.7·d), boss attack damage ×(1 + 0.25·d) (`balance.endless`) |
+| Depth `d` (realms cleared) | enemy health ×3^d, damage ×1.5^d, spawn rate and enemies alive ×(1 + 0.25·d), boss health ×2.4^d, boss attack damage ×1.5^d (`balance.endless`) |
+| Head start | spawn phases are read at realm time + min(180, 120·d) s; events, the boss time, the merchant and per-minute scaling keep realm time |
 
 ## Rooms — `engine/net/` (D16)
 

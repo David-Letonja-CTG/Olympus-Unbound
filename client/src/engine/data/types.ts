@@ -636,14 +636,21 @@ export interface BalanceConfig {
     readonly maxAlivePerPlayer: number;
     readonly bossHealthPerPlayer: number;
   };
-  /** Each realm cleared adds these fractions (spec: endless-run / difficulty by depth). */
+  /**
+   * Each realm cleared multiplies health and damage by these growths (compounding) and adds these fractions of spawn
+   * rate and room; later realms start their spawn phases further in (spec: endless-run / difficulty by depth).
+   */
   readonly endless: {
-    readonly enemyHealthPerRealm: number;
-    readonly enemyDamagePerRealm: number;
+    /** At least every realm's `scaling.max`, so a new realm never starts weaker than the last ended. */
+    readonly enemyHealthGrowth: number;
+    readonly enemyDamageGrowth: number;
+    readonly bossHealthGrowth: number;
+    readonly bossDamageGrowth: number;
     readonly spawnRatePerRealm: number;
     readonly maxAlivePerRealm: number;
-    readonly bossHealthPerRealm: number;
-    readonly bossDamagePerRealm: number;
+    /** Seconds into its spawn timeline a realm starts, per realm cleared, up to `maxHeadStart`. */
+    readonly headStartPerRealm: number;
+    readonly maxHeadStart: number;
   };
   /** Sprinting and dashing (spec: player-control / stamina, sprint and dash). */
   readonly stamina: StaminaBalance;
