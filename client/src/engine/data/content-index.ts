@@ -195,6 +195,10 @@ export function validateContent(content: GameContent): string[] {
       errors.push(`Companion "${c.id}" cannot attack with orbs (they circle the god).`);
     if (!(c.attack.base.cooldown > 0)) errors.push(`Companion "${c.id}" needs a cooldown.`);
   }
+  // A new realm never starts weaker than the last ended (spec: endless-run / difficulty by depth).
+  for (const realm of content.realms)
+    if (content.balance.endless.enemyHealthGrowth < realm.scaling.max)
+      errors.push(`Realm "${realm.id}" grows past the health growth per realm cleared.`);
   for (const quest of content.dailyQuests)
     if (quest.goal.everyGod) errors.push(`Daily quest "${quest.id}" cannot ask for every god.`);
 

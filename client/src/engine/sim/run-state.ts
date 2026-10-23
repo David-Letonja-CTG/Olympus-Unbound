@@ -358,13 +358,19 @@ export class RunState implements WorldFrame {
     const e = this.balance.endless;
     const d = this.depth;
     return {
-      enemyHealth: 1 + e.enemyHealthPerRealm * d,
-      enemyDamage: 1 + e.enemyDamagePerRealm * d,
+      enemyHealth: e.enemyHealthGrowth ** d,
+      enemyDamage: e.enemyDamageGrowth ** d,
       spawnRate: 1 + e.spawnRatePerRealm * d,
       maxAlive: 1 + e.maxAlivePerRealm * d,
-      bossHealth: 1 + e.bossHealthPerRealm * d,
-      bossDamage: 1 + e.bossDamagePerRealm * d,
+      bossHealth: e.bossHealthGrowth ** d,
+      bossDamage: e.bossDamageGrowth ** d,
     };
+  }
+
+  /** Seconds into its spawn timeline the current realm reads its phases (spec: endless-run / difficulty by depth). */
+  headStart(): number {
+    const e = this.balance.endless;
+    return Math.min(e.maxHeadStart, e.headStartPerRealm * this.depth);
   }
 
   /** Swaps in the next realm and its arena; the simulation clears and places everything (spec: endless-run). */

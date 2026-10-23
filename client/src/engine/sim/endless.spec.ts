@@ -121,16 +121,51 @@ describe('endless runs (spec: endless-run)', () => {
     const first = s.state.spawnEnemy(def, 100, 100)?.maxHealth ?? 0;
     s.debug({ type: 'travel' });
     const second = s.state.spawnEnemy(def, 100, 100)?.maxHealth ?? 0;
-    const per = s.state.balance.endless.enemyHealthPerRealm;
-    expect(second / first).toBeCloseTo(1 + per);
+    const growth = s.state.balance.endless;
+    expect(second / first).toBeCloseTo(growth.enemyHealthGrowth);
     const bossHealth = (depth: number) => {
       const t = sim();
       for (let i = 0; i < depth; i++) t.debug({ type: 'travel' });
       return spawnBoss(t.state)?.maxHealth ?? 0;
     };
-    expect(bossHealth(2) / bossHealth(0)).toBeCloseTo(
-      1 + 2 * s.state.balance.endless.bossHealthPerRealm,
-    );
+    expect(bossHealth(2) / bossHealth(0)).toBeCloseTo(growth.bossHealthGrowth ** 2);
+  });
+
+  it('deals more damage in every realm, compounding', () => {
+    const s = sim();
+    const def = s.state.index.enemy('satyr');
+    const first = s.state.spawnEnemy(def, 100, 100)?.damage ?? 0;
+    s.debug({ type: 'travel' });
+    s.debug({ type: 'travel' });
+    const third = s.state.spawnEnemy(def, 100, 100)?.damage ?? 0;
+    expect(third / first).toBeCloseTo(s.state.balance.endless.enemyDamageGrowth ** 2);
+  });
+
+  it('never starts a realm weaker than the last one ended', () => {
+    const s = sim();
+    const def = s.state.index.enemy('satyr');
+    s.state.realmTime = 60 * 60; // the first realm's growth at its cap
+    const last = s.state.spawnEnemy(def, 100, 100)?.maxHealth ?? 0;
+    s.debug({ type: 'travel' });
+    const arrival = s.state.spawnEnemy(def, 100, 100)?.maxHealth ?? 0;
+    expect(arrival).toBeGreaterThanOrEqual(last);
+  });
+
+  it('opens later realms further into their spawn timeline', () => {
+    const content = twoRealms();
+    const timeline = [
+      { from: 0, rate: 0, maxAlive: 0, enemies: [{ id: 'satyr', weight: 1 }] },
+      { from: 90, rate: 30, maxAlive: 5, enemies: [{ id: 'harpy', weight: 1 }] },
+    ];
+    const realms = content.realms.map((r) => ({ ...r, timeline }));
+    const s = sim({ ...content, realms });
+    const harpies = () => s.state.enemies.filter((e) => !e.dead && e.def.id === 'harpy').length;
+    steps(s, 1);
+    expect(harpies()).toBe(0);
+    s.debug({ type: 'travel' });
+    steps(s, 1);
+    expect(s.state.realmTime).toBeLessThan(2);
+    expect(harpies()).toBeGreaterThan(0);
   });
 
   it('raises fallen gods in the next realm, but not those who left', () => {
