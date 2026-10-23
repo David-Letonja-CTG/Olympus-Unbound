@@ -355,6 +355,8 @@ export interface Pickup {
   y: number;
   value: number;
   attracted: boolean;
+  /** Seconds since an instant blessing called it: it flies fast to the nearest god from anywhere (spec: run-progression). */
+  calledFor?: number;
   dead: boolean;
 }
 
@@ -370,6 +372,8 @@ export type UpgradeKind =
   | 'skill'
   | 'heal'
   | 'gold'
+  /** An instant blessing, used at once (spec: run-progression / instant blessings). */
+  | 'instant'
   /** A merchant's ware, and leaving the shop (spec: merchant / the shop). */
   | 'ware'
   | 'leave';
@@ -503,6 +507,8 @@ export type SimEvent =
   /** `choiceId`: which choice was answered; a later one of the same player may already be open (D16). */
   | { type: 'choiceResolved'; offer: UpgradeOffer; playerId: number; choiceId: number }
   | { type: 'synergy'; id: string; name: string }
+  /** An instant blessing called `count` pickups to the god at `x`, `y` (spec: run-progression). */
+  | { type: 'gathered'; x: number; y: number; count: number }
   | { type: 'announcement'; text: string; kind: AnnouncementKind }
   | { type: 'bossSpawned'; bossId: string; name: string }
   | { type: 'bossAttack'; attack: string; kind: BossAttack['type'] }

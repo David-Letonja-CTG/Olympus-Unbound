@@ -21,6 +21,7 @@ const KIND_LABEL: Record<UpgradeOffer['kind'], string> = {
   skill: 'Skill',
   heal: 'Blessing',
   gold: 'Blessing',
+  instant: 'Blessing',
   ware: 'For sale',
   leave: 'Leave',
 };

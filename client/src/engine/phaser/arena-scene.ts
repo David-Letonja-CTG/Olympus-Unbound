@@ -339,6 +339,9 @@ export class ArenaScene extends Phaser.Scene {
       case 'synergy':
         sound.play('synergy');
         return;
+      case 'gathered':
+        sound.play('gather');
+        return;
       case 'announcement':
         if (event.kind === 'elite') sound.play('elite');
         emit({ type: 'announcement', text: event.text, kind: event.kind });

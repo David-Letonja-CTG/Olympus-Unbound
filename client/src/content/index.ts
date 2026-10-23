@@ -8,7 +8,7 @@ import { INTRO } from './cutscenes/intro';
 import { BOSSES } from './bosses';
 import { ENEMIES } from './enemies';
 import { GODS } from './gods';
-import { ARMOUR, RELICS, SKILLS, SYNERGIES } from './items';
+import { ARMOUR, INSTANTS, RELICS, SKILLS, SYNERGIES } from './items';
 import { REALMS } from './realms';
 import { WEAPONS } from './weapons';
 
@@ -118,6 +118,7 @@ export const CONTENT: GameContent = {
   relics: RELICS,
   skills: SKILLS,
   synergies: SYNERGIES,
+  instants: INSTANTS,
   enemies: ENEMIES,
   bosses: BOSSES,
   realms: REALMS,

@@ -54,6 +54,7 @@ export type SoundCue =
   | 'levelUp'
   | 'choose'
   | 'synergy'
+  | 'gather'
   | 'elite'
   | 'gate'
   | 'realm'
@@ -457,6 +458,18 @@ export const CUES: Record<SoundCue, Cue> = {
       note(587, 0, 0.3, 0.06),
       note(880, 0.1, 0.3, 0.06),
       note(1175, 0.2, 0.6, 0.06, 'sine'),
+    ],
+  },
+  // Call of Hermes: a rising rush of wind with a shimmer as the gems stream in.
+  gather: {
+    bus: 'ui',
+    reverb: 0.5,
+    vary: 0,
+    voices: [
+      n(600, 4200, 1.1, 0.05, { filter: 'bandpass' }),
+      o('sine', 440, 1760, 1.0, 0.05),
+      note(1319, 0.5, 0.5, 0.04, 'sine'),
+      note(1760, 0.7, 0.7, 0.04, 'sine'),
     ],
   },
   elite: {

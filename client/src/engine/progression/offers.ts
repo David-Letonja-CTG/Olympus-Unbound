@@ -3,6 +3,7 @@ import { wieldableBy } from '../data/content-index';
 import { Element } from '../data/types';
 import { RunState } from '../sim/run-state';
 import { Player, UpgradeOffer } from '../sim/types';
+import { instantValid } from './instants';
 
 interface Candidate {
   readonly offer: UpgradeOffer;
@@ -145,6 +146,23 @@ export function offerCandidates(state: RunState, player: Player): Candidate[] {
         level: level + 1,
         maxLevel: def.maxLevel,
         element: def.requiresElement,
+        sprite: def.visual.sprite,
+        color: def.visual.color,
+      },
+    });
+  }
+  // Instant blessings: used at once, offered again whenever they are worth it (spec: instant blessings).
+  for (const def of index.content.instants) {
+    if (!instantValid(state, def)) continue;
+    candidates.push({
+      weight: def.weight,
+      offer: {
+        kind: 'instant',
+        itemId: def.id,
+        name: def.name,
+        description: def.description,
+        level: 1,
+        maxLevel: 1,
         sprite: def.visual.sprite,
         color: def.visual.color,
       },

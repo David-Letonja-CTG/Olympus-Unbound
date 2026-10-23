@@ -11,6 +11,7 @@ import {
   GameContent,
   GodDefinition,
   Goal,
+  InstantDefinition,
   RealmDefinition,
   RelicDefinition,
   SkillDefinition,
@@ -65,6 +66,7 @@ export class ContentIndex {
   readonly enemies: ReadonlyMap<string, EnemyDefinition>;
   readonly bosses: ReadonlyMap<string, BossDefinition>;
   readonly realms: ReadonlyMap<string, RealmDefinition>;
+  readonly instants: ReadonlyMap<string, InstantDefinition>;
   readonly wares: ReadonlyMap<string, WareDefinition>;
   readonly companions: ReadonlyMap<string, CompanionDefinition>;
   readonly encounters: ReadonlyMap<string, EncounterDefinition>;
@@ -79,6 +81,7 @@ export class ContentIndex {
     this.enemies = byId([...content.enemies, ...partMonsters(content)]);
     this.bosses = byId(content.bosses);
     this.realms = byId(content.realms);
+    this.instants = byId(content.instants);
     this.wares = byId(content.wares);
     this.companions = byId(content.companions);
     this.encounters = byId(content.encounters);
@@ -125,6 +128,7 @@ export function validateContent(content: GameContent): string[] {
     ['relic', content.relics],
     ['skill', content.skills],
     ['synergy', content.synergies],
+    ['instant', content.instants],
     ['enemy', content.enemies],
     ['boss', content.bosses],
     ['realm', content.realms],

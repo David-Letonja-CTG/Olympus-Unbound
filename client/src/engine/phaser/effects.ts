@@ -150,6 +150,20 @@ export class Effects {
         });
         this.burst(this.sparks, event.x, event.y, 50, 0xffd27a);
         return;
+      case 'gathered':
+        // Call of Hermes: a ring of wind round the god as the gems are called in (spec: instant blessings).
+        this.add({
+          kind: 'burst',
+          x: event.x,
+          y: event.y,
+          radius: 320,
+          angle: 0,
+          arc: 0,
+          color: 0x7fe8d0,
+          ttl: 0.9,
+        });
+        this.burst(this.sparks, event.x, event.y, 36, 0x7fe8d0);
+        return;
       case 'playerRevived':
         this.add({
           kind: 'burst',

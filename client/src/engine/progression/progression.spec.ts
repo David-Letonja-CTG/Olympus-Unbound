@@ -220,3 +220,46 @@ describe('god arsenals (spec: run-progression / god arsenals)', () => {
     expect(newWeapons('hades')).toContain('soul_scythe');
   });
 });
+
+describe('instant blessings (spec: run-progression / instant blessings)', () => {
+  const hermes = (sim: RunSimulation) =>
+    offerCandidates(sim.state, player(sim)).find((c) => c.offer.itemId === 'call_of_hermes');
+  /** Scatters `count` one-XP gems on a ring `radius` away from the god. */
+  const scatter = (sim: RunSimulation, count: number, radius = 600) => {
+    const p = player(sim);
+    for (let i = 0; i < count; i++) {
+      const a = (i / count) * Math.PI * 2;
+      sim.state.spawnPickup('xp', p.x + Math.cos(a) * radius, p.y + Math.sin(a) * radius, 1);
+    }
+  };
+
+  it('offers Call of Hermes only with enough gems beyond the magnet', () => {
+    const sim = quietSim();
+    const min = sim.state.index.instants.get('call_of_hermes')?.minLying ?? 0;
+    scatter(sim, min - 1);
+    scatter(sim, 20, 30); // inside the magnet: these do not count
+    expect(hermes(sim)).toBeUndefined();
+    scatter(sim, 1);
+    expect(hermes(sim)?.offer.kind).toBe('instant');
+  });
+
+  it('calls every gem to the god within three seconds and adds their XP', () => {
+    const sim = quietSim();
+    sim.setView(720, 420);
+    scatter(sim, 60, 1200);
+    const offer = hermes(sim)?.offer;
+    if (!offer) throw new Error('not offered');
+    applyOffer(sim.state, player(sim), offer);
+    const progress = () => sim.state.level * 1e6 + sim.state.xp;
+    const before = progress();
+    for (let i = 0; i < Math.round(3 / STEP); i++) {
+      while (sim.phase === 'choosing') sim.choose(0);
+      sim.step(STEP, [NO_INPUT]);
+    }
+    expect(sim.state.pickups.filter((p) => !p.dead && p.kind === 'xp')).toHaveLength(0);
+    expect(progress()).toBeGreaterThan(before);
+    // Used up, not kept: with gems lying again it is offered again.
+    scatter(sim, 60);
+    expect(hermes(sim)).toBeDefined();
+  });
+});

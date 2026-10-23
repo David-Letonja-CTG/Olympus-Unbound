@@ -272,6 +272,7 @@ The Minotaur, king of the Labyrinth, with a bronze labrys (18,000 health, 380 go
 - **Relics** (up to 4): Zeus's Eye, Soul Lantern, Golden Fleece, Trident Fragment, Phoenix Feather, Eye of Horus.
 - **Skills** (stackable): Might, Swiftness, Haste, Multishot, Reach, Vitality, Bulwark, Magnetism, Wisdom of Athena, Precision, Lingering Power, Storm Caller, Forked Lightning, Fury of Flames, Titan's Strength, Shadow Pact. Element skills appear only when you wield that element.
 - **Synergies** activate automatically and are announced: **Storm**, **Tempest**, **Inferno**, **Soul Reaper**, **Divine Bulwark**, **Wrath of the Sky**, **Earthshaker** (requirements in [content.md](content.md)).
+- **Call of Hermes** (a blessing used at once): every experience gem in the realm streams to you from wherever it lies. It takes no slot and can be taken again whenever many gems lie beyond your magnet; it is only offered then.
 - When nothing is left to offer: **Ambrosia** (heal 30%) or **Tribute** (25 gold).
 
 ## The Wandering Merchant

@@ -53,6 +53,8 @@ export type DebugAction =
   /** The merchant arrives now (spec: merchant). */
   | { type: 'summonMerchant' }
   | { type: 'grantGold'; amount: number }
+  /** Scatters `count` one-XP gems in a ring beyond the first god's magnet. */
+  | { type: 'dropXp'; count: number }
   | { type: 'travel' }
   /** Switches the Director of Chaos on or off (spec: director-of-chaos / debugging). */
   | { type: 'director'; enabled: boolean }
@@ -457,6 +459,15 @@ export class RunSimulation {
       case 'grantGold':
         state.gold += action.amount;
         return;
+      case 'dropXp': {
+        const p = state.players[0];
+        for (let i = 0; i < action.count; i++) {
+          const a = (i / action.count) * Math.PI * 2;
+          const r = p.stats.magnet + 200 + (i % 7) * 60;
+          state.spawnPickup('xp', p.x + Math.cos(a) * r, p.y + Math.sin(a) * r, 1);
+        }
+        return;
+      }
       case 'summonMerchant':
         if (!state.merchant) arriveMerchant(state);
         return;

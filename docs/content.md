@@ -6,7 +6,7 @@ All game content is typed TypeScript in `client/src/content/` (decision D4). The
 |---|---|
 | `gods.ts` | gods with base stats, starting weapon, ability, passive, affinities |
 | `weapons.ts` | weapons (behavior, element, base stats, per-level deltas, effects) |
-| `items.ts` | armour, relics, skills, synergies |
+| `items.ts` | armour, relics, skills, synergies, instant blessings |
 | `enemies.ts` | enemies and bosses |
 | `realms.ts` | realms: map generation, spawn timeline, events, scaling, elites, boss, rewards |
 | `assets.ts` | external art manifest: files with licences, sprite key → frame/animation (D12) |
@@ -26,6 +26,8 @@ All game content is typed TypeScript in `client/src/content/` (decision D4). The
 **New weapon:** decide whose it is (`gods`: absent = every god; otherwise the IDs of the gods who may find it) → choose a behavior (`projectile`, `chain`, `orbit`, `nova`, `sweep`, `strike`) → add the definition with 5 level deltas, each with a `text` → add an icon (and a projectile sprite if it fires one) in `sprites.ts` → its sound: a cue in `engine/audio/sound-map.ts` (`ATTACK_SOUNDS`), made of recordings in `engine/audio/recorded.ts` (sound files listed in `content/assets.ts`) with a synthesized fallback in `sound-player.ts` → run the tests. A genuinely new way of attacking is a new behavior in `engine/weapons/behaviors.ts` with its own tests and an OpenSpec change.
 
 **New enemy:** pick a behavior (`chaser` with optional `jitter`, `ranged`, `charger`, `summoner`) → add it to `enemies.ts` → add a painter in `sprites.ts` → add it to a realm's timeline or events.
+
+**New instant blessing:** data with an `effect` (a new effect type is one rule in `INSTANT_RULES`), a `weight` and, for `gather`, `minLying`.
 
 **New relic / armour / skill / synergy:** modifiers only (see the stat list in [systems.md](systems.md)); skills may require an element or behavior; synergies list requirements (`weapon`/`armour`/`skill` with optional `minLevel`, `relic`, or `element` with `count`).
 
@@ -83,6 +85,14 @@ A `CutsceneDefinition` names its realm, arena seed, duration (the intro is 45–
 | `divine_bulwark` | `aegis_of_olympus` lv 3 + `bulwark` | +3 armour, +40 max health |
 | `wrath_of_the_sky` | `thunderbolt` lv 3 + `lightning_orb` lv 3 | attacks 10% faster, +40% crit damage |
 | `earthshaker` | `war_hammer` lv 3 + `titans_strength` lv 2 | +20% area, +50% knockback |
+
+### Instant blessings
+
+Offered at a level-up or chest like any upgrade, used at once, never kept, offered again whenever valid. One rule per effect type in `progression/instants.ts` (`INSTANT_RULES`).
+
+| ID | Effect | Offered when | Weight |
+|---|---|---|---|
+| `call_of_hermes` | `gather` `xp`: every XP gem flies to the nearest god | ≥ 40 XP gems beyond every god's magnet | 1.4 |
 
 ### Enemies of Mount Olympus
 

@@ -161,6 +161,31 @@ export interface SynergyDefinition {
   readonly visual: Visual;
 }
 
+/** What taking an instant blessing does; each type is one rule in `progression/instants.ts` (`INSTANT_RULES`). */
+export type InstantEffect = GatherEffect;
+
+/** Calls every pickup of these kinds in the realm to the gods. */
+export interface GatherEffect {
+  readonly type: 'gather';
+  readonly kinds: readonly ('xp' | 'gold')[];
+}
+
+/**
+ * A level-up offer applied once, at once, that takes no slot and may be offered again (spec: run-progression /
+ * instant blessings).
+ */
+export interface InstantDefinition {
+  readonly id: string;
+  readonly name: string;
+  readonly description: string;
+  readonly effect: InstantEffect;
+  /** Offer weight, against `offerWeights`. */
+  readonly weight: number;
+  /** A `gather` is only offered with at least this many such pickups beyond every god's magnet. */
+  readonly minLying?: number;
+  readonly visual: Visual;
+}
+
 /** Bought with gold between runs; applies to every run. */
 export interface PermanentUpgradeDefinition {
   readonly id: string;
@@ -647,6 +672,8 @@ export interface GameContent {
   readonly relics: readonly RelicDefinition[];
   readonly skills: readonly SkillDefinition[];
   readonly synergies: readonly SynergyDefinition[];
+  /** Level-up offers used at once (spec: run-progression / instant blessings). */
+  readonly instants: readonly InstantDefinition[];
   readonly enemies: readonly EnemyDefinition[];
   readonly bosses: readonly BossDefinition[];
   readonly realms: readonly RealmDefinition[];
