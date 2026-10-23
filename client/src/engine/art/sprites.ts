@@ -515,6 +515,26 @@ const symbols: Record<string, Symbol> = {
     circle(g, s * 0.4, s * 0.46, s * 0.035, '#111');
     circle(g, s * 0.6, s * 0.46, s * 0.035, '#111');
   },
+  // Hermes's staff: two serpents winding round a winged rod (spec: run-progression / call_of_hermes).
+  caduceus: (g, s, c) => {
+    line(g, [s / 2, s * 0.2, s / 2, s * 0.86], '#fff', 3);
+    poly(g, [s / 2, s * 0.24, s * 0.16, s * 0.14, s * 0.3, s * 0.3], c, '#fff', 1);
+    poly(g, [s / 2, s * 0.24, s * 0.84, s * 0.14, s * 0.7, s * 0.3], c, '#fff', 1);
+    circle(g, s / 2, s * 0.18, s * 0.06, c, '#fff', 1);
+    for (const side of [-1, 1]) {
+      g.beginPath();
+      for (let i = 0; i <= 16; i++) {
+        const t = i / 16;
+        const x = s / 2 + side * Math.sin(t * Math.PI * 3) * s * 0.16;
+        const y = s * 0.34 + t * s * 0.48;
+        if (i === 0) g.moveTo(x, y);
+        else g.lineTo(x, y);
+      }
+      g.strokeStyle = c;
+      g.lineWidth = 3;
+      g.stroke();
+    }
+  },
   crosshair: (g, s, c) => {
     circle(g, s / 2, s / 2, s * 0.26, 'rgba(0,0,0,0)', c, 3);
     line(g, [s / 2, s * 0.14, s / 2, s * 0.86], c, 2);
@@ -622,6 +642,8 @@ const ICONS: Record<string, [string, 'square' | 'round' | 'diamond' | 'hex', num
   synergy_sky: ['bolt', 'hex', 0xc9f0ff],
   synergy_earth: ['hammer', 'hex', 0xd9b27c],
   ambrosia: ['potion', 'round', 0xff7a9a],
+  // Instant blessings (spec: run-progression / instant blessings).
+  blessing_hermes: ['caduceus', 'round', 0x7fe8d0],
   icon_gold: ['coin', 'round', 0xffd34d],
   // Achievements (spec: glory / achievements): gold hexes.
   ach_hourglass: ['hourglass', 'hex', 0xe8c46a],

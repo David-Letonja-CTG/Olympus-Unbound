@@ -4,6 +4,10 @@ import { Pickup, Player } from './types';
 
 /** Speed of a pickup flying toward the player once attracted. */
 const ATTRACT_SPEED = 520;
+/** Extra speed per unit of distance of a called pickup (spec: run-progression / instant blessings). */
+const CALLED_PULL = 2;
+/** Seconds a called pickup takes to reach full speed, from a sixth of it: the stream stays visible. */
+const CALLED_RAMP = 1;
 
 /** Pickups within a player's magnet radius fly to them and are collected on contact. */
 export function updatePickups(state: RunState, dt: number): void {
@@ -22,7 +26,15 @@ export function updatePickups(state: RunState, dt: number): void {
     const magnetic = pickup.kind === 'xp' || pickup.kind === 'gold';
     if (!pickup.attracted && magnetic && dist <= player.stats.magnet) pickup.attracted = true;
     if (pickup.attracted) {
-      const step = Math.min(dist, (ATTRACT_SPEED + Math.max(0, 300 - dist)) * dt);
+      // Called gems rise slowly, then rush in from anywhere, fastest from far away: all arrive within about
+      // two seconds, as a visible stream.
+      let speed = ATTRACT_SPEED + Math.max(0, 300 - dist);
+      if (pickup.calledFor !== undefined) {
+        pickup.calledFor += dt;
+        const ramp = Math.min(1, 1 / 6 + pickup.calledFor / CALLED_RAMP);
+        speed = (ATTRACT_SPEED + CALLED_PULL * dist) * ramp;
+      }
+      const step = Math.min(dist, speed * dt);
       pickup.x += (dx / dist) * step;
       pickup.y += (dy / dist) * step;
     }

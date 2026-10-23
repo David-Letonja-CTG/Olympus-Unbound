@@ -113,7 +113,9 @@ The boss is an enemy with a `BossRuntime`: phases switch below health fractions 
 XP to next level (from L) = round(base + perLevel × (L − 1) + growth × (L − 1)²)     currently 5, 4, 0.3
 ```
 
-Excess XP carries over; each threshold crossed queues one choice. Chests queue a choice without a level. Offers: every valid candidate (weapon level below max; new weapon if < 6 weapons; armour if none, else its next level; relic if < 4; skill below max and meeting its element/behavior requirement) gets a weight (`offerWeights`), × `affinity` (1.6) when its element matches the god's affinities or a held weapon. Three distinct offers are drawn with the `offers` RNG stream; with no candidates the fallback is heal + gold.
+Excess XP carries over; each threshold crossed queues one choice. Chests queue a choice without a level. Offers: every valid candidate (weapon level below max; new weapon if < 6 weapons; armour if none, else its next level; relic if < 4; skill below max and meeting its element/behavior requirement) gets a weight (`offerWeights`), × `affinity` (1.6) when its element matches the god's affinities or a held weapon. Instant blessings join the candidates with their own `weight` while their rule says they are worth it (`call_of_hermes`: ≥ `minLying` XP gems beyond every living god's magnet); taking one runs its rule and keeps nothing. Three distinct offers are drawn with the `offers` RNG stream; with no candidates the fallback is heal + gold.
+
+Called pickups (`gather`) fly to the nearest living god at (520 + 2 × distance) units/s × a ramp from 1/6 to 1 over their first second, so they lift off visibly and gems across the realm still arrive in about 1–2 s.
 
 Synergies are checked after every change; each activates once, is announced, and adds its modifiers.
 

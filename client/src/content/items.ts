@@ -1,5 +1,6 @@
 import type {
   ArmourDefinition,
+  InstantDefinition,
   RelicDefinition,
   SkillDefinition,
   SynergyDefinition,
@@ -407,5 +408,18 @@ export const SYNERGIES: readonly SynergyDefinition[] = [
       { stat: 'knockback', percent: 0.5 },
     ],
     visual: { sprite: 'synergy_earth', color: 0xd9b27c },
+  },
+];
+
+/** Offers used at once, again whenever they are worth it (spec: run-progression / instant blessings). */
+export const INSTANTS: readonly InstantDefinition[] = [
+  {
+    id: 'call_of_hermes',
+    name: 'Call of Hermes',
+    description: 'Every experience gem in the realm flies to you.',
+    effect: { type: 'gather', kinds: ['xp'] },
+    weight: 1.4,
+    minLying: 40,
+    visual: { sprite: 'blessing_hermes', color: 0x7fe8d0 },
   },
 ];

@@ -4,6 +4,7 @@ import { heal } from '../combat/damage';
 import { resolveWeaponStats } from '../weapons/resolve';
 import { RunState } from '../sim/run-state';
 import { Loadout, Player, UpgradeOffer, WeaponInstance } from '../sim/types';
+import { applyInstant } from './instants';
 
 export function createWeapon(
   def: WeaponDefinition | AbilityDefinition,
@@ -118,6 +119,12 @@ export function applyOffer(state: RunState, player: Player, offer: UpgradeOffer)
     case 'gold':
       state.gold += state.balance.fallback.gold;
       break;
+    case 'instant': {
+      // Used at once; nothing enters the loadout (spec: run-progression / instant blessings).
+      const def = state.index.instants.get(offer.itemId);
+      if (def) applyInstant(state, player, def);
+      return;
+    }
   }
   refreshPlayer(state, player);
   evaluateSynergies(state, player);
