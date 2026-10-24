@@ -150,6 +150,20 @@ export class Effects {
         });
         this.burst(this.sparks, event.x, event.y, 50, 0xffd27a);
         return;
+      case 'fusionTaken':
+        // A burst that grows with the fusion's tier (spec: run-progression / fusion crests and fanfare).
+        this.add({
+          kind: 'burst',
+          x: event.x,
+          y: event.y,
+          radius: 140 * event.tier,
+          angle: 0,
+          arc: 0,
+          color: 0xffd98a,
+          ttl: 0.6 + 0.25 * event.tier,
+        });
+        this.burst(this.sparks, event.x, event.y, 30 * event.tier, 0xffe9a0);
+        return;
       case 'gathered':
         // Call of Hermes: a ring of wind round the god as the gems are called in (spec: instant blessings).
         this.add({

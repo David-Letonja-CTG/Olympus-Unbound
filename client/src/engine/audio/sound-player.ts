@@ -55,6 +55,7 @@ export type SoundCue =
   | 'choose'
   | 'synergy'
   | 'gather'
+  | 'apotheosis'
   | 'elite'
   | 'gate'
   | 'realm'
@@ -470,6 +471,21 @@ export const CUES: Record<SoundCue, Cue> = {
       o('sine', 440, 1760, 1.0, 0.05),
       note(1319, 0.5, 0.5, 0.04, 'sine'),
       note(1760, 0.7, 0.7, 0.04, 'sine'),
+    ],
+  },
+  // Apotheosis: a rising chord of brass-like saws over a low swell, then a long shimmer.
+  apotheosis: {
+    bus: 'ui',
+    reverb: 0.7,
+    vary: 0,
+    voices: [
+      o('sawtooth', 110, 220, 1.4, 0.05, { drive: 0.3 }),
+      note(392, 0, 0.5, 0.07, 'sawtooth'),
+      note(523, 0.2, 0.5, 0.07, 'sawtooth'),
+      note(659, 0.4, 0.6, 0.07, 'sawtooth'),
+      note(784, 0.6, 1.2, 0.08),
+      note(1568, 0.8, 1.4, 0.035, 'sine'),
+      n(3000, 9000, 1.6, 0.025, { delay: 0.7, filter: 'highpass' }),
     ],
   },
   elite: {
