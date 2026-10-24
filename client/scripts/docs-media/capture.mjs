@@ -9,6 +9,7 @@
 //   node scripts/docs-media/capture.mjs tour bosses       # only some scenes (tour: hero.gif and realms.png)
 //   DOCS_MEDIA_URL=http://localhost:4300 node scripts/docs-media/capture.mjs
 //   node scripts/docs-media/capture.mjs phone             # a run and god selection on a phone (touch, Low)
+//   node scripts/docs-media/capture.mjs build             # the build panel and Call of Hermes
 import { chromium, devices } from '@playwright/test';
 import { writeFileSync } from 'node:fs';
 import { dirname, join } from 'node:path';
@@ -583,6 +584,68 @@ const scenes = {
     await page.waitForTimeout(500);
     await page.screenshot({ path: join(here, '..', '..', 'public', 'og-image.jpg'), quality: 82 });
     await page.keyboard.up('d');
+    await page.close();
+  },
+
+  /**
+   * The build panel with the tree of fusions (build-panel.jpg), and Call of Hermes calling every gem in the realm
+   * (hermes.gif).
+   */
+  async build(browser) {
+    const decoder = await browser.newPage();
+    const page = await startRun(browser, { god: 'zeus', realm: REALMS[0] });
+    await send(page, { type: 'director', enabled: false });
+    /** Answers open choices, taking the first offer whose text matches `prefer`, else the first. */
+    const choose = async (prefer) => {
+      for (let i = 0; i < 60; i++) {
+        await page.waitForTimeout(120);
+        const offers = page.locator('[data-testid^=offer-]');
+        const count = await offers.count();
+        if (!count) return;
+        let pick = 0;
+        for (let o = 0; o < count; o++)
+          if (prefer.test(await offers.nth(o).innerText())) {
+            pick = o;
+            break;
+          }
+        await offers.nth(pick).click();
+      }
+    };
+    // A build on its way to Forge of Hephaestus: the hammer at its top, the sword one level short.
+    const forge = /Flaming Sword|War Hammer|Divine Bow|Multishot/;
+    for (let i = 0; i < 6; i++) {
+      await send(page, { type: 'grantXp', amount: 2500 });
+      await choose(forge);
+    }
+    await send(page, { type: 'skipTo', seconds: 120 });
+    await page.waitForTimeout(3000);
+    await choose(forge);
+    await page.keyboard.press('Tab');
+    await page.getByTestId('build-panel').waitFor();
+    await page.waitForTimeout(800);
+    await page.screenshot({ path: join(out, 'build-panel.jpg'), quality: 88 });
+    await page.keyboard.press('Tab');
+
+    // Gems lying all round, then a level-up until Call of Hermes is offered.
+    await send(page, { type: 'dropXp', count: 260 });
+    let hermes = -1;
+    for (let tries = 0; tries < 40 && hermes < 0; tries++) {
+      if (!(await page.locator('[data-testid=offer-0]').count())) {
+        await send(page, { type: 'grantXp', amount: 400 });
+        await page.waitForTimeout(250);
+      }
+      const offers = page.locator('[data-testid^=offer-]');
+      for (let o = 0; o < (await offers.count()); o++)
+        if ((await offers.nth(o).innerText()).includes('Call of Hermes')) hermes = o;
+      if (hermes < 0 && (await offers.count())) await offers.nth(0).click();
+      await page.waitForTimeout(120);
+    }
+    if (hermes < 0) throw new Error('Call of Hermes was never offered');
+    // Only this choice left open, so the stream is not hidden behind another.
+    await page.locator(`[data-testid=offer-${hermes}]`).click();
+    const clip = await record(page, decoder, 2200);
+    writeGif('hermes.gif', clip);
+    await decoder.close();
     await page.close();
   },
 
