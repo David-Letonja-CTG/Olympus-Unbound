@@ -367,7 +367,7 @@ export class GuestDriver implements RunDriver {
       realmReached: this.run.realmId,
       players: partyOf(this.run).length,
       bots: partyOf(this.run).filter((s) => s.bot).length,
-      loadout: { weapons: [], relics: [], skills: [], synergies: [] },
+      loadout: { weapons: [], relics: [], skills: [], synergies: [], fusions: [] },
     };
     return {
       ...base,

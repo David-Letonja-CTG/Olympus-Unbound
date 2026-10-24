@@ -275,6 +275,7 @@ The Minotaur, king of the Labyrinth, with a bronze labrys (18,000 health, 380 go
 - **Call of Hermes** (a blessing used at once): every experience gem in the realm streams to you from wherever it lies. It takes no slot and can be taken again whenever many gems lie beyond your magnet; it is only offered then.
 - **Fusions** combine upgrades at their top level into a stronger one, in a tree of three tiers. *Forge of Hephaestus* (Flaming Sword and War Hammer at level 6), *Artemis's Volley*, *Hide of the Titans*, *Sandals of Hermes*, *Oracle of Delphi* and *Grace of Chronos* are open to every god; *Sky Father*, *Lord of the Dead*, *Wrath of the Deep* and *Strategos* need a god's own weapons. Two tier I fusions at their top open a tier II one (*Wrath of the Twelve*, *Ichor of the Immortals*, *Eyes of Olympus*), and all three crown the tree with **Apotheosis**. A fusion joins the level-up offers once its requirements are met; an offer that counts toward one says so ("Toward Forge of Hephaestus").
 - **Ascensions** (Strength, Vigour, Speed, Fortune) have no top level and fill the choice once fewer than three other upgrades are left, so every level-up offers three real choices until the end.
+- The **codex** (Progression) remembers every fusion you have ended a run with, by tier; **Fusion Smith** (3 fusions in one run, 300 gold) and **Apotheosis** (reach the crown, 1,000 gold) are achievements.
 - **The build panel** (Tab, a gamepad's Back/Select, or the hexagon button on a phone) shows your whole build and the tree of every fusion and synergy your god can reach: each requirement ticked or with the level still needed, and which fusions are ready. The fight goes on behind it, and it opens over a level-up choice too.
 - Content without ascensions falls back to **Ambrosia** (heal 30%) or **Tribute** (25 gold).
 
@@ -332,7 +333,7 @@ A game master watches every run: how hurt the gods are, how hard they are presse
 
 Every run earns a **score**: kills + 2 per second survived + 10 per level + 1,000 per realm cleared. The **Hall of Glory** (main menu → Glory) keeps the ten best solo runs and, apart from them, the ten best co-op runs, runs with allies and quick runs, with a filter per god.
 
-**Achievements** (18) pay gold once: clear a realm, clear 3 or 5 in one run, survive 10 or 20 minutes, slay 1,000 in a run or 1,000 / 10,000 over all runs, reach level 30, two synergies at once, 1,500 gold in a run, 25 runs, two realms with each god, a realm with every god, a realm in co-op.
+**Achievements** (20) pay gold once: clear a realm, clear 3 or 5 in one run, survive 10 or 20 minutes, slay 1,000 in a run or 1,000 / 10,000 over all runs, reach level 30, two synergies at once, 1,500 gold in a run, 25 runs, two realms with each god, a realm with every god, a realm in co-op, three fusions in one run, Apotheosis.
 
 **Daily quests**: three a day, the same for everyone on that date, at most one for a particular god; progress adds up over the day's runs (or counts the day's best run), each pays gold once, and new ones come at local midnight. The run summary lists the score, a new high score, and achievements and quests completed with their gold.
 

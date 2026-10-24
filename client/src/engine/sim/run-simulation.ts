@@ -412,6 +412,11 @@ export class RunSimulation {
         relics: loadout.relics.map((r) => r.id),
         skills: [...loadout.skills].map(([id, level]) => ({ id, level })),
         synergies: loadout.synergies.map((s) => s.id),
+        fusions: [...loadout.fusions].map(([id, level]) => ({
+          id,
+          level,
+          tier: state.index.fusions.get(id)?.tier ?? 1,
+        })),
       },
     };
   }

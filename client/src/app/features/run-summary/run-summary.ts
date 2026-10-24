@@ -341,13 +341,15 @@ export class RunSummary {
     if (!run) return undefined;
     const { result, rewards } = run;
     const idx = this.index;
-    const item = (kind: 'weapons' | 'armour' | 'relics', id: string) => {
+    const item = (kind: 'weapons' | 'armour' | 'relics' | 'fusions', id: string) => {
       const def =
         kind === 'weapons'
           ? idx.weapons.get(id)
           : kind === 'armour'
             ? idx.armour.get(id)
-            : idx.relics.get(id);
+            : kind === 'fusions'
+              ? idx.fusions.get(id)
+              : idx.relics.get(id);
       return { id, name: def?.name ?? id, sprite: def?.visual.sprite ?? id };
     };
     return {

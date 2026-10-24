@@ -24,7 +24,7 @@ import {
 } from './save-records';
 
 /** Current save format version (D8). Bump it and add a migration when the shape changes. */
-export const SAVE_VERSION = 9;
+export const SAVE_VERSION = 10;
 /** Longest player name (spec: meta-progression / save format version 9; rooms use the same limit). */
 export const MAX_PLAYER_NAME = 16;
 /** How many processed run IDs are remembered to keep rewards idempotent. */
@@ -42,6 +42,8 @@ export interface Discovered {
   readonly weapons: readonly string[];
   readonly armour: readonly string[];
   readonly relics: readonly string[];
+  /** Fusions ever held at the end of a run (spec: meta-progression / save format version 10). */
+  readonly fusions: readonly string[];
 }
 
 /** Everything that persists between runs. Plain data only — never live game objects (spec: meta-progression). */
@@ -76,7 +78,7 @@ export function freshSave(quality: GraphicsQuality = DEFAULT_SETTINGS.quality): 
     version: SAVE_VERSION,
     gold: 0,
     permanentUpgrades: {},
-    discovered: { weapons: [], armour: [], relics: [] },
+    discovered: { weapons: [], armour: [], relics: [], fusions: [] },
     stats: { runs: 0, victories: 0, kills: 0, bestTimeSeconds: 0 },
     settings: { ...DEFAULT_SETTINGS, quality },
     processedRunIds: [],
@@ -129,6 +131,8 @@ const MIGRATIONS: Record<number, (save: Raw) => Raw> = {
   7: (save) => ({ ...save, version: 8 }),
   // v9 remembers the player's name (spec: meta-progression / save format version 9), none yet.
   8: (save) => ({ ...save, version: 9, playerName: '' }),
+  // v10 remembers fusions in the codex (spec: meta-progression / save format version 10), none yet.
+  9: (save) => ({ ...save, version: 10 }),
 };
 
 /**
@@ -185,6 +189,7 @@ export function parseSave(
       weapons: ids(discovered['weapons'], new Set(content.weapons.map((w) => w.id))),
       armour: ids(discovered['armour'], new Set(content.armour.map((a) => a.id))),
       relics: ids(discovered['relics'], new Set(content.relics.map((r) => r.id))),
+      fusions: ids(discovered['fusions'], new Set(content.fusions.map((f) => f.id))),
     },
     stats: {
       runs: count(stats['runs']),

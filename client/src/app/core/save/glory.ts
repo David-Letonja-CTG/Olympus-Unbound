@@ -91,6 +91,10 @@ export function measure(goal: Goal, r: RunResult): number | undefined {
       return 1;
     case 'synergies':
       return r.loadout.synergies.length;
+    case 'fusions':
+      return r.loadout.fusions.length;
+    case 'fusionTier':
+      return Math.max(0, ...r.loadout.fusions.map((f) => f.tier));
     default:
       return r[goal.measure];
   }

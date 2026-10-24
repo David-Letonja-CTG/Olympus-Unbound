@@ -235,6 +235,19 @@ describe('progression screen', () => {
     expect(q(h, '[data-testid=codex-golden_fleece]')?.getAttribute('data-known')).toBe('true');
     expect(q(h, '[data-testid=codex-war_hammer]')).toBeNull();
   });
+
+  it('shows discovered and undiscovered fusions (spec: meta-progression / codex and statistics)', async () => {
+    const h = await open('/progression', {
+      version: 10,
+      discovered: { fusions: ['forge_of_hephaestus'] },
+    });
+    q<HTMLButtonElement>(h, '[data-testid=codex-tab-fusions]')?.click();
+    h.detectChanges();
+    expect(q(h, '[data-testid=codex-forge_of_hephaestus]')?.getAttribute('data-known')).toBe(
+      'true',
+    );
+    expect(q(h, '[data-testid=codex-apotheosis]')?.getAttribute('data-known')).toBe('false');
+  });
 });
 
 describe('settings screen', () => {
@@ -388,7 +401,7 @@ describe('run summary sharing (spec: daily-trial / sharing a run)', () => {
         realmReached: 'mount_olympus',
         players: 1,
         bots: 0,
-        loadout: { weapons: [], relics: [], skills: [], synergies: [] },
+        loadout: { weapons: [], relics: [], skills: [], synergies: [], fusions: [] },
       };
       const rewards = TestBed.inject(Progression).recordRun(result);
       TestBed.inject(RunSetup).lastRun.set({ result, rewards });
