@@ -71,24 +71,6 @@ describe('level-up offers', () => {
     expect(kinds.some((o) => o.kind === 'weaponLevel' && o.itemId === 'thunder_spear')).toBe(false);
   });
 
-  it('offers healing and gold when nothing else is valid', () => {
-    const sim = quietSim();
-    const content = sim.state.index.content;
-    const p = player(sim);
-    p.loadout.weapons.length = 0;
-    for (const def of content.weapons.slice(0, 6)) {
-      const w = createWeapon(def, p.stats);
-      w.level = def.levels.length + 1;
-      p.loadout.weapons.push(w);
-    }
-    const armour = content.armour[0];
-    p.loadout.armour = { def: armour, level: armour.levels.length };
-    p.loadout.relics = content.relics.slice(0, 4);
-    for (const skill of content.skills) p.loadout.skills.set(skill.id, skill.maxLevel);
-    const offers = generateOffers(sim.state, p, new Rng(1));
-    expect(offers.map((o) => o.kind)).toEqual(['heal', 'gold']);
-  });
-
   it('wears one armour: others are not offered, levelling it is', () => {
     const sim = quietSim();
     const p = player(sim);

@@ -164,6 +164,22 @@ test('pausing stops time; abandoning needs a confirmation', async ({ page }) => 
   await expect(page.getByTestId('summary-outcome')).toHaveText('Run abandoned');
 });
 
+test('Tab opens the build panel while the run goes on (spec: hud / the build panel)', async ({
+  page,
+}) => {
+  await startRun(page, '4242');
+  await debug(page, { type: 'godMode', enabled: true });
+  await page.keyboard.press('Tab');
+  const panel = page.getByTestId('build-panel');
+  await expect(panel).toBeVisible();
+  await expect(panel).toContainText('Fusions');
+  await expect(panel.getByTestId('combo-forge_of_hephaestus')).toContainText('Locked');
+  const open = (await inspect(page))?.time ?? 0;
+  await expect.poll(async () => (await inspect(page))?.time ?? 0).toBeGreaterThan(open + 0.5);
+  await page.keyboard.press('Tab');
+  await expect(panel).toHaveCount(0);
+});
+
 test('permanent upgrades are bought with gold and kept', async ({ page }) => {
   await page.goto('/');
   await page.evaluate(() =>

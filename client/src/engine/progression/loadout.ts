@@ -1,5 +1,5 @@
 import { computeStats, Modifier, scaleModifiers, StatBlock } from '../core/stats';
-import { AbilityDefinition, SynergyRequirement, WeaponDefinition } from '../data/types';
+import { AbilityDefinition, FusionRequirement, WeaponDefinition } from '../data/types';
 import { heal } from '../combat/damage';
 import { resolveWeaponStats } from '../weapons/resolve';
 import { RunState } from '../sim/run-state';
@@ -37,6 +37,15 @@ export function collectModifiers(state: RunState, player: Player): Modifier[] {
     if (skill) mods.push(...scaleModifiers(skill.modifiers, level));
   }
   for (const synergy of loadout.synergies) mods.push(...synergy.modifiers);
+  // Fusions and ascensions stack per level, like skills (spec: run-progression / fusions, ascensions).
+  for (const [id, level] of loadout.fusions) {
+    const fusion = state.index.fusions.get(id);
+    if (fusion) mods.push(...scaleModifiers(fusion.modifiers, level));
+  }
+  for (const [id, level] of loadout.ascensions) {
+    const ascension = state.index.ascensions.get(id);
+    if (ascension) mods.push(...scaleModifiers(ascension.modifiers, level));
+  }
   // Blessings while they last (spec: director-of-chaos / divine blessings).
   for (const boon of player.boons) mods.push(...boon.def.modifiers);
   return mods;
@@ -55,7 +64,7 @@ export function refreshPlayer(state: RunState, player: Player): void {
   }
 }
 
-export function meetsRequirement(loadout: Loadout, r: SynergyRequirement): boolean {
+export function meetsRequirement(loadout: Loadout, r: FusionRequirement): boolean {
   switch (r.type) {
     case 'weapon':
       return loadout.weapons.some((w) => w.def.id === r.id && w.level >= (r.minLevel ?? 1));
@@ -67,6 +76,8 @@ export function meetsRequirement(loadout: Loadout, r: SynergyRequirement): boole
       return (loadout.skills.get(r.id) ?? 0) >= (r.minLevel ?? 1);
     case 'element':
       return loadout.weapons.filter((w) => w.def.element === r.element).length >= r.count;
+    case 'fusion':
+      return (loadout.fusions.get(r.id) ?? 0) >= (r.minLevel ?? 1);
   }
 }
 
@@ -112,6 +123,21 @@ export function applyOffer(state: RunState, player: Player, offer: UpgradeOffer)
     }
     case 'skill':
       loadout.skills.set(offer.itemId, (loadout.skills.get(offer.itemId) ?? 0) + 1);
+      break;
+    case 'fusion': {
+      const def = state.index.fusions.get(offer.itemId);
+      const level = loadout.fusions.get(offer.itemId) ?? 0;
+      if (!def || level >= def.maxLevel) break;
+      loadout.fusions.set(def.id, level + 1);
+      // The first level is announced like a synergy (spec: run-progression / fusions).
+      if (level === 0) {
+        state.emit({ type: 'synergy', id: def.id, name: def.name });
+        state.emit({ type: 'announcement', text: `Fusion: ${def.name}!`, kind: 'synergy' });
+      }
+      break;
+    }
+    case 'ascension':
+      loadout.ascensions.set(offer.itemId, (loadout.ascensions.get(offer.itemId) ?? 0) + 1);
       break;
     case 'heal':
       heal(state, player, player.stats.maxHealth * state.balance.fallback.healFraction);

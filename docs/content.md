@@ -6,7 +6,7 @@ All game content is typed TypeScript in `client/src/content/` (decision D4). The
 |---|---|
 | `gods.ts` | gods with base stats, starting weapon, ability, passive, affinities |
 | `weapons.ts` | weapons (behavior, element, base stats, per-level deltas, effects) |
-| `items.ts` | armour, relics, skills, synergies, instant blessings |
+| `items.ts` | armour, relics, skills, synergies, fusions, ascensions, instant blessings |
 | `enemies.ts` | enemies and bosses |
 | `realms.ts` | realms: map generation, spawn timeline, events, scaling, elites, boss, rewards |
 | `assets.ts` | external art manifest: files with licences, sprite key → frame/animation (D12) |
@@ -85,6 +85,33 @@ A `CutsceneDefinition` names its realm, arena seed, duration (the intro is 45–
 | `divine_bulwark` | `aegis_of_olympus` lv 3 + `bulwark` | +3 armour, +40 max health |
 | `wrath_of_the_sky` | `thunderbolt` lv 3 + `lightning_orb` lv 3 | attacks 10% faster, +40% crit damage |
 | `earthshaker` | `war_hammer` lv 3 + `titans_strength` lv 2 | +20% area, +50% knockback |
+
+### Fusions
+
+Offered once every requirement is met; modifiers stack per level. Tier II needs tier I at its top, tier III all of tier II.
+
+| ID | Tier | Requires | Per level | Levels |
+|---|---|---|---|---|
+| `hunters_volley` | I | `divine_bow` 6 + `multishot` 2 | +1 pierce, +10% projectile speed, +10% physical | 3 |
+| `forge_of_hephaestus` | I | `flaming_sword` 6 + `war_hammer` 6 | +15% fire, +15% physical, +5% area | 3 |
+| `titans_hide` | I | `vitality` 4 + `bulwark` 3 | +25 health, +1 armour, +0.3 regen | 3 |
+| `sandals_of_hermes` | I | `swiftness` 3 + `magnetism` 3 | +5% speed, +20% magnet, +5% XP | 3 |
+| `oracle_of_delphi` | I | `wisdom` 3 + `precision` 3 | +4% crit chance, +15% crit damage | 3 |
+| `grace_of_chronos` | I | `haste` 4 + `persistence` 3 | −4% cooldown, +10% duration | 3 |
+| `sky_father` (Zeus) | I | `thunderbolt` 6 + `storm_caller` 4 | +20% lightning, −3% cooldown | 3 |
+| `lord_of_the_dead` (Hades) | I | `soul_scythe` 6 + `bident` 6 | +20% shadow, +1% lifesteal | 3 |
+| `wrath_of_the_deep` (Poseidon) | I | `trident` 6 + `thunder_spear` 6 | +12% physical, +12% lightning, +1 pierce | 3 |
+| `strategos` (Athena) | I | `spear_of_athena` 6 + `lightning_orb` 6 | +12% physical, +8% area, +1 armour | 3 |
+| `wrath_of_the_twelve` | II | `forge_of_hephaestus` 3 + `hunters_volley` 3 | +12% damage, +20% crit damage | 2 |
+| `ichor_of_the_immortals` | II | `titans_hide` 3 + `grace_of_chronos` 3 | +40 health, +0.8 regen | 2 |
+| `eyes_of_olympus` | II | `oracle_of_delphi` 3 + `sandals_of_hermes` 3 | +10% damage, +10% XP, +5% crit chance | 2 |
+| `apotheosis` | III | all three tier II at 2 | +25% damage, −5% cooldown, +10% area, +50 health | 1 |
+
+**New fusion:** data only: requirements (synergy types plus `fusion` with `minLevel`), a tier one above its highest fusion requirement, per-level modifiers. Validation checks ids, top levels and tiers.
+
+### Ascensions
+
+No top level; offered only when fewer than three other upgrades remain (weight 1 each): `ascend_might` +5% damage, `ascend_vigour` +15 health and +0.2 regen, `ascend_celerity` −2% cooldown and +2% speed, `ascend_fortune` +5% gold and XP.
 
 ### Instant blessings
 

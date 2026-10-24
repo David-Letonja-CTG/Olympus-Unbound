@@ -1,0 +1,132 @@
+import { Rng } from '../core/rng';
+import { validateContent } from '../data/content-index';
+import { CONTENT } from '../testing/content';
+import { quietContent, quietSim } from '../testing/fixtures';
+import { RunSimulation } from '../sim/run-simulation';
+import { applyOffer, createWeapon, refreshPlayer } from './loadout';
+import { generateOffers, offerCandidates } from './offers';
+
+const player = (sim: RunSimulation) => sim.state.players[0];
+const give = (sim: RunSimulation, weaponId: string, level: number) => {
+  const p = player(sim);
+  const held = p.loadout.weapons.find((w) => w.def.id === weaponId);
+  if (held) held.level = level;
+  else {
+    const w = createWeapon(sim.state.index.weapon(weaponId), p.stats);
+    w.level = level;
+    p.loadout.weapons.push(w);
+  }
+};
+const offered = (sim: RunSimulation, id: string) =>
+  offerCandidates(sim.state, player(sim)).find((c) => c.offer.itemId === id)?.offer;
+const combo = (sim: RunSimulation, id: string) => sim.hud().build.tree.find((c) => c.id === id);
+
+/** Every weapon, armour, relic and skill of the god at its top: only fusions and ascensions are left. */
+function maxEverything(sim: RunSimulation) {
+  const p = player(sim);
+  const content = sim.state.index.content;
+  p.loadout.weapons.length = 0;
+  for (const def of content.weapons.filter((w) => !w.gods || w.gods.includes(p.god.id)).slice(0, 6))
+    give(sim, def.id, def.levels.length + 1);
+  const armour = content.armour[0];
+  p.loadout.armour = { def: armour, level: armour.levels.length };
+  p.loadout.relics = content.relics.slice(0, 4);
+  for (const skill of content.skills) p.loadout.skills.set(skill.id, skill.maxLevel);
+}
+
+describe('fusions (spec: run-progression / fusions)', () => {
+  it('the content tree is valid', () => {
+    expect(validateContent(CONTENT)).toEqual([]);
+  });
+
+  it('offers Forge of Hephaestus only with both weapons at level 6', () => {
+    const sim = quietSim();
+    give(sim, 'flaming_sword', 6);
+    give(sim, 'war_hammer', 5);
+    expect(offered(sim, 'forge_of_hephaestus')).toBeUndefined();
+    expect(combo(sim, 'forge_of_hephaestus')?.state).toBe('locked');
+    const hammer = combo(sim, 'forge_of_hephaestus')?.needs.find((n) => n.name === 'War Hammer');
+    expect(hammer).toMatchObject({ have: 5, need: 6, met: false });
+
+    give(sim, 'war_hammer', 6);
+    expect(offered(sim, 'forge_of_hephaestus')?.kind).toBe('fusion');
+    expect(combo(sim, 'forge_of_hephaestus')?.state).toBe('ready');
+  });
+
+  it('raises its level per pick, stacks its bonus and stops at the top', () => {
+    const sim = quietSim();
+    give(sim, 'flaming_sword', 6);
+    give(sim, 'war_hammer', 6);
+    const p = player(sim);
+    const fire = p.stats.fireDamage;
+    for (let i = 0; i < 3; i++) {
+      const offer = offered(sim, 'forge_of_hephaestus');
+      if (!offer) throw new Error('not offered');
+      applyOffer(sim.state, p, offer);
+    }
+    expect(p.loadout.fusions.get('forge_of_hephaestus')).toBe(3);
+    expect(p.stats.fireDamage).toBeCloseTo(fire + 0.45);
+    expect(offered(sim, 'forge_of_hephaestus')).toBeUndefined();
+    expect(combo(sim, 'forge_of_hephaestus')?.state).toBe('maxed');
+  });
+
+  it('opens a higher tier only with the tier below at its top', () => {
+    const sim = quietSim();
+    const p = player(sim);
+    p.loadout.fusions.set('forge_of_hephaestus', 3);
+    p.loadout.fusions.set('hunters_volley', 2);
+    expect(offered(sim, 'wrath_of_the_twelve')).toBeUndefined();
+    p.loadout.fusions.set('hunters_volley', 3);
+    expect(offered(sim, 'wrath_of_the_twelve')?.level).toBe(1);
+  });
+
+  it('never offers nor shows another god’s fusion', () => {
+    const sim = quietSim({ godId: 'hades' });
+    expect(combo(sim, 'sky_father')).toBeUndefined();
+    expect(combo(sim, 'lord_of_the_dead')).toBeDefined();
+    const zeus = quietSim({ godId: 'zeus' });
+    expect(combo(zeus, 'sky_father')).toBeDefined();
+    expect(combo(zeus, 'lord_of_the_dead')).toBeUndefined();
+  });
+
+  it('names what an offer counts toward', () => {
+    const sim = quietSim();
+    give(sim, 'war_hammer', 2);
+    const offer = offered(sim, 'war_hammer');
+    expect(offer?.parts).toContain('Forge of Hephaestus');
+  });
+});
+
+describe('ascensions (spec: run-progression / ascensions)', () => {
+  it('are not offered while plenty of other upgrades remain', () => {
+    const sim = quietSim();
+    expect(offerCandidates(sim.state, player(sim)).some((c) => c.offer.kind === 'ascension')).toBe(
+      false,
+    );
+  });
+
+  it('fill the choice when everything else is at its top, without end', () => {
+    const sim = quietSim();
+    maxEverything(sim);
+    for (const f of sim.state.index.content.fusions)
+      player(sim).loadout.fusions.set(f.id, f.maxLevel);
+    const offers = generateOffers(sim.state, player(sim), new Rng(3));
+    expect(offers.map((o) => o.kind)).toEqual(['ascension', 'ascension', 'ascension']);
+    const p = player(sim);
+    refreshPlayer(sim.state, p);
+    const might = p.stats.might;
+    const ascend = offerCandidates(sim.state, p).find((c) => c.offer.itemId === 'ascend_might');
+    if (!ascend) throw new Error('not offered');
+    for (let i = 0; i < 50; i++) applyOffer(sim.state, p, { ...ascend.offer });
+    expect(p.loadout.ascensions.get('ascend_might')).toBe(50);
+    expect(p.stats.might).toBeCloseTo(might + 2.5);
+    expect(sim.hud().build.ascensions[0]).toMatchObject({ id: 'ascend_might', level: 50 });
+  });
+
+  it('heal and gold remain for content without ascensions', () => {
+    const sim = quietSim({ content: { ...quietContent(), ascensions: [], fusions: [] } });
+    maxEverything(sim);
+    const offers = generateOffers(sim.state, player(sim), new Rng(1));
+    expect(offers.map((o) => o.kind)).toEqual(['heal', 'gold']);
+  });
+});

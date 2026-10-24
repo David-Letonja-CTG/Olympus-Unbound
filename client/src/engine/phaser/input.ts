@@ -140,6 +140,11 @@ export class InputReader {
     return requested;
   }
 
+  /** True once per press of any gamepad's Back/Select: the build panel (spec: hud / the build panel). */
+  takeBuildRequest(): boolean {
+    return this.pads().some((pad, i) => this.edge(`build${i}`, !!pad.buttons[8]?.pressed));
+  }
+
   /** Menu inputs from any gamepad pressed since the last call (any player may answer the shown menu). */
   uiInputs(): UiInput[] {
     const result: UiInput[] = [];

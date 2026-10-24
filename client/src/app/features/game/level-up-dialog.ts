@@ -22,6 +22,8 @@ const KIND_LABEL: Record<UpgradeOffer['kind'], string> = {
   heal: 'Blessing',
   gold: 'Blessing',
   instant: 'Blessing',
+  fusion: 'Fusion',
+  ascension: 'Ascension',
   ware: 'For sale',
   leave: 'Leave',
 };
@@ -66,7 +68,7 @@ const KIND_LABEL: Record<UpgradeOffer['kind'], string> = {
                 <span class="kind">{{ kindLabel(offer) }}</span>
                 <span class="name">
                   {{ offer.name }}
-                  @if (offer.maxLevel > 1) {
+                  @if (offer.maxLevel !== 1) {
                     <span class="level">{{
                       offer.kind === 'newWeapon' || offer.kind === 'armour'
                         ? 'new'
@@ -75,6 +77,11 @@ const KIND_LABEL: Record<UpgradeOffer['kind'], string> = {
                   }
                 </span>
                 <span class="description">{{ offer.description }}</span>
+                @if (offer.parts?.length) {
+                  <span class="parts" data-testid="offer-parts"
+                    >Toward {{ offer.parts?.join(', ') }}</span
+                  >
+                }
               </span>
               @if (offer.price !== undefined) {
                 <span class="price"
@@ -201,6 +208,15 @@ const KIND_LABEL: Record<UpgradeOffer['kind'], string> = {
     .description {
       color: #d6ccb8;
       font-size: 0.92rem;
+    }
+    /* What the offer counts toward (spec: run-progression / level-up choice). */
+    .parts {
+      display: block;
+      margin-top: 2px;
+      color: var(--gold-2);
+      font-family: var(--serif);
+      font-style: italic;
+      font-size: 0.82rem;
     }
     /* The merchant's shop (spec: merchant / the shop): more offers, so smaller, and scrolling if need be. */
     .offers.shop {

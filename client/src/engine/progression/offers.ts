@@ -4,6 +4,8 @@ import { Element } from '../data/types';
 import { RunState } from '../sim/run-state';
 import { Player, UpgradeOffer } from '../sim/types';
 import { instantValid } from './instants';
+import { meetsRequirement } from './loadout';
+import { comboParts } from './tree';
 
 interface Candidate {
   readonly offer: UpgradeOffer;
@@ -151,6 +153,52 @@ export function offerCandidates(state: RunState, player: Player): Candidate[] {
       },
     });
   }
+  // Fusions once every requirement is met, up to their top level (spec: run-progression / fusions).
+  for (const def of index.content.fusions) {
+    const level = loadout.fusions.get(def.id) ?? 0;
+    if (level >= def.maxLevel) continue;
+    if (!def.requirements.every((r) => meetsRequirement(loadout, r))) continue;
+    candidates.push({
+      weight: w.fusion,
+      offer: {
+        kind: 'fusion',
+        itemId: def.id,
+        name: def.name,
+        description: def.description,
+        level: level + 1,
+        maxLevel: def.maxLevel,
+        sprite: def.visual.sprite,
+        color: def.visual.color,
+      },
+    });
+  }
+
+  // Ascensions fill the choice when few other upgrades are left, so level-ups never run out (spec: ascensions).
+  if (candidates.length < balance.offerCount) {
+    for (const def of index.content.ascensions) {
+      const level = loadout.ascensions.get(def.id) ?? 0;
+      candidates.push({
+        weight: w.ascension,
+        offer: {
+          kind: 'ascension',
+          itemId: def.id,
+          name: def.name,
+          description: def.description,
+          level: level + 1,
+          maxLevel: 0,
+          sprite: def.visual.sprite,
+          color: def.visual.color,
+        },
+      });
+    }
+  }
+
+  // What each lasting upgrade counts toward, for the hint under the offer (spec: level-up choice).
+  for (const [i, c] of candidates.entries()) {
+    const parts = comboParts(state, player, c.offer.itemId);
+    if (parts.length) candidates[i] = { ...c, offer: { ...c.offer, parts } };
+  }
+
   // Instant blessings: used at once, offered again whenever they are worth it (spec: instant blessings).
   for (const def of index.content.instants) {
     if (!instantValid(state, def)) continue;

@@ -161,6 +161,36 @@ export interface SynergyDefinition {
   readonly visual: Visual;
 }
 
+/** A fusion's requirements: a synergy's, or another fusion at a level (spec: run-progression / fusions). */
+export type FusionRequirement =
+  SynergyRequirement | { readonly type: 'fusion'; readonly id: string; readonly minLevel?: number };
+
+/**
+ * A combined upgrade, offered once every requirement is met. Tier II and III need fusions of the tier below; the
+ * tiers form the tree the build panel shows (spec: run-progression / fusions).
+ */
+export interface FusionDefinition {
+  readonly id: string;
+  readonly name: string;
+  readonly description: string;
+  readonly tier: 1 | 2 | 3;
+  readonly maxLevel: number;
+  readonly requirements: readonly FusionRequirement[];
+  /** Modifiers per level (stacked). */
+  readonly modifiers: readonly Modifier[];
+  readonly visual: Visual;
+}
+
+/** An upgrade without a top level, filling the offers once few others remain (spec: run-progression / ascensions). */
+export interface AscensionDefinition {
+  readonly id: string;
+  readonly name: string;
+  readonly description: string;
+  /** Modifiers per level (stacked). */
+  readonly modifiers: readonly Modifier[];
+  readonly visual: Visual;
+}
+
 /** What taking an instant blessing does; each type is one rule in `progression/instants.ts` (`INSTANT_RULES`). */
 export type InstantEffect = GatherEffect;
 
@@ -612,6 +642,10 @@ export interface BalanceConfig {
     readonly armourLevel: number;
     readonly relic: number;
     readonly skill: number;
+    /** A fusion whose requirements are met: high, the build has earned it. */
+    readonly fusion: number;
+    /** An ascension filling a short pool. */
+    readonly ascension: number;
     /** Multiplier for items matching the god's affinities or held weapons' elements. */
     readonly affinity: number;
   };
@@ -681,6 +715,9 @@ export interface GameContent {
   readonly synergies: readonly SynergyDefinition[];
   /** Level-up offers used at once (spec: run-progression / instant blessings). */
   readonly instants: readonly InstantDefinition[];
+  /** Combined upgrades and upgrades without end (spec: run-progression / fusions, ascensions). */
+  readonly fusions: readonly FusionDefinition[];
+  readonly ascensions: readonly AscensionDefinition[];
   readonly enemies: readonly EnemyDefinition[];
   readonly bosses: readonly BossDefinition[];
   readonly realms: readonly RealmDefinition[];
