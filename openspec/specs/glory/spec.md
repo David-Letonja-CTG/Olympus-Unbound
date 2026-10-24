@@ -32,7 +32,7 @@ The game SHALL keep the ten best scores for solo runs and, separately, the ten b
 - **THEN** only Hades's runs are listed
 
 ### Requirement: Achievements
-Achievements SHALL be content data: a name, a description, a goal and a gold reward. A goal SHALL measure kills, seconds survived, level, realms cleared, gold collected, active synergies or runs played, either within one run or added up over every run, optionally only for one god or only in solo or co-op play. A goal over every god SHALL be met when each god has met it. An achievement SHALL unlock once, when a run meets its goal, and SHALL pay its gold once. The Hall SHALL list every achievement, unlocked ones with their date, locked ones with progress where progress adds up.
+Achievements SHALL be content data: a name, a description, a goal and a gold reward. A goal SHALL measure kills, seconds survived, level, realms cleared, gold collected, active synergies, fusions held, the highest fusion tier reached, or runs played, either within one run or added up over every run, optionally only for one god or only in solo or co-op play. A goal over every god SHALL be met when each god has met it. An achievement SHALL unlock once, when a run meets its goal, and SHALL pay its gold once. The Hall SHALL list every achievement, unlocked ones with their date, locked ones with progress where progress adds up.
 
 #### Scenario: First realm
 - **WHEN** a run clears its first realm
@@ -49,6 +49,14 @@ Achievements SHALL be content data: a name, a description, a goal and a gold rew
 #### Scenario: Never twice
 - **WHEN** a later run meets an unlocked achievement's goal again
 - **THEN** no gold is paid again
+
+#### Scenario: Apotheosis
+- **WHEN** a run ends holding `apotheosis`
+- **THEN** the achievement `apotheosis` unlocks and pays its gold
+
+#### Scenario: Fusion Smith
+- **WHEN** a run ends holding three different fusions
+- **THEN** `fusion_smith` unlocks
 
 ### Requirement: Daily quests
 Each local calendar day SHALL have three different quests, chosen from the quest content by the date alone, so the same date always gives the same quests, and at most one of them SHALL ask for a particular god. Quest goals SHALL use the achievement goal vocabulary; within-run goals count the best run of the day, added-up goals add the day's runs. A completed quest SHALL pay its gold once. At local midnight the next day's quests SHALL replace them with no progress. The Hall SHALL show the day's quests with progress and the time until new quests; the main menu SHALL show how many of today's quests are done.
