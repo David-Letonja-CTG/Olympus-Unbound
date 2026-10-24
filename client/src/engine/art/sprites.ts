@@ -96,6 +96,16 @@ const projectiles: Record<string, SpriteSpec> = {
       circle(g, s * 0.62, s / 2, s * 0.09, '#f4ecff');
     },
   },
+  // A Ker's blood-fire: a dark red flame with a crimson glow (spec: realm-othrys).
+  blood_fire: {
+    size: 26,
+    paint(g, s) {
+      glow(g, s / 2, s / 2, s / 2, 0xff3030, 0.65);
+      poly(g, [s * 0.05, s / 2, s * 0.45, s * 0.3, s * 0.45, s * 0.7], 'rgba(220,40,40,0.7)');
+      circle(g, s * 0.58, s / 2, s * 0.2, '#e03a2a', 'rgba(255,190,90,0.9)', 1.5);
+      circle(g, s * 0.62, s / 2, s * 0.09, '#ffe2c0');
+    },
+  },
   // A naiad's venom: a sickly green-yellow glob with a dripping tail and a dark rim (not an XP gem's blue).
   venom_spit: {
     size: 24,

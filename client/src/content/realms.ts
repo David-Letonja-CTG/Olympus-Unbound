@@ -1142,10 +1142,241 @@ export const LABYRINTH_OF_CRETE: RealmDefinition = {
 };
 
 /** The chain of realms in order (spec: endless-run / chain of realms). */
+/**
+ * Mount Othrys: the Titans' fortress mountain, black basalt and bronze ruins under a storm-red sky, embers on the
+ * wind. Titan Soldiers, Keres, Gigantes and the Scorpions of Kampe; Kronos waits on his throne (spec: realm-othrys).
+ */
+export const MOUNT_OTHRYS: RealmDefinition = {
+  id: 'mount_othrys',
+  name: 'Mount Othrys',
+  description:
+    'The Titans’ fortress above the clouds: black basalt and bronze ruins under a storm-red sky, where Kronos waits.',
+  backgroundColor: 0x140c0c,
+  tips: [
+    'Kronos devours. When the wide ring opens round him, run or dash: it drags you toward his jaws.',
+    'The swaddled stone that Rhea gave Kronos in Zeus’s place still falls on Othrys. Watch the circles.',
+    'A Ker keeps its distance and throws blood-fire. Close in, or step aside.',
+    'The Gigantes are slow but hard as the mountain. Strike them from afar.',
+    'A Scorpion of Kampe stops before it charges. When it stops, move.',
+    'Below his last quarter, time itself bends to Kronos: he devours twice as often.',
+    'The Titans ruled before Olympus. Their walls still rise when their king calls.',
+    'Clear Othrys and the chain begins again on Mount Olympus, harder.',
+  ],
+  // Black stone under a storm sky: a cold ash-grey light and fog, so the crimson host stands out; embers on the wind.
+  atmosphere: { ambient: 0x6e6266, fog: 0x4e4648, particles: 0xff9a5a },
+  map: {
+    widthTiles: 64,
+    heightTiles: 64,
+    tileSize: 64,
+    borderTiles: 3,
+    terrain: {
+      types: [
+        { id: 'basalt', color: 0x2e2a2c },
+        { id: 'ember_ground', color: 0x3e3634 },
+        { id: 'ash', color: 0x4a4644 },
+        { id: 'bronze_floor', color: 0x8a6a3e },
+        { id: 'chasm', color: 0x0c0808 },
+      ],
+      noiseScale: 9,
+      bands: [
+        { below: 0.34, terrain: 'ember_ground' },
+        { below: 0.7, terrain: 'basalt' },
+        { below: 1.01, terrain: 'ash' },
+      ],
+      plaza: 'bronze_floor',
+      border: 'chasm',
+    },
+    spawnClearRadius: 260,
+    bossArena: { radius: 320, minDistanceFromSpawn: 1300 },
+    minObstacleGap: 46,
+    maxObstacles: 260,
+    obstacles: [
+      { id: 'column', radius: 16, visual: { sprite: 'obsidian_column', color: 0x2a2630 } },
+      {
+        id: 'broken_column',
+        radius: 18,
+        visual: { sprite: 'broken_obsidian_column', color: 0x2a2630 },
+      },
+      { id: 'statue', radius: 22, visual: { sprite: 'statue', color: 0x8a6a3e } },
+      { id: 'rock', radius: 18, visual: { sprite: 'rock', color: 0x3a3436 } },
+      { id: 'rubble', radius: 16, visual: { sprite: 'rubble', color: 0x4a4040 } },
+      { id: 'altar', radius: 26, visual: { sprite: 'black_altar', color: 0x2a2224 } },
+      { id: 'wall', radius: 20, visual: { sprite: 'underworld_wall', color: 0x2e2a2c } },
+      { id: 'dead_tree', radius: 16, visual: { sprite: 'dead_tree', color: 0x2a2020 } },
+      {
+        id: 'brazier',
+        radius: 14,
+        visual: { sprite: 'brazier', color: 0xff6a3d },
+        light: { radius: 280, color: 0xff7a40, intensity: 1, flicker: 0.35 },
+      },
+    ],
+    roads: { width: 60, wander: 110 },
+    pointsOfInterest: [
+      {
+        type: 'ring',
+        kind: 'column',
+        count: [3, 5],
+        radius: [130, 190],
+        pieces: 10,
+        missingChance: 0.35,
+        plazaTerrain: 'bronze_floor',
+      },
+      {
+        type: 'temple',
+        column: 'column',
+        fallen: 'broken_column',
+        altar: 'altar',
+        light: 'brazier',
+        size: [560, 340],
+        spacing: 80,
+        fallenChance: 0.35,
+        missingChance: 0.15,
+      },
+      {
+        type: 'walls',
+        kind: 'wall',
+        count: [5, 7],
+        length: [220, 380],
+        spacing: 66,
+        missingChance: 0.25,
+      },
+      { type: 'cluster', kind: 'rubble', count: [5, 8], size: [3, 6], spread: 90 },
+      { type: 'plazaLights', kind: 'brazier', count: 4, offset: 18 },
+    ],
+    scatter: [
+      { kind: 'rock', density: 7 },
+      { kind: 'statue', density: 0.8 },
+      { kind: 'dead_tree', density: 1.5, terrain: ['ash', 'basalt'] },
+      { kind: 'broken_column', density: 2.5, terrain: ['basalt', 'bronze_floor'] },
+    ],
+    decorations: [
+      {
+        id: 'ash_pebbles',
+        terrain: ['ash', 'basalt'],
+        density: 70,
+        visual: { sprite: 'ash_pebbles', color: 0x5a5452 },
+      },
+      {
+        id: 'bones',
+        terrain: ['ember_ground', 'ash'],
+        density: 30,
+        visual: { sprite: 'bones', color: 0xcfc6b4 },
+      },
+      {
+        id: 'dust_pebbles',
+        terrain: ['ember_ground'],
+        density: 60,
+        visual: { sprite: 'dust_pebbles', color: 0x6a3a2a },
+      },
+      {
+        id: 'marble_shards',
+        terrain: ['bronze_floor'],
+        density: 60,
+        visual: { sprite: 'marble_shards', color: 0xb08a50 },
+      },
+    ],
+  },
+  timeline: [
+    { from: 0, rate: 1.4, maxAlive: 45, enemies: [{ id: 'titan_soldier', weight: 1 }] },
+    {
+      from: 40,
+      rate: 2,
+      maxAlive: 75,
+      enemies: [
+        { id: 'titan_soldier', weight: 3 },
+        { id: 'ker', weight: 1 },
+      ],
+    },
+    {
+      from: 90,
+      rate: 2.6,
+      maxAlive: 105,
+      enemies: [
+        { id: 'titan_soldier', weight: 3 },
+        { id: 'ker', weight: 1.5 },
+        { id: 'kampe_scorpion', weight: 0.7 },
+      ],
+      groups: [{ id: 'titan_soldier', size: [6, 9], every: 18 }],
+    },
+    {
+      from: 150,
+      rate: 3.1,
+      maxAlive: 140,
+      enemies: [
+        { id: 'titan_soldier', weight: 2.5 },
+        { id: 'ker', weight: 2 },
+        { id: 'kampe_scorpion', weight: 1.2 },
+        { id: 'gigas', weight: 0.6 },
+      ],
+      groups: [{ id: 'titan_soldier', size: [8, 12], every: 16 }],
+    },
+    {
+      from: 210,
+      rate: 3.7,
+      maxAlive: 175,
+      enemies: [
+        { id: 'titan_soldier', weight: 2 },
+        { id: 'ker', weight: 2 },
+        { id: 'kampe_scorpion', weight: 1.5 },
+        { id: 'gigas', weight: 1 },
+      ],
+      groups: [{ id: 'titan_soldier', size: [10, 14], every: 15 }],
+    },
+    {
+      from: 270,
+      rate: 4.3,
+      maxAlive: 215,
+      enemies: [
+        { id: 'titan_soldier', weight: 2 },
+        { id: 'ker', weight: 2 },
+        { id: 'kampe_scorpion', weight: 2 },
+        { id: 'gigas', weight: 1.4 },
+      ],
+      groups: [{ id: 'titan_soldier', size: [10, 14], every: 14 }],
+    },
+    {
+      from: 330,
+      rate: 5,
+      maxAlive: 255,
+      enemies: [
+        { id: 'titan_soldier', weight: 1.5 },
+        { id: 'ker', weight: 2 },
+        { id: 'kampe_scorpion', weight: 2 },
+        { id: 'gigas', weight: 1.8 },
+      ],
+    },
+    {
+      from: 390,
+      rate: 5.6,
+      maxAlive: 290,
+      enemies: [
+        { id: 'titan_soldier', weight: 1.5 },
+        { id: 'ker', weight: 2 },
+        { id: 'kampe_scorpion', weight: 2 },
+        { id: 'gigas', weight: 2 },
+      ],
+    },
+  ],
+  events: [
+    { at: 60, type: 'horde', enemy: 'titan_soldier', count: 32 },
+    { at: 120, type: 'elite', enemy: 'kampe_scorpion' },
+    { at: 180, type: 'horde', enemy: 'ker', count: 18 },
+    { at: 240, type: 'elite', enemy: 'gigas' },
+    { at: 300, type: 'horde', enemy: 'titan_soldier', count: 42 },
+    { at: 330, type: 'elite', enemy: 'ker' },
+    { at: 375, type: 'elite', enemy: 'gigas' },
+  ],
+  scaling: { healthPerMinute: 0.12, damagePerMinute: 0.05, max: 2.2 },
+  elite: { health: 12, damage: 1.6, size: 1.5, gold: 15, xp: 10 },
+  boss: { id: 'kronos', at: 420, spawnRateMultiplier: 0.45 },
+  rewards: { bossGold: 380 },
+};
+
 export const REALMS: readonly RealmDefinition[] = [
   MOUNT_OLYMPUS,
   THE_UNDERWORLD,
   LERNAEAN_MARSH,
   AEGEAN_SHORE,
   LABYRINTH_OF_CRETE,
+  MOUNT_OTHRYS,
 ];

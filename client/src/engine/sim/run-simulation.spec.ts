@@ -72,11 +72,29 @@ describe('content', () => {
       'lernaean_marsh',
       'aegean_shore',
       'labyrinth_of_crete',
+      'mount_othrys',
     ]);
     const underworld = CONTENT.realms.find((r) => r.id === 'the_underworld');
     expect(underworld?.boss.id).toBe('cerberus');
     const ids = new Set(underworld?.timeline.flatMap((p) => p.enemies.map((e) => e.id)));
     expect([...ids].sort()).toEqual(['corrupted_hoplite', 'fury', 'lampad', 'orthrus', 'shade']);
+  });
+
+  it('has Mount Othrys after the Labyrinth, guarded by Kronos (spec: realm-othrys)', () => {
+    const othrys = CONTENT.realms.find((r) => r.id === 'mount_othrys');
+    expect(othrys?.boss.id).toBe('kronos');
+    const ids = new Set(othrys?.timeline.flatMap((p) => p.enemies.map((e) => e.id)));
+    expect([...ids].sort()).toEqual(['gigas', 'kampe_scorpion', 'ker', 'titan_soldier']);
+    const kronos = CONTENT.bosses.find((b) => b.id === 'kronos');
+    expect(kronos?.phases.map((ph) => ph.announcement)).toEqual([
+      'Kronos rises from his throne on Othrys!',
+      'Kronos remembers his hunger!',
+      'Time itself bends to Kronos!',
+    ]);
+    expect(kronos?.phases[1].attacks.map((a) => a.type)).toContain('devour');
+    expect(kronos?.phases[1].attacks).toContainEqual(
+      expect.objectContaining({ type: 'summon', enemy: 'titan_soldier' }),
+    );
   });
 
   it('has the Aegean Shore, guarded by Scylla (spec: realm-aegean)', () => {

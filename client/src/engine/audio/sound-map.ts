@@ -39,4 +39,5 @@ export const BOSS_ATTACK_SOUNDS: Record<BossAttack['type'], SoundCue> = {
   sweep: 'whoosh',
   lash: 'whoosh',
   walls: 'rumble',
+  devour: 'bellow',
 };

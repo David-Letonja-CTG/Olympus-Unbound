@@ -106,6 +106,7 @@ export function updateBoss(state: RunState, enemy: Enemy, target: Player, dt: nu
   }
 
   if (boss.current) {
+    if (boss.current.type === 'devour') pull(state, enemy, boss.current, dt);
     boss.windup -= dt;
     if (boss.windup <= 0) {
       const attack = boss.current;
@@ -285,6 +286,46 @@ export function placeAttack(
     case 'walls':
       startWalls(state, from, attack, damage);
       return attack.windup;
+    case 'devour':
+      // The pull ring warns only; the maw strikes (spec: boss-encounter / devour).
+      state.addHazard({
+        ...base,
+        shape: 'circle',
+        x: from.x,
+        y: from.y,
+        radius: attack.pullRadius,
+        warn: attack.windup,
+        damage: 0,
+      });
+      state.addHazard({
+        ...base,
+        shape: 'circle',
+        x: from.x,
+        y: from.y,
+        radius: attack.radius,
+        warn: attack.windup,
+        damage,
+      });
+      return attack.windup;
+  }
+}
+
+/** Draws every living god in the ring toward the boss, never past the maw's edge (spec: boss-encounter / devour). */
+function pull(
+  state: RunState,
+  enemy: Enemy,
+  attack: Extract<BossAttack, { type: 'devour' }>,
+  dt: number,
+): void {
+  for (const p of state.players) {
+    if (!p.alive) continue;
+    const dx = enemy.x - p.x;
+    const dy = enemy.y - p.y;
+    const d = Math.hypot(dx, dy);
+    if (d > attack.pullRadius || d <= attack.radius * 0.5) continue;
+    const step = Math.min(attack.pullSpeed * dt, d - attack.radius * 0.5);
+    p.x += (dx / d) * step;
+    p.y += (dy / d) * step;
   }
 }
 

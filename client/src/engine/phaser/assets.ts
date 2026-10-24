@@ -1,4 +1,5 @@
 import Phaser from 'phaser';
+import { recolorCanvas } from '../art/canvas';
 import { paintSprite, SPRITES } from '../art/sprites';
 import { AnimationName, AssetManifest, SpriteAsset, walkRate } from '../data/assets';
 
@@ -99,7 +100,31 @@ export class SpriteResolver {
     );
   }
 
+  /**
+   * The texture a sprite draws from: its sheet, or a copy multiplied by its `recolor`, made once with the same frames
+   * (spec: asset-pipeline / recoloured sheets), so status tints still show on top.
+   */
+  private textureOf(asset: SpriteAsset): string {
+    if (asset.recolor === undefined) return asset.file;
+    const key = `${asset.file}~${asset.recolor.toString(16)}`;
+    const textures = this.scene.textures;
+    if (textures.exists(key)) return key;
+    const source = textures.get(asset.file);
+    const image = source.getSourceImage() as HTMLImageElement;
+    const copy = textures.addCanvas(
+      key,
+      recolorCanvas(image, image.width, image.height, asset.recolor),
+    );
+    if (!copy) return asset.file;
+    for (const name of source.getFrameNames()) {
+      const f = source.get(name);
+      copy.add(name, 0, f.cutX, f.cutY, f.cutWidth, f.cutHeight);
+    }
+    return key;
+  }
+
   private fromAsset(key: string, asset: SpriteAsset): ResolvedSprite {
+    const texture = this.textureOf(asset);
     const animations: Partial<Record<AnimationName, string>> = {};
     for (const name of Object.keys(asset.animations ?? {}) as AnimationName[]) {
       const anim = asset.animations?.[name];
@@ -108,7 +133,7 @@ export class SpriteResolver {
       if (!this.scene.anims.exists(animKey)) {
         this.scene.anims.create({
           key: animKey,
-          frames: anim.frames.map((frame) => ({ key: asset.file, frame })),
+          frames: anim.frames.map((frame) => ({ key: texture, frame })),
           frameRate: anim.fps,
           repeat: anim.repeat === false ? 0 : -1,
         });
@@ -116,7 +141,7 @@ export class SpriteResolver {
       animations[name] = animKey;
     }
     return {
-      texture: asset.file,
+      texture,
       frame: asset.frame,
       scale: asset.scale ?? 1,
       originX: asset.originX ?? 0.5,

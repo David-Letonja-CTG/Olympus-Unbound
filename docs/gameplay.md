@@ -9,7 +9,7 @@ The game as the player experiences it. Numbers live in `client/src/content/` and
 0. **Intro** — on first launch, a ~55-second scene: the gods at the altar on a moonlit Olympus, the horde breaking in from the north, the gods falling one by one, and Zeus unleashing the storm. Skip with Esc, Enter, Space, a click or the gamepad; replay it from the main menu (*Intro*).
 1. **Main menu** → *Play*, *Co-op*, *Progression*, *Settings*; the gold total is shown.
 2. **Choose a god** — Zeus, Hades, Poseidon or Athena (more gods later).
-3. **Choose a realm** — where the run starts (Mount Olympus, the Underworld, the Lernaean Marsh, the Aegean Shore or the Labyrinth of Crete), with a seed (random by default; enter one to replay the same arenas).
+3. **Choose a realm** — where the run starts (Mount Olympus, the Underworld, the Lernaean Marsh, the Aegean Shore, the Labyrinth of Crete or Mount Othrys), with a seed (random by default; enter one to replay the same arenas).
 4. **Survive.** Weapons fire on their own; the player moves, positions, collects XP and uses the divine ability.
 5. **Level up** — the run pauses; pick one of three upgrades.
 6. **Pressure rises** — new enemy types, packs, hordes and elites.
@@ -150,7 +150,7 @@ Health 135, speed 205, armour 2, critical chance 12% (with her passive): a preci
 
 ## The realms
 
-Five realms, each with its own map, monsters and boss, in the order a run passes through them (after the Labyrinth comes Mount Olympus again, harder). Every realm cleared makes the next much harder: monsters have three times the health and half again the damage of the realm before, bosses grow too, more monsters come, and a deeper realm opens with its horde already there.
+Six realms, each with its own map, monsters and boss, in the order a run passes through them (after Mount Othrys comes Mount Olympus again, harder). Every realm cleared makes the next much harder: monsters have three times the health and half again the damage of the realm before, bosses grow too, more monsters come, and a deeper realm opens with its horde already there.
 
 ![A still from every realm](images/realms.jpg)
 
@@ -246,7 +246,7 @@ The monster of the strait: a woman with six hounds at her waist and serpent tent
 
 ## Labyrinth of Crete
 
-The maze Daedalus built beneath Knossos: dressed stone under warm torchlight, dust and drifting embers, no sky. Its walls run across the whole map in a maze of corridors. They stop gods and monsters alike, but walls are broken here and there and every corridor leads on. Rooms of red Minoan columns, a shrine with the bull altar and its torches, horns of consecration, bones of the tribute, straw and labrys floor tiles. **Ariadne's thread**, a red line on the ground, runs along the road from where you enter to Asterion's arena. It follows the Aegean Shore in the chain of realms (after it comes Mount Olympus again, harder), and you can also start a run here.
+The maze Daedalus built beneath Knossos: dressed stone under warm torchlight, dust and drifting embers, no sky. Its walls run across the whole map in a maze of corridors. They stop gods and monsters alike, but walls are broken here and there and every corridor leads on. Rooms of red Minoan columns, a shrine with the bull altar and its torches, horns of consecration, bones of the tribute, straw and labrys floor tiles. **Ariadne's thread**, a red line on the ground, runs along the road from where you enter to Asterion's arena. It follows the Aegean Shore in the chain of realms (after it comes Mount Othrys), and you can also start a run here.
 
 | Realm time | What comes |
 |---|---|
@@ -264,6 +264,25 @@ The Minotaur, king of the Labyrinth, with a bronze labrys (18,000 health, 380 go
 - **Below 25% health:** "Asterion goes berserk!" He rages red, the walls shift faster, and he rushes twice in every round of attacks.
 
 <img src="images/boss.gif" width="100%" alt="Fighting Asterion in the Labyrinth">
+
+## Mount Othrys
+
+The Titans' fortress above the clouds, where they ruled before Olympus: black basalt and ash under a storm sky, bronze floors, fallen statues and black altars, braziers of the old gods and embers on the wind. It follows the Labyrinth in the chain of realms (after it comes Mount Olympus again, harder), and you can also start a run here. Its host is the Titans' own, drawn from the cast in their colours: bronze-dark soldiers, slate giants, crimson death spirits and red scorpions.
+
+| Realm time | What comes |
+|---|---|
+| 00:00 | **Titan Soldiers**: the Titans' bronze-clad host; later in packs |
+| 00:40 | **Keres**: death spirits; they keep their distance and throw blood-fire |
+| 01:30 | **Scorpions of Kampe**: the brood of Tartarus's jailer; they stop, then charge |
+| 02:30 | **Gigantes**: earth-born giants; slow, hard as the mountain, heavy blows |
+| 07:00 | **Kronos** (spawning slows) |
+
+## Kronos
+
+Lord of the Titans, Devourer of His Children: a towering king in dark gold armour (15,000 health, 380 gold).
+- His **sickle** cuts in cones before him, the **swaddled stone** Rhea gave him in Zeus's place falls on circles under you, and he stamps the ground.
+- **Below 60% health:** "Kronos remembers his hunger!" He **devours**: a wide ring opens round him and drags every god inside toward him for a moment, then his jaws snap shut on the smaller circle at his feet. Run or dash out of the ring: a dash outruns the pull, and a dash as the jaws close is a perfect dodge. He also calls Titan Soldiers to his side and raises the **walls of Othrys** in rings round himself.
+- **Below 25% health:** "Time itself bends to Kronos!" He rages, moves faster and devours twice in every round of attacks, between sickle cuts, falling stones and a charge.
 
 ## Building a run
 

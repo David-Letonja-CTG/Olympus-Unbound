@@ -8,7 +8,7 @@ import {
   Signal,
   WritableSignal,
 } from '@angular/core';
-import { AssetManifest, spriteDataUrl } from '../../engine';
+import { AssetManifest, recolorCanvas, spriteDataUrl } from '../../engine';
 import { GAME_CONTENT } from '../core/game-content';
 
 /**
@@ -109,6 +109,9 @@ function portrait(manifest: AssetManifest, key: string, px: number): Signal<stri
       fw,
       fh,
     );
+    // A recoloured sheet's portrait wears its colour too (spec: asset-pipeline / recoloured sheets).
+    const figure =
+      asset.recolor === undefined ? canvas : recolorCanvas(canvas, fw, fh, asset.recolor);
     const { data } = g.getImageData(0, 0, fw, fh);
     let [left, top, right, bottom] = [fw, fh, -1, -1];
     for (let y = 0; y < fh; y++)
@@ -134,7 +137,7 @@ function portrait(manifest: AssetManifest, key: string, px: number): Signal<stri
     og.fillRect(0, 0, px, px);
     og.imageSmoothingQuality = 'high';
     og.drawImage(
-      canvas,
+      figure,
       left,
       top,
       w,

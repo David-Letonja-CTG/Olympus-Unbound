@@ -52,6 +52,14 @@ const lash = (
   width,
   damage,
 });
+const devour = (
+  id: string,
+  windup: number,
+  pullRadius: number,
+  pullSpeed: number,
+  radius: number,
+  damage: number,
+): BossAttack => ({ type: 'devour', id, windup, pullRadius, pullSpeed, radius, damage });
 const summon = (id: string, enemy: string, count: number): BossAttack => ({
   type: 'summon',
   id,
@@ -361,5 +369,69 @@ export const BOSSES: readonly BossDefinition[] = [
       },
     ],
     visual: { sprite: 'asterion', color: 0x5a3a26 },
+  },
+  /**
+   * Kronos, Lord of the Titans (spec: realm-othrys / kronos): his sickle, the swaddled stone, the walls of Othrys, and
+   * his signature, Devour: a pull toward his maw, then the jaws close (spec: boss-encounter / devour).
+   */
+  {
+    id: 'kronos',
+    name: 'Kronos',
+    title: 'Lord of the Titans, Devourer of His Children',
+    health: 15000,
+    radius: 52,
+    speed: 72,
+    contactDamage: 34,
+    xp: 0,
+    gold: 380,
+    attackPause: 1.5,
+    phases: [
+      {
+        below: 1,
+        speedMultiplier: 1,
+        announcement: 'Kronos rises from his throne on Othrys!',
+        attacks: [
+          sweep('sickle_of_kronos', 1, 260, 1.9, 34, 2, 0.4),
+          boulders('swaddled_stone', 1.2, 80, 30, 4, 240),
+          slam('titan_stomp', 1, 180, 34),
+        ],
+      },
+      {
+        below: 0.6,
+        speedMultiplier: 1.15,
+        pauseMultiplier: 0.8,
+        announcement: 'Kronos remembers his hunger!',
+        attacks: [
+          devour('devour', 1.6, 420, 260, 150, 46),
+          summon('call_the_titans', 'titan_soldier', 4),
+          sweep('sickle_of_kronos', 0.95, 270, 1.9, 36, 2, 0.35),
+          {
+            type: 'walls',
+            id: 'walls_of_othrys',
+            windup: 1.3,
+            duration: 9,
+            damage: 26,
+            rings: [200, 320],
+            segments: 3,
+            gapShare: 0.4,
+          },
+        ],
+      },
+      {
+        below: 0.25,
+        speedMultiplier: 1.35,
+        enraged: true,
+        pauseMultiplier: 0.6,
+        announcement: 'Time itself bends to Kronos!',
+        attacks: [
+          devour('devour', 1.4, 460, 290, 160, 50),
+          sweep('sickle_of_kronos', 0.85, 280, 2, 38, 3, 0.3),
+          boulders('swaddled_stone', 1.1, 80, 32, 6, 280),
+          devour('devour', 1.4, 460, 290, 160, 50),
+          charge('titan_charge', 0.9, 640, 120, 40, 1000),
+        ],
+      },
+    ],
+    visual: { sprite: 'kronos', color: 0xb8862f },
   },
 ];
