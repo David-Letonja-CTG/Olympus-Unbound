@@ -343,3 +343,44 @@ describe('Asterion finds his way (spec: boss-encounter / asterion leaves his wal
     expect(Math.hypot(boss.x - p.x, boss.y - p.y)).toBeLessThan(boss.radius + p.radius + 40);
   });
 });
+
+describe('Kronos devours (spec: boss-encounter / devour)', () => {
+  /** Kronos in his second phase, about to devour (his first attack there). */
+  function devouring(distance: number) {
+    const { sim, boss, p } = withBoss('kronos');
+    boss.health = boss.maxHealth * 0.5;
+    sim.state.godMode = true;
+    sim.step(STEP, [NO_INPUT]);
+    boss.boss!.attackIndex = 0;
+    boss.boss!.attackTimer = 0;
+    p.x = p.px = boss.x - distance;
+    p.y = p.py = boss.y;
+    sim.step(STEP, [NO_INPUT]);
+    expect(boss.boss!.current?.type).toBe('devour');
+    return { sim, boss, p };
+  }
+
+  it('drags a god in the ring toward its maw, and the maw strikes', () => {
+    const { sim, boss, p } = devouring(300);
+    sim.state.godMode = false;
+    p.invulnerable = 0;
+    const before = p.health;
+    run(sim, 0.6);
+    expect(boss.x - p.x).toBeLessThan(300 - 100);
+    run(sim, 1.2);
+    expect(p.health).toBeLessThan(before);
+  });
+
+  it('leaves a god beyond the ring where it stands', () => {
+    const { sim, boss, p } = devouring(520);
+    run(sim, 0.6);
+    expect(Math.abs(boss.x - p.x - 520)).toBeLessThan(5);
+  });
+
+  it('is outrun by a dash', () => {
+    const { sim, boss, p } = devouring(300);
+    run(sim, 0.5, { ...NO_INPUT, moveX: -1, dash: true });
+    run(sim, 0.4, { ...NO_INPUT, moveX: -1 });
+    expect(boss.x - p.x).toBeGreaterThan(300);
+  });
+});

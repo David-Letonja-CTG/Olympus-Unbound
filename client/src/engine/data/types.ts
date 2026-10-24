@@ -359,6 +359,19 @@ export type BossAttack =
    * Raises walls around the boss after a warning: pillars on each ring of `rings` (distances), in `segments` arcs with
    * `gapShare` of each ring left open; they stand `duration` seconds or until the next set rises.
    */
+  /**
+   * Marks a wide pull ring and a maw round the boss: during the wind-up gods in the ring are drawn toward the boss at
+   * `pullSpeed`, then the maw strikes (spec: boss-encounter / devour).
+   */
+  | {
+      readonly type: 'devour';
+      readonly id: string;
+      readonly windup: number;
+      readonly pullRadius: number;
+      readonly pullSpeed: number;
+      readonly radius: number;
+      readonly damage: number;
+    }
   | {
       readonly type: 'walls';
       readonly id: string;

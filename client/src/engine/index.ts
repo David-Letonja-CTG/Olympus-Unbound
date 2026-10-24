@@ -60,6 +60,7 @@ export type {
   UpgradeOffer,
 } from './sim/types';
 export { spriteDataUrl, spriteKeys } from './art/sprites';
+export { recolorCanvas } from './art/canvas';
 export { SEAT_COLORS } from './art/minimap';
 export { createMenuAudio } from './audio/menu-audio';
 export type { MenuAudio, MenuCue } from './audio/menu-audio';

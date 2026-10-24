@@ -255,3 +255,27 @@ export function footShadow(g: Ctx, s: number, w = 0.32, y = 0.82): void {
 export function sheen(g: Ctx, points: readonly number[], alpha = 0.55, width = 1.5): void {
   line(g, points, `rgba(255,248,230,${alpha})`, width);
 }
+
+/**
+ * A copy of `source` (`width` × `height`) multiplied by `color`, keeping its transparency: a recoloured sheet
+ * (spec: asset-pipeline / recoloured sheets).
+ */
+export function recolorCanvas(
+  source: CanvasImageSource,
+  width: number,
+  height: number,
+  color: number,
+): HTMLCanvasElement {
+  const out = document.createElement('canvas');
+  out.width = width;
+  out.height = height;
+  const g = out.getContext('2d');
+  if (!g) return out;
+  g.drawImage(source, 0, 0, width, height);
+  g.globalCompositeOperation = 'multiply';
+  g.fillStyle = '#' + color.toString(16).padStart(6, '0');
+  g.fillRect(0, 0, width, height);
+  g.globalCompositeOperation = 'destination-in';
+  g.drawImage(source, 0, 0, width, height);
+  return out;
+}

@@ -171,6 +171,8 @@ Boss: `cyclops` (two phases; `ground_slam`, `boulder_throw`, `rampage_charge`, `
 | `client/public/assets/flare/minotaur.png` (`minotaur`) | "Minotaur" by Clint Bellanger, [OpenGameArt](https://opengameart.org/content/minotaur); right-facing row re-packed | CC-BY 3.0 |
 | `client/public/fonts/cinzel/Cinzel-wght.ttf` (display font) | Cinzel by Natanael Gama and The Cinzel Project Authors, [GitHub](https://github.com/NDISCOVER/Cinzel), unmodified | SIL OFL 1.1 (`OFL.txt` alongside) |
 
+A sprite in the manifest may name a `recolor`: the game multiplies a copy of its sheet by that colour once at load (keeping transparency, so status tints still show) and recolours its menu portrait too. Mount Othrys's cast is built this way from existing sheets: `titan_soldier` (bronze guardian, 0x8a5a44), `gigas` (Cyclops, 0x8a849a), `ker` (Fury, 0xff5a5a), `kampe_scorpion` (giant crab, 0xc0402a) and `kronos` (marble sentinel ×2.9, 0xd8a84a).
+
 Characters come from one source and render setup (D15): `art/blender/README.md` lists the source models and how to re-render; `client/scripts/pack-sheet.mjs` packs renders (`--frames`) or a Flare sheet's row (`--row`) into the 8-column sheets the game loads. Per-file credits are in `content/assets.ts` and `client/public/assets/*/CREDITS.txt`. The code-drawn sprites remain as fallbacks.
 
 Add a row for every external asset before it is committed. Never copy sprites, sounds, music or UI from other games.

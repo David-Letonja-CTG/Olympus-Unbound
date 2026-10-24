@@ -449,5 +449,25 @@ export const ASSETS: AssetManifest = {
     bronze_guardian: character('bronze_guardian', 1.3, 0.5, 0.73, 100, humanoid()),
     snake_priestess: character('snake_priestess', 1, 0.5, 0.72, 74, humanoid()),
     asterion: { ...character('asterion', 1.7, 0.51, 0.62, 210, humanoid()), portrait: 25 },
+    // Mount Othrys (spec: realm-othrys): existing sheets recoloured and rescaled, as the owner chose (D15).
+    titan_soldier: {
+      ...character('bronze_guardian', 1.3, 0.5, 0.73, 100, humanoid()),
+      recolor: 0x8a5a44,
+    },
+    gigas: { ...character('cyclops', 1.25, 0.51, 0.62, 160, humanoid()), recolor: 0x8a849a },
+    ker: { ...character('fury', 0.95, 0.52, 0.71, 74, humanoid()), recolor: 0xff5a5a },
+    kampe_scorpion: {
+      ...character('giant_crab', 1.15, 0.5, 0.76, 55, {
+        idle: run(0, 3, 4),
+        walk: run(4, 11, 12),
+        death: run(12, 17, 10, false),
+      }),
+      recolor: 0xc0402a,
+    },
+    kronos: {
+      ...character('marble_sentinel', 2.9, 0.52, 0.71, 240, humanoid()),
+      recolor: 0xd8a84a,
+      portrait: 25,
+    },
   },
 };
