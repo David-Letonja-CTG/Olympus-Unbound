@@ -129,9 +129,9 @@ export function applyOffer(state: RunState, player: Player, offer: UpgradeOffer)
       const level = loadout.fusions.get(offer.itemId) ?? 0;
       if (!def || level >= def.maxLevel) break;
       loadout.fusions.set(def.id, level + 1);
-      // The first level is announced like a synergy (spec: run-progression / fusions).
+      // The first level is announced, with a fanfare that grows with the tier (spec: fusion crests and fanfare).
       if (level === 0) {
-        state.emit({ type: 'synergy', id: def.id, name: def.name });
+        state.emit({ type: 'fusionTaken', id: def.id, tier: def.tier, x: player.x, y: player.y });
         state.emit({ type: 'announcement', text: `Fusion: ${def.name}!`, kind: 'synergy' });
       }
       break;

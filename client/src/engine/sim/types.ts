@@ -515,6 +515,8 @@ export type SimEvent =
   /** `choiceId`: which choice was answered; a later one of the same player may already be open (D16). */
   | { type: 'choiceResolved'; offer: UpgradeOffer; playerId: number; choiceId: number }
   | { type: 'synergy'; id: string; name: string }
+  /** A fusion's first level, at the god (spec: run-progression / fusion crests and fanfare). */
+  | { type: 'fusionTaken'; id: string; tier: number; x: number; y: number }
   /** An instant blessing called `count` pickups to the god at `x`, `y` (spec: run-progression). */
   | { type: 'gathered'; x: number; y: number; count: number }
   | { type: 'announcement'; text: string; kind: AnnouncementKind }

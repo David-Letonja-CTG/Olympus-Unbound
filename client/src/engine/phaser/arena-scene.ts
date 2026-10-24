@@ -340,6 +340,14 @@ export class ArenaScene extends Phaser.Scene {
       case 'synergy':
         sound.play('synergy');
         return;
+      case 'fusionTaken':
+        // The crown of the tree gets its own fanfare, a golden flash and a heavy shake.
+        if (event.tier >= 3) {
+          sound.play('apotheosis');
+          this.cameras.main.flash(500, 255, 228, 150);
+          this.shake(900, 0.01);
+        } else sound.play('synergy');
+        return;
       case 'gathered':
         sound.play('gather');
         return;

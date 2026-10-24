@@ -107,7 +107,7 @@ Offered once every requirement is met; modifiers stack per level. Tier II needs 
 | `eyes_of_olympus` | II | `oracle_of_delphi` 3 + `sandals_of_hermes` 3 | +10% damage, +10% XP, +5% crit chance | 2 |
 | `apotheosis` | III | all three tier II at 2 | +25% damage, −5% cooldown, +10% area, +50 health | 1 |
 
-**New fusion:** data only: requirements (synergy types plus `fusion` with `minLevel`), a tier one above its highest fusion requirement, per-level modifiers. Validation checks ids, top levels and tiers.
+**New fusion:** data plus a crest in `FUSION_CRESTS` (`engine/art/sprites.ts`: its glyphs, tier and colour): requirements (synergy types plus `fusion` with `minLevel`), a tier one above its highest fusion requirement, per-level modifiers. Validation checks ids, top levels and tiers.
 
 ### Ascensions
 

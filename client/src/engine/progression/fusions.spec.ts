@@ -1,5 +1,6 @@
 import { Rng } from '../core/rng';
 import { validateContent } from '../data/content-index';
+import { FUSION_CRESTS } from '../art/sprites';
 import { CONTENT } from '../testing/content';
 import { quietContent, quietSim } from '../testing/fixtures';
 import { RunSimulation } from '../sim/run-simulation';
@@ -128,5 +129,33 @@ describe('ascensions (spec: run-progression / ascensions)', () => {
     maxEverything(sim);
     const offers = generateOffers(sim.state, player(sim), new Rng(1));
     expect(offers.map((o) => o.kind)).toEqual(['heal', 'gold']);
+  });
+});
+
+describe('fusion crests and fanfare (spec: run-progression / fusion crests and fanfare)', () => {
+  it('gives every fusion a crest with one pip per tier', () => {
+    for (const f of CONTENT.fusions) {
+      expect(FUSION_CRESTS[f.visual.sprite], f.id).toBeDefined();
+      expect(FUSION_CRESTS[f.visual.sprite].tier, f.id).toBe(f.tier);
+    }
+  });
+
+  it('announces a fusion with its tier at the first level only', () => {
+    const sim = quietSim();
+    give(sim, 'flaming_sword', 6);
+    give(sim, 'war_hammer', 6);
+    const p = player(sim);
+    const take = () => {
+      const offer = offered(sim, 'forge_of_hephaestus');
+      if (!offer) throw new Error('not offered');
+      applyOffer(sim.state, p, offer);
+      const taken = sim.state.events.filter((e) => e.type === 'fusionTaken');
+      sim.state.events.length = 0;
+      return taken;
+    };
+    expect(take()).toEqual([
+      expect.objectContaining({ type: 'fusionTaken', id: 'forge_of_hephaestus', tier: 1 }),
+    ]);
+    expect(take()).toEqual([]);
   });
 });

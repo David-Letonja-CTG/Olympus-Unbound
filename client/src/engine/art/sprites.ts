@@ -535,6 +535,36 @@ const symbols: Record<string, Symbol> = {
       g.stroke();
     }
   },
+  // A victor's wreath round a star: the crown of the fusions (spec: run-progression / fusion crests).
+  laurel: (g, s, c) => {
+    for (const side of [-1, 1]) {
+      g.beginPath();
+      g.arc(
+        s / 2,
+        s * 0.52,
+        s * 0.3,
+        Math.PI / 2 + side * 0.25,
+        Math.PI / 2 + side * 2.6,
+        side < 0,
+      );
+      g.strokeStyle = c;
+      g.lineWidth = 2.5;
+      g.stroke();
+      for (let i = 0; i < 6; i++) {
+        const a = Math.PI / 2 + side * (0.45 + i * 0.36);
+        const x = s / 2 + Math.cos(a) * s * 0.3;
+        const y = s * 0.52 + Math.sin(a) * s * 0.3;
+        ellipse(g, x, y, s * 0.075, s * 0.035, c, '#fff');
+      }
+    }
+    const star: number[] = [];
+    for (let i = 0; i < 10; i++) {
+      const r = i % 2 ? s * 0.08 : s * 0.19;
+      const a = -Math.PI / 2 + (i * Math.PI) / 5;
+      star.push(s / 2 + Math.cos(a) * r, s * 0.5 + Math.sin(a) * r);
+    }
+    poly(g, star, '#fff6c8', c, 1.5);
+  },
   crosshair: (g, s, c) => {
     circle(g, s / 2, s / 2, s * 0.26, 'rgba(0,0,0,0)', c, 3);
     line(g, [s / 2, s * 0.14, s / 2, s * 0.86], c, 2);
@@ -641,21 +671,6 @@ const ICONS: Record<string, [string, 'square' | 'round' | 'diamond' | 'hex', num
   synergy_bulwark: ['shield', 'hex', 0xe8d38a],
   synergy_sky: ['bolt', 'hex', 0xc9f0ff],
   synergy_earth: ['hammer', 'hex', 0xd9b27c],
-  // Fusions (spec: run-progression / fusions): hexes like synergies, a symbol of what they fuse.
-  fusion_volley: ['bow', 'hex', 0xffe9b0],
-  fusion_forge: ['hammer', 'hex', 0xff9a4d],
-  fusion_hide: ['shield', 'hex', 0xd8b48a],
-  fusion_sandals: ['boot', 'hex', 0x7fe8d0],
-  fusion_oracle: ['eye', 'hex', 0x9ad0ff],
-  fusion_chronos: ['hourglass', 'hex', 0xa8e6cf],
-  fusion_sky: ['bolt', 'hex', 0xfff27a],
-  fusion_dead: ['skull', 'hex', 0xb68cff],
-  fusion_deep: ['wave', 'hex', 0x5fc6c0],
-  fusion_strategos: ['javelin', 'hex', 0xe8c070],
-  fusion_twelve: ['storm', 'hex', 0xffd36b],
-  fusion_ichor: ['heart', 'hex', 0xffc870],
-  fusion_eyes: ['owl', 'hex', 0xc9f0ff],
-  fusion_apotheosis: ['burst', 'hex', 0xfff6a8],
   // Ascensions (spec: run-progression / ascensions).
   ascend_might: ['fist', 'round', 0xff6b6b],
   ascend_vigour: ['heart', 'round', 0xff8fa3],
@@ -738,6 +753,114 @@ function frame(
   g.stroke();
 }
 
+/**
+ * Fusion crests (spec: run-progression / fusion crests): the glyphs of what a fusion fuses, overlapped, on a gilded
+ * hex with one pip per tier.
+ */
+export const FUSION_CRESTS: Readonly<
+  Record<string, { glyphs: readonly string[]; tier: number; color: number }>
+> = {
+  fusion_volley: { glyphs: ['bow', 'multi'], tier: 1, color: 0xffe9b0 },
+  fusion_forge: { glyphs: ['hammer', 'flame'], tier: 1, color: 0xff9a4d },
+  fusion_hide: { glyphs: ['heart', 'shield'], tier: 1, color: 0xd8b48a },
+  fusion_sandals: { glyphs: ['boot', 'magnet'], tier: 1, color: 0x7fe8d0 },
+  fusion_oracle: { glyphs: ['owl', 'crosshair'], tier: 1, color: 0x9ad0ff },
+  fusion_chronos: { glyphs: ['hourglass', 'wing'], tier: 1, color: 0xa8e6cf },
+  fusion_sky: { glyphs: ['bolt', 'storm'], tier: 1, color: 0xfff27a },
+  fusion_dead: { glyphs: ['scythe', 'bident'], tier: 1, color: 0xb68cff },
+  fusion_deep: { glyphs: ['trident', 'spear'], tier: 1, color: 0x5fc6c0 },
+  fusion_strategos: { glyphs: ['javelin', 'orb'], tier: 1, color: 0xe8c070 },
+  fusion_twelve: { glyphs: ['hammer', 'bow'], tier: 2, color: 0xffd36b },
+  fusion_ichor: { glyphs: ['heart', 'hourglass'], tier: 2, color: 0xffc870 },
+  fusion_eyes: { glyphs: ['eye', 'wing'], tier: 2, color: 0xc9f0ff },
+  fusion_apotheosis: { glyphs: ['laurel'], tier: 3, color: 0xfff6a8 },
+};
+
+/**
+ * One symbol at `size`, drawn apart and given a worn-metal finish (desaturated, lit from above) at `x`, `y`. The layer
+ * matches the target's scale so the symbol stays sharp at any icon size.
+ */
+function finishedSymbol(
+  g: Ctx,
+  symbol: string,
+  size: number,
+  color: number,
+  x: number,
+  y: number,
+): void {
+  const k = g.getTransform().a || 1;
+  const layer = document.createElement('canvas');
+  layer.width = layer.height = Math.ceil(size * k);
+  const lg = layer.getContext('2d') as Ctx;
+  lg.scale(k, k);
+  symbols[symbol](lg, size, hex(color));
+  lg.globalCompositeOperation = 'source-atop';
+  const finish = lg.createLinearGradient(0, 0, 0, size);
+  finish.addColorStop(0, 'rgba(255,250,235,0.28)');
+  finish.addColorStop(0.5, 'rgba(0,0,0,0)');
+  finish.addColorStop(1, 'rgba(0,0,0,0.42)');
+  lg.fillStyle = finish;
+  lg.fillRect(0, 0, size, size);
+  lg.setTransform(1, 0, 0, 1, 0, 0);
+  g.save();
+  g.filter = 'saturate(0.62) drop-shadow(0 1px 1px rgba(0,0,0,0.9))';
+  g.drawImage(layer, x, y, size, size);
+  g.restore();
+}
+
+function crest(g: Ctx, s: number, glyphs: readonly string[], tier: number, color: number): void {
+  const hexPath = (r: number) => {
+    g.beginPath();
+    for (let i = 0; i < 6; i++) {
+      const a = (i / 6) * Math.PI * 2 + Math.PI / 6;
+      const x = s / 2 + Math.cos(a) * r;
+      const y = s / 2 + Math.sin(a) * r;
+      if (i === 0) g.moveTo(x, y);
+      else g.lineTo(x, y);
+    }
+    g.closePath();
+  };
+  // Gilded rim: bronze to gold, a dark edge.
+  hexPath(s / 2 - s * 0.03);
+  const gold = g.createLinearGradient(0, 0, s, s);
+  gold.addColorStop(0, '#f6e3a1');
+  gold.addColorStop(0.45, '#b8862f');
+  gold.addColorStop(1, '#4a3212');
+  g.fillStyle = gold;
+  g.fill();
+  g.lineWidth = Math.max(1.5, s * 0.035);
+  g.strokeStyle = 'rgba(0,0,0,0.9)';
+  g.stroke();
+  // Stone face tinted by the fusion.
+  hexPath(s / 2 - s * 0.11);
+  const stone = g.createRadialGradient(s * 0.42, s * 0.38, s * 0.05, s / 2, s / 2, s * 0.5);
+  stone.addColorStop(0, hex(shade(color, 0.36)));
+  stone.addColorStop(1, '#0b090c');
+  g.fillStyle = stone;
+  g.fill();
+  g.lineWidth = Math.max(1, s * 0.02);
+  g.strokeStyle = 'rgba(255,230,160,0.55)';
+  g.stroke();
+  // Glyphs: one centred, two overlapped.
+  if (glyphs.length === 1) finishedSymbol(g, glyphs[0], s * 0.62, color, s * 0.19, s * 0.2);
+  else {
+    finishedSymbol(g, glyphs[0], s * 0.5, color, s * 0.15, s * 0.17);
+    finishedSymbol(g, glyphs[1], s * 0.5, color, s * 0.35, s * 0.35);
+  }
+  // Tier pips along the top.
+  for (let i = 0; i < tier; i++) {
+    const x = s / 2 + (i - (tier - 1) / 2) * s * 0.13;
+    circle(g, x, s * 0.09, s * 0.045, '#ffe9a0', '#3a2508', Math.max(1, s * 0.02));
+  }
+}
+
+const crests: Record<string, SpriteSpec> = Object.fromEntries(
+  Object.entries(FUSION_CRESTS).map(([key, c]) => [
+    key,
+    { size: 48, paint: (g: Ctx, s: number) => crest(g, s, c.glyphs, c.tier, c.color) },
+  ]),
+);
+
 const icons: Record<string, SpriteSpec> = Object.fromEntries(
   Object.entries(ICONS).map(([key, [symbol, shape, color]]) => [
     key,
@@ -745,27 +868,8 @@ const icons: Record<string, SpriteSpec> = Object.fromEntries(
       size: 48,
       paint(g: Ctx, s: number) {
         frame(g, s, shape, color);
-        // The symbol is drawn apart, then given a worn-metal finish: desaturated, lit from above.
         const inner = s * 0.72;
-        // Match the target's scale so the symbol stays sharp at any icon size.
-        const k = g.getTransform().a || 1;
-        const layer = document.createElement('canvas');
-        layer.width = layer.height = Math.ceil(inner * k);
-        const lg = layer.getContext('2d') as Ctx;
-        lg.scale(k, k);
-        symbols[symbol](lg, inner, hex(color));
-        lg.globalCompositeOperation = 'source-atop';
-        const finish = lg.createLinearGradient(0, 0, 0, inner);
-        finish.addColorStop(0, 'rgba(255,250,235,0.28)');
-        finish.addColorStop(0.5, 'rgba(0,0,0,0)');
-        finish.addColorStop(1, 'rgba(0,0,0,0.42)');
-        lg.fillStyle = finish;
-        lg.fillRect(0, 0, inner, inner);
-        lg.setTransform(1, 0, 0, 1, 0, 0);
-        g.save();
-        g.filter = 'saturate(0.62) drop-shadow(0 1px 1px rgba(0,0,0,0.9))';
-        g.drawImage(layer, (s - inner) / 2, (s - inner) / 2, inner, inner);
-        g.restore();
+        finishedSymbol(g, symbol, inner, color, (s - inner) / 2, (s - inner) / 2);
       },
     },
   ]),
@@ -776,6 +880,7 @@ export const SPRITES: Readonly<Record<string, SpriteSpec>> = {
   ...projectiles,
   ...WORLD,
   ...icons,
+  ...crests,
 };
 
 /** Draws a sprite into a new canvas; unknown keys get a plain disc in `fallbackColor`. */
