@@ -2,7 +2,7 @@
 
 *Unleash the gods. Survive the divine war.*
 
-An original mythological horde-survival roguelite that runs entirely in the browser. Choose a god, survive ever-larger hordes in procedurally generated realms of Greek myth, combine weapons, armour, relics and skills into synergies, defeat each realm's boss and pass its gate into the next, harder realm. The run goes on until every god has fallen; then spend your rewards on lasting upgrades and go again. Play alone, with up to three friends on one screen, or in a co-op room joined by code.
+An original mythological horde-survival roguelite that runs entirely in the browser. Choose a god, survive ever-larger hordes in procedurally generated realms of Greek myth, combine weapons, armour, relics and skills into synergies and fusions, defeat each realm's boss and pass its gate into the next, harder realm. The run goes on until every god has fallen; then spend your rewards on lasting upgrades and go again. Play alone, with up to three friends on one screen, or in a co-op room joined by code.
 
 <img src="docs/images/hero.gif" width="100%" alt="A run in every realm: Mount Olympus, the Underworld, the Lernaean Marsh, the Aegean Shore and the Labyrinth of Crete">
 
@@ -10,10 +10,13 @@ An original mythological horde-survival roguelite that runs entirely in the brow
 - **Daily Trial:** one run a day, the same for everyone: a god, a realm, a seed and a twist such as Swift Foes or Glass God. Your best today is kept, and any run can be shared as a picture and a challenge link that starts the same run for a friend. Co-op rooms have **Invite** links that open the room ready to join.
 - **Quick runs:** realms at twice the pace, with the boss at 3:30 instead of 7:00, and their own high-score table. Made for a break on the phone.
 - **Sprint and dash:** an orb of golden ichor beside your orb of blood; sprint away, or dash through an attack untouched.
-- **Five realms, endless runs:** Mount Olympus, the Underworld, the Lernaean Marsh, the Aegean Shore and the Labyrinth of Crete. Each has its own map, monsters and boss: the Cyclops, Cerberus, the Hydra, Scylla and Asterion. After the Labyrinth comes Olympus again, harder.
+- **Five realms, endless runs:** Mount Olympus, the Underworld, the Lernaean Marsh, the Aegean Shore and the Labyrinth of Crete. Each has its own map, monsters and boss: the Cyclops, Cerberus, the Hydra, Scylla and Asterion. Every realm cleared makes the next much harder: monster and boss health and damage multiply, more come, and the horde is there from the start. After the Labyrinth comes Olympus again, harder still.
 - **Bosses with a signature:** the Cyclops rages, Cerberus fights with three heads, the Hydra's heads must fall in order, Scylla's tentacles hold the ground and Asterion shifts the Labyrinth's walls. Every attack is telegraphed, and a dash at the last moment is a perfect dodge.
 - **Battle music:** composed in code, it grows from calm to metal as the realm's boss draws near, the horde closes in and the realms go by.
 - **Build a god:** 10 weapons, 4 armours, 6 relics, 16 skills and 7 synergies; permanent upgrades and a codex between runs.
+- **A tree of fusions:** upgrades at their top level fuse into 14 fusions in three tiers, from *Forge of Hephaestus* (Flaming Sword and War Hammer at level 6) up to **Apotheosis**. Endless **Ascensions** fill the choice once little is left, so every level-up still offers three real choices. Level-up offers say what they count toward.
+- **The build panel:** press Tab (Back/Select on a gamepad, the hexagon button on a phone) during a run to see your whole build and every fusion and synergy your god can reach, with what is met and the level still needed. The fight goes on behind it.
+- **Call of Hermes:** when experience lies out of reach, a level-up may offer it. Every gem in the realm streams to you.
 - **The Wandering Merchant:** twice a realm, trade the run's gold for companions (an eagle, a hound, a serpent) that fight beside you, whetstones and ambrosia.
 - **Glory:** a score for every run, solo and co-op high scores, 18 achievements and three daily quests.
 - **Co-op:** up to four players on one screen (keyboard and gamepads, one camera that zooms out to frame everyone), or in rooms peer to peer; difficulty per player; a living ally revives a fallen god by standing beside their spirit.
@@ -30,8 +33,10 @@ An original mythological horde-survival roguelite that runs entirely in the brow
 | ![The merchant's shop](docs/images/shop.jpg) | ![Companions fighting beside Athena, and a dash](docs/images/merchant.gif) | ![High scores, achievements and daily quests](docs/images/glory.jpg) |
 | **Together on one screen** | **Players and allies** | **Four at one screen** |
 | ![Two players on one keyboard walk apart and the camera zooms out](docs/images/together.gif) | ![God selection with a second player and two bot allies](docs/images/gods.jpg) | ![Four players at one screen, a plaque in every corner](docs/images/together-four.jpg) |
-| **On a phone, sideways** | **Menus upright** | |
-| ![A run on a phone: the stick under the left thumb, Power, Dash and Sprint on the right, the orbs between](docs/images/phone.jpg) | ![God selection on a phone held upright](docs/images/phone-gods.jpg) | |
+| **On a phone, sideways** | **Menus upright** | **Call of Hermes** |
+| ![A run on a phone: the stick under the left thumb, Power, Dash and Sprint on the right, the orbs between](docs/images/phone.jpg) | ![God selection on a phone held upright](docs/images/phone-gods.jpg) | ![Call of Hermes: every experience gem in the realm streams to the god](docs/images/hermes.gif) |
+| **The build panel** | | |
+| ![The build panel: the whole build and the tree of fusions, each requirement ticked or with the level still needed](docs/images/build-panel.jpg) | | |
 
 **Play it:** [olympus.138-2-144-201.sslip.io](https://olympus.138-2-144-201.sslip.io/), or download the game from [Releases](https://github.com/David-Letonja-CTG/Olympus-Unbound/releases)
 

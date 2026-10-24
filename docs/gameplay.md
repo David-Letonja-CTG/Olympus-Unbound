@@ -150,7 +150,7 @@ Health 135, speed 205, armour 2, critical chance 12% (with her passive): a preci
 
 ## The realms
 
-Five realms, each with its own map, monsters and boss, in the order a run passes through them (after the Labyrinth comes Mount Olympus again, harder).
+Five realms, each with its own map, monsters and boss, in the order a run passes through them (after the Labyrinth comes Mount Olympus again, harder). Every realm cleared makes the next much harder: monsters have three times the health and half again the damage of the realm before, bosses grow too, more monsters come, and a deeper realm opens with its horde already there.
 
 ![A still from every realm](images/realms.jpg)
 
@@ -277,6 +277,10 @@ The Minotaur, king of the Labyrinth, with a bronze labrys (18,000 health, 380 go
 - **Ascensions** (Strength, Vigour, Speed, Fortune) have no top level and fill the choice once fewer than three other upgrades are left, so every level-up offers three real choices until the end.
 - **The build panel** (Tab, a gamepad's Back/Select, or the hexagon button on a phone) shows your whole build and the tree of every fusion and synergy your god can reach: each requirement ticked or with the level still needed, and which fusions are ready. The fight goes on behind it, and it opens over a level-up choice too.
 - Content without ascensions falls back to **Ambrosia** (heal 30%) or **Tribute** (25 gold).
+
+| The build panel | Call of Hermes |
+|---|---|
+| ![The build panel: the whole build and the tree of fusions, each requirement ticked or with the level still needed](images/build-panel.jpg) | ![Call of Hermes: every experience gem in the realm streams to the god](images/hermes.gif) |
 
 ## The Wandering Merchant
 
