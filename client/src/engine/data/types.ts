@@ -828,7 +828,16 @@ export interface MerchantBalance {
 // Glory (spec: glory). Measured on finished runs by the application; the simulation never reads these.
 
 export type GoalMeasure =
-  'kills' | 'timeSeconds' | 'level' | 'realmsCleared' | 'gold' | 'synergies' | 'runs';
+  | 'kills'
+  | 'timeSeconds'
+  | 'level'
+  | 'realmsCleared'
+  | 'gold'
+  | 'synergies'
+  /** Fusions held at the end of a run, and the highest tier among them (spec: glory / achievements). */
+  | 'fusions'
+  | 'fusionTier'
+  | 'runs';
 
 export interface Goal {
   readonly measure: GoalMeasure;

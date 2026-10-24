@@ -83,6 +83,22 @@ export const ACHIEVEMENTS: readonly AchievementDefinition[] = [
     sprite: 'synergy_storm',
   },
   {
+    id: 'fusion_smith',
+    name: 'Fusion Smith',
+    description: 'Hold 3 fusions in one run.',
+    goal: { measure: 'fusions', target: 3, over: 'run' },
+    gold: 300,
+    sprite: 'fusion_forge',
+  },
+  {
+    id: 'apotheosis',
+    name: 'Apotheosis',
+    description: 'Reach the crown of the fusion tree in one run.',
+    goal: { measure: 'fusionTier', target: 3, over: 'run' },
+    gold: 1000,
+    sprite: 'fusion_apotheosis',
+  },
+  {
     id: 'treasure_hunter',
     name: 'Treasure Hunter',
     description: 'Collect 1,500 gold in one run.',

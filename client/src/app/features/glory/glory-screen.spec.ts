@@ -20,7 +20,7 @@ const run = (overrides: Partial<RunResult>): RunResult => ({
   realmReached: 'mount_olympus',
   players: 1,
   bots: 0,
-  loadout: { weapons: [], relics: [], skills: [], synergies: [] },
+  loadout: { weapons: [], relics: [], skills: [], synergies: [], fusions: [] },
   ...overrides,
 });
 

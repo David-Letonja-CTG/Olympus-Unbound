@@ -24,6 +24,7 @@ const run = (overrides: Partial<RunResult> = {}): RunResult => ({
     relics: [],
     skills: [],
     synergies: [],
+    fusions: [],
   },
   ...overrides,
 });
@@ -107,6 +108,25 @@ describe('high scores (spec: glory / high scores)', () => {
 });
 
 describe('achievements (spec: glory / achievements)', () => {
+  it('measures fusions held and the highest tier: fusion_smith and apotheosis', () => {
+    const content = only({
+      achievements: [achievement('fusion_smith'), achievement('apotheosis')],
+    });
+    const fusions = (tiers: number[]) => ({
+      loadout: {
+        ...run().loadout,
+        fusions: tiers.map((tier, i) => ({ id: `f${i}`, level: 1, tier })),
+      },
+    });
+    const two = play(freshSave(), content, fusions([1, 1]));
+    expect(two.rewards.glory.achievements).toEqual([]);
+    const crowned = play(two.save, content, fusions([1, 2, 3]));
+    expect(crowned.rewards.glory.achievements.map((a) => a.id).sort()).toEqual([
+      'apotheosis',
+      'fusion_smith',
+    ]);
+  });
+
   it('pays first_gate once, when a realm is first cleared', () => {
     const content = only({ achievements: [achievement('first_gate')] });
     const first = play(freshSave(), content, { realmsCleared: 1, gold: 0 });

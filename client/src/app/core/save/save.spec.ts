@@ -33,6 +33,7 @@ const result = (overrides: Partial<RunResult> = {}): RunResult => ({
     relics: ['zeus_eye'],
     skills: [],
     synergies: [],
+    fusions: [],
   },
   ...overrides,
 });
@@ -287,5 +288,48 @@ describe('graphics quality default', () => {
     expect(
       isSoftwareRenderer('ANGLE (NVIDIA, NVIDIA GeForce GTX 1660 Direct3D11 vs_5_0 ps_5_0, D3D11)'),
     ).toBe(false);
+  });
+});
+
+describe('save format v10 (spec: meta-progression / save format version 10)', () => {
+  it('migrates a version 9 save with no fusions discovered, keeping its progress', () => {
+    const save = parseSave(
+      JSON.stringify({ version: 9, gold: 80, discovered: { weapons: ['war_hammer'] } }),
+      CONTENT,
+    );
+    expect(save.version).toBe(SAVE_VERSION);
+    expect(save.discovered.fusions).toEqual([]);
+    expect(save.discovered.weapons).toEqual(['war_hammer']);
+    expect(save.gold).toBe(80);
+  });
+
+  it('drops fusion IDs that are not in the content', () => {
+    const save = parseSave(
+      JSON.stringify({ version: 10, discovered: { fusions: ['apotheosis', 'gone_fusion'] } }),
+      CONTENT,
+    );
+    expect(save.discovered.fusions).toEqual(['apotheosis']);
+  });
+
+  it('discovers the fusions a run ends with, once (spec: codex and statistics)', () => {
+    const forged = result({
+      loadout: {
+        ...result().loadout,
+        fusions: [{ id: 'forge_of_hephaestus', level: 1, tier: 1 }],
+      },
+    });
+    const first = applyRunResult(freshSave(), forged, CONTENT, new Date(2026, 9, 24));
+    expect(first.save.discovered.fusions).toEqual(['forge_of_hephaestus']);
+    expect(first.rewards.newlyDiscovered).toContainEqual({
+      kind: 'fusions',
+      id: 'forge_of_hephaestus',
+    });
+    const again = applyRunResult(
+      first.save,
+      { ...forged, runId: 'run-2' },
+      CONTENT,
+      new Date(2026, 9, 25),
+    );
+    expect(again.rewards.newlyDiscovered).toEqual([]);
   });
 });

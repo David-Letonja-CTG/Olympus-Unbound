@@ -11,6 +11,8 @@ interface CodexItem {
   readonly description: string;
   readonly sprite: string;
   readonly known: boolean;
+  /** A fusion's tier (spec: meta-progression / codex and statistics). */
+  readonly tier?: string;
 }
 
 interface CodexGroup {
@@ -148,6 +150,9 @@ interface CodexGroup {
                   <app-item-icon [sprite]="item.sprite" [size]="56" />
                   <div>
                     <strong>{{ item.name }}</strong>
+                    @if (item.tier) {
+                      <span class="tier">Fusion · Tier {{ item.tier }}</span>
+                    }
                     <p class="desc">{{ item.description }}</p>
                   </div>
                 } @else {
@@ -240,6 +245,13 @@ interface CodexGroup {
       color: var(--gold);
       font-size: 1.15rem;
       margin: 0;
+    }
+    .tier {
+      display: block;
+      color: var(--gold);
+      font-size: 0.75rem;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
     }
     .count,
     .hint,
@@ -415,6 +427,7 @@ export class ProgressionScreen {
         name: string;
         description: string;
         visual: { sprite: string };
+        tier?: number;
       }[],
       known: readonly string[],
     ): CodexGroup => {
@@ -424,6 +437,7 @@ export class ProgressionScreen {
         description: i.description,
         sprite: i.visual.sprite,
         known: known.includes(i.id),
+        tier: i.tier ? ['I', 'II', 'III'][i.tier - 1] : undefined,
       }));
       return { title, items: list, found: list.filter((i) => i.known).length };
     };
@@ -431,6 +445,7 @@ export class ProgressionScreen {
       group('Weapons', this.content.weapons, d.weapons),
       group('Armour', this.content.armour, d.armour),
       group('Relics', this.content.relics, d.relics),
+      group('Fusions', this.content.fusions, d.fusions),
     ];
   });
   protected readonly group = computed(() => this.codex()[this.tab()]);

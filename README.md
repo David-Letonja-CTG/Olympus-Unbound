@@ -18,7 +18,7 @@ An original mythological horde-survival roguelite that runs entirely in the brow
 - **The build panel:** press Tab (Back/Select on a gamepad, the hexagon button on a phone) during a run to see your whole build and every fusion and synergy your god can reach, with what is met and the level still needed. The fight goes on behind it.
 - **Call of Hermes:** when experience lies out of reach, a level-up may offer it. Every gem in the realm streams to you.
 - **The Wandering Merchant:** twice a realm, trade the run's gold for companions (an eagle, a hound, a serpent) that fight beside you, whetstones and ambrosia.
-- **Glory:** a score for every run, solo and co-op high scores, 18 achievements and three daily quests.
+- **Glory:** a score for every run, solo and co-op high scores, 20 achievements and three daily quests.
 - **Co-op:** up to four players on one screen (keyboard and gamepads, one camera that zooms out to frame everyone), or in rooms peer to peer; difficulty per player; a living ally revives a fallen god by standing beside their spirit.
 - **Allies:** not enough friends? Fill the party up to four with gods played by the machine (Easy, Normal or Hard).
 - **A HUD for every party:** a bronze frieze with orbs of blood and ichor, split between two players at one screen, a plaque in each corner for three or four, and medallions for everyone else; nobody shown twice.

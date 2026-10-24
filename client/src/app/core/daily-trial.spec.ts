@@ -49,7 +49,7 @@ const result = (overrides: Partial<RunResult> = {}): RunResult => ({
   realmReached: 'mount_olympus',
   players: 1,
   bots: 0,
-  loadout: { weapons: [], relics: [], skills: [], synergies: [] },
+  loadout: { weapons: [], relics: [], skills: [], synergies: [], fusions: [] },
   ...overrides,
 });
 const daily = { kind: 'daily' as const, date: '2026-10-21', twistId: 'swift_foes' };

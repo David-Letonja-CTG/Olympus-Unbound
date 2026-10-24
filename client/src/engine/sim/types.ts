@@ -433,6 +433,12 @@ export interface LoadoutSummary {
   readonly relics: readonly string[];
   readonly skills: readonly { readonly id: string; readonly level: number }[];
   readonly synergies: readonly string[];
+  /** Fusions held at the end, with their tier (spec: meta-progression / codex and statistics). */
+  readonly fusions: readonly {
+    readonly id: string;
+    readonly level: number;
+    readonly tier: number;
+  }[];
 }
 
 export interface RunResult {

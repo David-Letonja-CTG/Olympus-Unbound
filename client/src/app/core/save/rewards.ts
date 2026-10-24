@@ -3,7 +3,7 @@ import { applyGlory, GloryOutcome, NO_GLORY } from './glory';
 import { REMEMBERED_RUNS, SaveData } from './save-data';
 
 export interface DiscoveredItem {
-  readonly kind: 'weapons' | 'armour' | 'relics';
+  readonly kind: 'weapons' | 'armour' | 'relics' | 'fusions';
   readonly id: string;
 }
 
@@ -51,6 +51,7 @@ export function applyRunResult(
     ...result.loadout.weapons.map((w) => ({ kind: 'weapons' as const, id: w.id })),
     ...(result.loadout.armour ? [{ kind: 'armour' as const, id: result.loadout.armour.id }] : []),
     ...result.loadout.relics.map((id) => ({ kind: 'relics' as const, id })),
+    ...result.loadout.fusions.map((f) => ({ kind: 'fusions' as const, id: f.id })),
   ];
   const newlyDiscovered = held.filter((item) => !save.discovered[item.kind].includes(item.id));
   const discovered = { ...save.discovered };
