@@ -272,6 +272,8 @@ function scoreOffer(state: RunState, bot: Player, o: UpgradeOffer): number {
       return 5 + affinity + synergy;
     case 'heal':
       return bot.health < bot.stats.maxHealth * 0.5 ? 20 : 1;
+    case 'evolution':
+      return 30;
     case 'fusion':
       return 25;
     case 'ascension':

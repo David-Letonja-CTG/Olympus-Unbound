@@ -1,4 +1,4 @@
-import type { WeaponDefinition, WeaponStats } from '../engine';
+import type { EvolutionDefinition, WeaponDefinition, WeaponStats } from '../engine';
 
 /** Defaults every weapon starts from, so each definition lists only what matters for it. */
 const BASE: WeaponStats = {
@@ -275,5 +275,113 @@ export const WEAPONS: readonly WeaponDefinition[] = [
       { text: '+1 javelin, +10 damage.', amount: 1, damage: 10 },
     ],
     visual: { sprite: 'spear_of_athena', color: 0xe8c070, projectile: 'proj_javelin' },
+  },
+];
+
+/**
+ * A weapon at its top level and a relic transform the weapon (spec: run-progression / weapon evolutions): a new
+ * name and gilded icon, one more step of numbers and a burst against the foes round every hit.
+ */
+export const EVOLUTIONS: readonly EvolutionDefinition[] = [
+  {
+    id: 'spear_of_olympus',
+    name: 'Spear of Olympus',
+    description: 'Every spear bursts in thunder where it strikes.',
+    weapon: 'thunder_spear',
+    requirements: [{ type: 'relic', id: 'zeus_eye' }],
+    upgrade: { text: '+10 damage, +1 pierce, thunder bursts', damage: 10, pierce: 1 },
+    splash: { radius: 70, fraction: 0.5 },
+    visual: { sprite: 'evolved_spear', color: 0xfff27a },
+  },
+  {
+    id: 'keraunos',
+    name: 'Keraunos',
+    description: "Zeus's own thunderbolt: every strike splits the sky round its target.",
+    weapon: 'thunderbolt',
+    requirements: [{ type: 'relic', id: 'zeus_eye' }],
+    upgrade: { text: '+14 damage, +2 jumps, sky bursts', damage: 14, chains: 2 },
+    splash: { radius: 80, fraction: 0.45 },
+    visual: { sprite: 'evolved_bolt', color: 0xc9f0ff },
+  },
+  {
+    id: 'orbs_of_the_aether',
+    name: 'Orbs of the Aether',
+    description: 'Two more orbs of pure aether that crackle against everything near them.',
+    weapon: 'lightning_orb',
+    requirements: [{ type: 'relic', id: 'eye_of_horus' }],
+    upgrade: { text: '+2 orbs, +6 damage, aether bursts', amount: 2, damage: 6 },
+    splash: { radius: 55, fraction: 0.4 },
+    visual: { sprite: 'evolved_orb', color: 0x8fe8ff },
+  },
+  {
+    id: 'bow_of_apollo',
+    name: 'Bow of Apollo',
+    description: 'Arrows of sunlight that seek their mark and flare where they land.',
+    weapon: 'divine_bow',
+    requirements: [{ type: 'relic', id: 'trident_fragment' }],
+    upgrade: { text: '+2 arrows, +8 damage, seeking, sun flares', amount: 2, damage: 8, homing: 2 },
+    splash: { radius: 60, fraction: 0.45 },
+    visual: { sprite: 'evolved_bow', color: 0xffe9b0 },
+  },
+  {
+    id: 'trident_of_the_abyss',
+    name: 'Trident of the Abyss',
+    description: 'The sea god’s trident: each prong breaks like a wave on what it hits.',
+    weapon: 'trident',
+    requirements: [{ type: 'relic', id: 'trident_fragment' }],
+    upgrade: { text: '+12 damage, +2 pierce, breaking waves', damage: 12, pierce: 2 },
+    splash: { radius: 75, fraction: 0.5 },
+    visual: { sprite: 'evolved_trident', color: 0x6fd3ff },
+  },
+  {
+    id: 'hammer_of_hephaestus',
+    name: 'Hammer of Hephaestus',
+    description:
+      'The smith god’s hammer: a wider quake that throws sparks from every foe it strikes.',
+    weapon: 'war_hammer',
+    requirements: [{ type: 'relic', id: 'golden_fleece' }],
+    upgrade: { text: '+20 damage, +30% quake, sparks', damage: 20, size: 40 },
+    splash: { radius: 60, fraction: 0.35 },
+    visual: { sprite: 'evolved_hammer', color: 0xffb070 },
+  },
+  {
+    id: 'phoenix_blade',
+    name: 'Phoenix Blade',
+    description: 'A blade reborn in fire: every cut flares and sets the foes beside it burning.',
+    weapon: 'flaming_sword',
+    requirements: [{ type: 'relic', id: 'phoenix_feather' }],
+    upgrade: { text: '+14 damage, wider arc, fire flares', damage: 14, arc: 0.6 },
+    splash: { radius: 65, fraction: 0.5 },
+    visual: { sprite: 'evolved_sword', color: 0xff7a2e },
+  },
+  {
+    id: 'scythe_of_thanatos',
+    name: 'Scythe of Thanatos',
+    description: 'Death’s own scythe: each reaped soul bursts against those beside it.',
+    weapon: 'soul_scythe',
+    requirements: [{ type: 'relic', id: 'soul_lantern' }],
+    upgrade: { text: '+12 damage, +20% reach, soul bursts', damage: 12, size: 30 },
+    splash: { radius: 60, fraction: 0.45 },
+    visual: { sprite: 'evolved_scythe', color: 0xb68cff },
+  },
+  {
+    id: 'bident_of_tartarus',
+    name: 'Bident of Tartarus',
+    description: 'Forged in the pit: every thrust tears the shadows open round its mark.',
+    weapon: 'bident',
+    requirements: [{ type: 'relic', id: 'soul_lantern' }],
+    upgrade: { text: '+16 damage, longer reach, shadow tears', damage: 16, size: 40 },
+    splash: { radius: 70, fraction: 0.5 },
+    visual: { sprite: 'evolved_bident', color: 0x7fe0c8 },
+  },
+  {
+    id: 'spear_of_pallas',
+    name: 'Spear of Pallas',
+    description: 'Athena’s war spear: unerring, and it shatters the ranks where it lands.',
+    weapon: 'spear_of_athena',
+    requirements: [{ type: 'relic', id: 'eye_of_horus' }],
+    upgrade: { text: '+12 damage, +2 pierce, shattering', damage: 12, pierce: 2 },
+    splash: { radius: 70, fraction: 0.5 },
+    visual: { sprite: 'evolved_javelin', color: 0xe8c070 },
   },
 ];

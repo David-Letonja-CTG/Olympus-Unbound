@@ -181,6 +181,24 @@ export interface FusionDefinition {
   readonly visual: Visual;
 }
 
+/**
+ * A weapon's one transformation, at its top level with every requirement met (spec: run-progression / weapon
+ * evolutions): one more step of numbers and a splash on hit (spec: combat / splash on hit).
+ */
+export interface EvolutionDefinition {
+  readonly id: string;
+  readonly name: string;
+  readonly description: string;
+  /** The weapon that evolves; it keeps its identity for fusions and synergies. */
+  readonly weapon: string;
+  readonly requirements: readonly FusionRequirement[];
+  /** Applied like one more level. */
+  readonly upgrade: WeaponLevel;
+  /** Every hit also strikes the foes within `radius` of its target for `fraction` of the weapon's damage. */
+  readonly splash: { readonly radius: number; readonly fraction: number };
+  readonly visual: Visual;
+}
+
 /** An upgrade without a top level, filling the offers once few others remain (spec: run-progression / ascensions). */
 export interface AscensionDefinition {
   readonly id: string;
@@ -644,6 +662,8 @@ export interface BalanceConfig {
     readonly skill: number;
     /** A fusion whose requirements are met: high, the build has earned it. */
     readonly fusion: number;
+    /** A weapon's evolution, ready: the biggest moment of a build. */
+    readonly evolution: number;
     /** An ascension filling a short pool. */
     readonly ascension: number;
     /** Multiplier for items matching the god's affinities or held weapons' elements. */
@@ -718,6 +738,8 @@ export interface GameContent {
   /** Combined upgrades and upgrades without end (spec: run-progression / fusions, ascensions). */
   readonly fusions: readonly FusionDefinition[];
   readonly ascensions: readonly AscensionDefinition[];
+  /** One per weapon at most (spec: run-progression / weapon evolutions). */
+  readonly evolutions: readonly EvolutionDefinition[];
   readonly enemies: readonly EnemyDefinition[];
   readonly bosses: readonly BossDefinition[];
   readonly realms: readonly RealmDefinition[];

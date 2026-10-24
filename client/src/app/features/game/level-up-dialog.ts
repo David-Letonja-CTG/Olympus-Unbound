@@ -23,6 +23,7 @@ const KIND_LABEL: Record<UpgradeOffer['kind'], string> = {
   gold: 'Blessing',
   instant: 'Blessing',
   fusion: 'Fusion',
+  evolution: 'Evolution',
   ascension: 'Ascension',
   ware: 'For sale',
   leave: 'Leave',

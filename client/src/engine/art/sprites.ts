@@ -774,6 +774,17 @@ export const FUSION_CRESTS: Readonly<
   fusion_ichor: { glyphs: ['heart', 'hourglass'], tier: 2, color: 0xffc870 },
   fusion_eyes: { glyphs: ['eye', 'wing'], tier: 2, color: 0xc9f0ff },
   fusion_apotheosis: { glyphs: ['laurel'], tier: 3, color: 0xfff6a8 },
+  // Evolved weapons wear gold too, without pips (spec: run-progression / weapon evolutions).
+  evolved_spear: { glyphs: ['spear'], tier: 0, color: 0xfff27a },
+  evolved_bolt: { glyphs: ['bolt'], tier: 0, color: 0xc9f0ff },
+  evolved_orb: { glyphs: ['orb'], tier: 0, color: 0x8fe8ff },
+  evolved_bow: { glyphs: ['bow'], tier: 0, color: 0xffe9b0 },
+  evolved_trident: { glyphs: ['trident'], tier: 0, color: 0x6fd3ff },
+  evolved_hammer: { glyphs: ['hammer'], tier: 0, color: 0xffb070 },
+  evolved_sword: { glyphs: ['sword'], tier: 0, color: 0xff7a2e },
+  evolved_scythe: { glyphs: ['scythe'], tier: 0, color: 0xb68cff },
+  evolved_bident: { glyphs: ['bident'], tier: 0, color: 0x7fe0c8 },
+  evolved_javelin: { glyphs: ['javelin'], tier: 0, color: 0xe8c070 },
 };
 
 /**

@@ -153,6 +153,27 @@ export function offerCandidates(state: RunState, player: Player): Candidate[] {
       },
     });
   }
+  // A weapon's evolution: at its top level, once, with every requirement met (spec: weapon evolutions).
+  for (const def of index.content.evolutions) {
+    const weapon = loadout.weapons.find((wpn) => wpn.def.id === def.weapon);
+    if (!weapon || weapon.evolution || weapon.level < weapon.def.levels.length + 1) continue;
+    if (!def.requirements.every((r) => meetsRequirement(loadout, r))) continue;
+    candidates.push({
+      weight: w.evolution,
+      offer: {
+        kind: 'evolution',
+        itemId: def.id,
+        name: def.name,
+        description: `${def.description} ${def.upgrade.text}.`,
+        level: 1,
+        maxLevel: 1,
+        element: weapon.def.element,
+        sprite: def.visual.sprite,
+        color: def.visual.color,
+      },
+    });
+  }
+
   // Fusions once every requirement is met, up to their top level (spec: run-progression / fusions).
   for (const def of index.content.fusions) {
     const level = loadout.fusions.get(def.id) ?? 0;

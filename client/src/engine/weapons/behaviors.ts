@@ -33,6 +33,9 @@ export function hitSource(player: Player, weapon: WeaponInstance): HitSource {
     effects: weapon.effects,
     lifesteal: weapon.def.lifesteal ?? 0,
     ownerId: player.id,
+    ...(weapon.evolution
+      ? { splash: { ...weapon.evolution.splash, color: weapon.evolution.visual.color } }
+      : {}),
   };
 }
 

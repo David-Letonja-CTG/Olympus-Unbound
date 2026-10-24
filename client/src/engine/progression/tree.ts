@@ -1,5 +1,5 @@
 import { ContentIndex, wieldableBy } from '../data/content-index';
-import { FusionDefinition, FusionRequirement, SynergyDefinition } from '../data/types';
+import { EvolutionDefinition, FusionRequirement } from '../data/types';
 import { RunState } from '../sim/run-state';
 import { HudBuild, HudCombo, HudItem, Loadout, Player } from '../sim/types';
 
@@ -27,12 +27,26 @@ function requirementReachable(index: ContentIndex, godId: string, r: FusionRequi
   }
 }
 
-/** A fusion or synergy this god can ever complete; others are never offered nor shown. */
-export function comboReachable(
-  index: ContentIndex,
-  godId: string,
-  def: FusionDefinition | SynergyDefinition,
-): boolean {
+/** Anything with requirements the tree shows: a fusion, a synergy, or an evolution's full list. */
+interface Combo {
+  readonly id: string;
+  readonly name: string;
+  readonly description: string;
+  readonly requirements: readonly FusionRequirement[];
+  readonly visual: { readonly sprite: string };
+}
+
+/** An evolution's requirements with its weapon at the top level first (spec: run-progression / weapon evolutions). */
+export function evolutionCombo(index: ContentIndex, evo: EvolutionDefinition): Combo {
+  const top = (index.weapons.get(evo.weapon)?.levels.length ?? 0) + 1;
+  return {
+    ...evo,
+    requirements: [{ type: 'weapon', id: evo.weapon, minLevel: top }, ...evo.requirements],
+  };
+}
+
+/** A fusion, synergy or evolution this god can ever complete; others are never offered nor shown. */
+export function comboReachable(index: ContentIndex, godId: string, def: Combo): boolean {
   return def.requirements.every((r) => requirementReachable(index, godId, r));
 }
 
@@ -89,7 +103,7 @@ function requirementLabel(
   return { name: `${element} weapons`, sprite: weapon?.visual.sprite ?? '' };
 }
 
-/** Names of the locked fusions and inactive synergies an item counts toward (spec: level-up choice). */
+/** Names of the locked fusions, inactive synergies and evolutions an item counts toward (spec: level-up choice). */
 export function comboParts(state: RunState, player: Player, itemId: string): string[] {
   const loadout = player.loadout;
   const parts: string[] = [];
@@ -100,6 +114,12 @@ export function comboParts(state: RunState, player: Player, itemId: string): str
   }
   for (const def of state.index.content.synergies) {
     if (loadout.synergies.includes(def)) continue;
+    if (!def.requirements.some((r) => 'id' in r && r.id === itemId)) continue;
+    if (comboReachable(state.index, player.god.id, def)) parts.push(def.name);
+  }
+  for (const evo of state.index.content.evolutions) {
+    if (loadout.weapons.some((w) => w.evolution === evo)) continue;
+    const def = evolutionCombo(state.index, evo);
     if (!def.requirements.some((r) => 'id' in r && r.id === itemId)) continue;
     if (comboReachable(state.index, player.god.id, def)) parts.push(def.name);
   }
@@ -120,7 +140,7 @@ export function buildSnapshot(state: RunState, player: Player): HudBuild {
   const loadout = player.loadout;
   const tree: HudCombo[] = [];
   const combo = (
-    def: FusionDefinition | SynergyDefinition,
+    def: Combo,
     kind: HudCombo['kind'],
     tier: number,
     level: number,
@@ -152,6 +172,11 @@ export function buildSnapshot(state: RunState, player: Player): HudBuild {
   for (const def of index.content.synergies)
     if (comboReachable(index, player.god.id, def))
       combo(def, 'synergy', 1, loadout.synergies.includes(def) ? 1 : 0, 1);
+  for (const evo of index.content.evolutions) {
+    const def = evolutionCombo(index, evo);
+    const done = loadout.weapons.some((w) => w.evolution === evo);
+    if (comboReachable(index, player.god.id, def)) combo(def, 'evolution', 1, done ? 1 : 0, 1);
+  }
 
   const levels = <
     T extends { id: string; name: string; visual: { sprite: string; color: number } },
