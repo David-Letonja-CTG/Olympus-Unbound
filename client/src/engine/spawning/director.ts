@@ -24,10 +24,12 @@ export class SpawnDirector {
     this.events = [...state.realm.events].sort((a, b) => a.at - b.at);
   }
 
+  /** The phase due at realm time plus the depth's head start; events and the boss keep realm time. */
   currentPhase(): SpawnPhase {
     const timeline = this.state.realm.timeline;
+    const t = this.state.realmTime + this.state.headStart();
     let phase = timeline[0];
-    for (const p of timeline) if (p.from <= this.state.realmTime) phase = p;
+    for (const p of timeline) if (p.from <= t) phase = p;
     return phase;
   }
 
