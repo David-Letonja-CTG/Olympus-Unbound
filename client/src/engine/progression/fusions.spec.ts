@@ -22,7 +22,7 @@ const offered = (sim: RunSimulation, id: string) =>
   offerCandidates(sim.state, player(sim)).find((c) => c.offer.itemId === id)?.offer;
 const combo = (sim: RunSimulation, id: string) => sim.hud().build.tree.find((c) => c.id === id);
 
-/** Every weapon, armour, relic and skill of the god at its top: only fusions and ascensions are left. */
+/** Every weapon (evolved), armour, relic and skill of the god at its top: only fusions and ascensions are left. */
 function maxEverything(sim: RunSimulation) {
   const p = player(sim);
   const content = sim.state.index.content;
@@ -33,6 +33,8 @@ function maxEverything(sim: RunSimulation) {
   p.loadout.armour = { def: armour, level: armour.levels.length };
   p.loadout.relics = content.relics.slice(0, 4);
   for (const skill of content.skills) p.loadout.skills.set(skill.id, skill.maxLevel);
+  for (const w of p.loadout.weapons)
+    w.evolution = content.evolutions.find((e) => e.weapon === w.def.id);
 }
 
 describe('fusions (spec: run-progression / fusions)', () => {

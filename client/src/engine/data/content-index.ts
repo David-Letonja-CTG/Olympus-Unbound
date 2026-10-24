@@ -1,6 +1,7 @@
 import {
   ArmourDefinition,
   AscensionDefinition,
+  EvolutionDefinition,
   FusionDefinition,
   BoonDefinition,
   BossDefinition,
@@ -71,6 +72,7 @@ export class ContentIndex {
   readonly instants: ReadonlyMap<string, InstantDefinition>;
   readonly fusions: ReadonlyMap<string, FusionDefinition>;
   readonly ascensions: ReadonlyMap<string, AscensionDefinition>;
+  readonly evolutions: ReadonlyMap<string, EvolutionDefinition>;
   readonly wares: ReadonlyMap<string, WareDefinition>;
   readonly companions: ReadonlyMap<string, CompanionDefinition>;
   readonly encounters: ReadonlyMap<string, EncounterDefinition>;
@@ -88,6 +90,7 @@ export class ContentIndex {
     this.instants = byId(content.instants);
     this.fusions = byId(content.fusions);
     this.ascensions = byId(content.ascensions);
+    this.evolutions = byId(content.evolutions);
     this.wares = byId(content.wares);
     this.companions = byId(content.companions);
     this.encounters = byId(content.encounters);
@@ -137,6 +140,7 @@ export function validateContent(content: GameContent): string[] {
     ['instant', content.instants],
     ['fusion', content.fusions],
     ['ascension', content.ascensions],
+    ['evolution', content.evolutions],
     ['enemy', content.enemies],
     ['boss', content.bosses],
     ['realm', content.realms],
@@ -243,6 +247,27 @@ export function validateContent(content: GameContent): string[] {
   }
 
   errors.push(...validateFusions(content, index));
+  // Evolutions (spec: run-progression / weapon evolutions): a known weapon, once, known requirements, a real splash.
+  const evolved = new Set<string>();
+  for (const evo of content.evolutions) {
+    const name = `Evolution "${evo.id}"`;
+    if (!index.weapons.has(evo.weapon))
+      errors.push(`${name} evolves unknown weapon "${evo.weapon}".`);
+    if (evolved.has(evo.weapon)) errors.push(`${name}: weapon "${evo.weapon}" already evolves.`);
+    evolved.add(evo.weapon);
+    if (!(evo.splash.fraction > 0 && evo.splash.fraction <= 1 && evo.splash.radius > 0))
+      errors.push(`${name} needs a splash radius and a fraction in (0, 1].`);
+    for (const r of evo.requirements) {
+      const known =
+        (r.type === 'weapon' && index.weapons.has(r.id)) ||
+        (r.type === 'armour' && index.armour.has(r.id)) ||
+        (r.type === 'relic' && index.relics.has(r.id)) ||
+        (r.type === 'skill' && index.skills.has(r.id)) ||
+        (r.type === 'fusion' && index.fusions.has(r.id)) ||
+        r.type === 'element';
+      if (!known) errors.push(`${name} requires unknown ${r.type} "${'id' in r ? r.id : ''}".`);
+    }
+  }
 
   for (const enemy of content.enemies) {
     if (enemy.behavior.type === 'summoner' && !index.enemies.has(enemy.behavior.summon)) {

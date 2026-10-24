@@ -109,6 +109,25 @@ Offered once every requirement is met; modifiers stack per level. Tier II needs 
 
 **New fusion:** data plus a crest in `FUSION_CRESTS` (`engine/art/sprites.ts`: its glyphs, tier and colour): requirements (synergy types plus `fusion` with `minLevel`), a tier one above its highest fusion requirement, per-level modifiers. Validation checks ids, top levels and tiers.
 
+### Evolutions
+
+A weapon at level 6 with the relic below evolves once (weight 3.5): one more step of numbers, a gilded icon, and a **splash**: every hit also strikes the foes within the radius of its target for the given share of the weapon's damage (through the damage pipeline; the burst's own strikes never splash).
+
+| Evolution | Weapon + relic | Step | Splash |
+|---|---|---|---|
+| `spear_of_olympus` | `thunder_spear` + `zeus_eye` | +10 damage, +1 pierce | 70, 50% |
+| `keraunos` | `thunderbolt` + `zeus_eye` | +14 damage, +2 jumps | 80, 45% |
+| `orbs_of_the_aether` | `lightning_orb` + `eye_of_horus` | +2 orbs, +6 damage | 55, 40% |
+| `bow_of_apollo` | `divine_bow` + `trident_fragment` | +2 arrows, +8 damage, homing 2 | 60, 45% |
+| `trident_of_the_abyss` | `trident` + `trident_fragment` | +12 damage, +2 pierce | 75, 50% |
+| `hammer_of_hephaestus` | `war_hammer` + `golden_fleece` | +20 damage, +40 quake | 60, 35% |
+| `phoenix_blade` | `flaming_sword` + `phoenix_feather` | +14 damage, +0.6 arc | 65, 50% |
+| `scythe_of_thanatos` | `soul_scythe` + `soul_lantern` | +12 damage, +30 reach | 60, 45% |
+| `bident_of_tartarus` | `bident` + `soul_lantern` | +16 damage, +40 reach | 70, 50% |
+| `spear_of_pallas` | `spear_of_athena` + `eye_of_horus` | +12 damage, +2 pierce | 70, 50% |
+
+**New evolution:** data in `content/weapons.ts` (`EVOLUTIONS`: weapon, requirements, `upgrade` like a level, `splash`) plus an `evolved_*` crest (tier 0) in `FUSION_CRESTS`. One per weapon.
+
 ### Ascensions
 
 No top level; offered only when fewer than three other upgrades remain (weight 1 each): `ascend_might` +5% damage, `ascend_vigour` +15 health and +0.2 regen, `ascend_celerity` −2% cooldown and +2% speed, `ascend_fortune` +5% gold and XP.

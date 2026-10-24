@@ -62,3 +62,14 @@ An enemy whose health reaches 0 SHALL die exactly once, count as one kill, and d
 #### Scenario: Overkill by two weapons in the same step
 - **WHEN** two weapons hit an enemy with 5 health for 10 each in the same step
 - **THEN** the enemy dies once, one kill is counted and one XP drop appears
+
+### Requirement: Splash on hit
+A weapon with a splash SHALL, on every hit, also strike every other living enemy within the splash radius of the target for the splash fraction of the weapon's damage. Splash strikes SHALL go through the one damage pipeline (might, element, critical hits, the target's damage taken), count toward the weapon's damage, and SHALL not themselves splash.
+
+#### Scenario: A crowd
+- **WHEN** the Spear of Olympus hits a satyr with two more satyrs within its splash radius
+- **THEN** both are struck for half the spear's damage before multipliers, and a burst shows where
+
+#### Scenario: No chain of bursts
+- **WHEN** a splash strike hits an enemy
+- **THEN** that strike does not splash again

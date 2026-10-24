@@ -10,7 +10,7 @@ import { ENEMIES } from './enemies';
 import { GODS } from './gods';
 import { ARMOUR, ASCENSIONS, FUSIONS, INSTANTS, RELICS, SKILLS, SYNERGIES } from './items';
 import { REALMS } from './realms';
-import { WEAPONS } from './weapons';
+import { EVOLUTIONS, WEAPONS } from './weapons';
 
 export const BALANCE: BalanceConfig = {
   maxWeapons: 6,
@@ -25,6 +25,7 @@ export const BALANCE: BalanceConfig = {
     relic: 0.6,
     skill: 0.9,
     fusion: 3,
+    evolution: 3.5,
     ascension: 1,
     affinity: 1.6,
   },
@@ -127,6 +128,7 @@ export const CONTENT: GameContent = {
   instants: INSTANTS,
   fusions: FUSIONS,
   ascensions: ASCENSIONS,
+  evolutions: EVOLUTIONS,
   enemies: ENEMIES,
   bosses: BOSSES,
   realms: REALMS,

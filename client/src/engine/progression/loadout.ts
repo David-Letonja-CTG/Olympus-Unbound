@@ -58,7 +58,8 @@ export function refreshPlayer(state: RunState, player: Player): void {
   if (player.stats.maxHealth > oldMax) player.health += player.stats.maxHealth - oldMax;
   player.health = Math.min(player.health, player.stats.maxHealth);
   for (const weapon of [...player.loadout.weapons, player.ability]) {
-    const resolved = resolveWeaponStats(weapon.def, weapon.level, player.stats);
+    const extra = weapon.evolution?.upgrade;
+    const resolved = resolveWeaponStats(weapon.def, weapon.level, player.stats, extra);
     weapon.stats = resolved.stats;
     weapon.effects = resolved.effects;
   }
@@ -134,6 +135,16 @@ export function applyOffer(state: RunState, player: Player, offer: UpgradeOffer)
         state.emit({ type: 'fusionTaken', id: def.id, tier: def.tier, x: player.x, y: player.y });
         state.emit({ type: 'announcement', text: `Fusion: ${def.name}!`, kind: 'synergy' });
       }
+      break;
+    }
+    case 'evolution': {
+      const def = state.index.evolutions.get(offer.itemId);
+      const weapon = def && loadout.weapons.find((w) => w.def.id === def.weapon);
+      if (!def || !weapon || weapon.evolution) break;
+      weapon.evolution = def;
+      // Announced like a fusion (spec: run-progression / weapon evolutions).
+      state.emit({ type: 'fusionTaken', id: def.id, tier: 1, x: player.x, y: player.y });
+      state.emit({ type: 'announcement', text: `Evolution: ${def.name}!`, kind: 'synergy' });
       break;
     }
     case 'ascension':

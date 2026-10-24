@@ -10,6 +10,7 @@ import {
   BossPartDefinition,
   Element,
   EnemyDefinition,
+  EvolutionDefinition,
   RelicDefinition,
   StatusApplication,
   SynergyDefinition,
@@ -52,6 +53,8 @@ export interface WeaponInstance {
   /** Behavior-owned scratch state (e.g. which side a sweep swings next). */
   state: { swing?: number; orbs?: number[] };
   damageDealt: number;
+  /** Set once the weapon has evolved (spec: run-progression / weapon evolutions). */
+  evolution?: EvolutionDefinition;
 }
 
 export interface Loadout {
@@ -287,6 +290,8 @@ export interface HitSource {
   readonly effects: readonly StatusApplication[];
   readonly lifesteal: number;
   readonly ownerId: number;
+  /** An evolved weapon's burst round each target (spec: combat / splash on hit); absent on the burst's own strikes. */
+  readonly splash?: { readonly radius: number; readonly fraction: number; readonly color: number };
 }
 
 export interface Projectile {
@@ -380,6 +385,7 @@ export type UpgradeKind =
   /** A combined upgrade, and an upgrade without end (spec: run-progression / fusions, ascensions). */
   | 'fusion'
   | 'ascension'
+  | 'evolution'
   /** A merchant's ware, and leaving the shop (spec: merchant / the shop). */
   | 'ware'
   | 'leave';
@@ -521,6 +527,8 @@ export type SimEvent =
   /** `choiceId`: which choice was answered; a later one of the same player may already be open (D16). */
   | { type: 'choiceResolved'; offer: UpgradeOffer; playerId: number; choiceId: number }
   | { type: 'synergy'; id: string; name: string }
+  /** An evolved weapon's hit burst round its target (spec: combat / splash on hit). */
+  | { type: 'splash'; x: number; y: number; radius: number; color: number }
   /** A fusion's first level, at the god (spec: run-progression / fusion crests and fanfare). */
   | { type: 'fusionTaken'; id: string; tier: number; x: number; y: number }
   /** An instant blessing called `count` pickups to the god at `x`, `y` (spec: run-progression). */
@@ -697,7 +705,7 @@ export interface HudCombo {
   readonly id: string;
   readonly name: string;
   readonly description: string;
-  readonly kind: 'fusion' | 'synergy';
+  readonly kind: 'fusion' | 'synergy' | 'evolution';
   /** Synergies count as tier 1. */
   readonly tier: number;
   readonly level: number;

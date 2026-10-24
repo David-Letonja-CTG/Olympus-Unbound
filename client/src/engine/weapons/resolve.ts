@@ -1,5 +1,5 @@
 import { StatBlock } from '../core/stats';
-import { StatusApplication, WeaponDefinition, WeaponStats } from '../data/types';
+import { StatusApplication, WeaponDefinition, WeaponLevel, WeaponStats } from '../data/types';
 
 type MutableStats = { -readonly [K in keyof WeaponStats]: WeaponStats[K] };
 
@@ -20,7 +20,8 @@ const NUMERIC_KEYS: readonly (keyof WeaponStats)[] = [
 ];
 
 /**
- * A weapon's effective numbers at `level` for a player with `stats`: base + level deltas, then the player's
+ * A weapon's effective numbers at `level` for a player with `stats`: base + level deltas (and an evolution's `extra`
+ * step, spec: run-progression / weapon evolutions), then the player's
  * cooldown, area, projectile, pierce, chain, speed and duration stats. Damage multipliers (might, elements,
  * crits) and the knockback stat are applied per hit by the damage pipeline, not here.
  */
@@ -30,12 +31,14 @@ export function resolveWeaponStats(
   },
   level: number,
   stats: StatBlock,
+  extra?: WeaponLevel,
 ): { stats: WeaponStats; effects: StatusApplication[] } {
   const s: MutableStats = { ...def.base };
   const effects = [...(def.effects ?? [])];
   const levels = def.levels ?? [];
-  for (let i = 0; i < Math.min(level - 1, levels.length); i++) {
-    const delta = levels[i];
+  const deltas = levels.slice(0, Math.max(0, level - 1));
+  if (extra) deltas.push(extra);
+  for (const delta of deltas) {
     for (const key of NUMERIC_KEYS) {
       const value = delta[key];
       if (value !== undefined) s[key] += value;

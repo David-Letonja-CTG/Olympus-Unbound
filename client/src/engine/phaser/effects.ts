@@ -150,6 +150,21 @@ export class Effects {
         });
         this.burst(this.sparks, event.x, event.y, 50, 0xffd27a);
         return;
+      case 'splash':
+        // An evolved weapon's burst round its target (spec: combat / splash on hit). Bursts come with nearly every
+        // hit, so they never crowd out the other effects.
+        if (this.transients.length >= 90) return;
+        this.add({
+          kind: 'burst',
+          x: event.x,
+          y: event.y,
+          radius: event.radius,
+          angle: 0,
+          arc: 0,
+          color: event.color,
+          ttl: 0.3,
+        });
+        return;
       case 'fusionTaken':
         // A burst that grows with the fusion's tier (spec: run-progression / fusion crests and fanfare).
         this.add({

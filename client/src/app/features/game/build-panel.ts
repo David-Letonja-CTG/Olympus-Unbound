@@ -267,6 +267,13 @@ export class BuildPanel {
       if (combos.length)
         groups.push({ tier: `f${tier}`, title: `Fusions · ${TIER_NAMES[tier]}`, combos });
     }
+    const evolutions = tree.filter((c) => c.kind === 'evolution');
+    if (evolutions.length)
+      groups.push({
+        tier: 'e',
+        title: 'Evolutions · a weapon at its top and a relic',
+        combos: evolutions,
+      });
     const synergies = tree.filter((c) => c.kind === 'synergy');
     if (synergies.length)
       groups.push({ tier: 's', title: 'Synergies · activate on their own', combos: synergies });
@@ -281,6 +288,7 @@ export class BuildPanel {
 
   protected stateText(c: HudCombo): string {
     if (c.kind === 'synergy') return c.level > 0 ? 'Active' : 'Locked';
+    if (c.kind === 'evolution') return c.level > 0 ? 'Evolved' : STATE_LABEL[c.state];
     if (c.state === 'active') return `Lv ${c.level}/${c.maxLevel}`;
     return STATE_LABEL[c.state];
   }

@@ -511,11 +511,12 @@ export class RunSimulation {
     const boss = state.boss && !state.boss.dead ? state.boss : undefined;
     const weapons: HudItem[] = loadout.weapons.map((w) => ({
       id: w.def.id,
-      name: w.def.name,
+      // An evolved weapon wears its new name and gilded icon (spec: run-progression / weapon evolutions).
+      name: w.evolution?.name ?? w.def.name,
       level: w.level,
       maxLevel: w.def.levels.length + 1,
-      sprite: w.def.visual.sprite,
-      color: w.def.visual.color,
+      sprite: w.evolution?.visual.sprite ?? w.def.visual.sprite,
+      color: w.evolution?.visual.color ?? w.def.visual.color,
       ...(WEAPON_BEHAVIORS[w.def.behavior].continuous
         ? {}
         : { cooldown: w.stats.cooldown, remaining: Math.max(0, w.timer) }),

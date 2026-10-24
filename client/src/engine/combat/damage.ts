@@ -74,7 +74,35 @@ export function hitEnemy(
     enemy.vy += dir.y * push;
   }
   if (!enemy.dead) applyEffects(state, enemy, source.effects, amount, stats.duration);
+  if (source.splash) splash(state, enemy, source, source.splash);
   return amount;
+}
+
+/**
+ * An evolved weapon's burst (spec: combat / splash on hit): every other living enemy round the target is struck for a
+ * share of the weapon's damage through this same pipeline, by a source without a splash, so bursts never chain.
+ */
+function splash(
+  state: RunState,
+  target: Enemy,
+  source: HitSource,
+  burst: NonNullable<HitSource['splash']>,
+): void {
+  const strike: HitSource = {
+    ...source,
+    damage: source.damage * burst.fraction,
+    splash: undefined,
+  };
+  state.emit({
+    type: 'splash',
+    x: target.x,
+    y: target.y,
+    radius: burst.radius,
+    color: burst.color,
+  });
+  for (const other of state.enemiesInRadius(target.x, target.y, burst.radius)) {
+    if (other !== target && !other.dead) hitEnemy(state, other, strike, target.x, target.y);
+  }
 }
 
 function applyEffects(
