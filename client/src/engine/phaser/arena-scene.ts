@@ -197,6 +197,7 @@ export class ArenaScene extends Phaser.Scene {
     driver.advance(dt, this.input$.players(), () => this.input$.consumeTaps());
     if (driver.paused || driver.phase !== 'playing')
       for (const ui of this.input$.uiInputs()) this.host.emit({ type: 'uiInput', input: ui });
+    if (this.input$.takeBuildRequest()) this.host.emit({ type: 'uiInput', input: 'build' });
 
     for (const event of driver.events()) this.handle(event);
 

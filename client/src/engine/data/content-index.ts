@@ -1,5 +1,7 @@
 import {
   ArmourDefinition,
+  AscensionDefinition,
+  FusionDefinition,
   BoonDefinition,
   BossDefinition,
   BossPartDefinition,
@@ -67,6 +69,8 @@ export class ContentIndex {
   readonly bosses: ReadonlyMap<string, BossDefinition>;
   readonly realms: ReadonlyMap<string, RealmDefinition>;
   readonly instants: ReadonlyMap<string, InstantDefinition>;
+  readonly fusions: ReadonlyMap<string, FusionDefinition>;
+  readonly ascensions: ReadonlyMap<string, AscensionDefinition>;
   readonly wares: ReadonlyMap<string, WareDefinition>;
   readonly companions: ReadonlyMap<string, CompanionDefinition>;
   readonly encounters: ReadonlyMap<string, EncounterDefinition>;
@@ -82,6 +86,8 @@ export class ContentIndex {
     this.bosses = byId(content.bosses);
     this.realms = byId(content.realms);
     this.instants = byId(content.instants);
+    this.fusions = byId(content.fusions);
+    this.ascensions = byId(content.ascensions);
     this.wares = byId(content.wares);
     this.companions = byId(content.companions);
     this.encounters = byId(content.encounters);
@@ -129,6 +135,8 @@ export function validateContent(content: GameContent): string[] {
     ['skill', content.skills],
     ['synergy', content.synergies],
     ['instant', content.instants],
+    ['fusion', content.fusions],
+    ['ascension', content.ascensions],
     ['enemy', content.enemies],
     ['boss', content.bosses],
     ['realm', content.realms],
@@ -233,6 +241,8 @@ export function validateContent(content: GameContent): string[] {
         );
     }
   }
+
+  errors.push(...validateFusions(content, index));
 
   for (const enemy of content.enemies) {
     if (enemy.behavior.type === 'summoner' && !index.enemies.has(enemy.behavior.summon)) {
@@ -345,6 +355,47 @@ export function validateContent(content: GameContent): string[] {
  * The Director's content (spec: director-of-chaos): every ending a behavior can reach is defined, references resolve,
  * contracts offer encounters that only contracts start, major encounters warn first, and the balance is sane.
  */
+/**
+ * The tree of fusions (spec: run-progression / fusions): known requirements at reachable levels, every tier above I
+ * resting on the tier below and only on lower tiers (so no cycles), at least one level.
+ */
+function validateFusions(content: GameContent, index: ContentIndex): string[] {
+  const errors: string[] = [];
+  for (const fusion of content.fusions) {
+    const name = `Fusion "${fusion.id}"`;
+    if (!(fusion.maxLevel >= 1)) errors.push(`${name} needs at least one level.`);
+    if (fusion.requirements.length === 0) errors.push(`${name} has no requirements.`);
+    let below = false;
+    for (const r of fusion.requirements) {
+      const level = 'minLevel' in r ? (r.minLevel ?? 1) : 1;
+      const top =
+        r.type === 'weapon'
+          ? (index.weapons.get(r.id)?.levels.length ?? -1) + 1
+          : r.type === 'armour'
+            ? (index.armour.get(r.id)?.levels.length ?? 0)
+            : r.type === 'skill'
+              ? (index.skills.get(r.id)?.maxLevel ?? 0)
+              : r.type === 'relic'
+                ? index.relics.has(r.id)
+                  ? 1
+                  : 0
+                : r.type === 'fusion'
+                  ? (index.fusions.get(r.id)?.maxLevel ?? 0)
+                  : Infinity;
+      if (top <= 0) errors.push(`${name} requires unknown ${r.type} "${'id' in r ? r.id : ''}".`);
+      else if (level > top)
+        errors.push(`${name} requires ${r.type} "${'id' in r ? r.id : ''}" beyond its top level.`);
+      if (r.type === 'fusion') {
+        const tier = index.fusions.get(r.id)?.tier ?? 0;
+        if (tier >= fusion.tier) errors.push(`${name} requires a fusion of its own tier or above.`);
+        if (tier === fusion.tier - 1) below = true;
+      }
+    }
+    if (fusion.tier > 1 && !below) errors.push(`${name} needs a fusion of the tier below.`);
+  }
+  return errors;
+}
+
 function validateDirector(content: GameContent, index: ContentIndex): string[] {
   const errors: string[] = [];
   const reward = (where: string, r: EncounterReward | undefined) => {

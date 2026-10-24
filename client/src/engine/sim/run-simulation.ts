@@ -10,6 +10,7 @@ import { ArenaData, generateArena } from '../maps/generate-arena';
 import { applyOffer } from '../progression/loadout';
 import { generateOffers } from '../progression/offers';
 import { SpawnDirector } from '../spawning/director';
+import { buildSnapshot } from '../progression/tree';
 import { WEAPON_BEHAVIORS } from '../weapons/behaviors';
 import {
   updateHostileProjectiles,
@@ -616,6 +617,7 @@ export class RunSimulation {
           ability: p.ability.stats.cooldown > 0 ? 1 - p.abilityTimer / p.ability.stats.cooldown : 1,
         })),
       encounters: this.chaos.hud(),
+      build: buildSnapshot(state, player),
       boons: player.boons.map((b) => ({
         id: b.def.id,
         name: b.def.name,

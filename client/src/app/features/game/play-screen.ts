@@ -35,6 +35,7 @@ import { ALLY_SKILLS, RunSetup } from '../../core/run-setup';
 import { TouchScreen } from '../../core/touch-screen';
 import { challengeRun, QUICK_RULES } from '../../core/challenge';
 import { trialRun } from '../../core/daily-trial';
+import { BuildPanel } from './build-panel';
 import { DirectorPanel } from './director-panel';
 import { Announcement, Hud } from './hud/hud';
 import { LevelUpDialog } from './level-up-dialog';
@@ -70,11 +71,12 @@ declare global {
  */
 @Component({
   selector: 'app-play-screen',
-  imports: [DirectorPanel, Hud, LevelUpDialog, PauseMenu, RunLoading],
+  imports: [BuildPanel, DirectorPanel, Hud, LevelUpDialog, PauseMenu, RunLoading],
   changeDetection: ChangeDetectionStrategy.OnPush,
   host: {
     '(contextmenu)': '$event.preventDefault()',
     '(pointerdown)': 'onPointerDown($event)',
+    '(document:keydown)': 'onKey($event)',
   },
   template: `
     <div class="game-host" #host data-testid="game-host"></div>
@@ -109,6 +111,19 @@ declare global {
         >
           <span aria-hidden="true"></span><span aria-hidden="true"></span>
         </button>
+      }
+      @if (touch() && !paused() && !ended()) {
+        <button
+          class="touch-build"
+          data-testid="touch-build"
+          aria-label="Your build"
+          (click)="toggleBuild()"
+        >
+          <span aria-hidden="true">⬡</span>
+        </button>
+      }
+      @if (buildOpen() && !ended()) {
+        <app-build-panel [hud]="h" (closed)="buildOpen.set(false)" />
       }
     }
     @if (director(); as report) {
@@ -187,6 +202,27 @@ declare global {
         rgba(14, 10, 8, 0.9) 70%
       );
       box-shadow: 0 0 0 3px rgba(0, 0, 0, 0.45);
+      cursor: pointer;
+    }
+    /* Beside the pause button: the build panel on a phone (spec: hud / the build panel). */
+    .touch-build {
+      position: absolute;
+      top: calc(8px + env(safe-area-inset-top, 0px));
+      left: calc(62px + env(safe-area-inset-left, 0px));
+      z-index: 6;
+      width: 44px;
+      height: 44px;
+      border-radius: 50%;
+      border: 2px solid rgba(214, 170, 92, 0.85);
+      background: radial-gradient(
+        circle at 50% 35%,
+        rgba(70, 48, 22, 0.85),
+        rgba(14, 10, 8, 0.9) 70%
+      );
+      box-shadow: 0 0 0 3px rgba(0, 0, 0, 0.45);
+      color: var(--gold-2);
+      font-size: 1.3rem;
+      line-height: 1;
       cursor: pointer;
     }
     .touch-pause span {
@@ -323,6 +359,8 @@ export class PlayScreen {
     return special?.kind === 'daily' ? special.trial.twist : special?.challenge.twist;
   });
   protected readonly paused = signal(false);
+  /** The build panel (spec: hud / the build panel): open over play and choices; the run goes on. */
+  protected readonly buildOpen = signal(false);
   protected readonly ended = signal<RunOutcome | undefined>(undefined);
   protected readonly announcements = signal<readonly Announcement[]>([]);
   protected readonly error = signal<string | undefined>(undefined);
@@ -445,6 +483,22 @@ export class PlayScreen {
 
   protected send(command: Parameters<GameSession['send']>[0]): void {
     this.session?.send(command);
+  }
+
+  protected toggleBuild(): void {
+    this.buildOpen.update((open) => !open);
+  }
+
+  /** Tab opens and closes the build panel; Escape closes it first instead of pausing (spec: hud / the build panel). */
+  protected onKey(event: KeyboardEvent): void {
+    if (!this.hud() || this.ended()) return;
+    if (event.key === 'Tab') {
+      event.preventDefault();
+      this.toggleBuild();
+    } else if (event.key === 'Escape' && this.buildOpen() && !this.paused()) {
+      event.preventDefault();
+      this.buildOpen.set(false);
+    }
   }
 
   protected choose(choice: UpgradeChoice, index: number): void {
@@ -636,7 +690,8 @@ export class PlayScreen {
   }
 
   private onUiInput(input: UiInput): void {
-    if (this.paused()) this.pauseMenu()?.handle(input);
+    if (input === 'build') this.toggleBuild();
+    else if (this.paused()) this.pauseMenu()?.handle(input);
     else if (this.choice()) this.levelUp()?.handle(input);
   }
 

@@ -60,6 +60,9 @@ export interface Loadout {
   relics: RelicDefinition[];
   skills: Map<string, number>;
   synergies: SynergyDefinition[];
+  /** Fusion and ascension levels by ID (spec: run-progression / fusions, ascensions). */
+  fusions: Map<string, number>;
+  ascensions: Map<string, number>;
 }
 
 export interface Player {
@@ -374,6 +377,9 @@ export type UpgradeKind =
   | 'gold'
   /** An instant blessing, used at once (spec: run-progression / instant blessings). */
   | 'instant'
+  /** A combined upgrade, and an upgrade without end (spec: run-progression / fusions, ascensions). */
+  | 'fusion'
+  | 'ascension'
   /** A merchant's ware, and leaving the shop (spec: merchant / the shop). */
   | 'ware'
   | 'leave';
@@ -394,6 +400,8 @@ export interface UpgradeOffer {
   readonly price?: number;
   /** What a ware applies to, e.g. the weapon a whetstone levels. */
   readonly target?: string;
+  /** Locked fusions and inactive synergies this offer counts toward (spec: run-progression / level-up choice). */
+  readonly parts?: readonly string[];
 }
 
 export interface UpgradeChoice {
@@ -599,6 +607,8 @@ export interface HudSnapshot {
   readonly encounters: readonly HudEncounter[];
   /** This god's blessings. */
   readonly boons: readonly HudBoon[];
+  /** The build panel's view (spec: hud / the build panel). */
+  readonly build: HudBuild;
 }
 
 /** One encounter as the HUD shows it. */
@@ -662,4 +672,38 @@ export interface HudItem {
   /** A weapon's cooldown and the seconds of it left (spec: hud / cooldowns and stamina). */
   readonly cooldown?: number;
   readonly remaining?: number;
+}
+
+/** A player's build for the build panel (spec: hud / the build panel). */
+export interface HudBuild {
+  readonly skills: readonly HudItem[];
+  readonly fusions: readonly HudItem[];
+  /** `maxLevel` 0: no top level. */
+  readonly ascensions: readonly HudItem[];
+  /** Every fusion and synergy this god can reach. */
+  readonly tree: readonly HudCombo[];
+}
+
+/** One fusion or synergy in the tree, with what it still needs. */
+export interface HudCombo {
+  readonly id: string;
+  readonly name: string;
+  readonly description: string;
+  readonly kind: 'fusion' | 'synergy';
+  /** Synergies count as tier 1. */
+  readonly tier: number;
+  readonly level: number;
+  readonly maxLevel: number;
+  /** `ready`: every requirement met, so it may be offered (synergies activate on their own). */
+  readonly state: 'locked' | 'ready' | 'active' | 'maxed';
+  readonly sprite: string;
+  readonly needs: readonly HudBuildNeed[];
+}
+
+export interface HudBuildNeed {
+  readonly name: string;
+  readonly sprite: string;
+  readonly have: number;
+  readonly need: number;
+  readonly met: boolean;
 }

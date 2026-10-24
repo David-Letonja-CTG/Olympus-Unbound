@@ -273,7 +273,10 @@ The Minotaur, king of the Labyrinth, with a bronze labrys (18,000 health, 380 go
 - **Skills** (stackable): Might, Swiftness, Haste, Multishot, Reach, Vitality, Bulwark, Magnetism, Wisdom of Athena, Precision, Lingering Power, Storm Caller, Forked Lightning, Fury of Flames, Titan's Strength, Shadow Pact. Element skills appear only when you wield that element.
 - **Synergies** activate automatically and are announced: **Storm**, **Tempest**, **Inferno**, **Soul Reaper**, **Divine Bulwark**, **Wrath of the Sky**, **Earthshaker** (requirements in [content.md](content.md)).
 - **Call of Hermes** (a blessing used at once): every experience gem in the realm streams to you from wherever it lies. It takes no slot and can be taken again whenever many gems lie beyond your magnet; it is only offered then.
-- When nothing is left to offer: **Ambrosia** (heal 30%) or **Tribute** (25 gold).
+- **Fusions** combine upgrades at their top level into a stronger one, in a tree of three tiers. *Forge of Hephaestus* (Flaming Sword and War Hammer at level 6), *Artemis's Volley*, *Hide of the Titans*, *Sandals of Hermes*, *Oracle of Delphi* and *Grace of Chronos* are open to every god; *Sky Father*, *Lord of the Dead*, *Wrath of the Deep* and *Strategos* need a god's own weapons. Two tier I fusions at their top open a tier II one (*Wrath of the Twelve*, *Ichor of the Immortals*, *Eyes of Olympus*), and all three crown the tree with **Apotheosis**. A fusion joins the level-up offers once its requirements are met; an offer that counts toward one says so ("Toward Forge of Hephaestus").
+- **Ascensions** (Strength, Vigour, Speed, Fortune) have no top level and fill the choice once fewer than three other upgrades are left, so every level-up offers three real choices until the end.
+- **The build panel** (Tab, a gamepad's Back/Select, or the hexagon button on a phone) shows your whole build and the tree of every fusion and synergy your god can reach: each requirement ticked or with the level still needed, and which fusions are ready. The fight goes on behind it, and it opens over a level-up choice too.
+- Content without ascensions falls back to **Ambrosia** (heal 30%) or **Tribute** (25 gold).
 
 ## The Wandering Merchant
 

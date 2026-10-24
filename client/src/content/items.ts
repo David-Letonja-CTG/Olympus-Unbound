@@ -1,5 +1,7 @@
 import type {
   ArmourDefinition,
+  AscensionDefinition,
+  FusionDefinition,
   InstantDefinition,
   RelicDefinition,
   SkillDefinition,
@@ -421,5 +423,289 @@ export const INSTANTS: readonly InstantDefinition[] = [
     weight: 1.4,
     minLying: 40,
     visual: { sprite: 'blessing_hermes', color: 0x7fe8d0 },
+  },
+];
+
+/**
+ * Combined upgrades, offered once every requirement is met; three tiers form the tree the build panel shows
+ * (spec: run-progression / fusions). Tier I fuses two upgrades at their top level.
+ */
+export const FUSIONS: readonly FusionDefinition[] = [
+  {
+    id: 'hunters_volley',
+    name: "Artemis's Volley",
+    description: '+1 pierce, +10% projectile speed and +10% physical damage per level.',
+    tier: 1,
+    maxLevel: 3,
+    requirements: [
+      { type: 'weapon', id: 'divine_bow', minLevel: 6 },
+      { type: 'skill', id: 'multishot', minLevel: 2 },
+    ],
+    modifiers: [
+      { stat: 'pierce', flat: 1 },
+      { stat: 'projectileSpeed', flat: 0.1 },
+      { stat: 'physicalDamage', flat: 0.1 },
+    ],
+    visual: { sprite: 'fusion_volley', color: 0xffe9b0 },
+  },
+  {
+    id: 'forge_of_hephaestus',
+    name: 'Forge of Hephaestus',
+    description: '+15% fire and physical damage and +5% area per level.',
+    tier: 1,
+    maxLevel: 3,
+    requirements: [
+      { type: 'weapon', id: 'flaming_sword', minLevel: 6 },
+      { type: 'weapon', id: 'war_hammer', minLevel: 6 },
+    ],
+    modifiers: [
+      { stat: 'fireDamage', flat: 0.15 },
+      { stat: 'physicalDamage', flat: 0.15 },
+      { stat: 'area', flat: 0.05 },
+    ],
+    visual: { sprite: 'fusion_forge', color: 0xff9a4d },
+  },
+  {
+    id: 'titans_hide',
+    name: 'Hide of the Titans',
+    description: '+25 max health, +1 armour and +0.3 health per second per level.',
+    tier: 1,
+    maxLevel: 3,
+    requirements: [
+      { type: 'skill', id: 'vitality', minLevel: 4 },
+      { type: 'skill', id: 'bulwark', minLevel: 3 },
+    ],
+    modifiers: [
+      { stat: 'maxHealth', flat: 25 },
+      { stat: 'armor', flat: 1 },
+      { stat: 'regen', flat: 0.3 },
+    ],
+    visual: { sprite: 'fusion_hide', color: 0xd8b48a },
+  },
+  {
+    id: 'sandals_of_hermes',
+    name: 'Sandals of Hermes',
+    description: '+5% movement speed, +20% pickup range and +5% XP per level.',
+    tier: 1,
+    maxLevel: 3,
+    requirements: [
+      { type: 'skill', id: 'swiftness', minLevel: 3 },
+      { type: 'skill', id: 'magnetism', minLevel: 3 },
+    ],
+    modifiers: [
+      { stat: 'moveSpeed', percent: 0.05 },
+      { stat: 'magnet', percent: 0.2 },
+      { stat: 'xpGain', flat: 0.05 },
+    ],
+    visual: { sprite: 'fusion_sandals', color: 0x7fe8d0 },
+  },
+  {
+    id: 'oracle_of_delphi',
+    name: 'Oracle of Delphi',
+    description: '+4% critical chance and +15% critical damage per level.',
+    tier: 1,
+    maxLevel: 3,
+    requirements: [
+      { type: 'skill', id: 'wisdom', minLevel: 3 },
+      { type: 'skill', id: 'precision', minLevel: 3 },
+    ],
+    modifiers: [
+      { stat: 'critChance', flat: 0.04 },
+      { stat: 'critMultiplier', flat: 0.15 },
+    ],
+    visual: { sprite: 'fusion_oracle', color: 0x9ad0ff },
+  },
+  {
+    id: 'grace_of_chronos',
+    name: 'Grace of Chronos',
+    description: 'Attacks 4% faster and +10% duration per level.',
+    tier: 1,
+    maxLevel: 3,
+    requirements: [
+      { type: 'skill', id: 'haste', minLevel: 4 },
+      { type: 'skill', id: 'persistence', minLevel: 3 },
+    ],
+    modifiers: [
+      { stat: 'cooldown', percent: -0.04 },
+      { stat: 'duration', flat: 0.1 },
+    ],
+    visual: { sprite: 'fusion_chronos', color: 0xa8e6cf },
+  },
+  {
+    id: 'sky_father',
+    name: 'Sky Father',
+    description: '+20% lightning damage and attacks 3% faster per level.',
+    tier: 1,
+    maxLevel: 3,
+    requirements: [
+      { type: 'weapon', id: 'thunderbolt', minLevel: 6 },
+      { type: 'skill', id: 'storm_caller', minLevel: 4 },
+    ],
+    modifiers: [
+      { stat: 'lightningDamage', flat: 0.2 },
+      { stat: 'cooldown', percent: -0.03 },
+    ],
+    visual: { sprite: 'fusion_sky', color: 0xfff27a },
+  },
+  {
+    id: 'lord_of_the_dead',
+    name: 'Lord of the Dead',
+    description: '+20% shadow damage and +1% lifesteal per level.',
+    tier: 1,
+    maxLevel: 3,
+    requirements: [
+      { type: 'weapon', id: 'soul_scythe', minLevel: 6 },
+      { type: 'weapon', id: 'bident', minLevel: 6 },
+    ],
+    modifiers: [
+      { stat: 'shadowDamage', flat: 0.2 },
+      { stat: 'lifesteal', flat: 0.01 },
+    ],
+    visual: { sprite: 'fusion_dead', color: 0xb68cff },
+  },
+  {
+    id: 'wrath_of_the_deep',
+    name: 'Wrath of the Deep',
+    description: '+12% physical and lightning damage and +1 pierce per level.',
+    tier: 1,
+    maxLevel: 3,
+    requirements: [
+      { type: 'weapon', id: 'trident', minLevel: 6 },
+      { type: 'weapon', id: 'thunder_spear', minLevel: 6 },
+    ],
+    modifiers: [
+      { stat: 'physicalDamage', flat: 0.12 },
+      { stat: 'lightningDamage', flat: 0.12 },
+      { stat: 'pierce', flat: 1 },
+    ],
+    visual: { sprite: 'fusion_deep', color: 0x5fc6c0 },
+  },
+  {
+    id: 'strategos',
+    name: 'Strategos',
+    description: '+12% physical damage, +8% area and +1 armour per level.',
+    tier: 1,
+    maxLevel: 3,
+    requirements: [
+      { type: 'weapon', id: 'spear_of_athena', minLevel: 6 },
+      { type: 'weapon', id: 'lightning_orb', minLevel: 6 },
+    ],
+    modifiers: [
+      { stat: 'physicalDamage', flat: 0.12 },
+      { stat: 'area', flat: 0.08 },
+      { stat: 'armor', flat: 1 },
+    ],
+    visual: { sprite: 'fusion_strategos', color: 0xe8c070 },
+  },
+  // Tier II: two tier I fusions at their top level.
+  {
+    id: 'wrath_of_the_twelve',
+    name: 'Wrath of the Twelve',
+    description: '+12% damage and +20% critical damage per level.',
+    tier: 2,
+    maxLevel: 2,
+    requirements: [
+      { type: 'fusion', id: 'forge_of_hephaestus', minLevel: 3 },
+      { type: 'fusion', id: 'hunters_volley', minLevel: 3 },
+    ],
+    modifiers: [
+      { stat: 'might', flat: 0.12 },
+      { stat: 'critMultiplier', flat: 0.2 },
+    ],
+    visual: { sprite: 'fusion_twelve', color: 0xffd36b },
+  },
+  {
+    id: 'ichor_of_the_immortals',
+    name: 'Ichor of the Immortals',
+    description: '+40 max health and +0.8 health per second per level.',
+    tier: 2,
+    maxLevel: 2,
+    requirements: [
+      { type: 'fusion', id: 'titans_hide', minLevel: 3 },
+      { type: 'fusion', id: 'grace_of_chronos', minLevel: 3 },
+    ],
+    modifiers: [
+      { stat: 'maxHealth', flat: 40 },
+      { stat: 'regen', flat: 0.8 },
+    ],
+    visual: { sprite: 'fusion_ichor', color: 0xffc870 },
+  },
+  {
+    id: 'eyes_of_olympus',
+    name: 'Eyes of Olympus',
+    description: '+10% damage, +10% XP and +5% critical chance per level.',
+    tier: 2,
+    maxLevel: 2,
+    requirements: [
+      { type: 'fusion', id: 'oracle_of_delphi', minLevel: 3 },
+      { type: 'fusion', id: 'sandals_of_hermes', minLevel: 3 },
+    ],
+    modifiers: [
+      { stat: 'might', flat: 0.1 },
+      { stat: 'xpGain', flat: 0.1 },
+      { stat: 'critChance', flat: 0.05 },
+    ],
+    visual: { sprite: 'fusion_eyes', color: 0xc9f0ff },
+  },
+  // Tier III: the crown of the tree.
+  {
+    id: 'apotheosis',
+    name: 'Apotheosis',
+    description: '+25% damage, attacks 5% faster, +10% area and +50 max health.',
+    tier: 3,
+    maxLevel: 1,
+    requirements: [
+      { type: 'fusion', id: 'wrath_of_the_twelve', minLevel: 2 },
+      { type: 'fusion', id: 'ichor_of_the_immortals', minLevel: 2 },
+      { type: 'fusion', id: 'eyes_of_olympus', minLevel: 2 },
+    ],
+    modifiers: [
+      { stat: 'might', flat: 0.25 },
+      { stat: 'cooldown', percent: -0.05 },
+      { stat: 'area', flat: 0.1 },
+      { stat: 'maxHealth', flat: 50 },
+    ],
+    visual: { sprite: 'fusion_apotheosis', color: 0xfff6a8 },
+  },
+];
+
+/** Upgrades without a top level, offered only when fewer than three others remain (spec: run-progression / ascensions). */
+export const ASCENSIONS: readonly AscensionDefinition[] = [
+  {
+    id: 'ascend_might',
+    name: 'Ascension of Strength',
+    description: '+5% damage.',
+    modifiers: [{ stat: 'might', flat: 0.05 }],
+    visual: { sprite: 'ascend_might', color: 0xff6b6b },
+  },
+  {
+    id: 'ascend_vigour',
+    name: 'Ascension of Vigour',
+    description: '+15 max health, +0.2 health per second.',
+    modifiers: [
+      { stat: 'maxHealth', flat: 15 },
+      { stat: 'regen', flat: 0.2 },
+    ],
+    visual: { sprite: 'ascend_vigour', color: 0xff8fa3 },
+  },
+  {
+    id: 'ascend_celerity',
+    name: 'Ascension of Speed',
+    description: 'Attacks 2% faster, +2% movement speed.',
+    modifiers: [
+      { stat: 'cooldown', percent: -0.02 },
+      { stat: 'moveSpeed', percent: 0.02 },
+    ],
+    visual: { sprite: 'ascend_celerity', color: 0x7fc8ff },
+  },
+  {
+    id: 'ascend_fortune',
+    name: 'Ascension of Fortune',
+    description: '+5% gold and XP.',
+    modifiers: [
+      { stat: 'goldGain', flat: 0.05 },
+      { stat: 'xpGain', flat: 0.05 },
+    ],
+    visual: { sprite: 'ascend_fortune', color: 0xffd34d },
   },
 ];

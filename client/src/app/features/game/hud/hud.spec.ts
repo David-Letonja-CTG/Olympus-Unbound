@@ -33,6 +33,7 @@ const base: HudSnapshot = {
   party: [],
   encounters: [],
   boons: [],
+  build: { skills: [], fusions: [], ascensions: [], tree: [] },
 };
 
 function render(

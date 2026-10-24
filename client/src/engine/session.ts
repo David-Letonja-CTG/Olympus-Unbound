@@ -90,7 +90,16 @@ export type GameCommand =
   | { readonly type: 'debug'; readonly action: DebugAction };
 
 /** Menu navigation from a gamepad, forwarded while a choice or the pause menu is open. */
-export type UiInput = 'up' | 'down' | 'left' | 'right' | 'confirm' | 'back' | 'pause';
+export type UiInput =
+  | 'up'
+  | 'down'
+  | 'left'
+  | 'right'
+  | 'confirm'
+  | 'back'
+  | 'pause'
+  /** Opens or closes the build panel, also during play (a gamepad's Back/Select). */
+  | 'build';
 
 /** What a running game tells the application (D3). Frequent state arrives only as throttled `hud` snapshots. */
 export type GameEvent =

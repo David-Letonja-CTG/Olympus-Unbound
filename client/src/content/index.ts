@@ -8,7 +8,7 @@ import { INTRO } from './cutscenes/intro';
 import { BOSSES } from './bosses';
 import { ENEMIES } from './enemies';
 import { GODS } from './gods';
-import { ARMOUR, INSTANTS, RELICS, SKILLS, SYNERGIES } from './items';
+import { ARMOUR, ASCENSIONS, FUSIONS, INSTANTS, RELICS, SKILLS, SYNERGIES } from './items';
 import { REALMS } from './realms';
 import { WEAPONS } from './weapons';
 
@@ -24,6 +24,8 @@ export const BALANCE: BalanceConfig = {
     armourLevel: 0.8,
     relic: 0.6,
     skill: 0.9,
+    fusion: 3,
+    ascension: 1,
     affinity: 1.6,
   },
   fallback: { healFraction: 0.3, gold: 25 },
@@ -123,6 +125,8 @@ export const CONTENT: GameContent = {
   skills: SKILLS,
   synergies: SYNERGIES,
   instants: INSTANTS,
+  fusions: FUSIONS,
+  ascensions: ASCENSIONS,
   enemies: ENEMIES,
   bosses: BOSSES,
   realms: REALMS,

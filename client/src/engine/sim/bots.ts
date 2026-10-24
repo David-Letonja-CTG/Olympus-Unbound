@@ -272,6 +272,10 @@ function scoreOffer(state: RunState, bot: Player, o: UpgradeOffer): number {
       return 5 + affinity + synergy;
     case 'heal':
       return bot.health < bot.stats.maxHealth * 0.5 ? 20 : 1;
+    case 'fusion':
+      return 25;
+    case 'ascension':
+      return 4;
     case 'instant':
       // Only offered when it is worth it (many gems lying), and the XP is the whole party's.
       return 9;

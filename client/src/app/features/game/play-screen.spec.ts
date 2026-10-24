@@ -76,6 +76,7 @@ const hud: HudSnapshot = {
   party: [],
   encounters: [],
   boons: [],
+  build: { skills: [], fusions: [], ascensions: [], tree: [] },
 };
 
 const choice: UpgradeChoice = {
