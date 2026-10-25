@@ -34,6 +34,8 @@ export type SoundCue =
   | 'kill'
   | 'killElite'
   | 'killBoss'
+  // A prop broken (spec: arena-generation / breakable props).
+  | 'shatter'
   // The player.
   | 'hurt'
   | 'revive'
@@ -302,6 +304,14 @@ export const CUES: Record<SoundCue, Cue> = {
     voices: [
       n(900, 200, 0.12, 0.08, { filter: 'lowpass', drive: 0.3 }),
       o('triangle', 240, 80, 0.1, 0.05),
+    ],
+  },
+  shatter: {
+    bus: 'impact',
+    gap: 50,
+    voices: [
+      n(5000, 1800, 0.14, 0.09, { filter: 'bandpass' }),
+      o('triangle', 900, 300, 0.06, 0.04),
     ],
   },
   killElite: {

@@ -105,6 +105,18 @@ export const MOUNT_OLYMPUS: RealmDefinition = {
       { kind: 'olive_tree', density: 5, terrain: ['grass', 'meadow'] },
       { kind: 'broken_column', density: 3, terrain: ['earth', 'marble'] },
     ],
+    // Jars and crates a god breaks by walking into them (spec: arena-generation / breakable props).
+    props: {
+      kinds: [
+        { id: 'amphora', radius: 14, visual: { sprite: 'prop_amphora', color: 0xb0623a } },
+        {
+          id: 'pale_amphora',
+          radius: 14,
+          visual: { sprite: 'prop_amphora_pale', color: 0xc8a77a },
+        },
+      ],
+      clusters: 12,
+    },
     decorations: [
       {
         id: 'grass_tuft',
@@ -355,6 +367,13 @@ export const THE_UNDERWORLD: RealmDefinition = {
       { kind: 'dead_tree', density: 4, terrain: ['ash', 'basalt'] },
       { kind: 'broken_column', density: 3, terrain: ['basalt', 'black_marble'] },
     ],
+    // Jars and crates a god breaks by walking into them (spec: arena-generation / breakable props).
+    props: {
+      kinds: [
+        { id: 'funerary_urn', radius: 15, visual: { sprite: 'prop_urn_black', color: 0x5ad6c8 } },
+      ],
+      clusters: 12,
+    },
     decorations: [
       {
         id: 'asphodel',
@@ -596,6 +615,13 @@ export const LERNAEAN_MARSH: RealmDefinition = {
       { kind: 'cypress', density: 6, terrain: ['mud', 'reedbed'] },
       { kind: 'broken_column', density: 3, terrain: ['bog', 'mossy_marble'] },
     ],
+    // Jars and crates a god breaks by walking into them (spec: arena-generation / breakable props).
+    props: {
+      kinds: [
+        { id: 'reed_basket', radius: 15, visual: { sprite: 'prop_basket', color: 0x8a7a48 } },
+      ],
+      clusters: 12,
+    },
     decorations: [
       {
         id: 'reeds',
@@ -826,6 +852,14 @@ export const AEGEAN_SHORE: RealmDefinition = {
       { kind: 'statue', density: 0.6 },
       { kind: 'broken_column', density: 2.5, terrain: ['sea_rock', 'marble'] },
     ],
+    // Jars and crates a god breaks by walking into them (spec: arena-generation / breakable props).
+    props: {
+      kinds: [
+        { id: 'amphora', radius: 14, visual: { sprite: 'prop_amphora_pale', color: 0xc8a77a } },
+        { id: 'fish_crate', radius: 15, visual: { sprite: 'prop_crate', color: 0x8a6238 } },
+      ],
+      clusters: 12,
+    },
     decorations: [
       {
         id: 'shells',
@@ -1049,6 +1083,11 @@ export const LABYRINTH_OF_CRETE: RealmDefinition = {
       { kind: 'horns', density: 0.8, terrain: ['flagstone', 'dust'] },
       { kind: 'broken_column', density: 1, terrain: ['flagstone'] },
     ],
+    // Jars and crates a god breaks by walking into them (spec: arena-generation / breakable props).
+    props: {
+      kinds: [{ id: 'crate', radius: 15, visual: { sprite: 'prop_crate', color: 0x8a6238 } }],
+      clusters: 12,
+    },
     decorations: [
       {
         id: 'bones',
@@ -1286,6 +1325,13 @@ export const MOUNT_OTHRYS: RealmDefinition = {
       { kind: 'dead_tree', density: 1.5, terrain: ['ash', 'basalt'] },
       { kind: 'broken_column', density: 2.5, terrain: ['basalt', 'bronze_floor'] },
     ],
+    // Jars and crates a god breaks by walking into them (spec: arena-generation / breakable props).
+    props: {
+      kinds: [
+        { id: 'bronze_urn', radius: 15, visual: { sprite: 'prop_urn_bronze', color: 0xd0a050 } },
+      ],
+      clusters: 12,
+    },
     decorations: [
       {
         id: 'ash_pebbles',

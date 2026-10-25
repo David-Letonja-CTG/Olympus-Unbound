@@ -295,6 +295,13 @@ export const CROSSROADS_OF_HECATE: RealmDefinition = {
       { kind: 'rock', density: 3 },
       { kind: 'statue', density: 0.5 },
     ],
+    // Jars and crates a god breaks by walking into them (spec: arena-generation / breakable props).
+    props: {
+      kinds: [
+        { id: 'offering_gourd', radius: 15, visual: { sprite: 'prop_gourd', color: 0xd0782a } },
+      ],
+      clusters: 12,
+    },
     decorations: [
       {
         id: 'bones',

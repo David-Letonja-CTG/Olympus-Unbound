@@ -43,6 +43,8 @@ export interface WorldFrame {
   readonly sites: readonly FrameSite[];
   /** How far an eclipse has dimmed the realm, 0–1. */
   readonly darkness: number;
+  /** The arena's broken props, bit `i` for prop `i` (spec: arena-generation / breakable props). */
+  readonly brokenProps: number;
   /** Seconds between every entity's previous (`px`/`py`) and current position: one step, or a snapshot gap. */
   readonly span: number;
 }

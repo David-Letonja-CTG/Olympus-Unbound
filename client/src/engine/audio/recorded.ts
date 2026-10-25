@@ -95,6 +95,10 @@ export const RECORDED: Partial<Record<SoundCue, readonly SampleLayer[]>> = {
   hitShadow: [{ id: SOFT, gain: 0.35, rate: 0.8 }],
   crit: [{ id: PLATE, gain: 0.45 }],
   kill: [{ id: SOFT_HEAVY, gain: 0.4 }],
+  shatter: [
+    { id: STONE, gain: 0.45, rate: 1.6 },
+    { id: SOFT, gain: 0.3, rate: 1.3 },
+  ],
   killElite: [
     { id: PUNCH_HEAVY, gain: 0.85, rate: 0.8 },
     { id: STONE, gain: 0.5 },

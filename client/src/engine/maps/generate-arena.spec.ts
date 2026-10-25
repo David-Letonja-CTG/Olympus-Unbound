@@ -1,6 +1,6 @@
 import { CONTENT } from '../testing/content';
 import { MapGenConfig } from '../data/types';
-import { distanceToPolyline, generateArena, templeEntrance } from './generate-arena';
+import { distanceToPolyline, generateArena, MAX_PROPS, templeEntrance } from './generate-arena';
 import { WorldCollision } from '../core/collision';
 
 const olympus = CONTENT.realms.find((r) => r.id === 'mount_olympus')?.map as MapGenConfig;
@@ -258,6 +258,32 @@ describe('landmarks (spec: arena-generation / landmarks)', () => {
         expect(Math.hypot(m.x - arena.bossArena.x, m.y - arena.bossArena.y)).toBeGreaterThan(
           arena.bossArena.radius + m.radius,
         );
+      }
+    }
+  });
+});
+
+describe('breakable props (spec: arena-generation / breakable props)', () => {
+  it('scatters the props of every realm within the cap, clear of obstacles, the spawn and the boss arena', () => {
+    for (const realm of CONTENT.realms) {
+      for (let seed = 0; seed < 8; seed++) {
+        const arena = generateArena(realm.map, seed);
+        const where = realm.id + ' seed ' + seed;
+        expect(arena.props.length, where).toBeGreaterThan(8);
+        expect(arena.props.length, where).toBeLessThanOrEqual(MAX_PROPS);
+        expect(generateArena(realm.map, seed).props).toEqual(arena.props);
+        for (const p of arena.props) {
+          for (const o of arena.obstacles)
+            expect(Math.hypot(p.x - o.x, p.y - o.y), where).toBeGreaterThanOrEqual(
+              p.radius + o.radius,
+            );
+          expect(Math.hypot(p.x - arena.spawn.x, p.y - arena.spawn.y)).toBeGreaterThan(
+            realm.map.spawnClearRadius,
+          );
+          expect(Math.hypot(p.x - arena.bossArena.x, p.y - arena.bossArena.y)).toBeGreaterThan(
+            arena.bossArena.radius,
+          );
+        }
       }
     }
   });

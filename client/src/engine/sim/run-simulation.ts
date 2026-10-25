@@ -22,6 +22,7 @@ import { placeCompanions, updateCompanions } from './companions';
 import { arriveMerchant, buyWare, shopOffers, updateMerchant } from './merchant';
 import { collect, updatePickups } from './pickups';
 import { createPlayer, updatePlayers } from './players';
+import { breakProps } from './props';
 import { GATE_OPEN_SECONDS, GATE_RADIUS, GATE_STAND_SECONDS, realmAt, realmSeed } from './realms';
 import { updateRevives } from './revive';
 import { RunConfig, RunState } from './run-state';
@@ -148,6 +149,7 @@ export class RunSimulation {
 
     updatePlayers(state, this.withBots(inputs), dt);
     holdParty(state);
+    breakProps(state);
     updateRevives(state, dt);
     this.director.update(dt);
     this.chaos.update(dt, this.director);

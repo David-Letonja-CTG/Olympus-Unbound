@@ -122,6 +122,11 @@ export class Effects {
           this.number(event.x, event.y, event.amount, event.crit, event.element);
         if (event.crit) this.burst(this.sparks, event.x, event.y, 4, ELEMENT_COLOR[event.element]);
         return;
+      case 'propBroken':
+        // Shards and dust in the prop's colour (spec: arena-generation / breakable props).
+        this.burst(this.puffs, event.x, event.y, 8, event.color);
+        this.burst(this.sparks, event.x, event.y, 6, event.color);
+        return;
       case 'kill':
         this.burst(
           this.puffs,

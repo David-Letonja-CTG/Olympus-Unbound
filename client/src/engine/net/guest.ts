@@ -61,6 +61,7 @@ interface ReplicaFrame {
   zones: Snapshot['zones'];
   sites: Snapshot['sites'];
   darkness: number;
+  brokenProps: number;
   depth: number;
   span: number;
 }
@@ -95,6 +96,7 @@ export class GuestDriver implements RunDriver {
     zones: [],
     sites: [],
     darkness: 0,
+    brokenProps: 0,
     depth: 0,
     span: STEP,
   };
@@ -580,6 +582,7 @@ export class GuestDriver implements RunDriver {
       zones: b.zones,
       sites: b.sites,
       darkness: b.darkness,
+      brokenProps: b.brokenProps,
       depth: b.depth,
       span: b.time > a.time ? b.time - a.time : STEP,
     };

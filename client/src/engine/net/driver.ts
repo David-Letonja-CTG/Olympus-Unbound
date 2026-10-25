@@ -19,6 +19,8 @@ export interface DriverSnapshot {
   readonly boss?: { readonly x: number; readonly y: number };
   /** Where the realm's landmark stands (local runs only), for scripts that film it. */
   readonly landmark?: { readonly x: number; readonly y: number };
+  /** The breakable props and which are broken (scripts that smash them). */
+  readonly props?: readonly { readonly x: number; readonly y: number; readonly broken: boolean }[];
   /** The kind of attack the boss is winding up (local runs only), e.g. 'devour'. */
   readonly bossAttack?: string;
   /** Where the merchant stands while it is in the realm. */
@@ -253,6 +255,11 @@ export class LocalDriver implements RunDriver {
       boss: state.boss && !state.boss.dead ? { x: state.boss.x, y: state.boss.y } : undefined,
       bossAttack: state.boss && !state.boss.dead ? state.boss.boss?.current?.type : undefined,
       landmark: state.arena.obstacles.find((o) => o.kind === 'landmark'),
+      props: state.arena.props.map((pr) => ({
+        x: pr.x,
+        y: pr.y,
+        broken: !!((state.brokenProps >>> pr.id) & 1),
+      })),
       merchant: state.merchant ? { x: state.merchant.x, y: state.merchant.y } : undefined,
       players: state.players.filter((pl) => !pl.left).length,
       party: state.players.map((pl) => ({ x: pl.x, y: pl.y, alive: pl.alive })),

@@ -151,6 +151,10 @@ export class RunState implements WorldFrame {
   readonly merchantRng: Rng;
   /** The Director of Chaos's decisions and places (spec: director-of-chaos): its own stream (D5). */
   readonly chaosRng: Rng;
+  /** What broken props drop (spec: arena-generation / breakable props): its own stream (D5). */
+  readonly propRng: Rng;
+  /** The arena's broken props, bit `i` for prop `i` (WorldFrame; the snapshot carries it as 32 bits). */
+  brokenProps = 0;
 
   /** The run's clock (HUD, results). */
   time = 0;
@@ -243,6 +247,7 @@ export class RunState implements WorldFrame {
     this.offerRng = rng.fork('offers');
     this.merchantRng = rng.fork('merchant');
     this.chaosRng = rng.fork('chaos');
+    this.propRng = rng.fork('props');
   }
 
   /** How dark an encounter makes the realm, 0–1 (WorldFrame). */
@@ -406,6 +411,7 @@ export class RunState implements WorldFrame {
     this.omen.enemySpeed = 1;
     this.omen.spawnRate = 1;
     this.omen.darkness = 0;
+    this.brokenProps = 0;
   }
 
   /** Spawns an enemy unless the global cap is reached (bosses ignore the cap). */
