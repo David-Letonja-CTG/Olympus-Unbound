@@ -20,7 +20,19 @@ export const MOUNT_OLYMPUS: RealmDefinition = {
     'Some say the temple at the heart of the mountain still answers prayers. Most who went to ask did not return.',
   ],
   // Moonlit night: cold ambient light, pale fog, embers drifting from the burning temples.
-  atmosphere: { ambient: 0x5a6282, fog: 0x8a93ad, particles: 0xff9a4a },
+  atmosphere: {
+    ambient: 0x5a6282,
+    fog: 0x8a93ad,
+    particles: 0xff9a4a,
+    // Ambient life, drawn by the view only (spec: visual-atmosphere / ambient life).
+    ambience: {
+      weather: { kind: 'leaves', sprite: 'leaf_olive', rate: 4, color: 0x7a9a4a, wind: 24 },
+      lightning: { every: [14, 26], color: 0xdde6ff },
+      clouds: 0.35,
+      smoke: 0x8a8478,
+      wildlife: { kind: 'bird', sprite: 'dove', count: 6 },
+    },
+  },
   map: {
     widthTiles: 64,
     heightTiles: 64,
@@ -53,7 +65,12 @@ export const MOUNT_OLYMPUS: RealmDefinition = {
       { id: 'column', radius: 16, visual: { sprite: 'column', color: 0xe8e2d4 } },
       { id: 'broken_column', radius: 18, visual: { sprite: 'broken_column', color: 0xd8d0bf } },
       { id: 'statue', radius: 22, visual: { sprite: 'statue', color: 0xdcd6c8 } },
-      { id: 'olive_tree', radius: 24, visual: { sprite: 'olive_tree', color: 0x6b8e3d } },
+      {
+        id: 'olive_tree',
+        radius: 24,
+        visual: { sprite: 'olive_tree', color: 0x6b8e3d },
+        sway: 0.035,
+      },
       { id: 'rock', radius: 18, visual: { sprite: 'rock', color: 0x8a8580 } },
       { id: 'altar', radius: 26, visual: { sprite: 'altar', color: 0xc9c2b2 } },
       { id: 'wall', radius: 20, visual: { sprite: 'ruined_wall', color: 0xb3ac9e } },
@@ -299,7 +316,18 @@ export const THE_UNDERWORLD: RealmDefinition = {
     'Some heroes came down here alive. Few walked back up.',
   ],
   // A sunless sky: cold violet light, grey-blue mist, soul-wisps drifting instead of embers.
-  atmosphere: { ambient: 0x5e6090, fog: 0x5c6290, particles: 0x8fdcff, moon: false },
+  atmosphere: {
+    ambient: 0x5e6090,
+    fog: 0x5c6290,
+    particles: 0x8fdcff,
+    moon: false,
+    // Ambient life, drawn by the view only (spec: visual-atmosphere / ambient life).
+    ambience: {
+      weather: { kind: 'ash', rate: 10, color: 0x9a9aa8, wind: 8 },
+      smoke: 0x5a5a6a,
+      wildlife: { kind: 'bat', sprite: 'bat', count: 6 },
+    },
+  },
   map: {
     widthTiles: 64,
     heightTiles: 64,
@@ -579,7 +607,19 @@ export const LERNAEAN_MARSH: RealmDefinition = {
     'Heracles burned the Hydra’s necks to stop them growing back. You will have to make do with what you carry.',
   ],
   // Mist on still water: a cold green-grey light, low fog, drifting marsh-lights.
-  atmosphere: { ambient: 0x5c6a5c, fog: 0x6e8070, particles: 0xb8ff8a, moon: false },
+  atmosphere: {
+    ambient: 0x5c6a5c,
+    fog: 0x6e8070,
+    particles: 0xb8ff8a,
+    moon: false,
+    // Ambient life, drawn by the view only (spec: visual-atmosphere / ambient life).
+    ambience: {
+      weather: { kind: 'fireflies', rate: 6, color: 0xd8ff8a, wind: 4 },
+      glints: { terrain: ['deep_water', 'bog'], color: 0xb8ffd0 },
+      smoke: 0x6a7a6a,
+      wildlife: { kind: 'hopper', sprite: 'frog', count: 6 },
+    },
+  },
   map: {
     widthTiles: 64,
     heightTiles: 64,
@@ -624,7 +664,7 @@ export const LERNAEAN_MARSH: RealmDefinition = {
         radius: 18,
         visual: { sprite: 'broken_mossy_column', color: 0x7e8670 },
       },
-      { id: 'cypress', radius: 20, visual: { sprite: 'cypress', color: 0x24402c } },
+      { id: 'cypress', radius: 20, visual: { sprite: 'cypress', color: 0x24402c }, sway: 0.03 },
       { id: 'rock', radius: 18, visual: { sprite: 'rock', color: 0x6a6660 } },
       { id: 'altar', radius: 26, visual: { sprite: 'marsh_altar', color: 0x8c9478 } },
       { id: 'wall', radius: 20, visual: { sprite: 'marsh_wall', color: 0x868e76 } },
@@ -700,6 +740,7 @@ export const LERNAEAN_MARSH: RealmDefinition = {
         terrain: ['reedbed', 'bog'],
         density: 120,
         visual: { sprite: 'reeds', color: 0x78824a },
+        sway: 0.12,
       },
       {
         id: 'lily_pads',
@@ -839,7 +880,19 @@ export const AEGEAN_SHORE: RealmDefinition = {
     'The crabs of the shore are as stubborn as their marsh cousins. Strike them from afar.',
   ],
   // Moonlight on the sea: a cool silver-blue light, sea mist, spray drifting on the wind.
-  atmosphere: { ambient: 0x6a7290, fog: 0x8a98b4, particles: 0xd8ecff },
+  atmosphere: {
+    ambient: 0x6a7290,
+    fog: 0x8a98b4,
+    particles: 0xd8ecff,
+    // Ambient life, drawn by the view only (spec: visual-atmosphere / ambient life).
+    ambience: {
+      weather: { kind: 'spray', rate: 8, color: 0xe8f4ff, wind: 40 },
+      clouds: 0.3,
+      glints: { terrain: ['shallows', 'sea'], color: 0xe8f8ff },
+      smoke: 0x8a8478,
+      wildlife: { kind: 'bird', sprite: 'gull', count: 6 },
+    },
+  },
   map: {
     widthTiles: 64,
     heightTiles: 64,
@@ -1100,7 +1153,18 @@ export const LABYRINTH_OF_CRETE: RealmDefinition = {
     'Wound Asterion and the Labyrinth sends him its minotaurs. Near the end, he goes berserk.',
   ],
   // Underground: warm, low torchlight in dust, embers drifting; no moon.
-  atmosphere: { ambient: 0x6a5a4c, fog: 0x8a7458, particles: 0xffb070, moon: false },
+  atmosphere: {
+    ambient: 0x6a5a4c,
+    fog: 0x8a7458,
+    particles: 0xffb070,
+    moon: false,
+    // Ambient life, drawn by the view only (spec: visual-atmosphere / ambient life).
+    ambience: {
+      weather: { kind: 'dust', rate: 8, color: 0xffd8a0, wind: 6 },
+      smoke: 0x6a5a4a,
+      wildlife: { kind: 'crawler', sprite: 'rat', count: 5 },
+    },
+  },
   map: {
     widthTiles: 64,
     heightTiles: 64,
@@ -1356,7 +1420,18 @@ export const MOUNT_OTHRYS: RealmDefinition = {
     'Clear Othrys and the chain begins again on Mount Olympus, harder.',
   ],
   // Black stone under a storm sky: a cold ash-grey light and fog, so the crimson host stands out; embers on the wind.
-  atmosphere: { ambient: 0x6e6266, fog: 0x4e4648, particles: 0xff9a5a },
+  atmosphere: {
+    ambient: 0x6e6266,
+    fog: 0x4e4648,
+    particles: 0xff9a5a,
+    // Ambient life, drawn by the view only (spec: visual-atmosphere / ambient life).
+    ambience: {
+      weather: { kind: 'ash', rate: 12, color: 0x8a8080, wind: 18 },
+      lightning: { every: [18, 32], color: 0xffb0a0 },
+      smoke: 0x4a4444,
+      wildlife: { kind: 'bird', sprite: 'crow', count: 5 },
+    },
+  },
   map: {
     widthTiles: 64,
     heightTiles: 64,

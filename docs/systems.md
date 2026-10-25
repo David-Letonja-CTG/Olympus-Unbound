@@ -219,6 +219,18 @@ Placed after the obstacles, before the props, on `rng.fork('features')` (at most
 
 The bits are `RunState.features`, reset each realm; the snapshot carries them (format 8). The view leans a teetering column 0.12 rad, then shows its `stump` and `shaft`; dims a dry spring and its light; swaps a cold brazier for its `lit` sprite and light; closes a crusher's slabs as its telegraph runs out.
 
+## Ambient life — `phaser/ambience.ts`, `phaser/wildlife.ts`
+
+View only; the simulation never sees it and its randomness is cosmetic. `QualityProfile.ambience` scales it (Low 0: nothing is created; Medium 0.5; High 1); cloud shadows and sway are High only.
+
+- **Weather:** one emitter over the view at `rate × ambience` per second, drifting on `wind`.
+- **Lightning:** `Storm` flashes every `every` s: a view-wide light (priority 3) for 0.12 s, then 0.1 s, and the `rumble` cue 0.5–1.2 s later.
+- **Clouds:** a fog tile sprite over the ground, MULTIPLY at `clouds`.
+- **Glints:** 40/s × ambience tries at random view points, kept on `glints.terrain`.
+- **Smoke:** 12/s × ambience from the fire lights in view (flicker ≥ 0.25, lit).
+- **Wildlife:** a `Flock` of `count × ambience`, placed 260–520 px from the focus off obstacles; within 140 px of a god it flees for 1.4 s (birds and bats up the view) and is placed again 1–3 s later.
+- **Sway:** `sway` radians on obstacle and decoration kinds.
+
 ## Painted ground — `engine/maps/ground.ts`
 
 - Painted once per realm behind the loading screen (`GroundBuilder`), at 0.25/0.375/0.5 pixels per world unit (Low/Medium/High), then drawn as one image: no per-frame cost.

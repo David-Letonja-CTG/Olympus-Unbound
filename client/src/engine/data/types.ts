@@ -528,6 +528,33 @@ export interface ObstacleKind {
   readonly radius: number;
   readonly visual: Visual;
   readonly light?: LightSource;
+  /** How far it sways in the wind, radians (trees; spec: visual-atmosphere / ambient life). */
+  readonly sway?: number;
+}
+
+/**
+ * A realm's ambient life, drawn by the view only (spec: visual-atmosphere / ambient life): weather on the wind
+ * (`rate` particles per second at High, `wind` px/s sideways), lightning, cloud shadows (their opacity), glints on
+ * water terrain, smoke from fires (its colour) and a few creatures that flee from the gods.
+ */
+export interface Ambience {
+  readonly weather?: {
+    readonly kind: 'leaves' | 'ash' | 'fireflies' | 'spray' | 'dust';
+    /** A sprite for each particle (leaves); otherwise a soft spark in `color`. */
+    readonly sprite?: string;
+    readonly rate: number;
+    readonly color: number;
+    readonly wind: number;
+  };
+  readonly lightning?: { readonly every: readonly [number, number]; readonly color: number };
+  readonly clouds?: number;
+  readonly glints?: { readonly terrain: readonly string[]; readonly color: number };
+  readonly smoke?: number;
+  readonly wildlife?: {
+    readonly kind: 'bird' | 'bat' | 'hopper' | 'crawler';
+    readonly sprite: string;
+    readonly count: number;
+  };
 }
 
 /** A jar, urn, basket or crate a god breaks by walking into it (spec: arena-generation / breakable props). */
@@ -733,6 +760,8 @@ export interface MapGenConfig {
     readonly terrain: readonly string[];
     readonly density: number;
     readonly visual: Visual;
+    /** Sway in the wind, radians (reeds, grass; spec: visual-atmosphere / ambient life). */
+    readonly sway?: number;
   }[];
 }
 
@@ -768,6 +797,7 @@ export interface RealmDefinition {
     readonly particles: number;
     /** A moon over the realm on its loading screen (default true; the Underworld has no sky). */
     readonly moon?: boolean;
+    readonly ambience?: Ambience;
   };
   readonly map: MapGenConfig;
   /** Lore lines and tips for the loading screen. */
