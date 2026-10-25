@@ -25,6 +25,11 @@ export interface QualityProfile {
    * half the sprites of a horde, for phones on Low (spec: phone-play / phone performance).
    */
   readonly enemiesAboveDark: boolean;
+  /** How much ambient life is drawn, 0–1: weather, smoke, glints, wildlife, lightning (spec: visual-atmosphere / ambient life). */
+  readonly ambience: number;
+  /** Cloud shadows and swaying trees. */
+  readonly clouds: boolean;
+  readonly sway: boolean;
 }
 
 export const QUALITY: Record<GraphicsQuality, QualityProfile> = {
@@ -39,6 +44,9 @@ export const QUALITY: Record<GraphicsQuality, QualityProfile> = {
     particles: 0.5,
     enemyShadows: false,
     enemiesAboveDark: true,
+    ambience: 0,
+    clouds: false,
+    sway: false,
   },
   medium: {
     lights: 48,
@@ -51,6 +59,9 @@ export const QUALITY: Record<GraphicsQuality, QualityProfile> = {
     particles: 0.8,
     enemyShadows: true,
     enemiesAboveDark: false,
+    ambience: 0.5,
+    clouds: false,
+    sway: false,
   },
   high: {
     lights: 96,
@@ -63,6 +74,9 @@ export const QUALITY: Record<GraphicsQuality, QualityProfile> = {
     particles: 1,
     enemyShadows: true,
     enemiesAboveDark: false,
+    ambience: 1,
+    clouds: true,
+    sway: true,
   },
 };
 

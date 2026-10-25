@@ -3,6 +3,7 @@ import { CHARACTERS } from './characters';
 import { LANDMARKS } from './landmarks';
 import { PROPS } from './props';
 import { FEATURES } from './features';
+import { CREATURES } from './creatures';
 import { WORLD } from './world';
 
 /**
@@ -956,6 +957,7 @@ export const SPRITES: Readonly<Record<string, SpriteSpec>> = {
   ...LANDMARKS,
   ...PROPS,
   ...FEATURES,
+  ...CREATURES,
   ...icons,
   ...crests,
 };

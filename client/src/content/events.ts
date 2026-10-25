@@ -206,7 +206,17 @@ export const CROSSROADS_OF_HECATE: RealmDefinition = {
     'The Night of Hecate lasts until November 7. Its items appear only while it lasts.',
   ],
   // Moonlight and lantern-glow: a cold violet night, mist, and orange sparks over the graves.
-  atmosphere: { ambient: 0x6a6488, fog: 0x7a7896, particles: 0xffa050 },
+  atmosphere: {
+    ambient: 0x6a6488,
+    fog: 0x7a7896,
+    particles: 0xffa050,
+    // Ambient life, drawn by the view only (spec: visual-atmosphere / ambient life).
+    ambience: {
+      weather: { kind: 'leaves', sprite: 'leaf_dead', rate: 5, color: 0x8a6a3a, wind: 20 },
+      smoke: 0x6a6070,
+      wildlife: { kind: 'bat', sprite: 'bat', count: 6 },
+    },
+  },
   map: {
     widthTiles: 64,
     heightTiles: 64,
@@ -243,7 +253,7 @@ export const CROSSROADS_OF_HECATE: RealmDefinition = {
       },
       { id: 'stele', radius: 14, visual: { sprite: 'grave_stele', color: 0x8a8690 } },
       { id: 'dead_tree', radius: 16, visual: { sprite: 'dead_tree', color: 0x2a2420 } },
-      { id: 'cypress', radius: 18, visual: { sprite: 'cypress', color: 0x1e2a1e } },
+      { id: 'cypress', radius: 18, visual: { sprite: 'cypress', color: 0x1e2a1e }, sway: 0.03 },
       { id: 'altar', radius: 26, visual: { sprite: 'black_altar', color: 0x2a2228 } },
       { id: 'statue', radius: 22, visual: { sprite: 'statue', color: 0x9a96a0 } },
       { id: 'wall', radius: 20, visual: { sprite: 'ruined_wall', color: 0x6a6670 } },

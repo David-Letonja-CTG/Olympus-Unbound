@@ -137,6 +137,8 @@ export class WorldView {
   /** One static sprite per breakable prop, hidden once broken (spec: arena-generation / breakable props). */
   private readonly props: Phaser.GameObjects.Sprite[] = [];
   private shownBroken = 0;
+  /** Trees and reeds rocking in the wind on High (spec: visual-atmosphere / ambient life). */
+  private readonly swaying: { sprite: Phaser.GameObjects.Sprite; amp: number; seed: number }[] = [];
   private readonly features: FeatureView[] = [];
   private shownFeatures = -1;
   /** Half a crusher's line, where its slabs stand. */
@@ -173,6 +175,12 @@ export class WorldView {
 
   setQuality(profile: QualityProfile): void {
     this.profile = profile;
+    if (!profile.sway) for (const t of this.swaying) t.sprite.setRotation(0);
+  }
+
+  /** The fires among the static lights (they flicker; soul lights hardly do), lit ones only: smoke rises from them. */
+  fireLights(): readonly { x: number; y: number }[] {
+    return this.staticLights.filter((l) => l.on !== false && (l.light.flicker ?? 0) >= 0.25);
   }
 
   /** Static lights of the arena (braziers), with flicker. */
@@ -204,6 +212,11 @@ export class WorldView {
         this.props[i].setVisible(!((state.brokenProps >>> i) & 1));
     }
     if (state.features !== this.shownFeatures) this.showFeatures(state.features);
+    if (this.profile.sway)
+      for (const t of this.swaying)
+        t.sprite.setRotation(
+          t.amp * (Math.sin(time / 1100 + t.seed) * 0.7 + Math.sin(time / 430 + t.seed * 3) * 0.3),
+        );
     if (this.crusherHalf > 0) this.moveSlabs(state);
     if (time - this.walkPruned > 1000) {
       this.walk.prune(time);
@@ -717,6 +730,8 @@ export class WorldView {
         .setDepth(DEPTH.decoration)
         .setAlpha(0.9);
       sprite.setOrigin(r.originX, r.originY).setScale(r.scale);
+      const sway = kinds.get(d.kind)?.sway;
+      if (sway) this.swaying.push({ sprite, amp: sway, seed: d.x * 0.013 + d.y * 0.007 });
     }
     const obstacleSprites: Phaser.GameObjects.Sprite[] = [];
     for (const o of arena.obstacles) {
@@ -727,6 +742,8 @@ export class WorldView {
         .setOrigin(r.originX, r.originY)
         .setScale(r.scale)
         .setDepth(o.y + o.radius * 0.4);
+      if (kind?.sway)
+        this.swaying.push({ sprite: obstacleSprites[o.id], amp: kind.sway, seed: o.id * 0.77 });
       if (kind?.light)
         this.staticLights.push({ x: o.x, y: o.y, light: kind.light, seed: o.id * 1.37 });
     }

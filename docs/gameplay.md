@@ -98,7 +98,7 @@ Up to four gods fight one horde, each player in their own browser.
 
 Runs take place at night. The arena is dark beyond your light; braziers ring the marble plazas, lightning and fire light up their surroundings, fog drifts and embers float over the field. Enemies outside the light stay visible as dim figures; telegraphs, enemy arrows and pickups are always drawn at full strength.
 
-**Graphics quality** (Settings or the pause menu, applies at once): *Low* — fewer lights; no fog, embers, bloom or colour grading; monsters drawn once above the darkness with a night tint, instead of lit figures with a copy over them; no ground shadows under ordinary monsters. Chosen automatically on phones and without hardware graphics. *Medium*; *High* — the most lights, denser fog and embers, bloom on lightning and fire.
+**Graphics quality** (Settings or the pause menu, applies at once): *Low* — fewer lights; no fog, embers, bloom or colour grading; monsters drawn once above the darkness with a night tint, instead of lit figures with a copy over them; no ground shadows under ordinary monsters; no ambient life. Chosen automatically on phones and without hardware graphics. *Medium* — half the ambient life: weather, smoke, glints on water, a few creatures. *High* — the most lights, denser fog and embers, bloom on lightning and fire, and all the ambient life: each realm's weather on its wind (olive leaves, ash, fireflies, sea spray, dust, dead leaves), Zeus's lightning over Olympus and a red storm over Othrys, cloud shadows, glints on water, smoke from fires, doves, bats, frogs, gulls, rats and crows that flee when a god comes near, and trees and reeds swaying.
 
 ## Music
 

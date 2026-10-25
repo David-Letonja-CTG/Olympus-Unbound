@@ -9,6 +9,7 @@ import { SHARED_MARGIN, SHARED_ZOOM_OUT } from '../sim/shared-screen';
 import { HudSnapshot, SimEvent } from '../sim/types';
 import { queueAssets, SpriteResolver } from './assets';
 import { Atmosphere, LightMap, QUALITY, viewAround } from './atmosphere';
+import { Ambience } from './ambience';
 import { Effects } from './effects';
 import { GroundBuilder } from './ground-canvas';
 import { InputReader } from './input';
@@ -50,6 +51,7 @@ export class ArenaScene extends Phaser.Scene {
   private minimap!: Minimap;
   private lightMap!: LightMap;
   private atmosphere!: Atmosphere;
+  private ambience!: Ambience;
   private failedAssets = new Set<string>();
   private resolver!: SpriteResolver;
   private ground!: GroundBuilder;
@@ -131,6 +133,14 @@ export class ArenaScene extends Phaser.Scene {
     if (this.host.controls.length >= 3) this.minimap.top = CORNER_MINIMAP_TOP;
     this.lightMap = new LightMap(this, realm.atmosphere.ambient);
     this.atmosphere = new Atmosphere(this, arena.width, arena.height, realm.atmosphere);
+    this.ambience = new Ambience(
+      this,
+      this.resolver,
+      realm.atmosphere.ambience,
+      arena,
+      () => this.view.fireLights(),
+      () => this.host.sound.play('rumble'),
+    );
     this.applySettings(this.host.settings());
 
     const camera = this.cameras.main;
@@ -170,6 +180,7 @@ export class ArenaScene extends Phaser.Scene {
     this.view.setQuality(profile);
     this.lightMap.setQuality(profile);
     this.atmosphere.setQuality(profile);
+    this.ambience.setQuality(profile);
   }
 
   override update(): void {
@@ -217,6 +228,7 @@ export class ArenaScene extends Phaser.Scene {
     this.effects.update(world, driver.phase === 'playing' ? dt : 0, camera, this.lightMap);
     this.minimap.update(world, driver.localId, camera, this.game.loop.delta);
     this.atmosphere.update(camera, view, dt);
+    this.ambience.update(dt, view, focus, world.players, this.lightMap);
     this.lightMap.setDarkness(world.darkness, dt);
     this.lightMap.render(view);
 
