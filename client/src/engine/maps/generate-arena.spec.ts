@@ -239,3 +239,26 @@ describe('the Labyrinth (spec: arena-generation / maze)', () => {
     ]);
   });
 });
+
+describe('landmarks (spec: arena-generation / landmarks)', () => {
+  it('gives every realm its landmark, off every road and clear of the spawn and the boss arena', () => {
+    for (const realm of CONTENT.realms) {
+      for (let seed = 0; seed < 8; seed++) {
+        const arena = generateArena(realm.map, seed);
+        const marks = arena.obstacles.filter((o) => o.kind === 'landmark');
+        expect(marks, `${realm.id} seed ${seed}`).toHaveLength(1);
+        const [m] = marks;
+        for (const road of arena.roads)
+          expect(distanceToPolyline(m.x, m.y, road.points)).toBeGreaterThanOrEqual(
+            road.width / 2 + m.radius,
+          );
+        expect(Math.hypot(m.x - arena.spawn.x, m.y - arena.spawn.y)).toBeGreaterThan(
+          realm.map.spawnClearRadius + m.radius,
+        );
+        expect(Math.hypot(m.x - arena.bossArena.x, m.y - arena.bossArena.y)).toBeGreaterThan(
+          arena.bossArena.radius + m.radius,
+        );
+      }
+    }
+  });
+});

@@ -150,7 +150,7 @@ Health 135, speed 205, armour 2, critical chance 12% (with her passive): a preci
 
 ## The realms
 
-Six realms, each with its own map, monsters and boss, in the order a run passes through them (after Mount Othrys comes Mount Olympus again, harder). Every realm cleared makes the next much harder: monsters have three times the health and half again the damage of the realm before, bosses grow too, more monsters come, and a deeper realm opens with its horde already there.
+Six realms, each with its own map, monsters, boss and **landmark** (the fallen colossus of Zeus, the gates of Hades, a sunken temple, a beached trireme, Daedalus's workshop, the throne of Kronos; at the Crossroads, a hekataion of the triple goddess), in the order a run passes through them (after Mount Othrys comes Mount Olympus again, harder). Every realm cleared makes the next much harder: monsters have three times the health and half again the damage of the realm before, bosses grow too, more monsters come, and a deeper realm opens with its horde already there.
 
 ![A still from every realm](images/realms.jpg)
 

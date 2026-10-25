@@ -567,6 +567,15 @@ export type PointOfInterestRule =
       readonly fallenChance: number;
       readonly missingChance: number;
     }
+  /**
+   * The realm's landmark (spec: arena-generation / landmarks): one great `kind` obstacle on its own site, apart
+   * from the spawn, the boss arena, the roads and the other sites; `ground` is stamped round it.
+   */
+  | {
+      readonly type: 'landmark';
+      readonly kind: string;
+      readonly ground?: string;
+    }
   /** Ruined walls: straight lines of `kind` blocks, `spacing` apart, some missing (breaches). */
   | {
       readonly type: 'walls';

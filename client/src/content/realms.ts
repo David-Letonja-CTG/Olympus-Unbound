@@ -48,6 +48,8 @@ export const MOUNT_OLYMPUS: RealmDefinition = {
     minObstacleGap: 46,
     maxObstacles: 260,
     obstacles: [
+      // The realm's landmark (spec: arena-generation / landmarks).
+      { id: 'landmark', radius: 82, visual: { sprite: 'fallen_colossus', color: 0x8a8070 } },
       { id: 'column', radius: 16, visual: { sprite: 'column', color: 0xe8e2d4 } },
       { id: 'broken_column', radius: 18, visual: { sprite: 'broken_column', color: 0xd8d0bf } },
       { id: 'statue', radius: 22, visual: { sprite: 'statue', color: 0xdcd6c8 } },
@@ -64,6 +66,7 @@ export const MOUNT_OLYMPUS: RealmDefinition = {
     ],
     roads: { width: 64, wander: 90 },
     pointsOfInterest: [
+      { type: 'landmark', kind: 'landmark', ground: 'marble' },
       {
         type: 'ring',
         kind: 'column',
@@ -286,6 +289,13 @@ export const THE_UNDERWORLD: RealmDefinition = {
     minObstacleGap: 46,
     maxObstacles: 260,
     obstacles: [
+      // The realm's landmark (spec: arena-generation / landmarks).
+      {
+        id: 'landmark',
+        radius: 72,
+        visual: { sprite: 'gates_of_hades', color: 0x8a8070 },
+        light: { radius: 240, color: 0x7fe0c8, intensity: 0.8, flicker: 0.15 },
+      },
       { id: 'column', radius: 16, visual: { sprite: 'obsidian_column', color: 0x3e3a48 } },
       {
         id: 'broken_column',
@@ -306,6 +316,7 @@ export const THE_UNDERWORLD: RealmDefinition = {
     ],
     roads: { width: 60, wander: 110 },
     pointsOfInterest: [
+      { type: 'landmark', kind: 'landmark', ground: 'black_marble' },
       {
         type: 'ring',
         kind: 'column',
@@ -522,6 +533,13 @@ export const LERNAEAN_MARSH: RealmDefinition = {
     minObstacleGap: 46,
     maxObstacles: 260,
     obstacles: [
+      // The realm's landmark (spec: arena-generation / landmarks).
+      {
+        id: 'landmark',
+        radius: 86,
+        visual: { sprite: 'sunken_temple', color: 0x8a8070 },
+        light: { radius: 200, color: 0x9be8c0, intensity: 0.7, flicker: 0.25 },
+      },
       { id: 'column', radius: 16, visual: { sprite: 'mossy_column', color: 0x8c9478 } },
       {
         id: 'broken_column',
@@ -541,6 +559,7 @@ export const LERNAEAN_MARSH: RealmDefinition = {
     ],
     roads: { width: 56, wander: 120 },
     pointsOfInterest: [
+      { type: 'landmark', kind: 'landmark' },
       {
         type: 'ring',
         kind: 'column',
@@ -750,6 +769,8 @@ export const AEGEAN_SHORE: RealmDefinition = {
     minObstacleGap: 46,
     maxObstacles: 260,
     obstacles: [
+      // The realm's landmark (spec: arena-generation / landmarks).
+      { id: 'landmark', radius: 92, visual: { sprite: 'beached_trireme', color: 0x8a8070 } },
       { id: 'column', radius: 16, visual: { sprite: 'column', color: 0xe8e2d4 } },
       { id: 'broken_column', radius: 18, visual: { sprite: 'broken_column', color: 0xd8d0bf } },
       { id: 'statue', radius: 22, visual: { sprite: 'statue', color: 0xdcd6c8 } },
@@ -767,6 +788,7 @@ export const AEGEAN_SHORE: RealmDefinition = {
     ],
     roads: { width: 60, wander: 100 },
     pointsOfInterest: [
+      { type: 'landmark', kind: 'landmark', ground: 'wet_sand' },
       {
         type: 'ring',
         kind: 'column',
@@ -971,6 +993,8 @@ export const LABYRINTH_OF_CRETE: RealmDefinition = {
     minObstacleGap: 18,
     maxObstacles: 700,
     obstacles: [
+      // The realm's landmark (spec: arena-generation / landmarks).
+      { id: 'landmark', radius: 70, visual: { sprite: 'daedalus_workshop', color: 0x8a8070 } },
       { id: 'wall', radius: 24, visual: { sprite: 'labyrinth_wall', color: 0x8a7e6a } },
       { id: 'column', radius: 16, visual: { sprite: 'minoan_column', color: 0x9a3022 } },
       {
@@ -989,6 +1013,7 @@ export const LABYRINTH_OF_CRETE: RealmDefinition = {
     ],
     roads: { width: 64, wander: 120, thread: 0xc8281e },
     pointsOfInterest: [
+      { type: 'landmark', kind: 'landmark', ground: 'mosaic' },
       {
         type: 'ring',
         kind: 'column',
@@ -1195,6 +1220,13 @@ export const MOUNT_OTHRYS: RealmDefinition = {
     minObstacleGap: 46,
     maxObstacles: 260,
     obstacles: [
+      // The realm's landmark (spec: arena-generation / landmarks).
+      {
+        id: 'landmark',
+        radius: 78,
+        visual: { sprite: 'throne_of_kronos', color: 0x8a8070 },
+        light: { radius: 200, color: 0xff7a40, intensity: 0.6, flicker: 0.2 },
+      },
       { id: 'column', radius: 16, visual: { sprite: 'obsidian_column', color: 0x2a2630 } },
       {
         id: 'broken_column',
@@ -1216,6 +1248,7 @@ export const MOUNT_OTHRYS: RealmDefinition = {
     ],
     roads: { width: 60, wander: 110 },
     pointsOfInterest: [
+      { type: 'landmark', kind: 'landmark', ground: 'bronze_floor' },
       {
         type: 'ring',
         kind: 'column',
