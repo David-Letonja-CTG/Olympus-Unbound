@@ -235,7 +235,7 @@ stateDiagram-v2
   resolving --> cancelled
 ```
 
-- **Rooms:** the host's simulation alone directs. Guests get the markers, darkness and champion flag in the snapshot (since format 6; format 7 adds the broken props), the encounters and their blessings in their HUD, and the announcements and `encounter`/`escaped`/`blessed` events in the frames. Stepping into a shrine or altar is any god's position on the host, so no message was added.
+- **Rooms:** the host's simulation alone directs. Guests get the markers, darkness and champion flag in the snapshot (since format 6; format 7 adds the broken props, 8 the map features), the encounters and their blessings in their HUD, and the announcements and `encounter`/`escaped`/`blessed` events in the frames. Stepping into a shrine or altar is any god's position on the host, so no message was added.
 - **Presentation:** `Effects` draws markers and champions above the light map with pointers; `LightMap.setDarkness` eases the ambient toward night violet, keeping 40% of it; the minimap marks them; the HUD lists encounters and blessings (`hud.encounters`, `hud.boons`).
 - **Debugging:** `DebugAction` `director` (on/off) and `encounter` (start one); `RunSimulation.directorReport()` and `inspect().director`; `?debug&director` shows the report over the run (`DirectorPanel`). `RunRules.director: false` turns it off for a run.
 

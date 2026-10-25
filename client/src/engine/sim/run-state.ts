@@ -2,6 +2,7 @@ import type { BotSkill } from './bots';
 import { WorldFrame } from './world-frame';
 import { WorldCollision } from '../core/collision';
 import { Footing } from '../maps/footing';
+import { initFeatures } from './features';
 import { CLEARANCE, NavField } from '../enemies/navigation';
 import { Rng } from '../core/rng';
 import { SpatialHash } from '../core/spatial-hash';
@@ -158,6 +159,12 @@ export class RunState implements WorldFrame {
   readonly propRng: Rng;
   /** The arena's broken props, bit `i` for prop `i` (WorldFrame; the snapshot carries it as 32 bits). */
   brokenProps = 0;
+  /** The map's hazards' and helpers' intervals (D5) (spec: arena-generation / map hazards, map helpers). */
+  readonly featureRng: Rng;
+  /** Fallen columns, lit braziers, dry springs: bit `i` for feature `i` (WorldFrame, snapshot). */
+  features = 0;
+  /** Per feature: a vent's or crusher's countdown, a spring's pool or refill, a lit brazier's pulse. */
+  featureValues = new Float64Array(0);
 
   /** The run's clock (HUD, results). */
   time = 0;
@@ -252,6 +259,8 @@ export class RunState implements WorldFrame {
     this.merchantRng = rng.fork('merchant');
     this.chaosRng = rng.fork('chaos');
     this.propRng = rng.fork('props');
+    this.featureRng = rng.fork('features');
+    initFeatures(this);
   }
 
   /** How dark an encounter makes the realm, 0–1 (WorldFrame). */
@@ -417,6 +426,7 @@ export class RunState implements WorldFrame {
     this.omen.spawnRate = 1;
     this.omen.darkness = 0;
     this.brokenProps = 0;
+    initFeatures(this);
   }
 
   /** Spawns an enemy unless the global cap is reached (bosses ignore the cap). */

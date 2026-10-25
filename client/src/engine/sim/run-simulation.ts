@@ -23,6 +23,7 @@ import { arriveMerchant, buyWare, shopOffers, updateMerchant } from './merchant'
 import { collect, updatePickups } from './pickups';
 import { createPlayer, updatePlayers } from './players';
 import { breakProps } from './props';
+import { updateFeatures } from './features';
 import { GATE_OPEN_SECONDS, GATE_RADIUS, GATE_STAND_SECONDS, realmAt, realmSeed } from './realms';
 import { updateRevives } from './revive';
 import { RunConfig, RunState } from './run-state';
@@ -159,6 +160,7 @@ export class RunSimulation {
     updateProjectiles(state, dt);
     updateHostileProjectiles(state, dt);
     updateHazards(state, dt);
+    updateFeatures(state, dt);
     updateWalls(state, dt);
     // The boss has fallen: its parts, walls and zones go with it.
     if (

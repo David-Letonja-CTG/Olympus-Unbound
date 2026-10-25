@@ -352,6 +352,9 @@ export interface Hazard {
   readonly warn: number;
   timer: number;
   readonly damage: number;
+  /** A map hazard's share of a monster's max health; bosses are spared (spec: arena-generation / map hazards). */
+  readonly monsters?: number;
+  readonly element?: Element;
   readonly sourceId: number;
   dead: boolean;
 }
@@ -502,6 +505,8 @@ export type SimEvent =
     }
   /** A god broke prop `index` (spec: arena-generation / breakable props); `color` is its shards'. */
   | { type: 'propBroken'; index: number; x: number; y: number; color: number }
+  /** A teetering column starts to fall, a brazier is lit (spec: arena-generation / map hazards, map helpers). */
+  | { type: 'featureSprung'; kind: 'column' | 'brazier'; index: number; x: number; y: number }
   | { type: 'playerHurt'; playerId: number; amount: number; x: number; y: number }
   | { type: 'playerHealed'; playerId: number; amount: number }
   | { type: 'playerRevived'; playerId: number; x: number; y: number }

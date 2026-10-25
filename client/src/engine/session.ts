@@ -137,6 +137,13 @@ export interface DebugSnapshot {
   readonly landmark?: { readonly x: number; readonly y: number };
   /** The terrain under the first god (scripts that test footing). */
   readonly ground?: string;
+  /** The map's hazards and helpers and whether each is sprung (fallen, lit, dry). */
+  readonly features?: readonly {
+    readonly x: number;
+    readonly y: number;
+    readonly type: string;
+    readonly on: boolean;
+  }[];
   /** The breakable props and which are broken (scripts that smash them). */
   readonly props?: readonly { readonly x: number; readonly y: number; readonly broken: boolean }[];
   /** The kind of attack the boss is winding up, e.g. 'devour' (scripts that capture an attack). */

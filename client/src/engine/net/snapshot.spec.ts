@@ -76,11 +76,13 @@ describe('snapshots (spec: rooms / one authoritative game)', () => {
     );
   });
 
-  it('carry the broken props, all 32 bits (spec: arena-generation / breakable props)', () => {
+  it('carry the broken props and the features, all 32 bits (spec: arena-generation / breakable props, map helpers)', () => {
     const sim = busyRun(1);
     for (const mask of [0, 5, 0x80000001, 0xffffffff]) {
       sim.state.brokenProps = mask;
       expect(decodeSnapshot(encodeSnapshot(sim.state, sim.phase), index).brokenProps).toBe(mask);
+      sim.state.features = mask;
+      expect(decodeSnapshot(encodeSnapshot(sim.state, sim.phase), index).features).toBe(mask);
     }
   });
 

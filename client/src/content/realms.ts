@@ -117,6 +117,32 @@ export const MOUNT_OLYMPUS: RealmDefinition = {
       ],
       clusters: 12,
     },
+    // Hazards and helpers (spec: arena-generation / map hazards, map helpers).
+    features: [
+      {
+        type: 'teetering',
+        kind: 'column',
+        chance: 0.15,
+        trigger: 120,
+        length: 150,
+        width: 44,
+        damage: 22,
+        monsters: 0.6,
+        windup: 1.1,
+        stump: 'broken_column',
+        shaft: 'column_shaft',
+      },
+      {
+        type: 'spring',
+        count: 2,
+        radius: 44,
+        heal: 30,
+        pool: 120,
+        refill: 45,
+        visual: { sprite: 'healing_spring', color: 0x8affe0 },
+        light: { radius: 150, color: 0x8affe0, intensity: 0.6, flicker: 0.1 },
+      },
+    ],
     decorations: [
       {
         id: 'grass_tuft',
@@ -382,6 +408,31 @@ export const THE_UNDERWORLD: RealmDefinition = {
       ],
       clusters: 12,
     },
+    // Hazards and helpers (spec: arena-generation / map hazards, map helpers).
+    features: [
+      {
+        type: 'vent',
+        count: 6,
+        radius: 64,
+        damage: 20,
+        monsters: 0.5,
+        windup: 1.2,
+        every: [5, 9],
+        terrain: ['ash', 'basalt'],
+        visual: { sprite: 'lava_vent', color: 0xff7a2a },
+        light: { radius: 140, color: 0xff7a2a, intensity: 0.7, flicker: 0.4 },
+      },
+      {
+        type: 'brazier',
+        count: 4,
+        radius: 130,
+        burn: 0.08,
+        every: 1,
+        visual: { sprite: 'brazier_cold', color: 0x4a3e34 },
+        lit: { sprite: 'soul_brazier', color: 0x5fc8ff },
+        light: { radius: 270, color: 0x7fd2ff, intensity: 0.95, flicker: 0.35 },
+      },
+    ],
     decorations: [
       {
         id: 'asphodel',
@@ -630,6 +681,19 @@ export const LERNAEAN_MARSH: RealmDefinition = {
       ],
       clusters: 12,
     },
+    // Hazards and helpers (spec: arena-generation / map hazards, map helpers).
+    features: [
+      {
+        type: 'spring',
+        count: 3,
+        radius: 44,
+        heal: 30,
+        pool: 120,
+        refill: 45,
+        visual: { sprite: 'marsh_spring', color: 0xb0ff8a },
+        light: { radius: 150, color: 0xb8ff8a, intensity: 0.6, flicker: 0.1 },
+      },
+    ],
     decorations: [
       {
         id: 'reeds',
@@ -831,6 +895,15 @@ export const AEGEAN_SHORE: RealmDefinition = {
     roads: { width: 60, wander: 100 },
     pointsOfInterest: [
       { type: 'landmark', kind: 'landmark', ground: 'wet_sand' },
+      // Walls with breaches to hold (spec: arena-generation / map helpers).
+      {
+        type: 'walls',
+        kind: 'wall',
+        count: [4, 6],
+        length: [220, 380],
+        spacing: 66,
+        missingChance: 0.18,
+      },
       {
         type: 'ring',
         kind: 'column',
@@ -876,6 +949,19 @@ export const AEGEAN_SHORE: RealmDefinition = {
       ],
       clusters: 12,
     },
+    // Hazards and helpers (spec: arena-generation / map hazards, map helpers).
+    features: [
+      {
+        type: 'spring',
+        count: 2,
+        radius: 44,
+        heal: 30,
+        pool: 120,
+        refill: 45,
+        visual: { sprite: 'healing_spring', color: 0x8affe0 },
+        light: { radius: 150, color: 0x8affe0, intensity: 0.6, flicker: 0.1 },
+      },
+    ],
     decorations: [
       {
         id: 'shells',
@@ -1104,6 +1190,29 @@ export const LABYRINTH_OF_CRETE: RealmDefinition = {
       kinds: [{ id: 'crate', radius: 15, visual: { sprite: 'prop_crate', color: 0x8a6238 } }],
       clusters: 12,
     },
+    // Hazards and helpers (spec: arena-generation / map hazards, map helpers).
+    features: [
+      {
+        type: 'crusher',
+        count: 5,
+        width: 46,
+        damage: 24,
+        monsters: 0.7,
+        windup: 1,
+        every: [3.5, 6],
+        visual: { sprite: 'crusher_slab', color: 0x8a7a62 },
+      },
+      {
+        type: 'brazier',
+        count: 4,
+        radius: 130,
+        burn: 0.08,
+        every: 1,
+        visual: { sprite: 'brazier_cold', color: 0x4a3e34 },
+        lit: { sprite: 'labyrinth_torch', color: 0xff7a2a },
+        light: { radius: 280, color: 0xffa050, intensity: 1, flicker: 0.4 },
+      },
+    ],
     decorations: [
       {
         id: 'bones',
@@ -1304,6 +1413,15 @@ export const MOUNT_OTHRYS: RealmDefinition = {
     roads: { width: 60, wander: 110 },
     pointsOfInterest: [
       { type: 'landmark', kind: 'landmark', ground: 'bronze_floor' },
+      // Walls with breaches to hold (spec: arena-generation / map helpers).
+      {
+        type: 'walls',
+        kind: 'wall',
+        count: [4, 6],
+        length: [240, 420],
+        spacing: 66,
+        missingChance: 0.18,
+      },
       {
         type: 'ring',
         kind: 'column',
@@ -1348,6 +1466,21 @@ export const MOUNT_OTHRYS: RealmDefinition = {
       ],
       clusters: 12,
     },
+    // Hazards and helpers (spec: arena-generation / map hazards, map helpers).
+    features: [
+      {
+        type: 'vent',
+        count: 8,
+        radius: 64,
+        damage: 20,
+        monsters: 0.5,
+        windup: 1.2,
+        every: [5, 9],
+        terrain: ['ember_ground'],
+        visual: { sprite: 'lava_vent', color: 0xff7a2a },
+        light: { radius: 140, color: 0xff7a2a, intensity: 0.7, flicker: 0.4 },
+      },
+    ],
     decorations: [
       {
         id: 'ash_pebbles',

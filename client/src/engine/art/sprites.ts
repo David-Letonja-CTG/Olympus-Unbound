@@ -2,6 +2,7 @@ import { bolt, circle, Ctx, ellipse, glow, hex, line, poly, shade, SpriteSpec } 
 import { CHARACTERS } from './characters';
 import { LANDMARKS } from './landmarks';
 import { PROPS } from './props';
+import { FEATURES } from './features';
 import { WORLD } from './world';
 
 /**
@@ -954,6 +955,7 @@ export const SPRITES: Readonly<Record<string, SpriteSpec>> = {
   ...WORLD,
   ...LANDMARKS,
   ...PROPS,
+  ...FEATURES,
   ...icons,
   ...crests,
 };

@@ -1,4 +1,4 @@
-import { damagePlayer } from '../combat/damage';
+import { damagePlayer, dealDamage } from '../combat/damage';
 import { direction, distanceToSegmentSq } from '../core/vector';
 import { BossAttack, BossDefinition, EnemyDefinition } from '../data/types';
 import { RunState } from '../sim/run-state';
@@ -353,7 +353,7 @@ function perfectDodge(state: RunState, p: Player): void {
   state.emit({ type: 'perfectDodge', playerId: p.id, x: p.x, y: p.y });
 }
 
-function inside(h: Hazard, p: Player): boolean {
+function inside(h: Hazard, p: { x: number; y: number; radius: number }): boolean {
   if (h.shape === 'circle')
     return (p.x - h.x) ** 2 + (p.y - h.y) ** 2 <= (h.radius + p.radius) ** 2;
   if (h.shape === 'line')
@@ -367,6 +367,18 @@ function inside(h: Hazard, p: Player): boolean {
   let diff = Math.atan2(dy, dx) - (h.angle ?? 0);
   diff = Math.atan2(Math.sin(diff), Math.cos(diff));
   return Math.abs(diff) <= (h.arc ?? 0) / 2 + Math.asin(Math.min(1, p.radius / d));
+}
+
+/** A map hazard strikes the monsters in it too: a share of their health, never a boss's or a part's. */
+function hurtMonsters(state: RunState, h: Hazard, share: number): void {
+  const reach =
+    h.shape === 'line' ? Math.hypot(h.x2 - h.x, h.y2 - h.y) / 2 + h.width : h.radius + 40;
+  const cx = h.shape === 'line' ? (h.x + h.x2) / 2 : h.x;
+  const cy = h.shape === 'line' ? (h.y + h.y2) / 2 : h.y;
+  for (const e of state.enemiesInRadius(cx, cy, reach)) {
+    if (e.dead || e.boss || e.part || !inside(h, e)) continue;
+    dealDamage(state, e, e.maxHealth * share, false, h.element ?? 'physical');
+  }
 }
 
 /** Counts down telegraphs; when one ends, every living player inside it is hit (spec: telegraphed attacks). */
@@ -391,6 +403,7 @@ export function updateHazards(state: RunState, dt: number): void {
       raiseWalls(state, h);
       rose = true;
     }
+    if (h.monsters) hurtMonsters(state, h, h.monsters);
     if (h.damage <= 0) continue;
     for (const p of state.players) if (p.alive && inside(h, p)) dodgeOrHit(state, p, h.damage);
   }
