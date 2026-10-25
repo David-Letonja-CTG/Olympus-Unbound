@@ -234,6 +234,13 @@ export const CROSSROADS_OF_HECATE: RealmDefinition = {
     minObstacleGap: 46,
     maxObstacles: 260,
     obstacles: [
+      // The realm's landmark (spec: arena-generation / landmarks).
+      {
+        id: 'landmark',
+        radius: 56,
+        visual: { sprite: 'hekataion', color: 0x8a8070 },
+        light: { radius: 260, color: 0xff9a40, intensity: 1, flicker: 0.35 },
+      },
       { id: 'stele', radius: 14, visual: { sprite: 'grave_stele', color: 0x8a8690 } },
       { id: 'dead_tree', radius: 16, visual: { sprite: 'dead_tree', color: 0x2a2420 } },
       { id: 'cypress', radius: 18, visual: { sprite: 'cypress', color: 0x1e2a1e } },
@@ -250,6 +257,7 @@ export const CROSSROADS_OF_HECATE: RealmDefinition = {
     ],
     roads: { width: 64, wander: 90 },
     pointsOfInterest: [
+      { type: 'landmark', kind: 'landmark', ground: 'flagstones' },
       {
         type: 'ring',
         kind: 'stele',

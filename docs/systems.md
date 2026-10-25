@@ -196,6 +196,10 @@ Each frame: clear the light map to the realm's `atmosphere.ambient`; add lights 
 
 Cues fire when `previous < at ≤ now` (the first frame includes `at = 0`). The camera eases (smoothstep) from where earlier camera cues left it to each cue's target over its duration; fades work the same way on visibility (0 black, 1 clear; a fade at 0 starts black). Captions are active for `at ≤ t < at + duration`. Positions are relative to the arena's central plaza.
 
+## Landmarks — `generate-arena.ts`
+
+After the roads, a `landmark` rule places its obstacle kind on `rng.fork('landmark')` (up to 120 tries): clear of the spawn, the boss arena and the sites (radius + 40), and of every road (radius + 12); `ground` is stamped round it without making a plaza; the site keeps walls and groves away.
+
 ## Painted ground — `engine/maps/ground.ts`
 
 - Painted once per realm behind the loading screen (`GroundBuilder`), at 0.25/0.375/0.5 pixels per world unit (Low/Medium/High), then drawn as one image: no per-frame cost.

@@ -133,6 +133,8 @@ export interface DebugSnapshot {
   readonly bossAlive: boolean;
   /** Where the living boss is (solo runs and a room's host), for scripts that wait for it to come into view. */
   readonly boss?: { readonly x: number; readonly y: number };
+  /** Where the realm's landmark stands (scripts that film it). */
+  readonly landmark?: { readonly x: number; readonly y: number };
   /** The kind of attack the boss is winding up, e.g. 'devour' (scripts that capture an attack). */
   readonly bossAttack?: string;
   /** The battle music's tier, 0 (Calm) to 4 (Titan) (spec: music). */

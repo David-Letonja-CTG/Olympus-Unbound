@@ -114,8 +114,9 @@ export function generateArena(config: MapGenConfig, seed: number): ArenaData {
     tx < widthTiles - borderTiles &&
     ty < heightTiles - borderTiles;
   const plazas: { x: number; y: number; radius: number }[] = [];
-  const stamp = (cx: number, cy: number, radius: number, terrainId: string) => {
-    if (terrainId === config.terrain.plaza) plazas.push({ x: cx, y: cy, radius });
+  /** `asPlaza` false: the ground only (a landmark's), not a plaza of ruins with lights and a road to its centre. */
+  const stamp = (cx: number, cy: number, radius: number, terrainId: string, asPlaza = true) => {
+    if (asPlaza && terrainId === config.terrain.plaza) plazas.push({ x: cx, y: cy, radius });
     const value = terrainIndex(terrainId);
     const r = Math.ceil(radius / tileSize);
     const ctx = Math.floor(cx / tileSize);
@@ -236,6 +237,32 @@ export function generateArena(config: MapGenConfig, seed: number): ArenaData {
     );
   }
 
+  // The landmark (spec: arena-generation / landmarks): after the roads, on ground no road crosses, clear of the
+  // spawn, the boss arena and every other site, on a stream of its own; walls and groves then keep away from it.
+  const landmarkRng = rng.fork('landmark');
+  for (const rule of config.pointsOfInterest) {
+    if (rule.type !== 'landmark') continue;
+    const kind = kinds.get(rule.kind);
+    if (!kind) continue;
+    const reach = kind.radius + 40;
+    for (let attempt = 0; attempt < 120; attempt++) {
+      const c = randomPoint(landmarkRng, reach + 60);
+      if (!isClear(c.x, c.y, reach) || nearRoad(c.x, c.y, kind.radius + 12)) continue;
+      if (rule.ground) stamp(c.x, c.y, kind.radius + 34, rule.ground, false);
+      sites.push({ x: c.x, y: c.y, reach });
+      const obstacle: ArenaObstacle = {
+        id: obstacles.length,
+        kind: kind.id,
+        x: c.x,
+        y: c.y,
+        radius: kind.radius,
+      };
+      obstacles.push(obstacle);
+      placed.insert(obstacle);
+      break;
+    }
+  }
+
   // The sites' obstacles, walls, groves and lights, in the realm's order.
   for (const rule of config.pointsOfInterest) {
     if (rule.type === 'ring') {
@@ -276,6 +303,8 @@ export function generateArena(config: MapGenConfig, seed: number): ArenaData {
       placeWalls(rule, kinds, tryPlace, randomPoint, isClear, poiRng);
     } else if (rule.type === 'maze') {
       placeMaze(rule, kinds, tryPlace, bounds, sites, poiRng);
+    } else if (rule.type === 'landmark') {
+      // Placed after the roads, above.
     } else {
       placeGroves(rule, kinds, tryPlace, randomPoint, isClear, poiRng);
     }
