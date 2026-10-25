@@ -506,6 +506,11 @@ export interface TerrainType {
     readonly size?: number;
     readonly strength?: number;
   };
+  /**
+   * How it walks (spec: arena-generation / footing): `speed` multiplies every god's and monster's walk on it (bog,
+   * shallows); `grip` 0–1 is how quickly a god's walk follows the stick (ice; default 1, at once).
+   */
+  readonly footing?: { readonly speed?: number; readonly grip?: number };
 }
 
 /** A light an obstacle gives off (braziers, altars); drawn by the light map (D13). */

@@ -204,6 +204,10 @@ After the roads, a `landmark` rule places its obstacle kind on `rng.fork('landma
 
 Last in generation, on `rng.fork('props')`: `clusters` clusters of 1–3 props of one kind, each clear of obstacles, the spawn, the boss arena, road middles (a quarter of the width) and the other props, at most `MAX_PROPS` (32). They do not collide. Each step after movement, a living god within prop radius + god radius of a standing prop breaks it: bit `i` of `RunState.brokenProps` (reset each realm), a `propBroken` event (shards in the kind's `visual.color`, the `shatter` cue), and the drops of `balance.props` rolled on the run's `props` stream: gold 60% (4), XP 50% (3), heal 10% (20). Enemies never break props. The snapshot carries the mask as 32 bits (format 7).
 
+## Footing — `maps/footing.ts`, `sim/movement.ts`
+
+A terrain's `footing.speed` multiplies the walking speed of gods (`updatePlayers`, the guest's prediction) and walking monsters (`updateEnemies`; bosses and parts excepted) on its tile. `footing.grip` < 1 eases a god's walking velocity toward stick × speed by `1 − (1 − grip)^(60·dt)` a step, kept in `driftX/driftY` from the real displacement (a wall stops a slide; under 1 px/s it stops). A dash ignores footing and leaves the god drifting along it. Grip 1 is the plain walk. Content: Marsh `bog` speed 0.8; Aegean `shallows` speed 0.8; Underworld `cocytus_ice` grip 0.06.
+
 ## Painted ground — `engine/maps/ground.ts`
 
 - Painted once per realm behind the loading screen (`GroundBuilder`), at 0.25/0.375/0.5 pixels per world unit (Low/Medium/High), then drawn as one image: no per-frame cost.

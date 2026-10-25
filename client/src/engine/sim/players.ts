@@ -49,6 +49,8 @@ export function createPlayer(state: RunState, slot: number, x: number, y: number
     dashCooldown: 0,
     dashX: 1,
     dashY: 0,
+    driftX: 0,
+    driftY: 0,
     surge: 0,
     dodged: false,
     boons: [],
@@ -71,8 +73,10 @@ export function updatePlayers(state: RunState, inputs: readonly PlayerInput[], d
     const x = player.x;
     const y = player.y;
     if (player.surge > 0) player.surge = Math.max(0, player.surge - dt);
-    const speed = player.stats.moveSpeed * zoneSlow(state, player);
-    if (stepMovement(player, input, speed, rules, state.collision, dt)) {
+    // The ground under the god: bog and shallows slow, ice slides (spec: arena-generation / footing).
+    const speed = player.stats.moveSpeed * zoneSlow(state, player) * state.footing.speedAt(x, y);
+    const grip = state.footing.gripAt(x, y);
+    if (stepMovement(player, input, speed, rules, state.collision, dt, grip)) {
       player.dodged = false;
       // Untouchable for the dash (spec: player-control / dash through an attack); the one damage check is unchanged.
       player.invulnerable = Math.max(player.invulnerable, rules.dashDuration + rules.dashGrace);

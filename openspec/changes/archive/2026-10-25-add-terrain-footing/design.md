@@ -1,0 +1,22 @@
+# Design
+
+- **Data:** `TerrainType.footing?: { speed?: number; grip?: number }`.
+- **Lookup:** `maps/footing.ts`, `Footing`, built with the arena by the run state and the guest. It holds one speed and one grip per terrain type (typed arrays) and looks up the tile under a point: one index and two array reads per mover per step, no allocation.
+- **Gods:** `stepMovement` takes `grip` (default 1) and keeps the god's walking velocity in `driftX/driftY`.
+  - With grip 1, the walk is exactly as before: velocity = stick × speed.
+  - Below 1, the velocity eases toward stick × speed by `1 − (1 − grip)^(60·dt)` a step.
+  - Drift is measured from the actual displacement, so a wall stops a slide.
+  - A dash leaves the god drifting along it.
+  - `updatePlayers` multiplies the speed by the footing; the guest's prediction does the same.
+- **Monsters:** `updateEnemies` multiplies a walking monster's speed by the footing's speed under it. Bosses and parts are unchanged.
+- **Content:**
+  - Marsh `bog` speed 0.8.
+  - Aegean `shallows` (new band between sea rock and wet sand, ripples) speed 0.8.
+  - Underworld `cocytus_ice` (new lowest band, cracks) grip 0.06.
+- **Performance:** a few hundred lookups a step. Measured on the Underworld (phone emulation, full horde): loading 3.0 / 3.5 s (Low / High), median frame 33 / 50 ms, the same as the other realms.
+- **Tests:**
+  - Footing lookup.
+  - Bog slows a god and a monster.
+  - Ice keeps a god sliding after the stick is let go.
+  - Grip 1 is unchanged from before.
+  - Every new terrain appears in generated arenas.

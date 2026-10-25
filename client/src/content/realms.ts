@@ -284,12 +284,20 @@ export const THE_UNDERWORLD: RealmDefinition = {
         { id: 'ash', color: 0x46413e, texture: { kind: 'ash' } },
         { id: 'asphodel', color: 0x575d4b, texture: { kind: 'grass', strength: 0.7 } },
         { id: 'basalt', color: 0x2c2a31, texture: { kind: 'cracks' } },
+        // The frozen Cocytus: gods slide on it, monsters keep their footing (spec: arena-generation / footing).
+        {
+          id: 'cocytus_ice',
+          color: 0x5c6e80,
+          texture: { kind: 'cracks', strength: 0.6 },
+          footing: { grip: 0.06 },
+        },
         { id: 'black_marble', color: 0x4f4c5a, texture: { kind: 'slabs', size: 52 } },
         { id: 'chasm', color: 0x0f0d14 },
       ],
       noiseScale: 9,
       bands: [
-        { below: 0.34, terrain: 'basalt' },
+        { below: 0.28, terrain: 'cocytus_ice' },
+        { below: 0.38, terrain: 'basalt' },
         { below: 0.68, terrain: 'ash' },
         { below: 1.01, terrain: 'asphodel' },
       ],
@@ -528,7 +536,7 @@ export const LERNAEAN_MARSH: RealmDefinition = {
     borderTiles: 3,
     terrain: {
       types: [
-        { id: 'bog', color: 0x2c3a2e, texture: { kind: 'mud' } },
+        { id: 'bog', color: 0x2c3a2e, texture: { kind: 'mud' }, footing: { speed: 0.8 } },
         { id: 'mud', color: 0x4a4232, texture: { kind: 'mud', strength: 0.8 } },
         { id: 'reedbed', color: 0x4c5a36, texture: { kind: 'grass' } },
         {
@@ -778,12 +786,20 @@ export const AEGEAN_SHORE: RealmDefinition = {
         { id: 'wet_sand', color: 0x6a6048, texture: { kind: 'ripples', size: 26 } },
         { id: 'dune', color: 0x847858, texture: { kind: 'ripples', size: 38 } },
         { id: 'sea_rock', color: 0x4a4c56, texture: { kind: 'cracks' } },
+        // Tidal water between the rocks and the sand: everyone wades (spec: arena-generation / footing).
+        {
+          id: 'shallows',
+          color: 0x2e5a62,
+          texture: { kind: 'ripples', size: 22 },
+          footing: { speed: 0.8 },
+        },
         { id: 'marble', color: 0xb0aea6, texture: { kind: 'slabs' } },
         { id: 'sea', color: 0x0e1e2e },
       ],
       noiseScale: 9,
       bands: [
-        { below: 0.32, terrain: 'sea_rock' },
+        { below: 0.26, terrain: 'sea_rock' },
+        { below: 0.36, terrain: 'shallows' },
         { below: 0.66, terrain: 'wet_sand' },
         { below: 1.01, terrain: 'dune' },
       ],

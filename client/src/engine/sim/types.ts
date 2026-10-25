@@ -105,6 +105,8 @@ export interface Player {
   dashCooldown: number;
   dashX: number;
   dashY: number;
+  driftX: number;
+  driftY: number;
   /** Seconds of Surge left (+30% damage after a perfect dodge, spec: boss-encounter / perfect dodge). */
   surge: number;
   /** This dash has already counted as a perfect dodge. */

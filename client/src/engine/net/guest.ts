@@ -2,6 +2,7 @@ import { WorldCollision } from '../core/collision';
 import { ContentIndex } from '../data/content-index';
 import { RealmDefinition } from '../data/types';
 import { ArenaData, generateArena } from '../maps/generate-arena';
+import { Footing } from '../maps/footing';
 import { Mover, stepMovement } from '../sim/movement';
 import { DebugAction } from '../sim/run-simulation';
 import { realmAt, realmSeed } from '../sim/realms';
@@ -76,6 +77,7 @@ export class GuestDriver implements RunDriver {
   arena: ArenaData;
   readonly shared = true;
   private collision: WorldCollision;
+  private footing: Footing;
   /** Realms cleared, as far as this guest has followed the host (spec: endless-run). */
   private depth = 0;
   private readonly inbox: unknown[] = [];
@@ -123,6 +125,8 @@ export class GuestDriver implements RunDriver {
     dashCooldown: 0,
     dashX: 1,
     dashY: 0,
+    driftX: 0,
+    driftY: 0,
     ox: 0,
     oy: 0,
   };
@@ -147,6 +151,7 @@ export class GuestDriver implements RunDriver {
     // The same generator and seed as the host's: the same arena (design: guests rebuild the arena).
     this.arena = generateArena(this.realm.map, run.seed);
     this.collision = new WorldCollision(this.arena.bounds, this.arena.obstacles);
+    this.footing = new Footing(this.arena, this.realm.map);
     link.onMessage((m) => this.inbox.push(m));
     link.onClose(() => (this.hostGone = true));
   }
@@ -337,6 +342,7 @@ export class GuestDriver implements RunDriver {
     this.realm = realmAt(this.index.content.realms, this.run.realmId, depth);
     this.arena = generateArena(this.realm.map, realmSeed(this.run.seed, depth));
     this.collision = new WorldCollision(this.arena.bounds, this.arena.obstacles);
+    this.footing = new Footing(this.arena, this.realm.map);
     this.frames = [];
     this.pair = undefined;
     this.renderTime = -1;
@@ -407,7 +413,10 @@ export class GuestDriver implements RunDriver {
         speed *= 1 - z.slow;
         break;
       }
-    stepMovement(me, input, speed, this.index.content.balance.stamina, this.collision, STEP);
+    // The same footing as the host's (spec: arena-generation / footing).
+    speed *= this.footing.speedAt(me.x, me.y);
+    const rules = this.index.content.balance.stamina;
+    stepMovement(me, input, speed, rules, this.collision, STEP, this.footing.gripAt(me.x, me.y));
     this.history.push({ seq: this.seq, x: me.x, y: me.y, stamina: me.stamina });
     if (this.history.length > 120) this.history.shift();
   }

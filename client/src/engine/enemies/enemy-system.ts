@@ -57,7 +57,13 @@ export function updateEnemies(state: RunState, dt: number): void {
         const stunned = enemy.status.stun > 0;
         const s = stunned ? { x: 0, y: 0, speed: 0 } : steer(state, enemy, target, dt);
         // An eclipse hastens the monsters while it lasts (spec: director-of-chaos / eclipse of olympus).
-        const speed = enemy.speed * s.speed * speedMultiplier(enemy) * state.omen.enemySpeed;
+        // The bog and the shallows slow monsters as they slow gods (spec: arena-generation / footing).
+        const speed =
+          enemy.speed *
+          s.speed *
+          speedMultiplier(enemy) *
+          state.omen.enemySpeed *
+          state.footing.speedAt(enemy.x, enemy.y);
         if (speed > 0) {
           // Walking turns smoothly; a charger's wind-up and dash keep their line (spec: enemy-spawning / finding the way).
           if (enemy.mode === 'move') turnToward(enemy, s.x, s.y, turnCos, turnSin);
