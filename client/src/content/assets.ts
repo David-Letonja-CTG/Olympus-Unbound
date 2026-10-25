@@ -449,6 +449,27 @@ export const ASSETS: AssetManifest = {
     bronze_guardian: character('bronze_guardian', 1.3, 0.5, 0.73, 100, humanoid()),
     snake_priestess: character('snake_priestess', 1, 0.5, 0.72, 74, humanoid()),
     asterion: { ...character('asterion', 1.7, 0.51, 0.62, 210, humanoid()), portrait: 25 },
+    // The Night of Hecate (spec: seasonal-events): the cast recoloured for the crossroads.
+    restless_dead: { ...character('shade', 1, 0.5, 0.73, 77, humanoid()), recolor: 0xa8ffc8 },
+    empusa: { ...character('lamia', 1, 0.5, 0.72, 70, humanoid()), recolor: 0xff8ad0 },
+    lampad_of_hecate: { ...character('lampad', 1, 0.51, 0.71, 74, humanoid()), recolor: 0xffb060 },
+    hound_of_hecate: {
+      ...character('orthrus', 1, 0.5, 0.71, 70, {
+        idle: run(0, 3, 4),
+        walk: run(4, 11, 10),
+        death: run(12, 17, 10, false),
+      }),
+      recolor: 0x7a9a8a,
+    },
+    hecate: {
+      ...character('snake_priestess', 2.3, 0.5, 0.72, 160, humanoid()),
+      recolor: 0xd0c0ff,
+      portrait: 25,
+    },
+    hecate_torch_bearer: {
+      ...character('lampad', 0.85, 0.51, 0.71, 70, humanoid()),
+      recolor: 0xffc070,
+    },
     // Mount Othrys (spec: realm-othrys): existing sheets recoloured and rescaled, as the owner chose (D15).
     titan_soldier: {
       ...character('bronze_guardian', 1.3, 0.5, 0.73, 100, humanoid()),

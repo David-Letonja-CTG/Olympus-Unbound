@@ -25,7 +25,8 @@ export function dailyTrialFor(date: string, content: GameContent): DailyTrial {
   };
   const pick = <T>(items: readonly T[]) => items[Math.floor(next() * items.length)];
   const god = pick(content.gods);
-  const realm = next() < 1 / 3 ? content.realms[0] : pick(content.realms);
+  const realms = content.realms.filter((r) => !r.event);
+  const realm = next() < 1 / 3 ? realms[0] : pick(realms);
   const twist = pick(content.twists);
   return {
     date,

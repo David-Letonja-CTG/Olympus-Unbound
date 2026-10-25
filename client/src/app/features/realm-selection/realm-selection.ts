@@ -2,6 +2,7 @@ import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@a
 import { Router, RouterLink } from '@angular/router';
 import { GameContent, RealmDefinition } from '../../../engine';
 import { GAME_CONTENT } from '../../core/game-content';
+import { SeasonalEvents } from '../../core/seasonal-events';
 import { MAX_SEED, parseSeed, RunSetup } from '../../core/run-setup';
 import { TouchScreen } from '../../core/touch-screen';
 import { ItemIcon } from '../../shared/item-icon';
@@ -327,7 +328,8 @@ export class RealmSelection {
   private readonly touchScreen = inject(TouchScreen);
 
   protected readonly maxSeed = MAX_SEED;
-  protected readonly realms: readonly RealmDefinition[] = this.content.realms;
+  /** Every realm outside events, and the seasonal event's own while it is on (spec: seasonal-events). */
+  protected readonly realms: readonly RealmDefinition[] = inject(SeasonalEvents).realms();
   protected readonly selected = signal<string | undefined>(
     this.setup.realmId() ?? this.content.realms[0]?.id,
   );

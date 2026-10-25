@@ -7,6 +7,14 @@ import { TWISTS } from './daily';
 import { INTRO } from './cutscenes/intro';
 import { BOSSES } from './bosses';
 import { ENEMIES } from './enemies';
+import {
+  CROSSROADS_OF_HECATE,
+  EVENTS,
+  HECATE,
+  HECATE_ENEMIES,
+  HECATE_RELICS,
+  HECATE_WEAPONS,
+} from './events';
 import { GODS } from './gods';
 import { ARMOUR, ASCENSIONS, FUSIONS, INSTANTS, RELICS, SKILLS, SYNERGIES } from './items';
 import { REALMS } from './realms';
@@ -120,18 +128,19 @@ export const PERMANENT_UPGRADES: readonly PermanentUpgradeDefinition[] = [
 /** All game content (D4). Validated by `content.spec.ts`. */
 export const CONTENT: GameContent = {
   gods: GODS,
-  weapons: WEAPONS,
+  weapons: [...WEAPONS, ...HECATE_WEAPONS],
   armour: ARMOUR,
-  relics: RELICS,
+  relics: [...RELICS, ...HECATE_RELICS],
   skills: SKILLS,
   synergies: SYNERGIES,
   instants: INSTANTS,
   fusions: FUSIONS,
   ascensions: ASCENSIONS,
   evolutions: EVOLUTIONS,
-  enemies: ENEMIES,
-  bosses: BOSSES,
-  realms: REALMS,
+  enemies: [...ENEMIES, ...HECATE_ENEMIES],
+  bosses: [...BOSSES, HECATE],
+  realms: [...REALMS, CROSSROADS_OF_HECATE],
+  events: EVENTS,
   permanentUpgrades: PERMANENT_UPGRADES,
   balance: BALANCE,
   assets: ASSETS,

@@ -1,6 +1,7 @@
 import { computed, inject, Injectable, signal } from '@angular/core';
 import { Modifier, PartySeat, PeerLink, RoomSeat, RunConfig, roomVersion } from '../../../engine';
 import { GAME_CONTENT } from '../game-content';
+import { SeasonalEvents } from '../seasonal-events';
 import { Progression } from '../progression';
 import { randomSeed } from '../run-setup';
 import { GameServer } from '../game-server';
@@ -55,6 +56,8 @@ type HostToGuest =
       runId: string;
       realmId: string;
       seed: number;
+      /** The host's seasonal event (spec: seasonal-events). */
+      eventId?: string;
       party: readonly { godId: string; name: string }[];
     };
 
@@ -84,6 +87,7 @@ interface Guest {
 export class RoomService {
   private readonly loadNetwork = inject(ROOM_NETWORK);
   private readonly content = inject(GAME_CONTENT);
+  private readonly events = inject(SeasonalEvents);
   private readonly progression = inject(Progression);
   private readonly version = roomVersion(this.content);
   /** Rooms need the game server (D21); a build without one does not offer them (spec: game-server). */
@@ -260,7 +264,7 @@ export class RoomService {
   }
 
   setRealm(realmId: string): void {
-    if (this.role() !== 'host' || !this.content.realms.some((r) => r.id === realmId)) return;
+    if (this.role() !== 'host' || !this.events.realms().some((r) => r.id === realmId)) return;
     this.realmId.set(realmId);
     this.broadcastLobby();
   }
@@ -273,6 +277,7 @@ export class RoomService {
     const runId = globalThis.crypto.randomUUID();
     const realmId = this.realmId();
     const seed = randomSeed();
+    const eventId = this.events.active()?.id;
     const party: PartySeat[] = ordered.map((m) => ({
       godId: m.godId,
       name: m.name,
@@ -291,6 +296,7 @@ export class RoomService {
         runId,
         realmId,
         seed,
+        eventId,
         party: party.map(({ godId, name }) => ({ godId, name })),
       });
     });
@@ -304,6 +310,7 @@ export class RoomService {
         godId: party[0].godId,
         realmId,
         seed,
+        eventId,
         modifiers: party[0].modifiers,
         party,
       },
@@ -488,6 +495,7 @@ export class RoomService {
             godId: party[0].godId,
             realmId: m.realmId,
             seed: m.seed,
+            eventId: m.eventId,
             modifiers: [],
             party,
           },

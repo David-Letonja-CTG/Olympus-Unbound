@@ -9,6 +9,7 @@ import {
 import { FormsModule } from '@angular/forms';
 import { RouterLink } from '@angular/router';
 import { BalanceReport, BalanceRow, GameContent } from '../../../engine';
+import { SeasonalEvents } from '../../core/seasonal-events';
 import { adminUnlocked, unlockAdmin } from '../../core/admin-mode';
 import { GAME_CONTENT } from '../../core/game-content';
 import { Progression } from '../../core/progression';
@@ -180,6 +181,44 @@ const CHART_RUNS = 40;
             </section>
           </div>
         }
+
+        <!-- Seasonal events on this device (spec: seasonal-events / admin switch). -->
+        <section class="panel wide" aria-labelledby="events-title">
+          <h2 id="events-title">Seasonal events</h2>
+          <p class="hint">
+            Events follow the calendar on every device. This switch only changes this browser: to
+            test or show an event out of season, or to hide one.
+          </p>
+          <div class="tabs" role="group" aria-label="Event switch">
+            <button
+              class="tab"
+              data-testid="event-auto"
+              [attr.aria-pressed]="events.override().mode === 'auto'"
+              (click)="events.setOverride({ mode: 'auto' })"
+            >
+              By the calendar
+            </button>
+            @for (e of content.events; track e.id) {
+              <button
+                class="tab"
+                [attr.data-testid]="'event-on-' + e.id"
+                [attr.aria-pressed]="eventForced(e.id)"
+                (click)="events.setOverride({ mode: 'on', id: e.id })"
+              >
+                {{ e.name }} on
+              </button>
+            }
+            <button
+              class="tab"
+              data-testid="event-off"
+              [attr.aria-pressed]="events.override().mode === 'off'"
+              (click)="events.setOverride({ mode: 'off' })"
+            >
+              All off
+            </button>
+          </div>
+          <p class="hint" data-testid="event-now">Now: {{ events.active()?.name ?? 'no event' }}</p>
+        </section>
 
         <section class="panel wide balance" aria-labelledby="balance-title">
           <h2 id="balance-title">Balance report</h2>
@@ -431,9 +470,15 @@ const CHART_RUNS = 40;
 })
 export class AdminScreen {
   private readonly progression = inject(Progression);
+  protected readonly events = inject(SeasonalEvents);
   protected readonly unlocked = signal(adminUnlocked());
   protected readonly wrong = signal(false);
   protected password = '';
+
+  protected eventForced(id: string): boolean {
+    const o = this.events.override();
+    return o.mode === 'on' && o.id === id;
+  }
 
   protected async unlock(event: Event): Promise<void> {
     event.preventDefault();

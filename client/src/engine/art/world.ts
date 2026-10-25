@@ -179,7 +179,40 @@ function pebbles(colours: readonly [string, string, string]): SpriteSpec {
   };
 }
 
+/** A carved gourd lantern of the Night of Hecate: an orange gourd with a grinning cut face lit from inside. */
+const gourdLantern: SpriteSpec = {
+  size: 36,
+  paint(g, s) {
+    groundShadow(g, s, 0.3, 0.2);
+    glow(g, s / 2, s * 0.55, s * 0.5, 0xff8a2a, 0.5);
+    volume(g, s / 2, s * 0.58, s * 0.3, s * 0.24, 0xd8661a, { contrast: 1.3 });
+    line(g, [s / 2, s * 0.36, s * 0.53, s * 0.24], '#3a4a22', 3);
+    // The cut face: two eyes and a grin, glowing yellow.
+    poly(g, [s * 0.36, s * 0.54, s * 0.42, s * 0.46, s * 0.46, s * 0.55], '#ffe27a');
+    poly(g, [s * 0.54, s * 0.55, s * 0.58, s * 0.46, s * 0.64, s * 0.54], '#ffe27a');
+    poly(
+      g,
+      [
+        s * 0.36,
+        s * 0.64,
+        s * 0.44,
+        s * 0.68,
+        s * 0.5,
+        s * 0.64,
+        s * 0.56,
+        s * 0.68,
+        s * 0.64,
+        s * 0.64,
+        s * 0.5,
+        s * 0.74,
+      ],
+      '#ffd24a',
+    );
+  },
+};
+
 export const WORLD: Record<string, SpriteSpec> = {
+  gourd_lantern: gourdLantern,
   // ---------------------------------------------------------------------------------------- Mount Olympus
   column: column(0xb8b2a4, 0xcfc9bb),
   broken_column: brokenColumn(0xa8a294, '#8a8476'),

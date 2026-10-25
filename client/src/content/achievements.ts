@@ -98,6 +98,23 @@ export const ACHIEVEMENTS: readonly AchievementDefinition[] = [
     gold: 1000,
     sprite: 'fusion_apotheosis',
   },
+  // The Night of Hecate (spec: seasonal-events / event achievements): they wait for the event each year.
+  {
+    id: 'queen_of_crossroads',
+    name: 'Queen of the Crossroads',
+    description: 'Defeat Hecate at her crossroads.',
+    goal: { measure: 'realmsCleared', target: 1, over: 'run', realm: 'crossroads_of_hecate' },
+    gold: 400,
+    sprite: 'key_of_hecate',
+  },
+  {
+    id: 'night_walker',
+    name: 'Walker of the Night',
+    description: 'Survive 10 minutes from the Crossroads of Hecate.',
+    goal: { measure: 'timeSeconds', target: 600, over: 'run', realm: 'crossroads_of_hecate' },
+    gold: 250,
+    sprite: 'hecates_torches',
+  },
   {
     id: 'treasure_hunter',
     name: 'Treasure Hunter',

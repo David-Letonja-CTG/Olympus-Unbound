@@ -454,6 +454,8 @@ export interface RunResult {
   readonly seed: number;
   /** The run's kind as its config said (quick, Daily Trial, challenge); absent for an ordinary run. */
   readonly variant?: RunVariant;
+  /** The seasonal event the run was played in (spec: seasonal-events). */
+  readonly eventId?: string;
   readonly outcome: RunOutcome;
   readonly timeSeconds: number;
   readonly level: number;

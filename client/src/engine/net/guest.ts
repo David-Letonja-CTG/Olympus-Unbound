@@ -358,6 +358,7 @@ export class GuestDriver implements RunDriver {
       realmId: this.run.realmId,
       seed: this.run.seed,
       variant: this.run.variant,
+      eventId: this.run.eventId,
       outcome: 'abandoned',
       timeSeconds: 0,
       level: 1,

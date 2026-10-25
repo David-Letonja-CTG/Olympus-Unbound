@@ -132,6 +132,16 @@ A weapon at level 6 with the relic below evolves once (weight 3.5): one more ste
 
 No top level; offered only when fewer than three other upgrades remain (weight 1 each): `ascend_might` +5% damage, `ascend_vigour` +15 health and +0.2 regen, `ascend_celerity` −2% cooldown and +2% speed, `ascend_fortune` +5% gold and XP.
 
+### Seasonal events
+
+`content/events.ts` keeps each event in one place: its `EventDefinition` (id, name, tagline, `window` `MM-DD`, accent colour), its realm (`event` set: outside the chain), its host and boss, and its weapons and relics (`event` set: offered only in its runs). `content/index.ts` merges them into the lists, event realms last. Event achievements use `goal.realm`. Validation checks the dates, the event ids and that a realm outside events remains.
+
+| Event | Window | Realm | Host | Boss | Items |
+|---|---|---|---|---|---|
+| `night_of_hecate` | 10-24 – 11-07 | `crossroads_of_hecate` | `restless_dead` (shade, 0xa8ffc8), `empusa` (lamia, 0xff8ad0), `lampad_of_hecate` (lampad, 0xffb060, ranged), `hound_of_hecate` (orthrus, 0x7a9a8a, charger) | `hecate` (snake priestess ×2.3, 0xd0c0ff): guard 0.35 while any of three torch parts (1,600 health, regrow 18 s) lives | `hecates_torches` (orbit, fire, burn), `key_of_hecate` |
+
+**New event:** an `EventDefinition` and its realm, host, boss and items in `content/events.ts` (recoloured sheets and code-drawn props, D15), merged in `content/index.ts`; achievements with `goal.realm`; sounds for new weapons in `ATTACK_SOUNDS`.
+
 ### Instant blessings
 
 Offered at a level-up or chest like any upgrade, used at once, never kept, offered again whenever valid. One rule per effect type in `progression/instants.ts` (`INSTANT_RULES`).

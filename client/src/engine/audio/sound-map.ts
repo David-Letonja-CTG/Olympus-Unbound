@@ -17,6 +17,8 @@ export const ATTACK_SOUNDS: Record<string, SoundCue> = {
   gates_of_tartarus: 'tartarus',
   tidal_wave: 'tidal',
   gorgons_gaze: 'gaze',
+  // Event weapons (spec: seasonal-events / event items).
+  hecates_torches: 'torches',
   // Companions (spec: merchant / companions) borrow the voices of their kind of attack.
   eagle_dive: 'strike',
   hound_bite: 'sword',

@@ -1,5 +1,5 @@
 import { ChangeDetectionStrategy, Component, computed, inject } from '@angular/core';
-import { RouterLink } from '@angular/router';
+import { Router, RouterLink } from '@angular/router';
 
 import { AppUpdate } from '../../core/app-update';
 import { InstallPrompt } from '../../core/install-prompt';
@@ -8,6 +8,8 @@ import { GameServer } from '../../core/game-server';
 import { roomsOffered } from '../../core/rooms/room-network';
 import { nextGoal } from '../../core/next-goal';
 import { Progression } from '../../core/progression';
+import { RunSetup } from '../../core/run-setup';
+import { SeasonalEvents } from '../../core/seasonal-events';
 import { ItemIcon } from '../../shared/item-icon';
 
 @Component({
@@ -22,6 +24,19 @@ import { ItemIcon } from '../../shared/item-icon';
 
       <nav class="panel menu-panel" aria-label="Main menu">
         <a class="btn btn-primary" routerLink="/gods">Play</a>
+        <!-- The seasonal event while it is on: straight to its realm (spec: seasonal-events / in the menus). -->
+        @if (events.active(); as e) {
+          <button
+            class="btn event"
+            data-testid="menu-event"
+            [style.--accent]="accent(e.accent)"
+            [title]="e.tagline"
+            (click)="playEvent()"
+          >
+            {{ e.name }}
+            <span class="event-days">{{ daysText() }}</span>
+          </button>
+        }
         <!-- The same trial for everyone today (spec: daily-trial); a gold dot until played. -->
         <a
           class="btn daily-trial"
@@ -253,6 +268,30 @@ import { ItemIcon } from '../../shared/item-icon';
     .daily-trial {
       position: relative;
     }
+    /* The seasonal event's button glows in its colour. */
+    .btn.event {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 1px;
+      color: #fff2e0;
+      border-color: var(--accent);
+      background:
+        radial-gradient(
+          ellipse at 50% 0%,
+          color-mix(in srgb, var(--accent) 45%, transparent),
+          transparent 70%
+        ),
+        var(--panel);
+      box-shadow:
+        0 0 14px color-mix(in srgb, var(--accent) 55%, transparent),
+        inset 0 0 0 1px color-mix(in srgb, var(--accent) 60%, transparent);
+    }
+    .event-days {
+      font-size: 0.68rem;
+      letter-spacing: 0.08em;
+      opacity: 0.85;
+    }
     .dot {
       position: absolute;
       top: 6px;
@@ -348,6 +387,27 @@ export class MainMenu {
     this.progression.save();
     return this.progression.trialToday();
   });
+  protected readonly events = inject(SeasonalEvents);
+  private readonly setup = inject(RunSetup);
+  private readonly router = inject(Router);
+
+  protected readonly daysText = computed(() => {
+    const days = this.events.daysLeft();
+    return days <= 1 ? 'last day' : `${days} days left`;
+  });
+
+  protected accent(color: number): string {
+    return '#' + color.toString(16).padStart(6, '0');
+  }
+
+  /** The event's realm chosen, then the god (spec: seasonal-events / in the menus). */
+  protected playEvent(): void {
+    const realm = this.events.realms().find((r) => r.event === this.events.active()?.id);
+    this.setup.special.set(undefined);
+    if (realm) this.setup.realmId.set(realm.id);
+    void this.router.navigate(['/gods']);
+  }
+
   protected readonly goal = computed(() =>
     nextGoal(this.progression.save(), this.content, new Date(), this.trial()),
   );

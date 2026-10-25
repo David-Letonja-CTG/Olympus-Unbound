@@ -9,18 +9,22 @@ export const GATE_OPEN_SECONDS = 60;
 
 /**
  * The realm a run reaches after clearing `depth` realms (spec: endless-run / chain of realms): content order from
- * the starting realm, wrapping around. Hosts and guests compute the same chain (D16).
+ * the starting realm, wrapping around. Event realms stand outside the chain: a run may start in one, and goes on
+ * into the chain from its first realm (spec: seasonal-events). Hosts and guests compute the same chain (D16).
  */
 export function realmAt(
   realms: readonly RealmDefinition[],
   startId: string,
   depth: number,
 ): RealmDefinition {
+  const chain = realms.filter((r) => !r.event);
+  const first = realms.find((r) => r.id === startId);
+  if (first?.event) return depth === 0 ? first : chain[(depth - 1) % chain.length];
   const start = Math.max(
     0,
-    realms.findIndex((r) => r.id === startId),
+    chain.findIndex((r) => r.id === startId),
   );
-  return realms[(start + depth) % realms.length];
+  return chain[(start + depth) % chain.length];
 }
 
 /** The arena seed of the realm at `depth`: the run's seed itself first, then a mix of seed and depth (D5). */

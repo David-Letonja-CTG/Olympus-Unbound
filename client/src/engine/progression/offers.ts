@@ -54,6 +54,8 @@ export function offerCandidates(state: RunState, player: Player): Candidate[] {
   if (loadout.weapons.length < balance.maxWeapons) {
     for (const def of index.content.weapons) {
       if (!wieldableBy(def, player.god.id)) continue;
+      // Event weapons only in their event's runs (spec: seasonal-events / event items).
+      if (def.event && def.event !== state.config.eventId) continue;
       if (loadout.weapons.some((held) => held.def.id === def.id)) continue;
       candidates.push({
         weight: w.newWeapon * affinity(def.element),
@@ -108,6 +110,7 @@ export function offerCandidates(state: RunState, player: Player): Candidate[] {
   if (loadout.relics.length < balance.maxRelics) {
     for (const def of index.content.relics) {
       if (loadout.relics.includes(def)) continue;
+      if (def.event && def.event !== state.config.eventId) continue;
       candidates.push({
         weight: w.relic * affinity(def.element),
         offer: {

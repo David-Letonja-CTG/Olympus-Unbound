@@ -106,6 +106,41 @@ const projectiles: Record<string, SpriteSpec> = {
       circle(g, s * 0.62, s / 2, s * 0.09, '#ffe2c0');
     },
   },
+  // Hecate's fire, thrown by her Lampades: an orange flame with a gold heart (spec: seasonal-events).
+  hecate_fire: {
+    size: 26,
+    paint(g, s) {
+      glow(g, s / 2, s / 2, s / 2, 0xff8a2a, 0.65);
+      poly(g, [s * 0.05, s / 2, s * 0.45, s * 0.3, s * 0.45, s * 0.7], 'rgba(255,140,40,0.7)');
+      circle(g, s * 0.58, s / 2, s * 0.2, '#ff9a3a', 'rgba(255,230,120,0.9)', 1.5);
+      circle(g, s * 0.62, s / 2, s * 0.09, '#fff2c0');
+    },
+  },
+  // One of Hecate's Torches as it circles: a flame on a short brand.
+  torch_flame: {
+    size: 36,
+    paint(g, s) {
+      glow(g, s / 2, s * 0.42, s / 2, 0xff8a2a, 0.8);
+      line(g, [s / 2, s * 0.85, s / 2, s * 0.5], '#5a3a22', 4);
+      poly(
+        g,
+        [
+          s * 0.36,
+          s * 0.52,
+          s * 0.46,
+          s * 0.2,
+          s / 2,
+          s * 0.32,
+          s * 0.56,
+          s * 0.12,
+          s * 0.64,
+          s * 0.52,
+        ],
+        '#ffb040',
+      );
+      circle(g, s / 2, s * 0.44, s * 0.08, '#fff2c0');
+    },
+  },
   // A naiad's venom: a sickly green-yellow glob with a dripping tail and a dark rim (not an XP gem's blue).
   venom_spit: {
     size: 24,
@@ -687,6 +722,9 @@ const ICONS: Record<string, [string, 'square' | 'round' | 'diamond' | 'hex', num
   ascend_celerity: ['hourglass', 'round', 0x7fc8ff],
   ascend_fortune: ['coin', 'round', 0xffd34d],
   ambrosia: ['potion', 'round', 0xff7a9a],
+  // The Night of Hecate's items (spec: seasonal-events / event items).
+  hecates_torches: ['flame', 'square', 0xff8a2a],
+  key_of_hecate: ['gates', 'round', 0xc8a0ff],
   // Instant blessings (spec: run-progression / instant blessings).
   blessing_hermes: ['caduceus', 'round', 0x7fe8d0],
   icon_gold: ['coin', 'round', 0xffd34d],

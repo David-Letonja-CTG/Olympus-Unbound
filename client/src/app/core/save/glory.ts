@@ -85,6 +85,7 @@ export function questsFor(date: string, quests: readonly QuestDefinition[]): Que
 /** A run's value for a goal, or undefined when the run does not count for it (another god or mode). */
 export function measure(goal: Goal, r: RunResult): number | undefined {
   if (goal.god && goal.god !== r.godId) return undefined;
+  if (goal.realm && goal.realm !== r.realmId) return undefined;
   if (goal.mode && goal.mode !== modeOf(r.players, r.bots)) return undefined;
   switch (goal.measure) {
     case 'runs':

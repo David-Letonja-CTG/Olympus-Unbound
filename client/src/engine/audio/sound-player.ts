@@ -24,6 +24,7 @@ export type SoundCue =
   | 'tartarus'
   | 'tidal'
   | 'gaze'
+  | 'torches'
   // Hits and kills.
   | 'hit'
   | 'hitLightning'
@@ -260,6 +261,12 @@ export const CUES: Record<SoundCue, Cue> = {
     ],
   },
 
+  // Hecate's Torches (spec: seasonal-events): a soft roar of flame as they pass.
+  torches: {
+    bus: 'weapon',
+    gap: 120,
+    voices: [n(900, 2400, 0.16, 0.05, { filter: 'bandpass' }), o('sine', 180, 120, 0.12, 0.03)],
+  },
   // ------------------------------------------------------------------------------------------- hits and kills
   hit: {
     bus: 'impact',
