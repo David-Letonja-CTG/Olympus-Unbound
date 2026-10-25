@@ -301,7 +301,8 @@ export class ArenaScene extends Phaser.Scene {
         sound.play('choose');
         return;
       case 'pickup':
-        sound.play(event.kind === 'xp' ? 'xp' : event.kind, event);
+        // An event's currency chimes like gold.
+        sound.play(event.kind === 'token' ? 'gold' : event.kind, event);
         return;
       case 'attack': {
         const cue =

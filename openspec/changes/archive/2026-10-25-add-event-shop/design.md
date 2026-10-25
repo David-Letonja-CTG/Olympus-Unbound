@@ -1,0 +1,26 @@
+# Design
+
+- **Content:**
+  - `EventDefinition.currency` (`name`, `chance`, `elite`, `boss`).
+  - `EventRewardDefinition` (`id`, `event`, `name`, `description`, `cost`, `effect`: `modifiers` or `unlock` an event item, `sprite`) in `GameContent.eventRewards`.
+  - Validation: known event, cost > 0, an unlock names an event item.
+- **Engine:**
+  - Pickup kind `token`, appended to the snapshot's pickup kinds for guests.
+  - `killEnemy` drops tokens when the run has `eventId`: boss → `boss`, elite → `elite`, else `chance` on the loot stream (D5).
+  - Tokens are magnetic and add to `RunState.tokens`, echoed as `RunResult.tokens`.
+  - `RunConfig.unlocked` lists event items allowed in any run (`offerCandidates`: `eventItemAllowed`).
+  - A code-drawn honey cake sprite; the chime is gold's.
+- **Save v11:**
+  - `eventTokens` (event id → balance) and `eventRewards` (ids);
+  - `highScores.event`;
+  - migration 10 → 11; parsing keeps known ids.
+  - `applyRunResult` adds `tokens` to the run's event once (idempotent per run id), and `RunRewards.tokens` carries them.
+  - `permanentModifiers` adds owned modifier rewards.
+- **Glory:** `tableOf(r, content)` returns `event` for runs whose start realm has `event`. `worldBoardOf` (no content) never gets it, so world boards count those runs by mode.
+- **App:**
+  - `Progression`: `tokens`, `owns`, `canBuyReward`, `buyReward`, `unlockedItems`.
+  - Solo and local configs and the room `start` message carry `unlocked` (the host's).
+  - The Progression screen shows each shop (the blessings panel scrolls).
+  - The run summary shows "+N <currency>".
+  - The Hall of Glory gets an event tab, on this device only.
+- **Tests:** drops (none out of season, 3 from an elite), collection, unlocks in offers, migration, idempotent balance, the event table, buying (cost, once, unlock list).

@@ -333,3 +333,55 @@ describe('save format v10 (spec: meta-progression / save format version 10)', ()
     expect(again.rewards.newlyDiscovered).toEqual([]);
   });
 });
+
+describe('save format v11 (spec: meta-progression / save format version 11)', () => {
+  it('migrates a version 10 save with no event currency, rewards or event table', () => {
+    const save = parseSave(JSON.stringify({ version: 10, gold: 50 }), CONTENT);
+    expect(save.version).toBe(SAVE_VERSION);
+    expect(save.eventTokens).toEqual({});
+    expect(save.eventRewards).toEqual([]);
+    expect(save.highScores.event).toEqual([]);
+    expect(save.gold).toBe(50);
+  });
+
+  it('keeps an event run’s honey cakes once, and puts a crossroads run in the event table', () => {
+    const night = result({
+      realmId: 'crossroads_of_hecate',
+      eventId: 'night_of_hecate',
+      tokens: 12,
+    });
+    const first = applyRunResult(freshSave(), night, CONTENT, new Date(2026, 9, 31));
+    expect(first.save.eventTokens['night_of_hecate']).toBe(12);
+    expect(first.rewards.tokens).toBe(12);
+    expect(first.save.highScores.event).toHaveLength(1);
+    expect(first.save.highScores.solo).toHaveLength(0);
+    const again = applyRunResult(first.save, night, CONTENT, new Date(2026, 9, 31));
+    expect(again.save.eventTokens['night_of_hecate']).toBe(12);
+  });
+
+  it('buys event rewards with honey cakes, for good (spec: seasonal-events / event shop)', () => {
+    const storage = { data: {} as Record<string, string> };
+    storage.data[SAVE_KEY] = JSON.stringify({ version: 11, eventTokens: { night_of_hecate: 100 } });
+    TestBed.configureTestingModule({
+      providers: [
+        {
+          provide: SAVE_STORAGE,
+          useValue: {
+            getItem: (k: string) => storage.data[k] ?? null,
+            setItem: (k: string, v: string) => (storage.data[k] = v),
+            removeItem: (k: string) => delete storage.data[k],
+          },
+        },
+      ],
+    });
+    const progression = TestBed.inject(Progression);
+    const reward = (id: string) => CONTENT.eventRewards.find((r) => r.id === id)!;
+    expect(progression.buyReward(reward('torchbearer'))).toBe(true);
+    expect(progression.tokens('night_of_hecate')).toBe(20);
+    expect(progression.unlockedItems()).toEqual(['hecates_torches']);
+    expect(progression.buyReward(reward('torchbearer'))).toBe(false);
+    expect(progression.buyReward(reward('ward_of_the_crossroads'))).toBe(false);
+    expect(progression.buyReward(reward('hecates_blessing'))).toBe(false);
+    expect(progression.runModifiers()).toEqual([]);
+  });
+});

@@ -12,9 +12,11 @@ import { HIGH_SCORES, HISTORY_SIZE, RunRecord, ScoreEntry, TrialRecord } from '.
  * The high-score table a run belongs in, or none (spec: quick-runs, daily-trial): quick runs have their own; Daily
  * Trials and challenges with a twist play by other rules and enter none.
  */
-export function tableOf(r: RunResult): GloryMode | undefined {
+export function tableOf(r: RunResult, content?: GameContent): GloryMode | undefined {
   const v = r.variant;
   if (v?.kind === 'daily' || (v?.kind === 'challenge' && v.twistId)) return undefined;
+  // Runs from a seasonal event's realm have their own table here (spec: seasonal-events / event table).
+  if (content?.realms.find((realm) => realm.id === r.realmId)?.event) return 'event';
   if (v?.kind === 'quick' || (v?.kind === 'challenge' && v.quick)) return 'quick';
   return modeOf(r.players, r.bots);
 }
@@ -39,7 +41,7 @@ export function scoreOf(r: Pick<RunResult, 'kills' | 'timeSeconds' | 'level' | '
   return r.kills + 2 * r.timeSeconds + 10 * r.level + 1000 * r.realmsCleared;
 }
 
-export type GloryMode = 'solo' | 'coop' | 'allies' | 'quick';
+export type GloryMode = 'solo' | 'coop' | 'allies' | 'quick' | 'event';
 
 /**
  * Co-op needs two or more players; a solo run with bot allies is its own mode and never co-op (spec: glory / runs with
@@ -119,7 +121,7 @@ export function applyGlory(
 ): { save: SaveData; glory: GloryOutcome } {
   const endedAt = now.toISOString();
   const score = scoreOf(r);
-  const mode = tableOf(r);
+  const mode = tableOf(r, content);
 
   const entry: ScoreEntry = {
     runId: r.runId,

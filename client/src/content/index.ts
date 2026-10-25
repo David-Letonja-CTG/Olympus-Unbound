@@ -9,6 +9,7 @@ import { BOSSES } from './bosses';
 import { ENEMIES } from './enemies';
 import {
   CROSSROADS_OF_HECATE,
+  EVENT_REWARDS,
   EVENTS,
   HECATE,
   HECATE_ENEMIES,
@@ -141,6 +142,7 @@ export const CONTENT: GameContent = {
   bosses: [...BOSSES, HECATE],
   realms: [...REALMS, CROSSROADS_OF_HECATE],
   events: EVENTS,
+  eventRewards: EVENT_REWARDS,
   permanentUpgrades: PERMANENT_UPGRADES,
   balance: BALANCE,
   assets: ASSETS,

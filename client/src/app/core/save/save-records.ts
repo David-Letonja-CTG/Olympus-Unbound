@@ -55,6 +55,8 @@ export interface HighScores {
   readonly allies: readonly ScoreEntry[];
   /** Quick runs, whatever the party (spec: glory / quick run high scores). */
   readonly quick: readonly ScoreEntry[];
+  /** Runs that started in a seasonal event's realm (spec: seasonal-events / event table). */
+  readonly event: readonly ScoreEntry[];
 }
 
 /** The best Daily Trial run of a day (spec: daily-trial / daily best). */
@@ -82,7 +84,13 @@ export interface DailyState {
   readonly done: readonly string[];
 }
 
-export const EMPTY_HIGH_SCORES: HighScores = { solo: [], coop: [], allies: [], quick: [] };
+export const EMPTY_HIGH_SCORES: HighScores = {
+  solo: [],
+  coop: [],
+  allies: [],
+  quick: [],
+  event: [],
+};
 export const EMPTY_DAILY: DailyState = { date: '', progress: {}, done: [] };
 export const EMPTY_TRIAL: TrialRecord = { date: '', attempts: 0 };
 
@@ -162,6 +170,7 @@ export function parseHighScores(v: unknown, content: GameContent): HighScores {
     coop: table(raw['coop']),
     allies: table(raw['allies']),
     quick: table(raw['quick']),
+    event: table(raw['event']),
   };
 }
 

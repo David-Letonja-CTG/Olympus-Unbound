@@ -235,7 +235,7 @@ describe('save format version 4 (spec: meta-progression / save format version 4)
     expect(save.version).toBe(SAVE_VERSION);
     expect(save.gold).toBe(800);
     expect(save.history).toEqual([]);
-    expect(save.highScores).toEqual({ solo: [], coop: [], allies: [], quick: [] });
+    expect(save.highScores).toEqual({ solo: [], coop: [], allies: [], quick: [], event: [] });
     expect(save.achievements).toEqual({});
   });
 

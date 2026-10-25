@@ -392,6 +392,7 @@ export class RunSimulation {
       seed: state.config.seed,
       variant: state.config.variant,
       eventId: state.config.eventId,
+      tokens: state.tokens,
       outcome,
       timeSeconds: Math.floor(state.time),
       level: state.level,

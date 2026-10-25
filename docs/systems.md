@@ -160,6 +160,7 @@ A run's `party` lists 1–4 seats (god, name, the player's own permanent upgrade
 - Weapons and relics with `event` are offered only when it equals the run's `eventId`; they do not count toward a god's arsenal. Realm lists show the active event's realm first and hide other event realms.
 - `realmAt` chains only realms without `event`; from an event realm, depth `d` is `chain[(d − 1) % n]`.
 - Goals may name a `realm`: only runs that started there count.
+- **Currency** (`EventDefinition.currency`): in a run with `eventId`, every kill drops a `token` pickup by `chance` on the loot stream, elites `elite`, the boss `boss`; tokens are magnetic and add to `RunState.tokens` (`RunResult.tokens`). `applyRunResult` adds them to `save.eventTokens[eventId]` once. **Shop** (`eventRewards`): `modifiers` rewards join `permanentModifiers`; `unlock` rewards put their item in `RunConfig.unlocked` (a room uses its host's), so it may be offered in any run. **Event table:** `tableOf(r, content)` sends runs that started in an event realm to `highScores.event` (save v11); world boards count them by mode.
 
 ## Endless runs — `engine/sim/realms.ts`, `run-simulation.ts`
 

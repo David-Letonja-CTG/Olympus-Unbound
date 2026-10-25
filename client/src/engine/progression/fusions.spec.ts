@@ -2,9 +2,22 @@ import { Rng } from '../core/rng';
 import { validateContent } from '../data/content-index';
 import { FUSION_CRESTS } from '../art/sprites';
 import { CONTENT } from '../testing/content';
-import { quietContent, quietSim } from '../testing/fixtures';
+import { quietContent, quietSim, spawnNear } from '../testing/fixtures';
 import { RunSimulation } from '../sim/run-simulation';
 import { applyOffer, createWeapon, refreshPlayer } from './loadout';
+import { hitEnemy } from '../combat/damage';
+import { collect } from '../sim/pickups';
+import { HitSource } from '../sim/types';
+
+const strike: Omit<HitSource, 'ownerId'> = {
+  weaponId: 'test',
+  element: 'physical',
+  damage: 1e9,
+  critChance: 0,
+  knockback: 0,
+  effects: [],
+  lifesteal: 0,
+};
 import { generateOffers, offerCandidates } from './offers';
 
 const player = (sim: RunSimulation) => sim.state.players[0];
@@ -176,5 +189,42 @@ describe('event items (spec: seasonal-events / event items)', () => {
     expect(eventOffers()).not.toContain('key_of_hecate');
     expect(eventOffers('night_of_hecate')).toContain('hecates_torches');
     expect(eventOffers('night_of_hecate')).toContain('key_of_hecate');
+  });
+});
+
+describe('event currency (spec: seasonal-events / event currency)', () => {
+  const run = (eventId?: string, unlocked?: string[]) =>
+    new RunSimulation(
+      {
+        runId: 'c',
+        godId: 'zeus',
+        realmId: 'mount_olympus',
+        seed: 2,
+        modifiers: [],
+        eventId,
+        unlocked,
+      },
+      quietContent(),
+    );
+
+  it('drops honey cakes only in event runs: from elites always, and they are collected', () => {
+    for (const [eventId, expected] of [
+      [undefined, 0],
+      ['night_of_hecate', 3],
+    ] as const) {
+      const sim = run(eventId);
+      const elite = spawnNear(sim, 'satyr', 60, 0, { elite: true });
+      hitEnemy(sim.state, elite, { ...strike, ownerId: player(sim).id }, 0, 0);
+      const tokens = sim.state.pickups.filter((p) => p.kind === 'token' && !p.dead);
+      expect(tokens.reduce((n, p) => n + p.value, 0)).toBe(expected);
+      for (const t of tokens) collect(sim.state, player(sim), t);
+      expect(sim.state.tokens).toBe(expected);
+    }
+  });
+
+  it('offers an unlocked event item outside its event', () => {
+    const sim = run(undefined, ['hecates_torches']);
+    const ids = offerCandidates(sim.state, player(sim)).map((c) => c.offer.itemId);
+    expect(ids).toContain('hecates_torches');
   });
 });

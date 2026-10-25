@@ -1,5 +1,6 @@
 import type {
   BossDefinition,
+  EventRewardDefinition,
   EnemyDefinition,
   EventDefinition,
   RealmDefinition,
@@ -18,6 +19,8 @@ export const EVENTS: readonly EventDefinition[] = [
     tagline: 'The dead walk the crossroads. Hecate holds the keys.',
     window: { from: '10-24', to: '11-07' },
     accent: 0xff8a2a,
+    // Honey cakes: the offering that calms Cerberus at the gates of the dead.
+    currency: { name: 'Honey cakes', chance: 0.02, elite: 3, boss: 15 },
   },
 ];
 
@@ -454,5 +457,45 @@ export const HECATE_RELICS: readonly RelicDefinition[] = [
       { stat: 'xpGain', flat: 0.1 },
     ],
     visual: { sprite: 'key_of_hecate', color: 0xc8a0ff },
+  },
+];
+
+/** What honey cakes buy (spec: seasonal-events / event shop): kept for good, whenever bought. */
+export const EVENT_REWARDS: readonly EventRewardDefinition[] = [
+  {
+    id: 'hecates_blessing',
+    event: 'night_of_hecate',
+    name: 'Hecate’s Blessing',
+    description: '+5% XP in every run.',
+    cost: 40,
+    effect: { type: 'modifiers', modifiers: [{ stat: 'xpGain', flat: 0.05 }] },
+    sprite: 'honey_cake',
+  },
+  {
+    id: 'keykeeper',
+    event: 'night_of_hecate',
+    name: 'Keykeeper',
+    description: 'The Key of Hecate may be offered in every run, all year.',
+    cost: 60,
+    effect: { type: 'unlock', item: 'key_of_hecate' },
+    sprite: 'key_of_hecate',
+  },
+  {
+    id: 'torchbearer',
+    event: 'night_of_hecate',
+    name: 'Torchbearer',
+    description: 'Hecate’s Torches may be offered in every run, all year.',
+    cost: 80,
+    effect: { type: 'unlock', item: 'hecates_torches' },
+    sprite: 'hecates_torches',
+  },
+  {
+    id: 'ward_of_the_crossroads',
+    event: 'night_of_hecate',
+    name: 'Ward of the Crossroads',
+    description: '+1 armour in every run.',
+    cost: 120,
+    effect: { type: 'modifiers', modifiers: [{ stat: 'armor', flat: 1 }] },
+    sprite: 'honey_cake',
   },
 ];

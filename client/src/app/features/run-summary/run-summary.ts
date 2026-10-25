@@ -145,6 +145,13 @@ const TITLES = { defeat: 'You have fallen', abandoned: 'Run abandoned' } as cons
           @if (v.rewards.newBestTime) {
             <p class="best">New best survival time!</p>
           }
+          @if (v.rewards.tokens > 0) {
+            <p class="tokens" data-testid="summary-tokens">
+              <app-item-icon sprite="honey_cake" [size]="18" />
+              +{{ v.rewards.tokens }} {{ currencyOf(v.result.eventId) }} for the event shop
+              (Progression)
+            </p>
+          }
           @if (v.discovered.length) {
             <h3>Discovered</h3>
             <ul class="items">
@@ -331,6 +338,12 @@ const TITLES = { defeat: 'You have fallen', abandoned: 'Run abandoned' } as cons
 export class RunSummary {
   private readonly content: GameContent = inject(GAME_CONTENT);
   private readonly index = new ContentIndex(this.content);
+
+  /** The name of an event's currency, as the run summary counts it (spec: seasonal-events / event currency). */
+  protected currencyOf(eventId: string | undefined): string {
+    const event = eventId ? this.index.events.get(eventId) : undefined;
+    return event?.currency.name.toLowerCase() ?? '';
+  }
   private readonly setup = inject(RunSetup);
   private readonly router = inject(Router);
   private readonly touchScreen = inject(TouchScreen);

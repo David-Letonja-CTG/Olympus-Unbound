@@ -3,6 +3,7 @@ import { RouterLink } from '@angular/router';
 import { GameContent, PermanentUpgradeDefinition } from '../../../engine';
 import { GAME_CONTENT } from '../../core/game-content';
 import { Progression } from '../../core/progression';
+import { SeasonalEvents } from '../../core/seasonal-events';
 import { formatTime, ItemIcon } from '../../shared/item-icon';
 
 interface CodexItem {
@@ -100,6 +101,44 @@ interface CodexGroup {
               </li>
             }
           </ul>
+          <!-- Each event's shop while it is on or its cakes remain (spec: seasonal-events / event shop). -->
+          @for (shop of shops(); track shop.event.id) {
+            <div class="event-shop" [attr.data-testid]="'event-shop-' + shop.event.id">
+              <h3>
+                {{ shop.event.name }}
+                <span class="tokens" [attr.data-testid]="'event-tokens-' + shop.event.id">
+                  <app-item-icon sprite="honey_cake" [size]="16" />
+                  {{ progression.tokens(shop.event.id) }}
+                  {{ shop.event.currency.name.toLowerCase() }}
+                </span>
+              </h3>
+              <ul class="upgrades">
+                @for (r of shop.rewards; track r.id) {
+                  <li [attr.data-testid]="'reward-' + r.id">
+                    <div class="info">
+                      <span class="name-row"
+                        ><strong>{{ r.name }}</strong></span
+                      >
+                      <span class="desc">{{ r.description }}</span>
+                    </div>
+                    @if (progression.owns(r)) {
+                      <span class="tag">Owned</span>
+                    } @else {
+                      <button
+                        class="btn buy"
+                        [disabled]="!progression.canBuyReward(r)"
+                        (click)="progression.buyReward(r)"
+                        [attr.data-testid]="'buy-' + r.id"
+                      >
+                        <app-item-icon sprite="honey_cake" [size]="16" />
+                        <span>{{ r.cost }}</span>
+                      </button>
+                    }
+                  </li>
+                }
+              </ul>
+            </div>
+          }
         </section>
 
         <section class="panel codex-panel" aria-labelledby="codex-title">
@@ -245,6 +284,31 @@ interface CodexGroup {
       color: var(--gold);
       font-size: 1.15rem;
       margin: 0;
+    }
+    /* With an event shop the blessings outgrow their panel: it scrolls within the page. */
+    .blessings {
+      overflow-y: auto;
+    }
+    .event-shop {
+      margin-top: 12px;
+      padding-top: 8px;
+      border-top: 1px solid rgba(255, 138, 42, 0.45);
+    }
+    .event-shop h3 {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 8px;
+      margin: 0 0 6px;
+      font-size: 0.9rem;
+      color: #ffb070;
+    }
+    .event-shop .tokens {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      font-size: 0.8rem;
+      color: var(--gold-2);
     }
     .tier {
       display: block;
@@ -416,6 +480,25 @@ export class ProgressionScreen {
     formatTime(this.progression.save().stats.bestTimeSeconds),
   );
   protected readonly tab = signal(0);
+  private readonly events = inject(SeasonalEvents);
+
+  /** The event shops to show: the event on now, and any whose currency or rewards the player holds. */
+  protected readonly shops = computed(() => {
+    const save = this.progression.save();
+    const active = this.events.active()?.id;
+    return this.content.events
+      .map((event) => ({
+        event,
+        rewards: this.content.eventRewards.filter((r) => r.event === event.id),
+      }))
+      .filter(
+        ({ event, rewards }) =>
+          rewards.length > 0 &&
+          (event.id === active ||
+            (save.eventTokens[event.id] ?? 0) > 0 ||
+            rewards.some((r) => save.eventRewards.includes(r.id))),
+      );
+  });
   protected readonly selectedId = signal<string | undefined>(undefined);
 
   protected readonly codex = computed<readonly CodexGroup[]>(() => {

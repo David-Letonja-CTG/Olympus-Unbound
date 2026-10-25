@@ -1,5 +1,6 @@
 import { Injectable, computed, inject, signal } from '@angular/core';
 import {
+  EventRewardDefinition,
   GameContent,
   GameSettings,
   Modifier,
@@ -67,6 +68,39 @@ export class Progression {
       permanentUpgrades: { ...save.permanentUpgrades, [upgrade.id]: this.level(upgrade) + 1 },
     });
     return true;
+  }
+
+  /** An event's currency held (spec: seasonal-events / event currency). */
+  tokens(eventId: string): number {
+    return this.state().eventTokens[eventId] ?? 0;
+  }
+
+  owns(reward: EventRewardDefinition): boolean {
+    return this.state().eventRewards.includes(reward.id);
+  }
+
+  canBuyReward(reward: EventRewardDefinition): boolean {
+    return !this.owns(reward) && this.tokens(reward.event) >= reward.cost;
+  }
+
+  /** Buys an event shop reward for good (spec: seasonal-events / event shop); false when owned or too dear. */
+  buyReward(reward: EventRewardDefinition): boolean {
+    if (!this.canBuyReward(reward)) return false;
+    const save = this.state();
+    this.commit({
+      ...save,
+      eventTokens: { ...save.eventTokens, [reward.event]: this.tokens(reward.event) - reward.cost },
+      eventRewards: [...save.eventRewards, reward.id],
+    });
+    return true;
+  }
+
+  /** Event items bought for every run (spec: seasonal-events / event shop). */
+  unlockedItems(): string[] {
+    const owned = this.state().eventRewards;
+    return this.content.eventRewards.flatMap((r) =>
+      r.effect.type === 'unlock' && owned.includes(r.id) ? [r.effect.item] : [],
+    );
   }
 
   /** Grants a finished run's rewards once (spec: run-outcome / rewards granted once). */

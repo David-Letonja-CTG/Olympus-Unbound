@@ -545,6 +545,7 @@ export class PlayScreen {
       modifiers,
       // The seasonal event on now: its items may be offered (spec: seasonal-events).
       eventId: this.events.active()?.id,
+      unlocked: this.progression.unlockedItems(),
       sharedScreen: players.length > 0 || undefined,
       // Realms at twice the pace, double experience (spec: quick-runs / quick pace).
       ...(this.setup.quick() ? QUICK_RUN : {}),

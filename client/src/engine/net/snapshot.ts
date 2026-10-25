@@ -21,7 +21,7 @@ const POS = 4;
 const RADIUS = 8;
 const TIMER = 100;
 const PHASES: readonly RunPhase[] = ['playing', 'choosing', 'paused', 'ended'];
-const PICKUPS: readonly PickupKind[] = ['xp', 'gold', 'heal', 'chest'];
+const PICKUPS: readonly PickupKind[] = ['xp', 'gold', 'heal', 'chest', 'token'];
 const SITES: readonly SiteKind[] = ['rift', 'arrival', 'shrine', 'altar'];
 /** Hundredths of a second in 16 bits: up to about 11 minutes. */
 const LONG_TIMER = 100;

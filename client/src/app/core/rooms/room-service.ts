@@ -58,6 +58,8 @@ type HostToGuest =
       seed: number;
       /** The host's seasonal event (spec: seasonal-events). */
       eventId?: string;
+      /** The host's event items bought for every run. */
+      unlocked?: readonly string[];
       party: readonly { godId: string; name: string }[];
     };
 
@@ -278,6 +280,7 @@ export class RoomService {
     const realmId = this.realmId();
     const seed = randomSeed();
     const eventId = this.events.active()?.id;
+    const unlocked = this.progression.unlockedItems();
     const party: PartySeat[] = ordered.map((m) => ({
       godId: m.godId,
       name: m.name,
@@ -297,6 +300,7 @@ export class RoomService {
         realmId,
         seed,
         eventId,
+        unlocked,
         party: party.map(({ godId, name }) => ({ godId, name })),
       });
     });
@@ -311,6 +315,7 @@ export class RoomService {
         realmId,
         seed,
         eventId,
+        unlocked,
         modifiers: party[0].modifiers,
         party,
       },
@@ -496,6 +501,7 @@ export class RoomService {
             realmId: m.realmId,
             seed: m.seed,
             eventId: m.eventId,
+            unlocked: m.unlocked,
             modifiers: [],
             party,
           },
