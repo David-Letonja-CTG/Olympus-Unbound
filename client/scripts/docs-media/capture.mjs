@@ -10,6 +10,7 @@
 //   DOCS_MEDIA_URL=http://localhost:4300 node scripts/docs-media/capture.mjs
 //   node scripts/docs-media/capture.mjs phone             # a run and god selection on a phone (touch, Low)
 //   node scripts/docs-media/capture.mjs build             # the build panel and Call of Hermes
+//   node scripts/docs-media/capture.mjs kronos evolution  # Kronos devouring, and an evolved weapon
 import { chromium, devices } from '@playwright/test';
 import { writeFileSync } from 'node:fs';
 import { dirname, join } from 'node:path';
@@ -86,6 +87,7 @@ const REALMS = [
   { id: 'lernaean_marsh', name: 'Lernaean Marsh', god: 'poseidon' },
   { id: 'aegean_shore', name: 'Aegean Shore', god: 'athena' },
   { id: 'labyrinth_of_crete', name: 'Labyrinth of Crete', god: 'zeus' },
+  { id: 'mount_othrys', name: 'Mount Othrys', god: 'hades' },
 ];
 
 async function newPage(browser, viewport = VIEW) {
@@ -137,6 +139,16 @@ async function startRun(browser, { god, realm, players = [], allies = [] }) {
   await page.getByTestId('run-loading').waitFor({ state: 'detached', timeout: 120000 });
   await send(page, { type: 'godMode', enabled: true });
   return page;
+}
+
+/** A screenshot (PNG) with no level-up open: XP still arriving can open one right after the last is answered. */
+async function stillWithoutChoice(page) {
+  for (let i = 0; i < 10; i++) {
+    await pickUpgrades(page);
+    const shot = await page.screenshot({ type: 'png' });
+    if (!(await page.getByRole('dialog').count())) return shot;
+  }
+  return page.screenshot({ type: 'png' });
 }
 
 /** Levels the god up several times (first choice each time), so the run shows a fuller build. */
@@ -268,11 +280,9 @@ const scenes = {
       await walk(page, ['KeyD', 'KeyS'], 2200);
       await page.waitForTimeout(3500);
       await pickUpgrades(page);
+      // The still first, with no level-up open: a choice could open during the clip.
+      stills.push([`${realm.name} · ${GOD_NAMES[realm.god]}`, await stillWithoutChoice(page)]);
       clips.push(await record(page, decoder, 2600));
-      stills.push([
-        `${realm.name} · ${GOD_NAMES[realm.god]}`,
-        await page.screenshot({ type: 'png' }),
-      ]);
       await page.close();
     }
     await decoder.close();
@@ -283,7 +293,7 @@ const scenes = {
   /** Every realm's boss (bosses.png) and a fight with Asterion (boss.gif). */
   async bosses(browser) {
     const decoder = await browser.newPage();
-    const BOSSES = ['The Cyclops', 'Cerberus', 'The Hydra', 'Scylla', 'Asterion'];
+    const BOSSES = ['The Cyclops', 'Cerberus', 'The Hydra', 'Scylla', 'Asterion', 'Kronos'];
     const stills = [];
     for (const [i, realm] of REALMS.entries()) {
       const page = await startRun(browser, { god: realm.god, realm });
@@ -645,6 +655,60 @@ const scenes = {
     await page.locator(`[data-testid=offer-${hermes}]`).click();
     const clip = await record(page, decoder, 2200);
     writeGif('hermes.gif', clip);
+    await decoder.close();
+    await page.close();
+  },
+
+  /** Kronos devours: the pull ring and the maw on Mount Othrys (devour.gif). */
+  async kronos(browser) {
+    const decoder = await browser.newPage();
+    const realm = REALMS.find((r) => r.id === 'mount_othrys');
+    const page = await startRun(browser, { god: 'athena', realm });
+    await send(page, { type: 'director', enabled: false });
+    await powerUp(page);
+    await send(page, { type: 'skipTo', seconds: 419 });
+    await page.getByTestId('boss-bar').waitFor({ timeout: 30000 });
+    await awaitBoss(page, 320);
+    await pickUpgrades(page);
+    // His hunger: the second phase opens with Devour.
+    await send(page, { type: 'damageBoss', fraction: 0.45 });
+    // Wait for the wind-up of a Devour, answering any level-up on the way, then film the pull and the bite.
+    for (let i = 0; i < 100 && (await inspect(page))?.bossAttack !== 'devour'; i++) {
+      if (await page.getByRole('dialog').count()) await page.keyboard.press('1');
+      await page.waitForTimeout(100);
+    }
+    writeGif('devour.gif', await record(page, decoder, 2600));
+    await decoder.close();
+    await page.close();
+  },
+
+  /** An evolved weapon at work: the Spear of Olympus bursting in thunder in a crowd (evolution.gif). */
+  async evolution(browser) {
+    const decoder = await browser.newPage();
+    const page = await startRun(browser, { god: 'zeus', realm: REALMS[0] });
+    await send(page, { type: 'director', enabled: false });
+    const offers = page.locator('[data-testid^=offer-]');
+    let evolved = false;
+    for (let round = 0; round < 30 && !evolved; round++) {
+      if (!(await offers.count())) {
+        await send(page, { type: 'grantXp', amount: 500 });
+        await page.waitForTimeout(250);
+      }
+      for (let i = 0; i < 20 && (await offers.count()); i++) {
+        const texts = await offers.allInnerTexts();
+        const evo = texts.findIndex((t) => /evolution/i.test(t) && /spear of olympus/i.test(t));
+        const want = texts.findIndex((t) => /thunder spear|zeus's eye/i.test(t));
+        await offers.nth(evo >= 0 ? evo : Math.max(0, want)).click();
+        if (evo >= 0) evolved = true;
+        await page.waitForTimeout(120);
+      }
+    }
+    if (!evolved) throw new Error('the Spear of Olympus was never offered');
+    // Just before the 5:00 horde rings the god: a crowd for the thunder bursts.
+    await send(page, { type: 'skipTo', seconds: 298 });
+    await page.waitForTimeout(8000);
+    await pickUpgrades(page);
+    writeGif('evolution.gif', await record(page, decoder, 2400));
     await decoder.close();
     await page.close();
   },

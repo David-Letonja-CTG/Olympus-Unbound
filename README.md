@@ -4,7 +4,7 @@
 
 An original mythological horde-survival roguelite that runs entirely in the browser. Choose a god, survive ever-larger hordes in procedurally generated realms of Greek myth, combine weapons, armour, relics and skills into synergies and fusions, defeat each realm's boss and pass its gate into the next, harder realm. The run goes on until every god has fallen; then spend your rewards on lasting upgrades and go again. Play alone, with up to three friends on one screen, or in a co-op room joined by code.
 
-<img src="docs/images/hero.gif" width="100%" alt="A run in every realm: Mount Olympus, the Underworld, the Lernaean Marsh, the Aegean Shore and the Labyrinth of Crete">
+<img src="docs/images/hero.gif" width="100%" alt="A run in every realm: Mount Olympus, the Underworld, the Lernaean Marsh, the Aegean Shore, the Labyrinth of Crete and Mount Othrys">
 
 - **Four gods:** Zeus, Hades, Poseidon and Athena, each with a starting weapon, a divine ability, a passive and an arsenal of their own (Thunderbolt is Zeus's alone, the Soul Scythe Hades's).
 - **Daily Trial:** one run a day, the same for everyone: a god, a realm, a seed and a twist such as Swift Foes or Glass God. Your best today is kept, and any run can be shared as a picture and a challenge link that starts the same run for a friend. Co-op rooms have **Invite** links that open the room ready to join.
@@ -35,8 +35,8 @@ An original mythological horde-survival roguelite that runs entirely in the brow
 | ![Two players on one keyboard walk apart and the camera zooms out](docs/images/together.gif) | ![God selection with a second player and two bot allies](docs/images/gods.jpg) | ![Four players at one screen, a plaque in every corner](docs/images/together-four.jpg) |
 | **On a phone, sideways** | **Menus upright** | **Call of Hermes** |
 | ![A run on a phone: the stick under the left thumb, Power, Dash and Sprint on the right, the orbs between](docs/images/phone.jpg) | ![God selection on a phone held upright](docs/images/phone-gods.jpg) | ![Call of Hermes: every experience gem in the realm streams to the god](docs/images/hermes.gif) |
-| **The build panel** | | |
-| ![The build panel: the whole build and the tree of fusions, each requirement ticked or with the level still needed](docs/images/build-panel.jpg) | | |
+| **The build panel** | **Kronos devours** | **An evolved weapon** |
+| ![The build panel: the whole build and the tree of fusions, each requirement ticked or with the level still needed](docs/images/build-panel.jpg) | ![Kronos on Mount Othrys: the wide pull ring and his maw](docs/images/devour.gif) | ![The Spear of Olympus bursting in thunder in a horde](docs/images/evolution.gif) |
 
 **Play it:** [olympus.138-2-144-201.sslip.io](https://olympus.138-2-144-201.sslip.io/), or download the game from [Releases](https://github.com/David-Letonja-CTG/Olympus-Unbound/releases)
 

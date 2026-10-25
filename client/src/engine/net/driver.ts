@@ -17,6 +17,8 @@ export interface DriverSnapshot {
   readonly bossAlive: boolean;
   /** Where the living boss is (local runs only), so scripts can wait for it to come into view. */
   readonly boss?: { readonly x: number; readonly y: number };
+  /** The kind of attack the boss is winding up (local runs only), e.g. 'devour'. */
+  readonly bossAttack?: string;
   /** Where the merchant stands while it is in the realm. */
   readonly merchant?: { readonly x: number; readonly y: number };
   readonly players: number;
@@ -247,6 +249,7 @@ export class LocalDriver implements RunDriver {
       enemies: state.enemies.length,
       bossAlive: !!state.boss && !state.boss.dead,
       boss: state.boss && !state.boss.dead ? { x: state.boss.x, y: state.boss.y } : undefined,
+      bossAttack: state.boss && !state.boss.dead ? state.boss.boss?.current?.type : undefined,
       merchant: state.merchant ? { x: state.merchant.x, y: state.merchant.y } : undefined,
       players: state.players.filter((pl) => !pl.left).length,
       party: state.players.map((pl) => ({ x: pl.x, y: pl.y, alive: pl.alive })),

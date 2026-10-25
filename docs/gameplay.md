@@ -2,7 +2,7 @@
 
 The game as the player experiences it. Numbers live in `client/src/content/` and may change with balancing; this page describes the shape.
 
-<img src="images/hero.gif" width="100%" alt="A run in every realm: Mount Olympus, the Underworld, the Lernaean Marsh, the Aegean Shore and the Labyrinth of Crete">
+<img src="images/hero.gif" width="100%" alt="A run in every realm: Mount Olympus, the Underworld, the Lernaean Marsh, the Aegean Shore, the Labyrinth of Crete and Mount Othrys">
 
 ## The loop
 
@@ -284,6 +284,8 @@ Lord of the Titans, Devourer of His Children: a towering king in dark gold armou
 - **Below 60% health:** "Kronos remembers his hunger!" He **devours**: a wide ring opens round him and drags every god inside toward him for a moment, then his jaws snap shut on the smaller circle at his feet. Run or dash out of the ring: a dash outruns the pull, and a dash as the jaws close is a perfect dodge. He also calls Titan Soldiers to his side and raises the **walls of Othrys** in rings round himself.
 - **Below 25% health:** "Time itself bends to Kronos!" He rages, moves faster and devours twice in every round of attacks, between sickle cuts, falling stones and a charge.
 
+<img src="images/devour.gif" width="100%" alt="Kronos on Mount Othrys: the wide pull ring and his maw">
+
 ## Building a run
 
 - **Weapons** (up to 6, levels 1–6): Thunder Spear, Divine Bow, Trident, Lightning Orb, War Hammer, Flaming Sword, Thunderbolt, Soul Scythe.
@@ -302,6 +304,8 @@ Lord of the Titans, Devourer of His Children: a towering king in dark gold armou
 | The build panel | Call of Hermes |
 |---|---|
 | ![The build panel: the whole build and the tree of fusions, each requirement ticked or with the level still needed](images/build-panel.jpg) | ![Call of Hermes: every experience gem in the realm streams to the god](images/hermes.gif) |
+| **An evolved weapon** | |
+| ![The Spear of Olympus bursting in thunder in a horde](images/evolution.gif) | |
 
 ## The Wandering Merchant
 
