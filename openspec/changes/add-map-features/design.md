@@ -62,7 +62,10 @@ On a mask change (one comparison a frame) the view swaps sprites.
 
 ## Performance
 
-No allocation per step. Hazards appear only near the gods. At most about 10 extra static lights. To be measured on Othrys and the Labyrinth, Low and High.
+No allocation per step. Hazards appear only near the gods. At most about 10 extra static lights. Measured (phone emulation, full horde):
+
+- Othrys: median 33 / 33 ms (Low / High).
+- Labyrinth: median 33 / 50 ms, p95 50 / 67–83 ms. main measures the same 67–83 ms on High.
 
 ## Tests
 
