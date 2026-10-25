@@ -121,6 +121,9 @@ export class WorldView {
     SpritePool
   >;
   private readonly staticLights: StaticLight[] = [];
+  /** One static sprite per breakable prop, hidden once broken (spec: arena-generation / breakable props). */
+  private readonly props: Phaser.GameObjects.Sprite[] = [];
+  private shownBroken = 0;
   /** Which enemies are drawn walking (no restart of their walk on every short stop). */
   private readonly walk = new WalkHold();
   private walkPruned = 0;
@@ -177,6 +180,11 @@ export class WorldView {
   }
 
   sync(state: WorldFrame, alpha: number, time: number, lights: LightMap): void {
+    if (state.brokenProps !== this.shownBroken) {
+      this.shownBroken = state.brokenProps;
+      for (let i = 0; i < this.props.length; i++)
+        this.props[i].setVisible(!((state.brokenProps >>> i) & 1));
+    }
     if (time - this.walkPruned > 1000) {
       this.walk.prune(time);
       this.walkPruned = time;
@@ -612,6 +620,17 @@ export class WorldView {
         .setDepth(o.y + o.radius * 0.4);
       if (kind?.light)
         this.staticLights.push({ x: o.x, y: o.y, light: kind.light, seed: o.id * 1.37 });
+    }
+    const propKinds = new Map((config.props?.kinds ?? []).map((k) => [k.id, k]));
+    for (const p of arena.props) {
+      const r = this.resolver.resolve(propKinds.get(p.kind)?.visual.sprite ?? p.kind);
+      this.props.push(
+        scene.add
+          .sprite(p.x, p.y, r.texture, r.frame)
+          .setOrigin(r.originX, r.originY)
+          .setScale(r.scale)
+          .setDepth(p.y + p.radius * 0.4),
+      );
     }
     // The boss arena: a ritual circle of dried blood on the plaza.
     const ring = scene.add.graphics().setDepth(DEPTH.decoration + 1);

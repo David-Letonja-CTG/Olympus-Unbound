@@ -43,6 +43,7 @@ export const BALANCE: BalanceConfig = {
   enemyAttackInterval: 1,
   caps: { enemies: 400, projectiles: 300, hostileProjectiles: 120, pickups: 400 },
   drops: { healChance: 0.006, healAmount: 30 },
+  props: { goldChance: 0.6, gold: 4, xpChance: 0.5, xp: 3, healChance: 0.1, healAmount: 20 },
   // Co-op: each extra player adds 65% enemy health, half again the spawn rate and room, 90% boss health.
   coop: {
     enemyHealthPerPlayer: 0.65,

@@ -5,7 +5,7 @@ import { RunSimulation } from '../sim/run-simulation';
 import { Enemy } from '../sim/types';
 
 /**
- * Real content with a quiet, small Mount Olympus: no spawns, no events, no obstacles, a far-away boss and no Director
+ * Real content with a quiet, small Mount Olympus: no spawns, no events, no obstacles or props, a far-away boss and no Director
  * encounters, so tests place exactly the enemies they need (Director tests add the encounters back).
  */
 export function quietContent(changes: Partial<RealmDefinition> = {}): GameContent {
@@ -20,6 +20,7 @@ export function quietContent(changes: Partial<RealmDefinition> = {}): GameConten
       pointsOfInterest: [],
       scatter: [],
       decorations: [],
+      props: undefined,
       bossArena: { radius: 200, minDistanceFromSpawn: 900 },
     },
     timeline: [{ from: 0, rate: 0, maxAlive: 0, enemies: [{ id: 'satyr', weight: 1 }] }],

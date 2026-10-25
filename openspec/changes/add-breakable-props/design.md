@@ -1,0 +1,24 @@
+# Design
+
+- **Content:** `MapGenConfig.props?: { kinds: PropKind[]; clusters: number }`. A `PropKind` is `{ id, radius, visual }`. The drops are in the balance: `props: { goldChance, gold, xpChance, xp, healChance, healAmount }`.
+- **Generator** (`generate-arena.ts`), last, on `rng.fork('props')`:
+  - `clusters` clusters of 1–3 props, each prop within 34 px of its cluster's centre.
+  - Each prop is clear of obstacles (by their radii), the spawn, the boss arena and road centres.
+  - At most 32 props (`MAX_PROPS`), so their state fits one 32-bit mask.
+  - `ArenaData.props`: `{ id (index), kind, x, y, radius }`.
+- **Simulation** (`sim/props.ts`, `breakProps`, after movement):
+  - Each living player against each standing prop, by distance: at most 4 × 32 checks a step.
+  - A break sets bit `index` of `RunState.brokenProps` and emits `propBroken {index, x, y, color}`.
+  - Drops roll on `rng.fork('props')` and go through `spawnPickup`.
+  - The mask resets in a new realm.
+- **Rooms:** the snapshot carries the mask as a u32 (`SNAPSHOT_FORMAT` 7). The guest's frame exposes it as `WorldFrame.brokenProps`.
+- **View:**
+  - `WorldView` adds one static sprite per prop. When the frame's mask changes (one comparison a frame), it hides the broken props.
+  - `Effects` shows the shatter: shards and dust in the prop's colour.
+  - The scene plays the `impact` cue.
+- **Art:** six code-drawn props in `engine/art/props.ts` (amphora, urn, basket, crate, bronze urn, gourd), with recolours where a realm needs one.
+- **Performance:** about 24 static sprites and a check that costs nothing measurable. Measured (phone emulation, Olympus, full horde): loading 3.1 / 3.6 s (Low / High), median frame 33 / 50 ms, p95 50 / 67 ms, the same as before.
+- **Tests:**
+  - Generator: props deterministic, within the cap, clear of obstacles, the spawn and the boss arena.
+  - Simulation: a god walking into a prop breaks it once, drops loot and emits the event; an enemy does not break it.
+  - Snapshot: the mask round-trips.

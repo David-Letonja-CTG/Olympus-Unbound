@@ -135,6 +135,8 @@ export interface DebugSnapshot {
   readonly boss?: { readonly x: number; readonly y: number };
   /** Where the realm's landmark stands (scripts that film it). */
   readonly landmark?: { readonly x: number; readonly y: number };
+  /** The breakable props and which are broken (scripts that smash them). */
+  readonly props?: readonly { readonly x: number; readonly y: number; readonly broken: boolean }[];
   /** The kind of attack the boss is winding up, e.g. 'devour' (scripts that capture an attack). */
   readonly bossAttack?: string;
   /** The battle music's tier, 0 (Calm) to 4 (Titan) (spec: music). */

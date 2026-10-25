@@ -76,6 +76,14 @@ describe('snapshots (spec: rooms / one authoritative game)', () => {
     );
   });
 
+  it('carry the broken props, all 32 bits (spec: arena-generation / breakable props)', () => {
+    const sim = busyRun(1);
+    for (const mask of [0, 5, 0x80000001, 0xffffffff]) {
+      sim.state.brokenProps = mask;
+      expect(decodeSnapshot(encodeSnapshot(sim.state, sim.phase), index).brokenProps).toBe(mask);
+    }
+  });
+
   it('carry the boss and its telegraphs', () => {
     const sim = busyRun(1);
     sim.debug({ type: 'skipTo', seconds: 419 });

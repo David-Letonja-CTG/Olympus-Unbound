@@ -525,6 +525,14 @@ export interface ObstacleKind {
   readonly light?: LightSource;
 }
 
+/** A jar, urn, basket or crate a god breaks by walking into it (spec: arena-generation / breakable props). */
+export interface PropKind {
+  readonly id: string;
+  readonly radius: number;
+  /** `color` is the shards'. */
+  readonly visual: Visual;
+}
+
 export type PointOfInterestRule =
   /** Ruined temples: rings of `kind` obstacles around a plaza, some pieces missing. */
   | {
@@ -637,6 +645,8 @@ export interface MapGenConfig {
     readonly density: number;
     readonly terrain?: readonly string[];
   }[];
+  /** `clusters` small clusters (1–3) of breakable props of these kinds (spec: arena-generation / breakable props). */
+  readonly props?: { readonly kinds: readonly PropKind[]; readonly clusters: number };
   /** Non-colliding decorations by terrain; `density` per 1000 tiles of that terrain. */
   readonly decorations: readonly {
     readonly id: string;
@@ -759,6 +769,15 @@ export interface BalanceConfig {
     readonly pickups: number;
   };
   readonly drops: { readonly healChance: number; readonly healAmount: number };
+  /** What a broken prop drops (spec: arena-generation / breakable props). */
+  readonly props: {
+    readonly goldChance: number;
+    readonly gold: number;
+    readonly xpChance: number;
+    readonly xp: number;
+    readonly healChance: number;
+    readonly healAmount: number;
+  };
   /** Each player beyond the first adds these fractions (spec: co-op / difficulty per player). */
   readonly coop: {
     readonly enemyHealthPerPlayer: number;

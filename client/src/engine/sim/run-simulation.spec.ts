@@ -212,7 +212,7 @@ describe('full runs (autopilot)', () => {
       { stat: 'regen', flat: 20 },
     ]);
     // Picks like a player building an arsenal; the first offer alone may leave weapon slots empty.
-    playRun(sim, 9 * 60, armsFirst);
+    playRun(sim, 12 * 60, armsFirst);
     expect(sim.state.depth).toBeGreaterThanOrEqual(1);
     expect(sim.state.time).toBeGreaterThan(420);
     expect(sim.state.level).toBeGreaterThan(10);

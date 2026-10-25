@@ -200,6 +200,10 @@ Cues fire when `previous < at ≤ now` (the first frame includes `at = 0`). The 
 
 After the roads, a `landmark` rule places its obstacle kind on `rng.fork('landmark')` (up to 120 tries): clear of the spawn, the boss arena and the sites (radius + 40), and of every road (radius + 12); `ground` is stamped round it without making a plaza; the site keeps walls and groves away.
 
+## Breakable props — `generate-arena.ts`, `sim/props.ts`
+
+Last in generation, on `rng.fork('props')`: `clusters` clusters of 1–3 props of one kind, each clear of obstacles, the spawn, the boss arena, road middles (a quarter of the width) and the other props, at most `MAX_PROPS` (32). They do not collide. Each step after movement, a living god within prop radius + god radius of a standing prop breaks it: bit `i` of `RunState.brokenProps` (reset each realm), a `propBroken` event (shards in the kind's `visual.color`, the `shatter` cue), and the drops of `balance.props` rolled on the run's `props` stream: gold 60% (4), XP 50% (3), heal 10% (20). Enemies never break props. The snapshot carries the mask as 32 bits (format 7).
+
 ## Painted ground — `engine/maps/ground.ts`
 
 - Painted once per realm behind the loading screen (`GroundBuilder`), at 0.25/0.375/0.5 pixels per world unit (Low/Medium/High), then drawn as one image: no per-frame cost.

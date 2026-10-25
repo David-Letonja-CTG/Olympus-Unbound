@@ -267,6 +267,9 @@ export class ArenaScene extends Phaser.Scene {
       case 'hit':
         sound.play(event.crit ? 'crit' : HIT_SOUNDS[event.element], event);
         return;
+      case 'propBroken':
+        sound.play('shatter', event);
+        return;
       case 'kill':
         sound.play(event.boss ? 'killBoss' : event.elite ? 'killElite' : 'kill', event);
         if (event.boss) this.shake(600, 0.012);

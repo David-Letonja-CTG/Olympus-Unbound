@@ -77,6 +77,8 @@ export interface Snapshot {
   /** The Director's markers and an eclipse's darkness (spec: director-of-chaos / rooms). */
   readonly sites: FrameSite[];
   readonly darkness: number;
+  /** The arena's broken props (spec: arena-generation / breakable props). */
+  readonly brokenProps: number;
 }
 
 export interface SnapCompanion extends FrameCompanion {
@@ -158,6 +160,7 @@ export function encodeSnapshot(state: RunState, phase: RunPhase, waiting = false
     w.f32(merchant.leavesIn);
   }
   w.u8(Math.round(Math.max(0, Math.min(1, state.omen.darkness)) * 255));
+  w.u32(state.brokenProps);
   w.u8(names.size);
   for (const s of names.keys()) w.str(s);
 
@@ -318,6 +321,7 @@ export function decodeSnapshot(buffer: ArrayBuffer, index: ContentIndex): Snapsh
       ? { x: r.f32(), y: r.f32(), radius: r.f32(), leavesIn: r.f32() }
       : undefined;
   const darkness = r.u8() / 255;
+  const brokenProps = r.u32();
   const names: string[] = [];
   for (let n = r.u8(); n > 0; n--) names.push(r.str());
 
@@ -516,6 +520,7 @@ export function decodeSnapshot(buffer: ArrayBuffer, index: ContentIndex): Snapsh
   return {
     sites,
     darkness,
+    brokenProps,
     companions,
     merchant,
     walls,

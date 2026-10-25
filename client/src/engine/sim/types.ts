@@ -498,6 +498,8 @@ export type SimEvent =
       boss: boolean;
       color: number;
     }
+  /** A god broke prop `index` (spec: arena-generation / breakable props); `color` is its shards'. */
+  | { type: 'propBroken'; index: number; x: number; y: number; color: number }
   | { type: 'playerHurt'; playerId: number; amount: number; x: number; y: number }
   | { type: 'playerHealed'; playerId: number; amount: number }
   | { type: 'playerRevived'; playerId: number; x: number; y: number }
