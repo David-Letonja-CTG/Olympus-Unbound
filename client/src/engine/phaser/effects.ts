@@ -122,6 +122,11 @@ export class Effects {
           this.number(event.x, event.y, event.amount, event.crit, event.element);
         if (event.crit) this.burst(this.sparks, event.x, event.y, 4, ELEMENT_COLOR[event.element]);
         return;
+      case 'featureSprung':
+        // A column starts to fall in dust; a brazier catches in sparks.
+        if (event.kind === 'column') this.burst(this.puffs, event.x, event.y, 10, 0xd8d0bf);
+        else this.burst(this.sparks, event.x, event.y - 10, 14, 0xffb04a);
+        return;
       case 'propBroken':
         // Shards and dust in the prop's colour (spec: arena-generation / breakable props).
         this.burst(this.puffs, event.x, event.y, 8, event.color);

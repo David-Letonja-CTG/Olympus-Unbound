@@ -24,6 +24,22 @@ export interface ArenaProp {
 /** Props per arena at most: their broken state fits one 32-bit mask (snapshot). */
 export const MAX_PROPS = 32;
 
+/**
+ * A hazard or helper (spec: arena-generation / map hazards, map helpers): `rule` indexes the map's `features`, `id` is
+ * its bit in the features mask; `angle` is a column's fall or a crusher's line.
+ */
+export interface ArenaFeature {
+  readonly id: number;
+  readonly rule: number;
+  readonly x: number;
+  readonly y: number;
+  readonly angle: number;
+}
+
+/** Features per arena at most (one 32-bit mask), and the least room between two. */
+export const MAX_FEATURES = 32;
+const FEATURE_GAP = 90;
+
 export interface ArenaDecoration {
   readonly kind: string;
   readonly x: number;
@@ -69,6 +85,7 @@ export interface ArenaData {
   readonly obstacles: readonly ArenaObstacle[];
   readonly decorations: readonly ArenaDecoration[];
   readonly props: readonly ArenaProp[];
+  readonly features: readonly ArenaFeature[];
   readonly spawn: { readonly x: number; readonly y: number };
   readonly bossArena: { readonly x: number; readonly y: number; readonly radius: number };
   /** Round marble floors (spawn plaza, boss arena, ruin plazas), for drawing. */
@@ -357,27 +374,83 @@ export function generateArena(config: MapGenConfig, seed: number): ArenaData {
     }
   }
 
-  // 6. Breakable props, last and on their own stream: small clusters clear of every obstacle, the spawn, the boss
-  //    arena and the roads' middles (spec: arena-generation / breakable props).
+  // Breakable props and features keep to open ground (spec: arena-generation / breakable props).
   const props: ArenaProp[] = [];
+  const features: ArenaFeature[] = [];
+  /** Open ground for a prop or a feature: off obstacles, the spawn, the boss arena, road middles and each other. */
+  const free = (x: number, y: number, r: number) => {
+    if (x - r < bounds.minX || y - r < bounds.minY || x + r > bounds.maxX || y + r > bounds.maxY)
+      return false;
+    if (distanceSq(x, y, spawn.x, spawn.y) < (config.spawnClearRadius + r) ** 2) return false;
+    if (distanceSq(x, y, bossArena.x, bossArena.y) < (bossArena.radius + r) ** 2) return false;
+    if (roads.some((road) => distanceToPolyline(x, y, road.points) < road.width / 4 + r))
+      return false;
+    if (props.some((p) => distanceSq(x, y, p.x, p.y) < (p.radius + r + 4) ** 2)) return false;
+    if (features.some((f) => distanceSq(x, y, f.x, f.y) < (FEATURE_GAP + r) ** 2)) return false;
+    let blocked = false;
+    placed.query(x, y, r + 6, () => {
+      blocked = true;
+      return false;
+    });
+    return !blocked;
+  };
+
+  // 6. Hazards and helpers, on their own stream (spec: arena-generation / map hazards, map helpers).
+  if (config.features) {
+    const featureRng = rng.fork('features');
+    const add = (rule: number, x: number, y: number, angle = 0) => {
+      if (features.length >= MAX_FEATURES) return;
+      features.push({ id: features.length, rule, x, y, angle });
+    };
+    config.features.forEach((rule, index) => {
+      if (rule.type === 'teetering') {
+        // Leaning columns among the rule's kind, each falling a way that stays in the arena.
+        for (const o of obstacles) {
+          if (o.kind !== rule.kind || !featureRng.chance(rule.chance)) continue;
+          const angle = featureRng.angle();
+          const ex = o.x + Math.cos(angle) * rule.length;
+          const ey = o.y + Math.sin(angle) * rule.length;
+          if (ex < bounds.minX || ey < bounds.minY || ex > bounds.maxX || ey > bounds.maxY)
+            continue;
+          add(index, o.x, o.y, angle);
+        }
+      } else if (rule.type === 'crusher') {
+        // Across a road, square to it, away from the spawn and the boss arena.
+        for (let n = 0, attempt = 0; n < rule.count && attempt < rule.count * 30; attempt++) {
+          if (roads.length === 0) break;
+          const road = roads[featureRng.int(0, roads.length - 1)];
+          const pts = road.points;
+          const i = featureRng.int(0, pts.length / 2 - 2) * 2;
+          const t = featureRng.next();
+          const x = pts[i] + (pts[i + 2] - pts[i]) * t;
+          const y = pts[i + 1] + (pts[i + 3] - pts[i + 1]) * t;
+          const clear = road.width + 120;
+          if (distanceSq(x, y, spawn.x, spawn.y) < (config.spawnClearRadius + clear) ** 2) continue;
+          if (distanceSq(x, y, bossArena.x, bossArena.y) < (bossArena.radius + clear) ** 2)
+            continue;
+          if (features.some((f) => distanceSq(x, y, f.x, f.y) < (FEATURE_GAP * 3) ** 2)) continue;
+          const along = Math.atan2(pts[i + 3] - pts[i + 1], pts[i + 2] - pts[i]);
+          add(index, x, y, along + Math.PI / 2);
+          n++;
+        }
+      } else {
+        const footprint = rule.type === 'brazier' ? 16 : rule.radius;
+        for (let n = 0, attempt = 0; n < rule.count && attempt < rule.count * 40; attempt++) {
+          const p = randomPoint(featureRng, footprint + 40);
+          if (rule.type === 'vent' && rule.terrain && !rule.terrain.includes(terrainAt(p.x, p.y)))
+            continue;
+          if (!free(p.x, p.y, footprint)) continue;
+          add(index, p.x, p.y);
+          n++;
+        }
+      }
+    });
+  }
+
+  // 7. Breakable props, last: small clusters on open ground.
   if (config.props) {
     const propRng = rng.fork('props');
     const { kinds: propKinds, clusters } = config.props;
-    const free = (x: number, y: number, r: number) => {
-      if (x - r < bounds.minX || y - r < bounds.minY || x + r > bounds.maxX || y + r > bounds.maxY)
-        return false;
-      if (distanceSq(x, y, spawn.x, spawn.y) < (config.spawnClearRadius + r) ** 2) return false;
-      if (distanceSq(x, y, bossArena.x, bossArena.y) < (bossArena.radius + r) ** 2) return false;
-      if (roads.some((road) => distanceToPolyline(x, y, road.points) < road.width / 4 + r))
-        return false;
-      if (props.some((p) => distanceSq(x, y, p.x, p.y) < (p.radius + r + 4) ** 2)) return false;
-      let blocked = false;
-      placed.query(x, y, r + 6, () => {
-        blocked = true;
-        return false;
-      });
-      return !blocked;
-    };
     for (let c = 0; c < clusters && props.length < MAX_PROPS; c++) {
       const kind = propKinds[propRng.int(0, propKinds.length - 1)];
       for (let attempt = 0; attempt < 20; attempt++) {
@@ -410,6 +483,7 @@ export function generateArena(config: MapGenConfig, seed: number): ArenaData {
     obstacles,
     decorations,
     props,
+    features,
     spawn,
     bossArena,
     plazas,

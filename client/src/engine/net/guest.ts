@@ -63,6 +63,7 @@ interface ReplicaFrame {
   sites: Snapshot['sites'];
   darkness: number;
   brokenProps: number;
+  features: number;
   depth: number;
   span: number;
 }
@@ -99,6 +100,7 @@ export class GuestDriver implements RunDriver {
     sites: [],
     darkness: 0,
     brokenProps: 0,
+    features: 0,
     depth: 0,
     span: STEP,
   };
@@ -592,6 +594,7 @@ export class GuestDriver implements RunDriver {
       sites: b.sites,
       darkness: b.darkness,
       brokenProps: b.brokenProps,
+      features: b.features,
       depth: b.depth,
       span: b.time > a.time ? b.time - a.time : STEP,
     };

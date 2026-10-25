@@ -538,6 +538,79 @@ export interface PropKind {
   readonly visual: Visual;
 }
 
+/**
+ * A map's hazards and helpers (spec: arena-generation / map hazards, map helpers). Hazards hurt gods for `damage` ×
+ * the realm's monster damage scaling and monsters for `monsters` × their max health (bosses spared), after a
+ * telegraph of `windup` seconds. `every` is a range of seconds between repeats.
+ */
+export type FeatureRule =
+  /** Lava vents on `terrain` (any if unset): each marks a circle of `radius`, then erupts, again and again. */
+  | {
+      readonly type: 'vent';
+      readonly count: number;
+      readonly radius: number;
+      readonly damage: number;
+      readonly monsters: number;
+      readonly windup: number;
+      readonly every: readonly [number, number];
+      readonly terrain?: readonly string[];
+      readonly visual: Visual;
+      readonly light?: LightSource;
+    }
+  /**
+   * Teetering columns: `chance` of the `kind` obstacles lean; the first god within `trigger` makes one fall along a
+   * line `length` long and `width` wide, once; it then shows its `stump` and its `shaft` lying along the fall.
+   */
+  | {
+      readonly type: 'teetering';
+      readonly kind: string;
+      readonly chance: number;
+      readonly trigger: number;
+      readonly length: number;
+      readonly width: number;
+      readonly damage: number;
+      readonly monsters: number;
+      readonly windup: number;
+      readonly stump: string;
+      readonly shaft: string;
+    }
+  /** Crushing walls: slabs on both sides of a road slam across it (a line `width` wide), again and again. */
+  | {
+      readonly type: 'crusher';
+      readonly count: number;
+      readonly width: number;
+      readonly damage: number;
+      readonly monsters: number;
+      readonly windup: number;
+      readonly every: readonly [number, number];
+      readonly visual: Visual;
+    }
+  /** Healing springs: a god inside heals `heal` per second out of a `pool`; spent, it refills after `refill` seconds. */
+  | {
+      readonly type: 'spring';
+      readonly count: number;
+      readonly radius: number;
+      readonly heal: number;
+      readonly pool: number;
+      readonly refill: number;
+      readonly visual: Visual;
+      readonly light?: LightSource;
+    }
+  /**
+   * Braziers to light: a god who touches a cold one (`visual`) lights it (`lit`, `light`) for the realm; every
+   * `every` seconds a lit one sets monsters within `radius` burning for `burn` × their max health per second.
+   */
+  | {
+      readonly type: 'brazier';
+      readonly count: number;
+      readonly radius: number;
+      readonly burn: number;
+      readonly every: number;
+      readonly visual: Visual;
+      readonly lit: Visual;
+      readonly light: LightSource;
+    };
+
 export type PointOfInterestRule =
   /** Ruined temples: rings of `kind` obstacles around a plaza, some pieces missing. */
   | {
@@ -652,6 +725,8 @@ export interface MapGenConfig {
   }[];
   /** `clusters` small clusters (1–3) of breakable props of these kinds (spec: arena-generation / breakable props). */
   readonly props?: { readonly kinds: readonly PropKind[]; readonly clusters: number };
+  /** Hazards and helpers (spec: arena-generation / map hazards, map helpers). */
+  readonly features?: readonly FeatureRule[];
   /** Non-colliding decorations by terrain; `density` per 1000 tiles of that terrain. */
   readonly decorations: readonly {
     readonly id: string;

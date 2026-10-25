@@ -79,6 +79,7 @@ export interface Snapshot {
   readonly darkness: number;
   /** The arena's broken props (spec: arena-generation / breakable props). */
   readonly brokenProps: number;
+  readonly features: number;
 }
 
 export interface SnapCompanion extends FrameCompanion {
@@ -161,6 +162,7 @@ export function encodeSnapshot(state: RunState, phase: RunPhase, waiting = false
   }
   w.u8(Math.round(Math.max(0, Math.min(1, state.omen.darkness)) * 255));
   w.u32(state.brokenProps);
+  w.u32(state.features);
   w.u8(names.size);
   for (const s of names.keys()) w.str(s);
 
@@ -322,6 +324,7 @@ export function decodeSnapshot(buffer: ArrayBuffer, index: ContentIndex): Snapsh
       : undefined;
   const darkness = r.u8() / 255;
   const brokenProps = r.u32();
+  const features = r.u32();
   const names: string[] = [];
   for (let n = r.u8(); n > 0; n--) names.push(r.str());
 
@@ -521,6 +524,7 @@ export function decodeSnapshot(buffer: ArrayBuffer, index: ContentIndex): Snapsh
     sites,
     darkness,
     brokenProps,
+    features,
     companions,
     merchant,
     walls,

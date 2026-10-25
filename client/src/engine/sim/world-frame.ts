@@ -45,6 +45,8 @@ export interface WorldFrame {
   readonly darkness: number;
   /** The arena's broken props, bit `i` for prop `i` (spec: arena-generation / breakable props). */
   readonly brokenProps: number;
+  /** Fallen columns, lit braziers, dry springs (spec: arena-generation / map hazards, map helpers). */
+  readonly features: number;
   /** Seconds between every entity's previous (`px`/`py`) and current position: one step, or a snapshot gap. */
   readonly span: number;
 }

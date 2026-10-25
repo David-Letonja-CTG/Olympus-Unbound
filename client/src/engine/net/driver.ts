@@ -21,6 +21,13 @@ export interface DriverSnapshot {
   readonly landmark?: { readonly x: number; readonly y: number };
   /** The terrain under the first god (scripts that test footing). */
   readonly ground?: string;
+  /** The map's hazards and helpers and whether each is sprung (fallen, lit, dry). */
+  readonly features?: readonly {
+    readonly x: number;
+    readonly y: number;
+    readonly type: string;
+    readonly on: boolean;
+  }[];
   /** The breakable props and which are broken (scripts that smash them). */
   readonly props?: readonly { readonly x: number; readonly y: number; readonly broken: boolean }[];
   /** The kind of attack the boss is winding up (local runs only), e.g. 'devour'. */
@@ -264,6 +271,12 @@ export class LocalDriver implements RunDriver {
               Math.floor(p.x / state.arena.tileSize)
           ]
         ],
+      features: state.arena.features.map((f) => ({
+        x: f.x,
+        y: f.y,
+        type: state.realm.map.features?.[f.rule].type ?? '',
+        on: !!((state.features >>> f.id) & 1),
+      })),
       props: state.arena.props.map((pr) => ({
         x: pr.x,
         y: pr.y,

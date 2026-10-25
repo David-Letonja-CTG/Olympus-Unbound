@@ -208,6 +208,17 @@ Last in generation, on `rng.fork('props')`: `clusters` clusters of 1–3 props o
 
 A terrain's `footing.speed` multiplies the walking speed of gods (`updatePlayers`, the guest's prediction) and walking monsters (`updateEnemies`; bosses and parts excepted) on its tile. `footing.grip` < 1 eases a god's walking velocity toward stick × speed by `1 − (1 − grip)^(60·dt)` a step, kept in `driftX/driftY` from the real displacement (a wall stops a slide; under 1 px/s it stops). A dash ignores footing and leaves the god drifting along it. Grip 1 is the plain walk. Content: Marsh `bog` speed 0.8; Aegean `shallows` speed 0.8; Underworld `cocytus_ice` grip 0.06.
 
+## Map hazards and helpers — `generate-arena.ts`, `sim/features.ts`
+
+Placed after the obstacles, before the props, on `rng.fork('features')` (at most 32, 90 px apart): vents, springs and braziers on open ground (vents on their `terrain`); teetering columns among the rule's obstacle kind (`chance`, a fall `angle` that stays in the arena); crushers across a road, square to it, clear of the spawn and the boss arena. Each step after the hazards, `updateFeatures`:
+
+- **vent / crusher:** while a god is within 900 px, count down; then a circle (vent, fire) or a line across the road (half the widest road + 34 px each side) hazard, `windup` warning, `damage × scaling().damage` to gods (a perfect dodge avoids it) and `monsters × max health` to non-boss monsters (`Hazard.monsters`, through `dealDamage`); next in `every` (+ windup) on the run's `features` stream.
+- **teetering:** the first god within `trigger` sets its bit (fallen) and raises a line hazard `length` long along the fall; `featureSprung` (rumble, dust).
+- **spring:** a wounded god inside heals `heal`/s from a `pool` (as regen, no event); empty, its bit (dry) is set for `refill` s, then the pool is full again.
+- **brazier:** a god within 20 px sets its bit (lit, `featureSprung`, sparks); every `every` s a lit one burns monsters within `radius` (bosses and parts spared) for `burn × max health` per second, 3 s.
+
+The bits are `RunState.features`, reset each realm; the snapshot carries them (format 8). The view leans a teetering column 0.12 rad, then shows its `stump` and `shaft`; dims a dry spring and its light; swaps a cold brazier for its `lit` sprite and light; closes a crusher's slabs as its telegraph runs out.
+
 ## Painted ground — `engine/maps/ground.ts`
 
 - Painted once per realm behind the loading screen (`GroundBuilder`), at 0.25/0.375/0.5 pixels per world unit (Low/Medium/High), then drawn as one image: no per-frame cost.

@@ -302,6 +302,19 @@ export const CROSSROADS_OF_HECATE: RealmDefinition = {
       ],
       clusters: 12,
     },
+    // Hazards and helpers (spec: arena-generation / map hazards, map helpers).
+    features: [
+      {
+        type: 'brazier',
+        count: 4,
+        radius: 130,
+        burn: 0.08,
+        every: 1,
+        visual: { sprite: 'brazier_cold', color: 0x4a3e34 },
+        lit: { sprite: 'brazier', color: 0xff8a3d },
+        light: { radius: 260, color: 0xff9a40, intensity: 1, flicker: 0.35 },
+      },
+    ],
     decorations: [
       {
         id: 'bones',

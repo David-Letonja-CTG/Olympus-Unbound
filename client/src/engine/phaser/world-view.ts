@@ -1,6 +1,7 @@
 import Phaser from 'phaser';
-import { ArenaData } from '../maps/generate-arena';
-import { Element, LightSource, MapGenConfig } from '../data/types';
+import { ArenaData, ArenaFeature } from '../maps/generate-arena';
+import { Element, FeatureRule, LightSource, MapGenConfig } from '../data/types';
+import { crusherReach } from '../sim/features';
 import { STEP } from '../sim/run-state';
 import { FramePlayer, WorldFrame } from '../sim/world-frame';
 import { WalkHold } from './walk-hold';
@@ -101,6 +102,18 @@ interface StaticLight {
   readonly y: number;
   readonly light: LightSource;
   readonly seed: number;
+  /** A feature's light is off while its brazier is cold or its spring dry. */
+  on?: boolean;
+}
+
+/** A hazard's or helper's sprites (spec: arena-generation / map hazards, map helpers). */
+interface FeatureView {
+  readonly feature: ArenaFeature;
+  readonly rule: FeatureRule;
+  readonly main?: Phaser.GameObjects.Sprite;
+  readonly shaft?: Phaser.GameObjects.Sprite;
+  readonly slabs?: readonly [Phaser.GameObjects.Sprite, Phaser.GameObjects.Sprite];
+  readonly light?: StaticLight;
 }
 
 /** Draws the arena and keeps one sprite per simulation entity in sync with its (interpolated) position. */
@@ -124,6 +137,10 @@ export class WorldView {
   /** One static sprite per breakable prop, hidden once broken (spec: arena-generation / breakable props). */
   private readonly props: Phaser.GameObjects.Sprite[] = [];
   private shownBroken = 0;
+  private readonly features: FeatureView[] = [];
+  private shownFeatures = -1;
+  /** Half a crusher's line, where its slabs stand. */
+  private crusherHalf = 0;
   /** Which enemies are drawn walking (no restart of their walk on every short stop). */
   private readonly walk = new WalkHold();
   private walkPruned = 0;
@@ -161,6 +178,7 @@ export class WorldView {
   /** Static lights of the arena (braziers), with flicker. */
   addArenaLights(lights: LightMap, time: number): void {
     for (const l of this.staticLights) {
+      if (l.on === false) continue;
       const flicker = l.light.flicker
         ? 1 -
           l.light.flicker *
@@ -185,6 +203,8 @@ export class WorldView {
       for (let i = 0; i < this.props.length; i++)
         this.props[i].setVisible(!((state.brokenProps >>> i) & 1));
     }
+    if (state.features !== this.shownFeatures) this.showFeatures(state.features);
+    if (this.crusherHalf > 0) this.moveSlabs(state);
     if (time - this.walkPruned > 1000) {
       this.walk.prune(time);
       this.walkPruned = time;
@@ -430,6 +450,94 @@ export class WorldView {
     for (const pool of Object.values(p)) pool.end();
   }
 
+  private sprite(id: string, x: number, y: number, depth: number): Phaser.GameObjects.Sprite {
+    const r = this.resolver.resolve(id);
+    return this.scene.add
+      .sprite(x, y, r.texture, r.frame)
+      .setOrigin(r.originX, r.originY)
+      .setScale(r.scale)
+      .setDepth(depth);
+  }
+
+  /** One view per feature; a teetering column is its obstacle's own sprite, leaning toward its fall. */
+  private drawFeatures(
+    arena: ArenaData,
+    config: MapGenConfig,
+    obstacleSprites: readonly Phaser.GameObjects.Sprite[],
+  ): void {
+    const rules = config.features ?? [];
+    for (const f of arena.features) {
+      const rule = rules[f.rule];
+      const seed = f.id * 2.11;
+      if (rule.type === 'vent' || rule.type === 'spring') {
+        const main = this.sprite(rule.visual.sprite, f.x, f.y, DEPTH.decoration + 2);
+        const light = rule.light && { x: f.x, y: f.y + 10, light: rule.light, seed };
+        if (light) this.staticLights.push(light);
+        this.features.push({ feature: f, rule, main, light });
+      } else if (rule.type === 'teetering') {
+        const o = arena.obstacles.find((ob) => ob.x === f.x && ob.y === f.y);
+        const main = o && obstacleSprites[o.id];
+        if (!main) continue;
+        main.setRotation(Math.cos(f.angle) >= 0 ? 0.12 : -0.12);
+        const mx = f.x + Math.cos(f.angle) * rule.length * 0.5;
+        const my = f.y + Math.sin(f.angle) * rule.length * 0.5;
+        const shaft = this.sprite(rule.shaft, mx, my, my).setRotation(f.angle).setVisible(false);
+        this.features.push({ feature: f, rule, main, shaft });
+      } else if (rule.type === 'crusher') {
+        this.crusherHalf = crusherReach(arena);
+        const slab = (flip: boolean) =>
+          this.sprite(rule.visual.sprite, f.x, f.y, f.y).setRotation(f.angle).setFlipX(flip);
+        this.features.push({ feature: f, rule, slabs: [slab(false), slab(true)] });
+      } else {
+        const main = this.sprite(rule.visual.sprite, f.x, f.y, f.y + 6);
+        const light: StaticLight = { x: f.x, y: f.y, light: rule.light, seed, on: false };
+        this.staticLights.push(light);
+        this.features.push({ feature: f, rule, main, light });
+      }
+    }
+  }
+
+  /** Fallen columns, lit braziers and dry springs, as the mask says. */
+  private showFeatures(mask: number): void {
+    this.shownFeatures = mask;
+    for (const v of this.features) {
+      const on = ((mask >>> v.feature.id) & 1) === 1;
+      const rule = v.rule;
+      if (rule.type === 'teetering' && on && v.main && v.shaft && !v.shaft.visible) {
+        const r = this.resolver.resolve(rule.stump);
+        v.main.setTexture(r.texture, r.frame).setOrigin(r.originX, r.originY).setScale(r.scale);
+        v.main.setRotation(0);
+        v.shaft.setVisible(true);
+      } else if (rule.type === 'spring') {
+        v.main?.setAlpha(on ? 0.35 : 1);
+        if (v.light) v.light.on = !on;
+      } else if (rule.type === 'brazier') {
+        const r = this.resolver.resolve(on ? rule.lit.sprite : rule.visual.sprite);
+        v.main?.setTexture(r.texture, r.frame).setOrigin(r.originX, r.originY).setScale(r.scale);
+        if (v.light) v.light.on = on;
+      }
+    }
+  }
+
+  /** A crusher's slabs close in as its telegraph runs out, and stand apart again. */
+  private moveSlabs(state: WorldFrame): void {
+    for (const v of this.features) {
+      if (!v.slabs) continue;
+      const f = v.feature;
+      let close = 0;
+      for (const h of state.hazards) {
+        if (h.shape !== 'line' || Math.abs((h.x + h.x2) / 2 - f.x) > 1) continue;
+        if (Math.abs((h.y + h.y2) / 2 - f.y) > 1) continue;
+        close = h.warn > 0 ? Math.max(0, 1 - h.timer / h.warn) ** 3 : 0;
+      }
+      const reach = this.crusherHalf * (1 - close * 0.85);
+      const dx = Math.cos(f.angle) * reach;
+      const dy = Math.sin(f.angle) * reach;
+      v.slabs[0].setPosition(f.x - dx, f.y - dy).setDepth(f.y - dy);
+      v.slabs[1].setPosition(f.x + dx, f.y + dy).setDepth(f.y + dy);
+    }
+  }
+
   /** A fallen god as a pale, floating spirit above the darkness, glowing brighter as it is revived. */
   private spirit(pl: FramePlayer, time: number, lights: LightMap): void {
     const p = this.pools;
@@ -610,10 +718,11 @@ export class WorldView {
         .setAlpha(0.9);
       sprite.setOrigin(r.originX, r.originY).setScale(r.scale);
     }
+    const obstacleSprites: Phaser.GameObjects.Sprite[] = [];
     for (const o of arena.obstacles) {
       const kind = config.obstacles.find((k) => k.id === o.kind);
       const r = this.resolver.resolve(kind?.visual.sprite ?? o.kind);
-      scene.add
+      obstacleSprites[o.id] = scene.add
         .sprite(o.x, o.y, r.texture, r.frame)
         .setOrigin(r.originX, r.originY)
         .setScale(r.scale)
@@ -632,6 +741,7 @@ export class WorldView {
           .setDepth(p.y + p.radius * 0.4),
       );
     }
+    this.drawFeatures(arena, config, obstacleSprites);
     // The boss arena: a ritual circle of dried blood on the plaza.
     const ring = scene.add.graphics().setDepth(DEPTH.decoration + 1);
     ring.lineStyle(6, 0x5a1414, 0.55);
