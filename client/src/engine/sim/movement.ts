@@ -27,11 +27,15 @@ export interface Mover extends Body {
   dashCooldown: number;
   dashX: number;
   dashY: number;
+  /** The walk's velocity last step: on low grip it carries on (spec: arena-generation / footing). */
+  driftX: number;
+  driftY: number;
 }
 
 /**
  * One step of walking, sprinting and dashing (spec: player-control / stamina, sprint and dash). Returns true when a
- * dash started this step. `world` keeps the mover out of obstacles, dashing included.
+ * dash started this step. `world` keeps the mover out of obstacles, dashing included. `grip` below 1 (ice) eases the walk
+ * toward the stick instead of following it at once (spec: arena-generation / footing).
  */
 export function stepMovement(
   m: Mover,
@@ -40,6 +44,7 @@ export function stepMovement(
   rules: StaminaBalance,
   world: { resolve(body: Body): void },
   dt: number,
+  grip = 1,
 ): boolean {
   const move = normaliseMove(input);
   const length = Math.hypot(move.x, move.y);
@@ -66,9 +71,13 @@ export function stepMovement(
     m.x += m.dashX * rules.dashSpeed * t;
     m.y += m.dashY * rules.dashSpeed * t;
     world.resolve(m);
+    // Out of a dash, the god walks on along it.
+    m.driftX = m.dashX * moveSpeed;
+    m.driftY = m.dashY * moveSpeed;
   } else {
-    m.moving = length > 0;
-    if (m.moving) {
+    let vx = 0;
+    let vy = 0;
+    if (length > 0) {
       let speed = moveSpeed;
       // Running on, even when spent, keeps stamina from refilling: let go of sprint to catch breath.
       if (input.sprint) {
@@ -78,10 +87,26 @@ export function stepMovement(
       }
       m.facingX = move.x / length;
       m.facingY = move.y / length;
-      m.x += move.x * speed * dt;
-      m.y += move.y * speed * dt;
-      world.resolve(m);
+      vx = move.x * speed;
+      vy = move.y * speed;
     }
+    if (grip < 1) {
+      const k = 1 - (1 - grip) ** (dt * 60);
+      vx = m.driftX + (vx - m.driftX) * k;
+      vy = m.driftY + (vy - m.driftY) * k;
+      if (vx * vx + vy * vy < 1) vx = vy = 0;
+    }
+    m.moving = vx !== 0 || vy !== 0;
+    if (m.moving) {
+      const x = m.x;
+      const y = m.y;
+      m.x += vx * dt;
+      m.y += vy * dt;
+      world.resolve(m);
+      // What the walk really did: a wall stops a slide.
+      m.driftX = (m.x - x) / dt;
+      m.driftY = (m.y - y) / dt;
+    } else m.driftX = m.driftY = 0;
   }
 
   if (spent) m.staminaRest = 0;

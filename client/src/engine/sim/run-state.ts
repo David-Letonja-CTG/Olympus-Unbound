@@ -1,6 +1,7 @@
 import type { BotSkill } from './bots';
 import { WorldFrame } from './world-frame';
 import { WorldCollision } from '../core/collision';
+import { Footing } from '../maps/footing';
 import { CLEARANCE, NavField } from '../enemies/navigation';
 import { Rng } from '../core/rng';
 import { SpatialHash } from '../core/spatial-hash';
@@ -125,6 +126,8 @@ export class RunState implements WorldFrame {
   realm: RealmDefinition;
   arena: ArenaData;
   collision: WorldCollision;
+  /** The ground's speed and grip (spec: arena-generation / footing). */
+  footing: Footing;
   /** The way to the gods around obstacles and walls (spec: enemy-spawning / finding the way). */
   nav: NavField;
   /** A boss's own field, with room for its body; made when a boss first walks. */
@@ -240,6 +243,7 @@ export class RunState implements WorldFrame {
     };
     this.collision = new WorldCollision(arena.bounds, arena.obstacles);
     this.nav = new NavField(this.collision);
+    this.footing = new Footing(arena, this.realm.map);
     const rng = new Rng(`run:${config.seed}`);
     this.spawnRng = rng.fork('spawn');
     this.combatRng = rng.fork('combat');
@@ -390,6 +394,7 @@ export class RunState implements WorldFrame {
     this.arena = arena;
     this.collision = new WorldCollision(arena.bounds, arena.obstacles);
     this.nav = new NavField(this.collision);
+    this.footing = new Footing(arena, realm.map);
     this.bossNav = undefined;
     this.realmTime = 0;
     this.boss = undefined;
