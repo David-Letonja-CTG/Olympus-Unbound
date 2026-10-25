@@ -196,6 +196,12 @@ Each frame: clear the light map to the realm's `atmosphere.ambient`; add lights 
 
 Cues fire when `previous < at ≤ now` (the first frame includes `at = 0`). The camera eases (smoothstep) from where earlier camera cues left it to each cue's target over its duration; fades work the same way on visibility (0 black, 1 clear; a fade at 0 starts black). Captions are active for `at ≤ t < at + duration`. Positions are relative to the arena's central plaza.
 
+## Painted ground — `engine/maps/ground.ts`
+
+- Painted once per realm behind the loading screen (`GroundBuilder`), at 0.25/0.375/0.5 pixels per world unit (Low/Medium/High), then drawn as one image: no per-frame cost.
+- Per pixel: the terrain band colour (blended over 0.035 of the noise at band edges), patches and grain, the terrain's pattern (`TerrainType.texture`, fading out across the blend; a detail noise at 26 units drives cracks, ripples, ash, mud and clumps), and the cliff face beyond the bounds. Roads, the thread and soft shadows are drawn on top.
+- Measure with `node scripts/perf/phone.mjs` (`PERF_REALM`, `PERF_QUALITY`): it reports loading seconds and frame times.
+
 ## Arena generation — `engine/maps/generate-arena.ts`
 
 Deterministic from `(map config, seed)`: terrain bands from two-octave value noise; a cliff border; marble plazas (spawn, boss arena ≥ `minDistanceFromSpawn` away, temple rings); obstacles via rejection sampling with `minObstacleGap`, clear zones and `maxObstacles`; decorations only on their terrain and never on obstacles; `plazaLights` rules then place light-bearing obstacles (braziers) evenly around every plaza, outside the spawn and boss-arena clear zones. Rendering (`engine/phaser/world-view.ts`) draws the terrain as one smoothed picture (one pixel per tile), round marble floors and y-sorted obstacles.

@@ -492,10 +492,20 @@ export interface BossDefinition {
 // ---------------------------------------------------------------------------------------------------------------
 // Realms
 
+/** A procedural pattern painted into a terrain's ground once, when the realm loads (spec: visual-atmosphere). */
+export type TerrainTexture =
+  'slabs' | 'cobbles' | 'cracks' | 'ripples' | 'ash' | 'mud' | 'grass' | 'earth' | 'moss';
+
 export interface TerrainType {
   readonly id: string;
   /** Base colour of the generated tile. */
   readonly color: number;
+  /** Its pattern: `size` world units per stone, ripple or plate; `strength` 0–1 (default 1). */
+  readonly texture?: {
+    readonly kind: TerrainTexture;
+    readonly size?: number;
+    readonly strength?: number;
+  };
 }
 
 /** A light an obstacle gives off (braziers, altars); drawn by the light map (D13). */

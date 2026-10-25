@@ -28,10 +28,10 @@ export const MOUNT_OLYMPUS: RealmDefinition = {
     borderTiles: 3,
     terrain: {
       types: [
-        { id: 'grass', color: 0x46573a },
-        { id: 'meadow', color: 0x58613f },
-        { id: 'earth', color: 0x625142 },
-        { id: 'marble', color: 0xaea697 },
+        { id: 'grass', color: 0x46573a, texture: { kind: 'grass' } },
+        { id: 'meadow', color: 0x58613f, texture: { kind: 'grass', strength: 0.6 } },
+        { id: 'earth', color: 0x625142, texture: { kind: 'earth' } },
+        { id: 'marble', color: 0xaea697, texture: { kind: 'slabs' } },
         { id: 'cliff', color: 0x26232d },
       ],
       noiseScale: 9,
@@ -266,10 +266,10 @@ export const THE_UNDERWORLD: RealmDefinition = {
     borderTiles: 3,
     terrain: {
       types: [
-        { id: 'ash', color: 0x46413e },
-        { id: 'asphodel', color: 0x575d4b },
-        { id: 'basalt', color: 0x2c2a31 },
-        { id: 'black_marble', color: 0x4f4c5a },
+        { id: 'ash', color: 0x46413e, texture: { kind: 'ash' } },
+        { id: 'asphodel', color: 0x575d4b, texture: { kind: 'grass', strength: 0.7 } },
+        { id: 'basalt', color: 0x2c2a31, texture: { kind: 'cracks' } },
+        { id: 'black_marble', color: 0x4f4c5a, texture: { kind: 'slabs', size: 52 } },
         { id: 'chasm', color: 0x0f0d14 },
       ],
       noiseScale: 9,
@@ -498,10 +498,14 @@ export const LERNAEAN_MARSH: RealmDefinition = {
     borderTiles: 3,
     terrain: {
       types: [
-        { id: 'bog', color: 0x2c3a2e },
-        { id: 'mud', color: 0x4a4232 },
-        { id: 'reedbed', color: 0x4c5a36 },
-        { id: 'mossy_marble', color: 0x7d8470 },
+        { id: 'bog', color: 0x2c3a2e, texture: { kind: 'mud' } },
+        { id: 'mud', color: 0x4a4232, texture: { kind: 'mud', strength: 0.8 } },
+        { id: 'reedbed', color: 0x4c5a36, texture: { kind: 'grass' } },
+        {
+          id: 'mossy_marble',
+          color: 0x7d8470,
+          texture: { kind: 'slabs', size: 40, strength: 0.8 },
+        },
         { id: 'deep_water', color: 0x10201a },
       ],
       noiseScale: 8,
@@ -726,10 +730,10 @@ export const AEGEAN_SHORE: RealmDefinition = {
     borderTiles: 3,
     terrain: {
       types: [
-        { id: 'wet_sand', color: 0x6a6048 },
-        { id: 'dune', color: 0x847858 },
-        { id: 'sea_rock', color: 0x4a4c56 },
-        { id: 'marble', color: 0xb0aea6 },
+        { id: 'wet_sand', color: 0x6a6048, texture: { kind: 'ripples', size: 26 } },
+        { id: 'dune', color: 0x847858, texture: { kind: 'ripples', size: 38 } },
+        { id: 'sea_rock', color: 0x4a4c56, texture: { kind: 'cracks' } },
+        { id: 'marble', color: 0xb0aea6, texture: { kind: 'slabs' } },
         { id: 'sea', color: 0x0e1e2e },
       ],
       noiseScale: 9,
@@ -946,10 +950,10 @@ export const LABYRINTH_OF_CRETE: RealmDefinition = {
     borderTiles: 3,
     terrain: {
       types: [
-        { id: 'flagstone', color: 0x5e5446 },
-        { id: 'packed_earth', color: 0x4e4234 },
-        { id: 'dust', color: 0x6a5c48 },
-        { id: 'mosaic', color: 0x8a7a62 },
+        { id: 'flagstone', color: 0x5e5446, texture: { kind: 'slabs', size: 54 } },
+        { id: 'packed_earth', color: 0x4e4234, texture: { kind: 'earth' } },
+        { id: 'dust', color: 0x6a5c48, texture: { kind: 'ash', strength: 0.7 } },
+        { id: 'mosaic', color: 0x8a7a62, texture: { kind: 'cobbles', size: 18 } },
         { id: 'bedrock', color: 0x1a1410 },
       ],
       noiseScale: 8,
@@ -1171,10 +1175,10 @@ export const MOUNT_OTHRYS: RealmDefinition = {
     borderTiles: 3,
     terrain: {
       types: [
-        { id: 'basalt', color: 0x2e2a2c },
-        { id: 'ember_ground', color: 0x3e3634 },
-        { id: 'ash', color: 0x4a4644 },
-        { id: 'bronze_floor', color: 0x8a6a3e },
+        { id: 'basalt', color: 0x2e2a2c, texture: { kind: 'cracks' } },
+        { id: 'ember_ground', color: 0x3e3634, texture: { kind: 'cracks', size: 50 } },
+        { id: 'ash', color: 0x4a4644, texture: { kind: 'ash' } },
+        { id: 'bronze_floor', color: 0x8a6a3e, texture: { kind: 'slabs', size: 60 } },
         { id: 'chasm', color: 0x0c0808 },
       ],
       noiseScale: 9,
