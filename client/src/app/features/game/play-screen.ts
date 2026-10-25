@@ -28,6 +28,7 @@ import {
 } from '../../../engine';
 import { debugEnabled, directorPanelEnabled } from '../../core/debug-mode';
 import { GAME_CONTENT, GAME_SESSION_FACTORY } from '../../core/game-content';
+import { SeasonalEvents } from '../../core/seasonal-events';
 import { Progression } from '../../core/progression';
 import { RoomService } from '../../core/rooms/room-service';
 import { WorldScores } from '../../core/world-scores';
@@ -319,6 +320,7 @@ declare global {
 })
 export class PlayScreen {
   private readonly content = inject(GAME_CONTENT);
+  private readonly events = inject(SeasonalEvents);
   private readonly createSession = inject(GAME_SESSION_FACTORY);
   private readonly progression = inject(Progression);
   protected readonly setup = inject(RunSetup);
@@ -541,6 +543,8 @@ export class PlayScreen {
       realmId,
       seed: this.setup.seed(),
       modifiers,
+      // The seasonal event on now: its items may be offered (spec: seasonal-events).
+      eventId: this.events.active()?.id,
       sharedScreen: players.length > 0 || undefined,
       // Realms at twice the pace, double experience (spec: quick-runs / quick pace).
       ...(this.setup.quick() ? QUICK_RUN : {}),

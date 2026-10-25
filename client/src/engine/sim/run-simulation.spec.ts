@@ -52,7 +52,7 @@ describe('content', () => {
   it('has the vertical slice’s content', () => {
     expect(CONTENT.weapons.length).toBeGreaterThanOrEqual(6);
     expect(CONTENT.armour).toHaveLength(4);
-    expect(CONTENT.relics).toHaveLength(6);
+    expect(CONTENT.relics.filter((r) => !r.event)).toHaveLength(6);
     // Mount Olympus's own enemy types (spec: enemy-spawning), other realms bring theirs.
     const olympus = CONTENT.realms.find((r) => r.id === 'mount_olympus');
     const ids = new Set([
@@ -66,7 +66,7 @@ describe('content', () => {
   });
 
   it('chains Mount Olympus into the Underworld, guarded by Cerberus (spec: realm-underworld)', () => {
-    expect(CONTENT.realms.map((r) => r.id)).toEqual([
+    expect(CONTENT.realms.filter((r) => !r.event).map((r) => r.id)).toEqual([
       'mount_olympus',
       'the_underworld',
       'lernaean_marsh',

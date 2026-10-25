@@ -161,3 +161,20 @@ describe('fusion crests and fanfare (spec: run-progression / fusion crests and f
     expect(take()).toEqual([]);
   });
 });
+
+describe('event items (spec: seasonal-events / event items)', () => {
+  const eventOffers = (eventId?: string) => {
+    const sim = new RunSimulation(
+      { runId: 'e', godId: 'zeus', realmId: 'mount_olympus', seed: 1, modifiers: [], eventId },
+      quietContent(),
+    );
+    return offerCandidates(sim.state, player(sim)).map((c) => c.offer.itemId);
+  };
+
+  it('offers Hecate’s items only in runs of her event', () => {
+    expect(eventOffers()).not.toContain('hecates_torches');
+    expect(eventOffers()).not.toContain('key_of_hecate');
+    expect(eventOffers('night_of_hecate')).toContain('hecates_torches');
+    expect(eventOffers('night_of_hecate')).toContain('key_of_hecate');
+  });
+});

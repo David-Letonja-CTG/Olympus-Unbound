@@ -180,6 +180,25 @@ test('Tab opens the build panel while the run goes on (spec: hud / the build pan
   await expect(panel).toHaveCount(0);
 });
 
+test('the Night of Hecate: the menu button leads to a run at her crossroads (spec: seasonal-events)', async ({
+  page,
+}) => {
+  // The admin switch for this browser, so the test does not depend on the calendar.
+  await page.addInitScript(() =>
+    localStorage.setItem('olympus-unbound/event-override', 'on:night_of_hecate'),
+  );
+  await openAsReturningPlayer(page);
+  await page.getByTestId('menu-event').click();
+  await page.getByTestId('god-hades').click();
+  await page.getByRole('button', { name: 'Continue' }).click();
+  await expect(page.getByTestId('realm-crossroads_of_hecate')).toBeVisible();
+  await fillSeed(page, '31');
+  await page.getByTestId('begin').click();
+  await expect(page.getByTestId('run-loading')).toHaveCount(0, { timeout: 120_000 });
+  await expect(page.getByTestId('hud-realm')).toContainText('Crossroads of Hecate');
+  await expect.poll(async () => (await inspect(page))?.time ?? 0).toBeGreaterThan(0.5);
+});
+
 test('permanent upgrades are bought with gold and kept', async ({ page }) => {
   await page.goto('/');
   await page.evaluate(() =>

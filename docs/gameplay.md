@@ -286,6 +286,26 @@ Lord of the Titans, Devourer of His Children: a towering king in dark gold armou
 
 <img src="images/devour.gif" width="100%" alt="Kronos on Mount Othrys: the wide pull ring and his maw">
 
+## Seasonal events
+
+Some weeks of the year belong to an event. While one is on, the main menu shows its button with the days left, its realm leads the realm lists (also for co-op rooms), and its items may turn up in **every** run. Event realms stand outside the chain: a run that starts in one goes on to Mount Olympus. Events follow your device's calendar; the Daily Trial never visits an event realm.
+
+### The Night of Hecate (October 24 – November 7)
+
+The dead walk the crossroads, and Hecate holds the keys. **The Crossroads of Hecate** is a moonlit graveyard where three roads meet, among grave steles, cypresses and black altars, lit by carved gourd lanterns.
+
+| Realm time | What comes |
+|---|---|
+| 00:00 | **The Restless Dead**: pale ghosts of the unburied; later in packs |
+| 00:40 | **Empusae**: quick, hungry spirits of Hecate's train |
+| 01:30 | **Lampades of Hecate**: her torch nymphs; they keep their distance and throw her fire |
+| 02:30 | **Hounds of Hecate**: they stop, then spring |
+| 07:00 | **Hecate** (spawning slows) |
+
+**Hecate**, Queen of the Crossroads (14,000 health, 400 gold). Her **three torches** (the Maiden's, the Mother's and the Crone's), carried by Lampades, circle her and lash out on their own rhythms. While any of them burns she takes only a third of the damage: put them out, then strike. A quenched torch relights after 18 seconds. Ghost fire falls on circles under you and the dead answer her call. Below half health "**The three roads close!**": rings of stone rise round her with three ways out, and her hounds join the fight.
+
+**Event items** (only while the event is on): **Hecate's Torches** (a fire weapon: torches circle you and set the dead alight) and the **Key of Hecate** (relic: +20% fire and shadow damage, +10% XP). **Achievements:** *Queen of the Crossroads* (defeat Hecate at her crossroads) and *Walker of the Night* (survive 10 minutes from them); they wait for the event each year.
+
 ## Building a run
 
 - **Weapons** (up to 6, levels 1–6): Thunder Spear, Divine Bow, Trident, Lightning Orb, War Hammer, Flaming Sword, Thunderbolt, Soul Scythe.

@@ -77,6 +77,8 @@ export interface WeaponDefinition {
   readonly description: string;
   /** The gods this weapon belongs to; absent = common to every god (spec: run-progression / god arsenals). */
   readonly gods?: readonly string[];
+  /** Offered only in runs of this seasonal event (spec: seasonal-events / event items). */
+  readonly event?: string;
   readonly element: Element;
   readonly behavior: WeaponBehaviorId;
   readonly base: WeaponStats;
@@ -125,6 +127,8 @@ export interface RelicDefinition {
   readonly id: string;
   readonly name: string;
   readonly description: string;
+  /** Offered only in runs of this seasonal event (spec: seasonal-events / event items). */
+  readonly event?: string;
   readonly modifiers: readonly Modifier[];
   /** Weights the relic up for gods or builds with this element. */
   readonly element?: Element;
@@ -232,6 +236,20 @@ export interface InstantDefinition {
   /** A `gather` is only offered with at least this many such pickups beyond every god's magnet. */
   readonly minLying?: number;
   readonly visual: Visual;
+}
+
+/**
+ * A seasonal event (spec: seasonal-events): on every year between `from` and `to` (month-day, inclusive, may
+ * wrap the new year) on the player's device, unless switched on or off on the admin page.
+ */
+export interface EventDefinition {
+  readonly id: string;
+  readonly name: string;
+  /** One line for the menu banner. */
+  readonly tagline: string;
+  readonly window: { readonly from: string; readonly to: string };
+  /** The event's colour in menus. */
+  readonly accent: number;
 }
 
 /** Bought with gold between runs; applies to every run. */
@@ -607,6 +625,8 @@ export interface RealmDefinition {
   readonly id: string;
   readonly name: string;
   readonly description: string;
+  /** A seasonal event's realm: chosen only while its event is on, and outside the chain (spec: seasonal-events). */
+  readonly event?: string;
   readonly backgroundColor: number;
   /** Night lighting and air (D13): ambient light colour (brightness ≥ 30%), fog and floating particle colours. */
   readonly atmosphere: {
@@ -751,6 +771,8 @@ export interface GameContent {
   /** Combined upgrades and upgrades without end (spec: run-progression / fusions, ascensions). */
   readonly fusions: readonly FusionDefinition[];
   readonly ascensions: readonly AscensionDefinition[];
+  /** Seasonal events and what belongs to them (spec: seasonal-events). */
+  readonly events: readonly EventDefinition[];
   /** One per weapon at most (spec: run-progression / weapon evolutions). */
   readonly evolutions: readonly EvolutionDefinition[];
   readonly enemies: readonly EnemyDefinition[];
@@ -881,6 +903,8 @@ export interface Goal {
   readonly over: 'run' | 'total';
   /** Only runs as this god count. */
   readonly god?: string;
+  /** Only runs that started in this realm count (spec: seasonal-events / event achievements). */
+  readonly realm?: string;
   readonly mode?: 'solo' | 'coop';
   /** Achievements only: met once every god has met it. */
   readonly everyGod?: boolean;

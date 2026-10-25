@@ -391,6 +391,7 @@ export class RunSimulation {
       realmId: state.config.realmId,
       seed: state.config.seed,
       variant: state.config.variant,
+      eventId: state.config.eventId,
       outcome,
       timeSeconds: Math.floor(state.time),
       level: state.level,

@@ -65,6 +65,8 @@ export interface RunConfig {
   readonly rules?: RunRules;
   /** What kind of run this is, for the application's records; the simulation only echoes it in the result. */
   readonly variant?: RunVariant;
+  /** The seasonal event on when the run began: its items may be offered (spec: seasonal-events). */
+  readonly eventId?: string;
 }
 
 /** A run's kind, echoed in its result: a quick run, a Daily Trial, or a challenge from a link. */

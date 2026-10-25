@@ -166,7 +166,8 @@ export function validateContent(content: GameContent): string[] {
     } else if (!wieldableBy(start, god.id)) {
       errors.push(`God "${god.id}" starts with "${start.id}", which is not theirs.`);
     }
-    const arsenal = content.weapons.filter((w) => wieldableBy(w, god.id)).length;
+    // Event weapons come and go with their season: the arsenal is counted without them.
+    const arsenal = content.weapons.filter((w) => !w.event && wieldableBy(w, god.id)).length;
     if (arsenal < MIN_ARSENAL)
       errors.push(`God "${god.id}" can find only ${arsenal} weapons; needs ${MIN_ARSENAL}.`);
   }
@@ -247,6 +248,19 @@ export function validateContent(content: GameContent): string[] {
   }
 
   errors.push(...validateFusions(content, index));
+  // Seasonal events (spec: seasonal-events): month-day windows, known events, a normal realm to start from.
+  const eventIds = new Set(content.events.map((e) => e.id));
+  for (const event of content.events)
+    for (const day of [event.window.from, event.window.to])
+      if (!/^(0[1-9]|1[0-2])-(0[1-9]|[12]\d|3[01])$/.test(day))
+        errors.push(`Event "${event.id}" has a bad date "${day}" (MM-DD).`);
+  for (const item of [...content.realms, ...content.weapons, ...content.relics])
+    if (item.event && !eventIds.has(item.event))
+      errors.push(`"${item.id}" belongs to unknown event "${item.event}".`);
+  if (!content.realms.some((r) => !r.event)) errors.push('Content needs a realm outside events.');
+  for (const a of content.achievements)
+    if (a.goal.realm && !index.realms.has(a.goal.realm))
+      errors.push(`Achievement "${a.id}" counts unknown realm "${a.goal.realm}".`);
   // Evolutions (spec: run-progression / weapon evolutions): a known weapon, once, known requirements, a real splash.
   const evolved = new Set<string>();
   for (const evo of content.evolutions) {

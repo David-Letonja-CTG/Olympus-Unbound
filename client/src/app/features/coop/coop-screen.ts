@@ -14,6 +14,7 @@ import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { invitedCode, inviteLink } from '../../core/rooms/invite';
 import { shareLink } from '../../core/share-card';
 import { GAME_CONTENT } from '../../core/game-content';
+import { SeasonalEvents } from '../../core/seasonal-events';
 import {
   isValidCode,
   MAX_MEMBERS,
@@ -577,7 +578,7 @@ export class CoopScreen {
 
   protected readonly maxMembers = MAX_MEMBERS;
   protected readonly gods = this.content.gods;
-  protected readonly realms = this.content.realms;
+  protected readonly realms = inject(SeasonalEvents).realms();
   /** The code an invite link carried, filled in until the player joins (spec: rooms / joining a room). */
   protected readonly invited = signal<string | undefined>(
     invitedCode(inject(ActivatedRoute).snapshot.queryParamMap.get('join')),

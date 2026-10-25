@@ -236,3 +236,15 @@ describe('reviving allies (spec: co-op / reviving allies)', () => {
     expect(s.result?.outcome).toBe('defeat');
   });
 });
+
+describe('event realms (spec: seasonal-events)', () => {
+  it('stand outside the chain: a run may start in one, then goes on from the first realm', () => {
+    const content = twoRealms();
+    const event: RealmDefinition = { ...content.realms[0], id: 'event_realm', event: 'some_event' };
+    const realms = [...content.realms, event];
+    expect(realmAt(realms, 'event_realm', 0).id).toBe('event_realm');
+    expect(realmAt(realms, 'event_realm', 1).id).toBe('mount_olympus');
+    expect(realmAt(realms, 'event_realm', 2).id).toBe('second_realm');
+    expect(realmAt(realms, 'second_realm', 1).id).toBe('mount_olympus');
+  });
+});

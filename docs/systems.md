@@ -153,6 +153,14 @@ A run's `party` lists 1–4 seats (god, name, the player's own permanent upgrade
 
 **Reviving** (`sim/revive.ts`, `balance.revive`): a fallen god's `revive` grows by `dt / 3 s` while a living ally stands within 70 of the spirit, and drains at the same rate otherwise. At 1 the god rises with 50% health and 2 s of invulnerability. Players who left are never revived. Solo runs have no spirits.
 
+## Seasonal events — `app/core/seasonal-events.ts` (spec: seasonal-events)
+
+- An `EventDefinition` has a yearly `window` (`MM-DD` to `MM-DD`, inclusive, may wrap the new year). `SeasonalEvents.active` is the first event whose window holds the device's local date, unless the admin page's switch (`localStorage` `olympus-unbound/event-override`: `off` or `on:<id>`) says otherwise for that browser.
+- Solo and local runs carry `RunConfig.eventId` (echoed in `RunResult.eventId`); a room's `start` message carries the host's. The Daily Trial and challenges carry none, and the Daily Trial never picks a realm with `event`.
+- Weapons and relics with `event` are offered only when it equals the run's `eventId`; they do not count toward a god's arsenal. Realm lists show the active event's realm first and hide other event realms.
+- `realmAt` chains only realms without `event`; from an event realm, depth `d` is `chain[(d − 1) % n]`.
+- Goals may name a `realm`: only runs that started there count.
+
 ## Endless runs — `engine/sim/realms.ts`, `run-simulation.ts`
 
 | Rule | Value |
