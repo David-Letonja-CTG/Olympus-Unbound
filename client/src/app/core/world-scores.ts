@@ -62,7 +62,8 @@ export const WORLD_SCORES_STORAGE = new InjectionToken<
 export function worldBoardOf(r: RunResult): { board: WorldBoard; date?: string } | undefined {
   if (r.variant?.kind === 'daily') return { board: 'daily', date: r.variant.date };
   const table = tableOf(r);
-  return table ? { board: table } : undefined;
+  // The world has no event board: event runs count as the mode they were played in.
+  return table && table !== 'event' ? { board: table } : undefined;
 }
 
 /**

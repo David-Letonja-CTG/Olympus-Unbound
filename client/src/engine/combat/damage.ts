@@ -167,6 +167,13 @@ export function killEnemy(state: RunState, enemy: Enemy): void {
   else if (!enemy.boss && loot.chance(state.balance.drops.healChance)) {
     state.spawnPickup('heal', enemy.x + 6, enemy.y, state.balance.drops.healAmount);
   }
+  // The event's currency, only in its runs (spec: seasonal-events / event currency).
+  const event = state.config.eventId ? state.index.events.get(state.config.eventId) : undefined;
+  if (event) {
+    const c = event.currency;
+    const tokens = enemy.boss ? c.boss : enemy.elite ? c.elite : loot.chance(c.chance) ? 1 : 0;
+    if (tokens > 0) state.spawnPickup('token', enemy.x - 8, enemy.y + 4, tokens);
+  }
   if (enemy.boss) {
     state.bossDefeated = true;
     state.emit({ type: 'announcement', text: `${enemy.boss.def.name} has fallen!`, kind: 'boss' });

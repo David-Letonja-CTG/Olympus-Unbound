@@ -16,6 +16,8 @@ export interface RunRewards {
   readonly glory: GloryOutcome;
   readonly newlyDiscovered: readonly DiscoveredItem[];
   readonly newBestTime: boolean;
+  /** The event's currency the run brought home (spec: seasonal-events / event currency). */
+  readonly tokens: number;
   /** True when this run had already been rewarded; nothing was granted again. */
   readonly alreadyProcessed: boolean;
 }
@@ -41,6 +43,7 @@ export function applyRunResult(
         glory: NO_GLORY,
         newlyDiscovered: [],
         newBestTime: false,
+        tokens: 0,
         alreadyProcessed: true,
       },
     };
@@ -58,12 +61,19 @@ export function applyRunResult(
   for (const item of newlyDiscovered) discovered[item.kind] = [...discovered[item.kind], item.id];
 
   const newBestTime = result.timeSeconds > save.stats.bestTimeSeconds;
+  // The event's currency, kept per event (spec: seasonal-events / event currency).
+  const tokens = result.eventId ? Math.floor(result.tokens ?? 0) : 0;
+  const eventTokens =
+    result.eventId && tokens > 0
+      ? { ...save.eventTokens, [result.eventId]: (save.eventTokens[result.eventId] ?? 0) + tokens }
+      : save.eventTokens;
   const withGlory = applyGlory(save, result, content, now);
   return {
     save: {
       ...withGlory.save,
       gold: withGlory.save.gold + runGold,
       discovered,
+      eventTokens,
       stats: {
         runs: save.stats.runs + 1,
         victories: save.stats.victories + result.realmsCleared,
@@ -78,6 +88,7 @@ export function applyRunResult(
       glory: withGlory.glory,
       newlyDiscovered,
       newBestTime,
+      tokens,
       alreadyProcessed: false,
     },
   };

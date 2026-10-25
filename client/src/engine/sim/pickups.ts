@@ -23,7 +23,7 @@ export function updatePickups(state: RunState, dt: number): void {
       continue;
     }
     // Chests and healing must be walked to; XP and gold are pulled by the magnet.
-    const magnetic = pickup.kind === 'xp' || pickup.kind === 'gold';
+    const magnetic = pickup.kind === 'xp' || pickup.kind === 'gold' || pickup.kind === 'token';
     if (!pickup.attracted && magnetic && dist <= player.stats.magnet) pickup.attracted = true;
     if (pickup.attracted) {
       // Called gems rise slowly, then rush in from anywhere, fastest from far away: all arrive within about
@@ -59,6 +59,9 @@ export function collect(state: RunState, player: Player, pickup: Pickup, quiet =
       return;
     case 'gold':
       state.gold += pickup.value * player.stats.goldGain;
+      return;
+    case 'token':
+      state.tokens += pickup.value;
       return;
     case 'heal':
       heal(state, player, pickup.value);

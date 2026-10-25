@@ -354,7 +354,8 @@ export interface Hazard {
   dead: boolean;
 }
 
-export type PickupKind = 'xp' | 'gold' | 'heal' | 'chest';
+/** `token`: an event's currency (spec: seasonal-events / event currency). */
+export type PickupKind = 'xp' | 'gold' | 'heal' | 'chest' | 'token';
 
 export interface Pickup {
   readonly id: number;
@@ -456,6 +457,8 @@ export interface RunResult {
   readonly variant?: RunVariant;
   /** The seasonal event the run was played in (spec: seasonal-events). */
   readonly eventId?: string;
+  /** Its currency collected (spec: seasonal-events / event currency). */
+  readonly tokens?: number;
   readonly outcome: RunOutcome;
   readonly timeSeconds: number;
   readonly level: number;

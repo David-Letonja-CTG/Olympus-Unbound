@@ -11,12 +11,13 @@ import { RouterLink } from '@angular/router';
 import { AchievementDefinition, GameContent } from '../../../engine';
 import { Connectivity } from '../../core/connectivity';
 import { GAME_CONTENT } from '../../core/game-content';
+import { SeasonalEvents } from '../../core/seasonal-events';
 import { WorldEntry, WorldScores } from '../../core/world-scores';
 import { Progression } from '../../core/progression';
 import { ScoreEntry } from '../../core/save/save-records';
 import { formatTime, ItemIcon } from '../../shared/item-icon';
 
-type Mode = 'solo' | 'allies' | 'coop' | 'quick';
+type Mode = 'solo' | 'allies' | 'coop' | 'quick' | 'event';
 
 interface AchievementView {
   readonly def: AchievementDefinition;
@@ -124,7 +125,7 @@ interface AchievementView {
               </div>
             }
             <div class="tabs" role="tablist" aria-label="Mode">
-              @for (m of modes; track m.id) {
+              @for (m of modes(); track m.id) {
                 <button
                   role="tab"
                   class="tab"
@@ -467,12 +468,24 @@ export class GloryScreen {
     this.progression.save();
     return this.progression.trialToday();
   });
-  protected readonly modes: readonly { id: Mode; label: string }[] = [
-    { id: 'solo', label: 'Solo' },
-    { id: 'allies', label: 'With allies' },
-    { id: 'coop', label: 'Co-op' },
-    { id: 'quick', label: 'Quick' },
-  ];
+  private readonly events = inject(SeasonalEvents);
+  /**
+   * The tables; the event table only on this device (the world has no event board), while an event is on or once
+   * it holds runs (spec: seasonal-events / event table).
+   */
+  protected readonly modes = computed<readonly { id: Mode; label: string }[]>(() => {
+    const base: { id: Mode; label: string }[] = [
+      { id: 'solo', label: 'Solo' },
+      { id: 'allies', label: 'With allies' },
+      { id: 'coop', label: 'Co-op' },
+      { id: 'quick', label: 'Quick' },
+    ];
+    const event = this.events.active();
+    const held = this.progression.save().highScores.event.length > 0;
+    if (this.scope() === 'device' && (event || held))
+      base.push({ id: 'event', label: event?.name.replace(/^The /, '') ?? 'Events' });
+    return base;
+  });
   protected readonly mode = signal<Mode>('solo');
   protected readonly god = signal<string | undefined>(undefined);
   protected readonly world = inject(WorldScores);
@@ -507,12 +520,18 @@ export class GloryScreen {
     // The world table follows the chosen mode and god; a late answer to an older choice is dropped.
     effect(() => {
       if (this.scope() !== 'world' || !this.online()) return;
-      void this.loadWorld(this.mode(), this.god());
+      // The world has no event board: its table falls back to solo there.
+      const mode = this.mode();
+      if (mode === 'event') {
+        this.mode.set('solo');
+        return;
+      }
+      void this.loadWorld(mode, this.god());
     });
     if (this.world.available && this.online()) void this.loadWorldBestToday();
   }
 
-  private async loadWorld(mode: Mode, godId: string | undefined): Promise<void> {
+  private async loadWorld(mode: Exclude<Mode, 'event'>, godId: string | undefined): Promise<void> {
     const request = ++this.worldRequest;
     this.worldState.set({ status: 'loading', entries: [] });
     try {

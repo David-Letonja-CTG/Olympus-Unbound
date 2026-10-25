@@ -213,6 +213,16 @@ const projectiles: Record<string, SpriteSpec> = {
       circle(g, s / 2, s / 2, s * 0.18, '#ffe680');
     },
   },
+  // An event's currency on the ground: a round honey cake with a glaze and a warm glow (spec: seasonal-events).
+  token: {
+    size: 20,
+    paint(g, s) {
+      glow(g, s / 2, s / 2, s / 2, 0xffb040, 0.55);
+      circle(g, s / 2, s / 2, s * 0.36, '#c8782a', '#5a3010', 1.5);
+      circle(g, s / 2, s * 0.46, s * 0.26, '#f2b84a');
+      circle(g, s * 0.44, s * 0.4, s * 0.08, '#fff0b8');
+    },
+  },
   heal: {
     size: 20,
     paint(g, s) {
@@ -722,6 +732,8 @@ const ICONS: Record<string, [string, 'square' | 'round' | 'diamond' | 'hex', num
   ascend_celerity: ['hourglass', 'round', 0x7fc8ff],
   ascend_fortune: ['coin', 'round', 0xffd34d],
   ambrosia: ['potion', 'round', 0xff7a9a],
+  // The event shop (spec: seasonal-events / event shop).
+  honey_cake: ['coin', 'round', 0xf2b84a],
   // The Night of Hecate's items (spec: seasonal-events / event items).
   hecates_torches: ['flame', 'square', 0xff8a2a],
   key_of_hecate: ['gates', 'round', 0xc8a0ff],

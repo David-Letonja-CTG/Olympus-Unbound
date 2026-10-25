@@ -250,6 +250,30 @@ export interface EventDefinition {
   readonly window: { readonly from: string; readonly to: string };
   /** The event's colour in menus. */
   readonly accent: number;
+  /**
+   * Its currency, dropped only in its runs (spec: seasonal-events / event currency): by `chance` per kill, and
+   * `elite` and `boss` tokens for those.
+   */
+  readonly currency: {
+    readonly name: string;
+    readonly chance: number;
+    readonly elite: number;
+    readonly boss: number;
+  };
+}
+
+/** What an event's shop sells for its currency (spec: seasonal-events / event shop). */
+export interface EventRewardDefinition {
+  readonly id: string;
+  readonly event: string;
+  readonly name: string;
+  readonly description: string;
+  readonly cost: number;
+  readonly effect:
+    | { readonly type: 'modifiers'; readonly modifiers: readonly Modifier[] }
+    /** The event's weapon or relic may be offered in every run, all year. */
+    | { readonly type: 'unlock'; readonly item: string };
+  readonly sprite: string;
 }
 
 /** Bought with gold between runs; applies to every run. */
@@ -773,6 +797,7 @@ export interface GameContent {
   readonly ascensions: readonly AscensionDefinition[];
   /** Seasonal events and what belongs to them (spec: seasonal-events). */
   readonly events: readonly EventDefinition[];
+  readonly eventRewards: readonly EventRewardDefinition[];
   /** One per weapon at most (spec: run-progression / weapon evolutions). */
   readonly evolutions: readonly EvolutionDefinition[];
   readonly enemies: readonly EnemyDefinition[];

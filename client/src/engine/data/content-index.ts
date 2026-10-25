@@ -2,6 +2,7 @@ import {
   ArmourDefinition,
   AscensionDefinition,
   EvolutionDefinition,
+  EventDefinition,
   FusionDefinition,
   BoonDefinition,
   BossDefinition,
@@ -73,6 +74,7 @@ export class ContentIndex {
   readonly fusions: ReadonlyMap<string, FusionDefinition>;
   readonly ascensions: ReadonlyMap<string, AscensionDefinition>;
   readonly evolutions: ReadonlyMap<string, EvolutionDefinition>;
+  readonly events: ReadonlyMap<string, EventDefinition>;
   readonly wares: ReadonlyMap<string, WareDefinition>;
   readonly companions: ReadonlyMap<string, CompanionDefinition>;
   readonly encounters: ReadonlyMap<string, EncounterDefinition>;
@@ -91,6 +93,7 @@ export class ContentIndex {
     this.fusions = byId(content.fusions);
     this.ascensions = byId(content.ascensions);
     this.evolutions = byId(content.evolutions);
+    this.events = byId(content.events);
     this.wares = byId(content.wares);
     this.companions = byId(content.companions);
     this.encounters = byId(content.encounters);
@@ -258,6 +261,17 @@ export function validateContent(content: GameContent): string[] {
     if (item.event && !eventIds.has(item.event))
       errors.push(`"${item.id}" belongs to unknown event "${item.event}".`);
   if (!content.realms.some((r) => !r.event)) errors.push('Content needs a realm outside events.');
+  for (const reward of content.eventRewards) {
+    const name = `Event reward "${reward.id}"`;
+    if (!eventIds.has(reward.event))
+      errors.push(`${name} belongs to unknown event "${reward.event}".`);
+    if (!(reward.cost > 0)) errors.push(`${name} needs a cost.`);
+    if (reward.effect.type === 'unlock') {
+      const item = reward.effect.item;
+      const def = index.weapons.get(item) ?? index.relics.get(item);
+      if (!def?.event) errors.push(`${name} unlocks "${item}", which is not an event item.`);
+    }
+  }
   for (const a of content.achievements)
     if (a.goal.realm && !index.realms.has(a.goal.realm))
       errors.push(`Achievement "${a.id}" counts unknown realm "${a.goal.realm}".`);

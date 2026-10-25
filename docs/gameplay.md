@@ -304,6 +304,8 @@ The dead walk the crossroads, and Hecate holds the keys. **The Crossroads of Hec
 
 **Hecate**, Queen of the Crossroads (14,000 health, 400 gold). Her **three torches** (the Maiden's, the Mother's and the Crone's), carried by Lampades, circle her and lash out on their own rhythms. While any of them burns she takes only a third of the damage: put them out, then strike. A quenched torch relights after 18 seconds. Ghost fire falls on circles under you and the dead answer her call. Below half health "**The three roads close!**": rings of stone rise round her with three ways out, and her hounds join the fight.
 
+**Honey cakes**, the offering that calms Cerberus, drop only during the Night of Hecate: from some kills, 3 from every elite and 15 from Hecate. The run summary counts them, and the **event shop** under the Blessings on the Progression screen spends them on rewards kept for good: *Hecate's Blessing* (+5% XP, 40), *Keykeeper* (the Key of Hecate in every run, all year, 60), *Torchbearer* (Hecate's Torches in every run, all year, 80) and *Ward of the Crossroads* (+1 armour, 120). Runs that start at the crossroads have their own table in the Hall of Glory.
+
 **Event items** (only while the event is on): **Hecate's Torches** (a fire weapon: torches circle you and set the dead alight) and the **Key of Hecate** (relic: +20% fire and shadow damage, +10% XP). **Achievements:** *Queen of the Crossroads* (defeat Hecate at her crossroads) and *Walker of the Night* (survive 10 minutes from them); they wait for the event each year.
 
 ## Building a run

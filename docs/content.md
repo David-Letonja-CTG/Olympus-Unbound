@@ -140,7 +140,9 @@ No top level; offered only when fewer than three other upgrades remain (weight 1
 |---|---|---|---|---|---|
 | `night_of_hecate` | 10-24 – 11-07 | `crossroads_of_hecate` | `restless_dead` (shade, 0xa8ffc8), `empusa` (lamia, 0xff8ad0), `lampad_of_hecate` (lampad, 0xffb060, ranged), `hound_of_hecate` (orthrus, 0x7a9a8a, charger) | `hecate` (snake priestess ×2.3, 0xd0c0ff): guard 0.35 while any of three torch parts (1,600 health, regrow 18 s) lives | `hecates_torches` (orbit, fire, burn), `key_of_hecate` |
 
-**New event:** an `EventDefinition` and its realm, host, boss and items in `content/events.ts` (recoloured sheets and code-drawn props, D15), merged in `content/index.ts`; achievements with `goal.realm`; sounds for new weapons in `ATTACK_SOUNDS`.
+Currency and shop: `night_of_hecate` drops honey cakes (2% of kills, 3 per elite, 15 from the boss). `EVENT_REWARDS`: `hecates_blessing` (+5% XP, 40), `keykeeper` (unlocks `key_of_hecate`, 60), `torchbearer` (unlocks `hecates_torches`, 80), `ward_of_the_crossroads` (+1 armour, 120).
+
+**New event:** an `EventDefinition` (with its `currency`) and its rewards, and its realm, host, boss and items in `content/events.ts` (recoloured sheets and code-drawn props, D15), merged in `content/index.ts`; achievements with `goal.realm`; sounds for new weapons in `ATTACK_SOUNDS`.
 
 ### Instant blessings
 

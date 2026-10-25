@@ -67,6 +67,8 @@ export interface RunConfig {
   readonly variant?: RunVariant;
   /** The seasonal event on when the run began: its items may be offered (spec: seasonal-events). */
   readonly eventId?: string;
+  /** Event weapons and relics bought in the event shop: offered in every run (spec: seasonal-events / event shop). */
+  readonly unlocked?: readonly string[];
 }
 
 /** A run's kind, echoed in its result: a quick run, a Daily Trial, or a challenge from a link. */
@@ -163,6 +165,8 @@ export class RunState implements WorldFrame {
   eliteKills = 0;
   damageTaken = 0;
   gold = 0;
+  /** The event's currency collected this run (spec: seasonal-events / event currency). */
+  tokens = 0;
   level = 1;
   xp = 0;
   pendingLevels = 0;

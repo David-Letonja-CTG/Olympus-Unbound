@@ -73,7 +73,7 @@ describe('daily best (spec: daily-trial / daily best)', () => {
   it('never enters a high-score table, but counts for quests and stats', () => {
     const { save, rewards } = play(freshSave(), result({ variant: daily, kills: 99999 }));
     expect(rewards.glory.highScore).toBeUndefined();
-    expect(save.highScores).toEqual({ solo: [], coop: [], allies: [], quick: [] });
+    expect(save.highScores).toEqual({ solo: [], coop: [], allies: [], quick: [], event: [] });
     expect(save.stats.runs).toBe(1);
   });
 
