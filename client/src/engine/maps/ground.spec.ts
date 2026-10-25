@@ -39,3 +39,33 @@ describe('painted ground (spec: visual-atmosphere / painted ground)', () => {
     expect(brightness(2)).toBeLessThan(brightness(Math.floor(p.width / 2)));
   });
 });
+
+describe('ground patterns (spec: visual-atmosphere / painted ground)', () => {
+  /** A one-band ground of a single terrain, with or without a pattern. */
+  const flat = (texture?: { kind: 'slabs' | 'ripples' }): MapGenConfig => ({
+    ...olympus,
+    terrain: {
+      ...olympus.terrain,
+      types: [...olympus.terrain.types, { id: 'test_floor', color: 0x808080, texture }],
+      bands: [{ below: 1.01, terrain: 'test_floor' }],
+    },
+  });
+  const spread = (texture?: { kind: 'slabs' | 'ripples' }) => {
+    const map = flat(texture);
+    const p = new GroundPainter(generateArena(map, 5), map, GROUND_SCALE.low);
+    const mid = Math.floor(p.height / 2);
+    const row = p.paintRows(mid, mid + 1);
+    const values: number[] = [];
+    for (let x = Math.floor(p.width / 3); x < Math.floor((2 * p.width) / 3); x++)
+      values.push(row[x * 4]);
+    return Math.max(...values) - Math.min(...values);
+  };
+
+  it('a slab floor has dark grout lines a plain floor does not', () => {
+    expect(spread({ kind: 'slabs' })).toBeGreaterThan(spread() + 15);
+  });
+
+  it('sand ripples vary the light across the ground', () => {
+    expect(spread({ kind: 'ripples' })).toBeGreaterThan(spread());
+  });
+});

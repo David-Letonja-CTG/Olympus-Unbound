@@ -214,10 +214,10 @@ export const CROSSROADS_OF_HECATE: RealmDefinition = {
     borderTiles: 3,
     terrain: {
       types: [
-        { id: 'grave_earth', color: 0x3a342c },
-        { id: 'moss', color: 0x2e3a2a },
-        { id: 'dead_grass', color: 0x4a4434 },
-        { id: 'flagstones', color: 0x6a6670 },
+        { id: 'grave_earth', color: 0x3a342c, texture: { kind: 'earth' } },
+        { id: 'moss', color: 0x2e3a2a, texture: { kind: 'moss' } },
+        { id: 'dead_grass', color: 0x4a4434, texture: { kind: 'grass', strength: 0.8 } },
+        { id: 'flagstones', color: 0x6a6670, texture: { kind: 'slabs' } },
         { id: 'void', color: 0x07060a },
       ],
       noiseScale: 9,

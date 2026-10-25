@@ -8,6 +8,7 @@
 //   cd client
 //   node scripts/perf/phone.mjs                                  # Low, CPU ×4, against http://localhost:4200
 //   PERF_URL=http://localhost:4300 PERF_QUALITY=high PERF_CPU=6 node scripts/perf/phone.mjs
+//   PERF_REALM=mount_othrys node scripts/perf/phone.mjs              # another realm
 //
 // Emulation is not a phone: the GPU is this machine's, so treat the numbers as a check of the CPU side (the
 // simulation, the views, the light map's drawing calls), and try a real phone before trusting them.
@@ -15,6 +16,8 @@ import { chromium, devices } from '@playwright/test';
 
 const base = process.env.PERF_URL ?? 'http://localhost:4200';
 const quality = process.env.PERF_QUALITY ?? 'low';
+/** PERF_REALM=mount_othrys: the realm to measure. */
+const realm = process.env.PERF_REALM ?? 'mount_olympus';
 const cpu = Number(process.env.PERF_CPU ?? 4);
 /** Enemies to wait for before measuring, and the longest wait (real seconds). */
 const HORDE = Number(process.env.PERF_HORDE ?? 280);
@@ -46,13 +49,16 @@ const renderer = await page.evaluate(() => {
 await page.getByRole('link', { name: 'Play' }).tap();
 await page.getByTestId('god-zeus').tap();
 await page.getByRole('button', { name: 'Continue' }).tap();
-await page.getByTestId('realm-mount_olympus').tap();
+await page.getByTestId(`realm-${realm}`).tap();
 await page.getByTestId('seed-input').fill('4242');
 await page.getByTestId('begin').tap();
+// Loading: art, painting the realm's ground and building the scene (the cost of richer ground shows here).
+const loadStart = Date.now();
 await page.waitForFunction(() => (window.olympusDebug?.inspect()?.time ?? 0) > 0.3, null, {
   timeout: 180000,
 });
 await page.getByTestId('run-loading').waitFor({ state: 'detached', timeout: 180000 });
+const loadSeconds = (Date.now() - loadStart) / 1000;
 
 // The horde: god mode, and the clock late in the realm, before the boss.
 await send({ type: 'godMode', enabled: true });
@@ -105,6 +111,8 @@ const report = {
   enemies: [before?.enemies, after?.enemies],
   phase: after?.phase,
   frames: frames.length,
+  realm,
+  loadSeconds: +loadSeconds.toFixed(1),
   fps: +(frames.length / MEASURE_S).toFixed(1),
   medianMs: +at(0.5).toFixed(1),
   p95Ms: +at(0.95).toFixed(1),
