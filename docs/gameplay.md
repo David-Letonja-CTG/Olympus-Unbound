@@ -34,6 +34,7 @@ The game as the player experiences it. Numbers live in `client/src/content/` and
 | Dash (uses stamina, untouchable while dashing) | E | B (east) | Dash (dims while a dash is not affordable) |
 | Pause / resume | Esc or P | Start | the pause button at the top left |
 | Choose an upgrade | 1–3, or arrows/W/S + Enter/Space, or mouse | d-pad + A | tap it |
+| Your build (weapons, upgrades, fusions) | Tab, or click the ⬡ button above the ability | Back / Select | the ⬡ button beside pause |
 
 The game pauses by itself when the window loses focus or the tab is hidden (not in a room's run).
 
@@ -497,7 +498,7 @@ Currency: **star shards**. Shop: *Starlight* (+5% area, 40), *Veilkeeper* (the V
 - **Evolutions:** a weapon at level 6 with its relic evolves once: Thunder Spear and Zeus's Eye become the **Spear of Olympus**, whose every hit bursts in thunder against the foes round its target. Every weapon has one (Keraunos, Orbs of the Aether, Bow of Apollo, Trident of the Abyss, Hammer of Hephaestus, Phoenix Blade, Scythe of Thanatos, Bident of Tartarus, Spear of Pallas); the build panel shows which relic each needs, and an evolved weapon wears a gilded icon.
 - **Ascensions** (Strength, Vigour, Speed, Fortune) have no top level and fill the choice once fewer than three other upgrades are left, so every level-up offers three real choices until the end.
 - The **codex** (Progression) remembers every fusion you have ended a run with, by tier; **Fusion Smith** (3 fusions in one run, 300 gold) and **Apotheosis** (reach the crown, 1,000 gold) are achievements.
-- **The build panel** (Tab, a gamepad's Back/Select, or the hexagon button on a phone) shows your whole build and the tree of every fusion and synergy your god can reach: each requirement ticked or with the level still needed, and which fusions are ready. The fight goes on behind it, and it opens over a level-up choice too.
+- **The build panel** (Tab, a gamepad's Back/Select, or the hexagon button: above the ability on a computer, beside pause on a phone) shows your whole build and the tree of every fusion and synergy your god can reach: each requirement ticked or with the level still needed, and which fusions are ready. The fight goes on behind it, and it opens over a level-up choice too.
 - Content without ascensions falls back to **Ambrosia** (heal 30%) or **Tribute** (25 gold).
 
 | The build panel | Call of Hermes |

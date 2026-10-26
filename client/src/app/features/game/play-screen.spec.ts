@@ -425,6 +425,19 @@ describe('PlayScreen on a phone (spec: phone-play)', () => {
     expect(el.querySelector('.solo-ability .key')?.textContent).toBe('Space');
   });
 
+  it('opens the build panel from the HUD button on a computer (spec: hud / the build panel)', async () => {
+    const { el, update } = await setup();
+    await update({ type: 'hud', hud });
+    const button = el.querySelector<HTMLButtonElement>('[data-testid=hud-build]');
+    expect(button?.textContent).toContain('Tab');
+    button?.click();
+    await update();
+    expect(el.querySelector('[data-testid=build-panel]')).toBeTruthy();
+    button?.click();
+    await update();
+    expect(el.querySelector('[data-testid=build-panel]')).toBeNull();
+  });
+
   it('asks to turn the phone and pauses while it is held upright', async () => {
     const screen = phone(true);
     const { el, update, session } = await setup(undefined, undefined, screen);

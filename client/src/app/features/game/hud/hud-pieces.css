@@ -195,6 +195,33 @@ app-hud {
     font-weight: 800;
     color: var(--muted);
   }
+
+  /* The build button: a round bronze hexagon, like the phone's (spec: hud / the build panel). */
+  .solo-build {
+    width: 40px;
+    height: 40px;
+    display: grid;
+    place-items: center;
+    pointer-events: auto;
+    cursor: pointer;
+    border-radius: 50%;
+    border: 2px solid rgba(214, 170, 92, 0.8);
+    background: radial-gradient(
+      circle at 50% 35%,
+      rgba(70, 48, 22, 0.9),
+      rgba(14, 10, 8, 0.92) 70%
+    );
+    box-shadow: 0 0 0 3px rgba(0, 0, 0, 0.45);
+    color: var(--gold-2);
+    font-size: 1.2rem;
+    line-height: 1;
+
+    &:hover,
+    &:focus-visible {
+      border-color: var(--gold-2);
+      filter: brightness(1.25);
+    }
+  }
 }
 
 /*

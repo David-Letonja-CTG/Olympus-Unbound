@@ -49,6 +49,10 @@ import { SettingsControls } from '../../shared/settings-controls';
             <dd>E · B / Circle</dd>
           </div>
           <div>
+            <dt>Your build</dt>
+            <dd>Tab or the ⬡ button · Back / Select</dd>
+          </div>
+          <div>
             <dt>Pause</dt>
             <dd>Esc or P · Start</dd>
           </div>
