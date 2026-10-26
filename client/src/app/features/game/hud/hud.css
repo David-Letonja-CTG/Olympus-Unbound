@@ -446,7 +446,7 @@ app-hud {
   .solo-build {
     position: absolute;
     right: 192px;
-    bottom: 104px;
+    bottom: 128px;
   }
 
   .solo-stamina {
@@ -567,7 +567,7 @@ app-hud {
 
     .solo-build {
       right: 118px;
-      bottom: 74px;
+      bottom: 112px;
       zoom: 0.8;
     }
 
