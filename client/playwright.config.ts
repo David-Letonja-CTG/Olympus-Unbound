@@ -57,7 +57,8 @@ export default defineConfig({
       // The game server (D21), boards in memory: rooms, open rooms and world boards for the tests.
       command: 'npm --prefix ../server run serve',
       url: 'http://localhost:4330/health',
-      env: { PORT: '4330', HOST: '127.0.0.1' },
+      // A test admin password, so the admin page unlocks for real (spec: run-statistics / admin mode).
+      env: { PORT: '4330', HOST: '127.0.0.1', ADMIN_TOKEN: 'e2e-admin-token' },
       reuseExistingServer: !ci,
       timeout: 120_000,
     },

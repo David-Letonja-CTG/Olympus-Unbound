@@ -204,3 +204,5 @@ The owner (2026-10-26) found later realms too easy and asked for a difficulty se
 - **Dynamic difficulty from how a party plays:** rejected by D22.
 
 D1's "what it never does" stays true for rules and saves; D21's "what it does" gains the dial.
+
+*Revised 2026-10-26:* the owner wants one admin password, the server's `ADMIN_TOKEN`. The `/admin` page unlocks by asking the server to check it (limited tries per address) and saves the dial with it. Only a build without a server keeps the built-in password hash.

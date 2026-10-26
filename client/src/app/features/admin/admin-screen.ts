@@ -18,11 +18,19 @@ import {
   parseDial,
 } from '../../core/difficulty';
 import { GameServer, ServerError } from '../../core/game-server';
-import { adminUnlocked, unlockAdmin } from '../../core/admin-mode';
+import { adminToken, adminUnlocked, unlockAdmin, UnlockResult } from '../../core/admin-mode';
 import { GAME_CONTENT } from '../../core/game-content';
 import { Progression } from '../../core/progression';
 import { formatTime, ItemIcon } from '../../shared/item-icon';
 import { historyCsv, historyJson, runStatistics } from './run-statistics';
+
+/** What the lock says when the password does not open it (spec: run-statistics / admin mode). */
+const UNLOCK_REFUSALS: Record<Exclude<UnlockResult, 'ok'>, string> = {
+  wrong: 'Wrong password.',
+  'too-many': 'Too many tries from here. Wait an hour and try again.',
+  'no-token': 'The game server has no admin password (ADMIN_TOKEN) set.',
+  unreachable: 'Could not reach the game server to check the password. Try again.',
+};
 
 /** Simulation steps per slice of the balance report: small enough to keep the page responsive. */
 const SLICE_STEPS = 900;
@@ -54,8 +62,8 @@ const CHART_RUNS = 40;
             data-testid="admin-password"
           />
           <button class="btn btn-primary" type="submit" data-testid="admin-unlock">Unlock</button>
-          @if (wrong()) {
-            <p class="wrong" role="alert" data-testid="admin-wrong">Wrong password.</p>
+          @if (wrong(); as why) {
+            <p class="wrong" role="alert" data-testid="admin-wrong">{{ why }}</p>
           }
         </form>
       } @else {
@@ -258,18 +266,9 @@ const CHART_RUNS = 40;
               }
             </div>
             <div class="controls">
-              <label
-                >Server admin token
-                <input
-                  class="token"
-                  type="password"
-                  autocomplete="off"
-                  [(ngModel)]="token"
-                  data-testid="dial-token"
-              /></label>
               <button
                 class="btn btn-primary"
-                [disabled]="saving() || !token"
+                [disabled]="saving()"
                 (click)="saveDial()"
                 data-testid="dial-save"
               >
@@ -504,9 +503,6 @@ const CHART_RUNS = 40;
     input {
       width: 4.5em;
     }
-    input.token {
-      width: 14em;
-    }
     .progress {
       height: 8px;
       background: rgba(0, 0, 0, 0.5);
@@ -536,7 +532,8 @@ export class AdminScreen {
   private readonly progression = inject(Progression);
   protected readonly events = inject(SeasonalEvents);
   protected readonly unlocked = signal(adminUnlocked());
-  protected readonly wrong = signal(false);
+  /** Why the last unlock failed; empty when it did not. */
+  protected readonly wrong = signal('');
   protected password = '';
 
   // The difficulty dial (spec: difficulty-dial).
@@ -551,7 +548,6 @@ export class AdminScreen {
     ] as const
   ).map(([key, label]) => ({ key, label, min: DIAL_LIMITS[key][0], max: DIAL_LIMITS[key][1] }));
   protected dial: Record<keyof DifficultyDial, number> = { ...this.difficulty.current() };
-  protected token = '';
   protected readonly saving = signal(false);
   protected readonly dialStatus = signal('');
 
@@ -575,13 +571,13 @@ export class AdminScreen {
     }
     this.saving.set(true);
     try {
-      const saved = await this.difficulty.save(dial, this.token);
+      const saved = await this.difficulty.save(dial, adminToken() ?? '');
       this.dial = { ...saved };
       this.dialStatus.set(`Saved for everyone: ${this.describe(saved)}`);
     } catch (e) {
       this.dialStatus.set(
         e instanceof ServerError && e.status === 401
-          ? 'The server refused the token.'
+          ? 'The server refused the admin password. Close the tab, open /admin again and unlock with it.'
           : e instanceof ServerError && e.status === 404
             ? 'The server has no admin token set, so the dial cannot be changed.'
             : 'Could not reach the game server. Try again.',
@@ -602,10 +598,11 @@ export class AdminScreen {
 
   protected async unlock(event: Event): Promise<void> {
     event.preventDefault();
-    const ok = await unlockAdmin(this.password);
+    const result = await unlockAdmin(this.password, this.server);
     this.password = '';
-    this.wrong.set(!ok);
-    this.unlocked.set(ok);
+    this.wrong.set(result === 'ok' ? '' : UNLOCK_REFUSALS[result]);
+    this.unlocked.set(result === 'ok');
+    if (result === 'ok') void this.loadDial();
   }
   protected readonly content: GameContent = inject(GAME_CONTENT);
 
