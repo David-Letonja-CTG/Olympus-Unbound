@@ -763,7 +763,169 @@ const chainedTitan: SpriteSpec = {
   },
 };
 
+/** The Isle of the Gorgons: a great Gorgon's head carved on a fallen slab, snakes for hair, eyes still glowing. */
+const gorgoneion: SpriteSpec = {
+  size: 270,
+  paint(g, s) {
+    shadow(g, s, 0.4, 0.22, 0.7);
+    slab(
+      g,
+      [
+        s * 0.14,
+        s * 0.4,
+        s * 0.5,
+        s * 0.22,
+        s * 0.86,
+        s * 0.4,
+        s * 0.8,
+        s * 0.78,
+        s * 0.2,
+        s * 0.78,
+      ],
+      0x7a7e7a,
+      { outline: 3 },
+    );
+    // Snakes of her hair, writhing out round the face.
+    for (let i = 0; i < 11; i++) {
+      const a = Math.PI + 0.15 + (i / 10) * (Math.PI - 0.3);
+      const x0 = s * 0.5 + Math.cos(a) * s * 0.12;
+      const y0 = s * 0.52 + Math.sin(a) * s * 0.12;
+      const x1 = s * 0.5 + Math.cos(a) * s * 0.26;
+      const y1 = s * 0.52 + Math.sin(a) * s * 0.24;
+      line(g, [x0, y0, (x0 + x1) / 2 + s * 0.02, (y0 + y1) / 2, x1, y1], '#5a7a5a', 5);
+      circle(g, x1, y1, s * 0.014, '#7a9a6a');
+    }
+    // The face: round, staring, tongue out.
+    volume(g, s * 0.5, s * 0.54, s * 0.13, s * 0.13, 0xa8aca4, { contrast: 1.3 });
+    for (const x of [0.45, 0.55]) {
+      glow(g, s * x, s * 0.5, s * 0.04, 0x9affc8, 0.9);
+      circle(g, s * x, s * 0.5, s * 0.015, '#e0fff0');
+    }
+    poly(g, [s * 0.47, s * 0.6, s * 0.53, s * 0.6, s * 0.5, s * 0.68], '#8a3a3a');
+    line(g, [s * 0.3, s * 0.72, s * 0.4, s * 0.66], '#5a5e5a', 1.5);
+  },
+};
+
+/** The Vineyards of Naxos: the pirates' ship run aground, its mast sprouted into a vine, ivy over its rails. */
+const ivyShip: SpriteSpec = {
+  size: 290,
+  paint(g, s) {
+    shadow(g, s, 0.44, 0.18, 0.66);
+    // The hull, lying on its side in three-quarter view.
+    slab(
+      g,
+      [
+        s * 0.1,
+        s * 0.52,
+        s * 0.26,
+        s * 0.42,
+        s * 0.8,
+        s * 0.42,
+        s * 0.92,
+        s * 0.5,
+        s * 0.82,
+        s * 0.66,
+        s * 0.2,
+        s * 0.66,
+      ],
+      0x6a5038,
+      { outline: 3 },
+    );
+    for (const y of [0.5, 0.58])
+      line(g, [s * 0.18, s * y, s * 0.86, s * y], 'rgba(40,28,18,0.6)', 2);
+    // The mast, grown into a vine with leaves and grapes.
+    line(g, [s * 0.5, s * 0.46, s * 0.5, s * 0.12], '#5a4028', 7);
+    for (const [x, y] of [
+      [0.42, 0.14],
+      [0.58, 0.18],
+      [0.46, 0.26],
+      [0.56, 0.32],
+      [0.44, 0.38],
+      [0.6, 0.1],
+    ])
+      volume(g, s * x, s * y, s * 0.05, s * 0.04, 0x4e7a2e, { outline: 1, rim: 0.2 });
+    for (const [x, y] of [
+      [0.5, 0.2],
+      [0.53, 0.34],
+    ])
+      for (let i = 0; i < 4; i++)
+        circle(
+          g,
+          s * x + (i % 2) * s * 0.018,
+          s * y + Math.floor(i / 2) * s * 0.018,
+          s * 0.012,
+          '#6a2a7a',
+        );
+    // Ivy over the rails.
+    for (let i = 0; i < 9; i++)
+      ellipse(
+        g,
+        s * (0.22 + i * 0.07),
+        s * (0.44 + (i % 2) * 0.02),
+        s * 0.025,
+        s * 0.014,
+        '#3e6a2a',
+      );
+    glow(g, s * 0.5, s * 0.5, s * 0.1, 0xffc8f0, 0.4);
+  },
+};
+
+/** The Grove of Demeter: her great sacred oak, felled, the axe still in the stump and ribbons of offerings torn. */
+const felledOak: SpriteSpec = {
+  size: 290,
+  paint(g, s) {
+    shadow(g, s, 0.44, 0.2, 0.68);
+    // The trunk, lying across the clearing, its crown of russet leaves crushed at one end.
+    slab(
+      g,
+      [s * 0.2, s * 0.5, s * 0.68, s * 0.42, s * 0.7, s * 0.56, s * 0.22, s * 0.62],
+      0x5a4430,
+      {
+        outline: 3,
+      },
+    );
+    for (let i = 0; i < 8; i++) {
+      const a = (i / 8) * Math.PI * 2;
+      volume(
+        g,
+        s * 0.78 + Math.cos(a) * s * 0.08,
+        s * 0.48 + Math.sin(a) * s * 0.08,
+        s * 0.07,
+        s * 0.06,
+        i % 2 ? 0xa85a2a : 0xc8782a,
+        { outline: 1.2, rim: 0.2 },
+      );
+    }
+    // The stump, its rings, the axe in it.
+    volume(g, s * 0.24, s * 0.66, s * 0.1, s * 0.08, 0x6a4a30, { outline: 2 });
+    circle(g, s * 0.24, s * 0.65, s * 0.07, '#b8946a');
+    line(g, [s * 0.22, s * 0.62, s * 0.12, s * 0.5], '#6a4a28', 4);
+    poly(
+      g,
+      [s * 0.2, s * 0.6, s * 0.28, s * 0.58, s * 0.26, s * 0.66],
+      '#a8a8b0',
+      'rgba(8,6,10,0.8)',
+      1.5,
+    );
+    // Torn ribbons of the offerings that hung on it.
+    for (const [x, y, c] of [
+      [0.4, 0.46, '#d8384a'],
+      [0.5, 0.44, '#f2d040'],
+      [0.6, 0.43, '#f4f0e8'],
+    ] as const)
+      line(g, [s * x, s * y, s * (x + 0.02), s * (y + 0.08)], c, 2.5);
+    // Sheaves left for the goddess.
+    for (const x of [0.4, 0.48]) {
+      line(g, [s * x, s * 0.78, s * (x + 0.01), s * 0.7], '#c8a048', 3);
+      ellipse(g, s * (x + 0.01), s * 0.69, s * 0.015, s * 0.03, '#e0c060');
+    }
+  },
+};
+
 export const LANDMARKS: Readonly<Record<string, SpriteSpec>> = {
+  gorgoneion,
+  ivy_ship: ivyShip,
+  felled_oak: felledOak,
   shrine_of_pan: shrineOfPan,
   stag_shrine: stagShrine,
   delphic_tripod: delphicTripod,

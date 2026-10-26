@@ -498,3 +498,51 @@ describe('the spring and summer events’ bosses (spec: seasonal-events / the sp
     expect(p.health).toBeLessThan(before);
   });
 });
+
+describe('the late summer and autumn events’ bosses (spec: seasonal-events / the autumn events)', () => {
+  it('Medusa: her sisters fall in order, then she is exposed', () => {
+    const { sim, boss, p } = withBoss('medusa');
+    run(sim, 0.1);
+    const sisters = parts(sim);
+    expect(sisters).toHaveLength(2);
+    expect(damageTakenMultiplier(boss)).toBeCloseTo(0.2);
+    // Only Stheno can be hurt first.
+    const shielded = sisters.filter((s) => s.guarded);
+    expect(shielded).toHaveLength(1);
+    for (const t of parts(sim)) t.health = 0;
+    for (const t of parts(sim)) hitEnemy(sim.state, t, source(p.id), t.x, t.y);
+    run(sim, 0.1);
+    for (const t of parts(sim)) t.health = 0;
+    for (const t of parts(sim)) hitEnemy(sim.state, t, source(p.id), t.x, t.y);
+    run(sim, 0.1);
+    expect(parts(sim)).toHaveLength(0);
+    expect(damageTakenMultiplier(boss)).toBeCloseTo(1.6);
+  });
+
+  it('Dionysus: his panthers guard him and never return once slain', () => {
+    const { sim, boss, p } = withBoss('dionysus');
+    run(sim, 0.1);
+    expect(parts(sim)).toHaveLength(2);
+    expect(damageTakenMultiplier(boss)).toBeCloseTo(0.3);
+    for (const t of parts(sim)) t.health = 0;
+    for (const t of parts(sim)) hitEnemy(sim.state, t, source(p.id), t.x, t.y);
+    run(sim, 30);
+    expect(parts(sim)).toHaveLength(0);
+    expect(damageTakenMultiplier(boss)).toBe(1);
+  });
+
+  it('Erysichthon: below half health his hunger draws the gods in', () => {
+    const { sim, boss, p } = withBoss('erysichthon');
+    sim.state.godMode = true;
+    boss.health = boss.maxHealth * 0.45;
+    run(sim, 0.1);
+    // The second phase's first attack, now.
+    Object.assign(boss.boss!, { current: undefined, attackIndex: 0, attackTimer: 0 });
+    p.x = p.px = boss.x - 300;
+    p.y = p.py = boss.y;
+    sim.step(STEP, [NO_INPUT]);
+    expect(boss.boss!.current?.type).toBe('devour');
+    run(sim, 0.8);
+    expect(boss.x - p.x).toBeLessThan(300 - 80);
+  });
+});

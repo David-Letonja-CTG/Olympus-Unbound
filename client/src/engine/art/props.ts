@@ -201,4 +201,5 @@ export const PROPS: Record<string, SpriteSpec> = {
   prop_urn_frost: urn(0x8aa4c4, 0xe0f0ff),
   prop_amphora_rose: amphora(0xd8968a, 0x8a2a3a),
   prop_amphora_gold: amphora(0xc8a04a, 0x5a3a14),
+  prop_amphora_wine: amphora(0x7a2a4a, 0xe0c070),
 };

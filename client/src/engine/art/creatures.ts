@@ -122,6 +122,9 @@ export const CREATURES: Record<string, SpriteSpec> = {
   // Petals on the wind of the seasonal events: roses for Eros, apple blossom in the Hesperides.
   petal_rose: leaf(0xe85a7a),
   petal_blossom: leaf(0xfff0f0),
+  // Vine leaves in the vineyards, russet leaves in Demeter's grove.
+  leaf_vine: leaf(0x7a9a3a),
+  leaf_autumn: leaf(0xc8702a),
   dove: bird(0xe8e4dc, 0xd0ccc4, '#c8805a'),
   gull: bird(0xf0f0ec, 0x9aa4b0, '#e0b040'),
   crow: bird(0x2a2630, 0x1e1a24, '#4a4a4a'),

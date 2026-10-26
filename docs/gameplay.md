@@ -288,7 +288,8 @@ Lord of the Titans, Devourer of His Children: a towering king in dark gold armou
 
 ## Seasonal events
 
-Events come round with the holidays of the year, each for two or three weeks. While one is on, the main menu shows its button with the days left, its realm leads the realm lists (also for co-op rooms), and its items may turn up in **every** run. Event realms stand outside the chain: a run that starts in one goes on to Mount Olympus. Events follow your device's calendar; the Daily Trial never visits an event realm.
+Every month of the year has an event, each for two or three weeks round a holiday, and no two overlap. While one is on, the main menu shows its button with the days left, its realm leads the realm lists (also for co-op rooms), and its items may turn up in **every** run. Event realms stand outside the chain: a run that starts in one goes on to Mount Olympus. Events follow your device's calendar; the Daily Trial never visits an event realm.
+
 
 ### The Winds of Boreas (January 10 – 31)
 
@@ -402,6 +403,38 @@ With the fireworks of early July, the sky bursts with coloured light over **the 
 
 Currency: **embers**. Shop: *Forethought* (+15% pickup range, 40), *Fennel-Bearer* (60), *Firebringer* (80). Items: **Stolen Fire** (fire that leaps from foe to foe and burns) and the **Fennel Stalk** (relic: +20% fire damage, +10% area). Achievements: *Prometheus Unbound* and *Firekeeper*.
 
+### The Stars of Perseus (August 6 – 19)
+
+Over the Perseid meteor shower, stars fall all night on **the Isle of the Gorgons**: a rocky shore crowded with heroes turned to stone, shallows that slow you, and a great Gorgon's head carved on a fallen slab.
+
+| From | Host |
+|---|---|
+| 00:00 | **The Gorgon's Brood**: serpents in hundreds |
+| 00:40 | **Stone Lamiae**: quick |
+| 01:30 | **Graeae**: the grey sisters fling their one eye's glare from afar |
+| 02:30 | **Petrified Heroes**: slow, and nothing pushes them back |
+| 07:00 | **Medusa** (spawning slows) |
+
+**Medusa**, the Gorgon (14,000 health). Her immortal sisters **Stheno** and **Euryale** guard her: while either lives she takes only a fifth of the damage. Cut them in order, Stheno first; a fallen sister returns after 18 seconds. With both down Medusa is **exposed** for 7 seconds, taking 1.6 times the damage. Her **gaze** sweeps in slow cones that hit very hard, stone rains on circles and her brood answers her call. Below half health "**Medusa unveils her face!**": a ring of statues rises round her with four ways out and the Petrified Heroes come.
+
+Currency: **meteor stones**. Shop: *Starfall* (+10% critical damage, 40), *Skywalker* (60), *Mirrorbearer* (80). Items: **Shield of Perseus** (the mirror shield flashes round you, throwing foes back and freezing some) and the **Winged Sandals** (relic: +12% speed, +10% projectile speed). Achievements: *Gorgon-Slayer* and *Not Yet Stone*.
+
+### The Vintage of Dionysus (September 15 – 28)
+
+The grapes are in. **The Vineyards of Naxos** are terraces of vines in long rows over the wine-dark sea, with vine leaves on the wind and the pirates' ship run aground, its mast grown into a vine.
+
+| From | Host |
+|---|---|
+| 00:00 | **Tyrrhenian Pirates** |
+| 00:40 | **Panthers of Dionysus**: quick |
+| 01:30 | **Bacchants**: they throw pinecones from afar |
+| 02:30 | **Drunken Centaurs**: they stop, then charge |
+| 07:00 | **Dionysus** (spawning slows) |
+
+**Dionysus**, God of the Vine (14,000 health). Two **panthers** guard him and pounce along the lines they mark: while either lives he takes 30% of the damage, and once slain they never return. His thyrsus whirls in cones, wine rains on circles and his bacchants answer his call. Below half health "**Madness takes the vineyard!**": vines rise round him with five ways out, and he charges.
+
+Currency: **grapes**. Shop: *A Good Vintage* (+1% life steal, 40), *Cupbearer* (60), *Reveller* (80). Items: **Thyrsus** (ivy-wound staves circle you and tangle foes) and the **Cup of Dionysus** (relic: +3% life steal, +10 health). Achievements: *Sober as a God* and *The Last Vintage*.
+
 ### The Night of Hecate (October 24 – November 7)
 
 The dead walk the crossroads, and Hecate holds the keys. **The Crossroads of Hecate** is a moonlit graveyard where three roads meet, among grave steles, cypresses and black altars, lit by carved gourd lanterns.
@@ -419,6 +452,22 @@ The dead walk the crossroads, and Hecate holds the keys. **The Crossroads of Hec
 **Honey cakes**, the offering that calms Cerberus, drop only during the Night of Hecate: from some kills, 3 from every elite and 15 from Hecate. The run summary counts them, and the **event shop** under the Blessings on the Progression screen spends them on rewards kept for good: *Hecate's Blessing* (+5% XP, 40), *Keykeeper* (the Key of Hecate in every run, all year, 60), *Torchbearer* (Hecate's Torches in every run, all year, 80) and *Ward of the Crossroads* (+1 armour, 120). Runs that start at the crossroads have their own table in the Hall of Glory.
 
 **Event items** (only while the event is on): **Hecate's Torches** (a fire weapon: torches circle you and set the dead alight) and the **Key of Hecate** (relic: +20% fire and shadow damage, +10% XP). **Achievements:** *Queen of the Crossroads* (defeat Hecate at her crossroads) and *Walker of the Night* (survive 10 minutes from them); they wait for the event each year.
+
+### The Hunger of Erysichthon (November 16 – 30)
+
+For the harvest feasts of late November: the king who felled Demeter's sacred oak was cursed with a hunger nothing can fill, and he comes for the harvest. **The Grove of Demeter** stands in autumn wheat, with stumps, haystacks, russet leaves on the wind and the goddess's great oak lying felled.
+
+| From | Host |
+|---|---|
+| 00:00 | **Famished Shades** |
+| 00:40 | **Famine Crows**: quick, in flocks |
+| 01:30 | **Priestesses of Demeter**: they throw sickles from afar |
+| 02:30 | **Famished Giants**: slow, and nothing pushes them back |
+| 07:00 | **Erysichthon** (spawning slows) |
+
+**Erysichthon**, the Insatiable (15,000 health) swings the axe that felled the oak, brings branches down on circles and rushes along the line he marks; into a wall, he stands dazed. Below half health "**His hunger knows no end!**": his hunger marks a wide ring, and inside it you are drawn to his mouth until it strikes. The famine rises round him with three ways out.
+
+Currency: **wheat sheaves**. Shop: *Harvest Home* (+5% gold and XP, 40), *Horn of Plenty* (60), *Reaper* (80). Items: **Sickle of Demeter** (a wide reap before you that heals you) and the **Cornucopia** (relic: +10% gold, +10 health). Achievements: *The Harvest Saved* and *Well Fed*.
 
 ### The Longest Night (December 15 – January 5)
 
