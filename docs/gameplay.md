@@ -290,40 +290,6 @@ Lord of the Titans, Devourer of His Children: a towering king in dark gold armou
 
 Events come round with the holidays of the year, each for two or three weeks. While one is on, the main menu shows its button with the days left, its realm leads the realm lists (also for co-op rooms), and its items may turn up in **every** run. Event realms stand outside the chain: a run that starts in one goes on to Mount Olympus. Events follow your device's calendar; the Daily Trial never visits an event realm.
 
-### The Night of Hecate (October 24 – November 7)
-
-The dead walk the crossroads, and Hecate holds the keys. **The Crossroads of Hecate** is a moonlit graveyard where three roads meet, among grave steles, cypresses and black altars, lit by carved gourd lanterns.
-
-| Realm time | What comes |
-|---|---|
-| 00:00 | **The Restless Dead**: pale ghosts of the unburied; later in packs |
-| 00:40 | **Empusae**: quick, hungry spirits of Hecate's train |
-| 01:30 | **Lampades of Hecate**: her torch nymphs; they keep their distance and throw her fire |
-| 02:30 | **Hounds of Hecate**: they stop, then spring |
-| 07:00 | **Hecate** (spawning slows) |
-
-**Hecate**, Queen of the Crossroads (14,000 health, 400 gold). Her **three torches** (the Maiden's, the Mother's and the Crone's), carried by Lampades, circle her and lash out on their own rhythms. While any of them burns she takes only a third of the damage: put them out, then strike. A quenched torch relights after 18 seconds. Ghost fire falls on circles under you and the dead answer her call. Below half health "**The three roads close!**": rings of stone rise round her with three ways out, and her hounds join the fight.
-
-**Honey cakes**, the offering that calms Cerberus, drop only during the Night of Hecate: from some kills, 3 from every elite and 15 from Hecate. The run summary counts them, and the **event shop** under the Blessings on the Progression screen spends them on rewards kept for good: *Hecate's Blessing* (+5% XP, 40), *Keykeeper* (the Key of Hecate in every run, all year, 60), *Torchbearer* (Hecate's Torches in every run, all year, 80) and *Ward of the Crossroads* (+1 armour, 120). Runs that start at the crossroads have their own table in the Hall of Glory.
-
-**Event items** (only while the event is on): **Hecate's Torches** (a fire weapon: torches circle you and set the dead alight) and the **Key of Hecate** (relic: +20% fire and shadow damage, +10% XP). **Achievements:** *Queen of the Crossroads* (defeat Hecate at her crossroads) and *Walker of the Night* (survive 10 minutes from them); they wait for the event each year.
-
-### The Longest Night (December 15 – January 5)
-
-Over the solstice, Christmas and the New Year, Nyx spreads her veil. **The Starlit Wood** is a snowbound pine wood under falling snow, hung with lamps, with frozen ponds that slide underfoot and wrapped offerings to break open. Her cave opens in a snowy hill.
-
-| From | Host |
-|---|---|
-| 00:00 | **Oneiroi**: dreams that drift toward you in hundreds |
-| 00:40 | **Nightmares**: quick, winged terrors |
-| 01:30 | **Star-Bearers**: they keep their distance and throw star-fire |
-| 02:30 | **Wolves of Night**: they stop, then spring |
-| 07:00 | **Nyx** (spawning slows) |
-
-**Nyx**, Night, Mother of Sleep and Death (14,000 health). Her twin sons guard her: while **Hypnos** or **Thanatos** lives she takes only a third of the damage. Sleep slows every god near him; Death lashes out. A fallen son returns after 20 seconds. Stars fall on circles under you, cones of night sweep before her, and the Oneiroi answer her call. Below half health "**Nyx draws her veil over the world!**": rings of stone rise round her with four ways out, and her nightmares join her.
-
-Currency: **star shards**. Shop: *Starlight* (+5% area, 40), *Veilkeeper* (the Veil of Nyx in every run, 60), *Stargazer* (the Stars of Nyx in every run, 80). Items: **Stars of Nyx** (shadow: cold stars circle you and slow what they touch) and the **Veil of Nyx** (relic: +20% shadow damage, +8% speed). Achievements: *Mother of Night* (defeat Nyx) and *Bringer of Dawn* (survive 10 minutes from the Starlit Wood).
-
 ### The Winds of Boreas (January 10 – 31)
 
 The North Wind comes down from Thrace. **The Peaks of Thrace** are bare peaks in a blizzard: frozen lakes slide underfoot, hot springs heal, and Boreas' ice throne stands between pillars of ice.
@@ -371,6 +337,104 @@ Over St Patrick's Day and the spring equinox, green and gold: spring wakes **the
 **Ladon**, the Hundred-Headed (15,000 health) stays coiled near his tree in the middle of his arena. Three of his heads strike on their own rhythm along the lines they mark; they cannot be hurt, so strike Ladon. His tail sweeps in cones, golden venom falls on circles and his brood answers his call. Below half health "**Ladon uncoils!**": two more heads strike, the ground round him shakes and the Colossi come.
 
 Currency: **golden apples**. Shop: *Gift of the Hesperides* (+8% gold, 40), *Skybearer* (60), *Eris' Due* (80). Items: **Apple of Discord** (golden apples fall on the foes around you and burst) and the **Burden of Atlas** (relic: +1 armour, +15% gold). Achievements: *The Eleventh Labour* and *Evergreen*.
+
+### The Revels of Pan (April 1 – 14)
+
+Over April Fools' Day and the Easter season, Pan plays his tricks. **The Woods of Arcadia** are spring oak woods with reed-fringed ponds that slow you, blossom on the breeze and Pan's herm on its mossy rock.
+
+| From | Host |
+|---|---|
+| 00:00 | **Revelling Satyrs** |
+| 00:40 | **Panisci**: little Pans, small and quick |
+| 01:30 | **Dryads**: they throw thorns from afar |
+| 02:30 | **Silenus**: slow, and nothing pushes him back |
+| 07:00 | **Pan** (spawning slows) |
+
+**Pan**, Lord of the Wild (14,000 health). His shout spreads **panic** in cones before him, acorns fall on circles and his revel answers his call. Four **echoes** stand round his arena and strike along the lines they mark; they cannot be hurt. Below half health "**The reeds of Syrinx rise!**": rings with six ways out, his pipes shriek round him and Silenus joins him.
+
+Currency: **painted eggs**. Shop: *Arcadian Spring* (+0.3 health per second, 40), *Reedcutter* (60), *Piper* (80). Items: **Pipes of Pan** (a shadow blast sweeps before you and scatters the horde) and the **Reeds of Syrinx** (relic: attacks 6% faster, +15% knockback). Achievements: *Lord of the Wild* and *No Panic*.
+
+### The Hunt of Artemis (May 1 – 14)
+
+Over May Day, Artemis has loosed the great boar on Calydon. **The Forest of Calydon** flowers under her moon, its fields trampled to mud, fireflies in the dark and her stag shrine in a glade.
+
+| From | Host |
+|---|---|
+| 00:00 | **Curete Raiders** |
+| 00:40 | **Hunting Hounds**: the quickest things in the forest |
+| 01:30 | **Nymphs of Artemis**: they shoot moon-silver arrows from afar |
+| 02:30 | **Wild Centaurs**: they stop, then charge |
+| 07:00 | **The Calydonian Boar** (spawning slows) |
+
+**The Calydonian Boar** (15,000 health) charges along the line it marks; into a wall, it stands dazed for 3 seconds. It gores the ground round it and brings trees down on circles. Below half health "**The boar tramples the fields!**": a thicket rises round it with three ways out, it charges twice in a row and the hunters join the fight.
+
+Currency: **silver arrowheads**. Shop: *Eye of the Huntress* (+3% critical chance, 40), *Boarskin* (60), *Moonstruck* (80). Items: **Moonbow of Artemis** (piercing silver arrows that strike critically often) and the **Hide of the Boar** (relic: +2 armour, +10 health). Achievements: *Meleager's Prize* and *Huntress*.
+
+### Midsummer of Apollo (June 15 – 28)
+
+The longest day at Delphi. **The Slopes of Delphi** are sun-baked terraces under Parnassus: laurels, dust in the air, columns that lean and fall when you pass, and the golden tripod over the oracle's chasm.
+
+| From | Host |
+|---|---|
+| 00:00 | **Spawn of Python** |
+| 00:40 | **Sunbirds**: quick |
+| 01:30 | **Mad Pythiai**: they throw sunfire from afar |
+| 02:30 | **Tripod Guardians**: slow, and nothing pushes them back |
+| 07:00 | **Python** (spawning slows) |
+
+**Python**, Serpent of the Earth (15,000 health). Its **coils** mark a wide ring: inside it you are drawn toward its maw until it strikes, so run or dash out. Venom falls on circles, its tail sweeps in cones and its spawn answer its call. Below half health "**The earth splits under Delphi!**": rocks rise round it with four ways out.
+
+Currency: **laurel leaves**. Shop: *Midsummer Sun* (+3% damage, 40), *Lyrist* (60), *Sunbearer* (80). Items: **Rays of Apollo** (a fan of burning sun-rays) and the **Lyre of Apollo** (relic: +10% XP, +0.5 health per second). Achievements: *Pythian Victor* and *The Longest Day*.
+
+### The Theft of Fire (July 1 – 14)
+
+With the fireworks of early July, the sky bursts with coloured light over **the Peaks of the Caucasus**: black peaks, vents erupting in the ash, and Prometheus chained to his rock for the fire he gave mortals.
+
+| From | Host |
+|---|---|
+| 00:00 | **Ash Shades** |
+| 00:40 | **Cinder Harpies**: quick |
+| 01:30 | **Kabeiroi**: smiths of the forge who throw embers from afar |
+| 02:30 | **Forge Cyclopes**: slow, and nothing pushes them back |
+| 07:00 | **The Caucasian Eagle** (spawning slows) |
+
+**The Caucasian Eagle** (14,000 health). Three **stolen fires** burn round its arena: while any burns it takes only 40% of the damage, and standing near one burns and slows you. Put them out; they are lit again after 22 seconds. It dives along the line it marks and rains bronze feathers on circles. Below half health "**The eagle circles, screaming!**": its wings sweep in cones and it dives twice as often.
+
+Currency: **embers**. Shop: *Forethought* (+15% pickup range, 40), *Fennel-Bearer* (60), *Firebringer* (80). Items: **Stolen Fire** (fire that leaps from foe to foe and burns) and the **Fennel Stalk** (relic: +20% fire damage, +10% area). Achievements: *Prometheus Unbound* and *Firekeeper*.
+
+### The Night of Hecate (October 24 – November 7)
+
+The dead walk the crossroads, and Hecate holds the keys. **The Crossroads of Hecate** is a moonlit graveyard where three roads meet, among grave steles, cypresses and black altars, lit by carved gourd lanterns.
+
+| Realm time | What comes |
+|---|---|
+| 00:00 | **The Restless Dead**: pale ghosts of the unburied; later in packs |
+| 00:40 | **Empusae**: quick, hungry spirits of Hecate's train |
+| 01:30 | **Lampades of Hecate**: her torch nymphs; they keep their distance and throw her fire |
+| 02:30 | **Hounds of Hecate**: they stop, then spring |
+| 07:00 | **Hecate** (spawning slows) |
+
+**Hecate**, Queen of the Crossroads (14,000 health, 400 gold). Her **three torches** (the Maiden's, the Mother's and the Crone's), carried by Lampades, circle her and lash out on their own rhythms. While any of them burns she takes only a third of the damage: put them out, then strike. A quenched torch relights after 18 seconds. Ghost fire falls on circles under you and the dead answer her call. Below half health "**The three roads close!**": rings of stone rise round her with three ways out, and her hounds join the fight.
+
+**Honey cakes**, the offering that calms Cerberus, drop only during the Night of Hecate: from some kills, 3 from every elite and 15 from Hecate. The run summary counts them, and the **event shop** under the Blessings on the Progression screen spends them on rewards kept for good: *Hecate's Blessing* (+5% XP, 40), *Keykeeper* (the Key of Hecate in every run, all year, 60), *Torchbearer* (Hecate's Torches in every run, all year, 80) and *Ward of the Crossroads* (+1 armour, 120). Runs that start at the crossroads have their own table in the Hall of Glory.
+
+**Event items** (only while the event is on): **Hecate's Torches** (a fire weapon: torches circle you and set the dead alight) and the **Key of Hecate** (relic: +20% fire and shadow damage, +10% XP). **Achievements:** *Queen of the Crossroads* (defeat Hecate at her crossroads) and *Walker of the Night* (survive 10 minutes from them); they wait for the event each year.
+
+### The Longest Night (December 15 – January 5)
+
+Over the solstice, Christmas and the New Year, Nyx spreads her veil. **The Starlit Wood** is a snowbound pine wood under falling snow, hung with lamps, with frozen ponds that slide underfoot and wrapped offerings to break open. Her cave opens in a snowy hill.
+
+| From | Host |
+|---|---|
+| 00:00 | **Oneiroi**: dreams that drift toward you in hundreds |
+| 00:40 | **Nightmares**: quick, winged terrors |
+| 01:30 | **Star-Bearers**: they keep their distance and throw star-fire |
+| 02:30 | **Wolves of Night**: they stop, then spring |
+| 07:00 | **Nyx** (spawning slows) |
+
+**Nyx**, Night, Mother of Sleep and Death (14,000 health). Her twin sons guard her: while **Hypnos** or **Thanatos** lives she takes only a third of the damage. Sleep slows every god near him; Death lashes out. A fallen son returns after 20 seconds. Stars fall on circles under you, cones of night sweep before her, and the Oneiroi answer her call. Below half health "**Nyx draws her veil over the world!**": rings of stone rise round her with four ways out, and her nightmares join her.
+
+Currency: **star shards**. Shop: *Starlight* (+5% area, 40), *Veilkeeper* (the Veil of Nyx in every run, 60), *Stargazer* (the Stars of Nyx in every run, 80). Items: **Stars of Nyx** (shadow: cold stars circle you and slow what they touch) and the **Veil of Nyx** (relic: +20% shadow damage, +8% speed). Achievements: *Mother of Night* (defeat Nyx) and *Bringer of Dawn* (survive 10 minutes from the Starlit Wood).
 
 ## Building a run
 

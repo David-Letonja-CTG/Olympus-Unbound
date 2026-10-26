@@ -516,7 +516,232 @@ const ladonHead: SpriteSpec = {
   },
 };
 
+// ------------------------------------------------------------------------------------- spring and summer
+
+/** Ferns on the forest floor: a few curled fronds. */
+const ferns: SpriteSpec = {
+  size: 22,
+  paint(g, s) {
+    for (const [x, y, a] of [
+      [0.5, 0.6, -2.2],
+      [0.5, 0.6, -1.5],
+      [0.5, 0.6, -0.9],
+      [0.5, 0.6, -0.3],
+    ] as const) {
+      const ex = s * x + Math.cos(a) * s * 0.4;
+      const ey = s * y + Math.sin(a) * s * 0.4;
+      line(g, [s * x, s * y, ex, ey], '#3a6a2e', 1.6);
+      for (let i = 1; i < 4; i++) {
+        const t = i / 4;
+        const px = s * x + (ex - s * x) * t;
+        const py = s * y + (ey - s * y) * t;
+        ellipse(g, px, py, s * 0.06, s * 0.03, '#4e8a3a');
+      }
+    }
+  },
+};
+
+/** Wildflowers in the grass: yellow, white and violet. */
+const wildflowers: SpriteSpec = {
+  size: 18,
+  paint(g, s) {
+    for (const [x, y, c] of [
+      [0.3, 0.4, '#f0d84a'],
+      [0.66, 0.6, '#f4f0e8'],
+      [0.55, 0.26, '#b08ad8'],
+      [0.36, 0.72, '#f0d84a'],
+    ] as const) {
+      circle(g, s * x, s * y, s * 0.08, c);
+      circle(g, s * x, s * y, s * 0.03, '#8a5a1a');
+    }
+  },
+};
+
+/** Embers glowing in the ash. */
+const cinders: SpriteSpec = {
+  size: 18,
+  paint(g, s) {
+    for (const [x, y] of [
+      [0.3, 0.45],
+      [0.62, 0.36],
+      [0.56, 0.7],
+    ]) {
+      glow(g, s * x, s * y, s * 0.16, 0xff7a2a, 0.7);
+      circle(g, s * x, s * y, s * 0.05, '#ffc070');
+    }
+  },
+};
+
+/** Pan's currency: an egg painted in spring colours, red with a band of yellow and a green zigzag. */
+const paintedEgg: SpriteSpec = {
+  size: 20,
+  paint(g, s) {
+    glow(g, s / 2, s / 2, s / 2, 0xffb0c0, 0.45);
+    volume(g, s / 2, s * 0.54, s * 0.24, s * 0.32, 0xd8384a, { outline: 1.5, rim: 0.5 });
+    line(g, [s * 0.28, s * 0.5, s * 0.72, s * 0.5], '#f2d040', 2.5);
+    line(
+      g,
+      [
+        s * 0.3,
+        s * 0.64,
+        s * 0.38,
+        s * 0.58,
+        s * 0.46,
+        s * 0.66,
+        s * 0.54,
+        s * 0.58,
+        s * 0.62,
+        s * 0.66,
+        s * 0.7,
+        s * 0.6,
+      ],
+      '#4aa84a',
+      1.5,
+    );
+  },
+};
+
+/** Artemis' currency: a silver arrowhead, bright as the moon. */
+const silverArrowhead: SpriteSpec = {
+  size: 20,
+  paint(g, s) {
+    glow(g, s / 2, s / 2, s / 2, 0xd8e4ff, 0.6);
+    poly(
+      g,
+      [s / 2, s * 0.12, s * 0.74, s * 0.62, s / 2, s * 0.52, s * 0.26, s * 0.62],
+      '#e0e8f4',
+      'rgba(30,40,60,0.9)',
+      1.5,
+    );
+    line(g, [s / 2, s * 0.52, s / 2, s * 0.86], '#8a6a4a', 2);
+    line(g, [s / 2, s * 0.18, s / 2, s * 0.5], 'rgba(255,255,255,0.8)', 1);
+  },
+};
+
+/** Apollo's currency: a laurel leaf. */
+const laurelLeaf: SpriteSpec = {
+  size: 20,
+  paint(g, s) {
+    glow(g, s / 2, s / 2, s / 2, 0xffe08a, 0.5);
+    g.save();
+    g.translate(s / 2, s / 2);
+    g.rotate(-0.7);
+    ellipse(g, 0, 0, s * 0.36, s * 0.15, '#5a8a32', 'rgba(20,30,10,0.85)');
+    line(g, [-s * 0.32, 0, s * 0.32, 0], '#c8d870', 1.2);
+    g.restore();
+  },
+};
+
+/** Prometheus' currency: a glowing ember of the stolen fire. */
+const ember: SpriteSpec = {
+  size: 20,
+  paint(g, s) {
+    glow(g, s / 2, s / 2, s / 2, 0xff7a2a, 0.8);
+    poly(
+      g,
+      [
+        s * 0.3,
+        s * 0.6,
+        s * 0.44,
+        s * 0.3,
+        s * 0.66,
+        s * 0.36,
+        s * 0.72,
+        s * 0.62,
+        s * 0.5,
+        s * 0.74,
+      ],
+      '#8a2a10',
+      'rgba(30,10,0,0.9)',
+      1.2,
+    );
+    circle(g, s * 0.52, s * 0.52, s * 0.12, '#ffb040');
+    circle(g, s * 0.5, s * 0.5, s * 0.05, '#fff0b0');
+  },
+};
+
+/** A Dryad's thorn: a green barb, point first. */
+const thornShot: SpriteSpec = {
+  size: 24,
+  paint(g, s) {
+    glow(g, s / 2, s / 2, s * 0.4, 0x8ae070, 0.5);
+    poly(
+      g,
+      [s * 0.12, s * 0.42, s * 0.88, s / 2, s * 0.12, s * 0.58],
+      '#5a9a3a',
+      'rgba(20,40,10,0.9)',
+      1.5,
+    );
+    line(g, [s * 0.3, s * 0.44, s * 0.36, s * 0.32], '#3a6a2a', 1.5);
+  },
+};
+
+/** An arrow of moon-silver: a pale shaft and a bright head. */
+const moonArrow: SpriteSpec = {
+  size: 30,
+  paint(g, s) {
+    glow(g, s * 0.75, s / 2, s * 0.3, 0xd8e8ff, 0.7);
+    line(g, [s * 0.1, s / 2, s * 0.74, s / 2], '#c8d4e8', 2);
+    poly(g, [s * 0.08, s * 0.4, s * 0.2, s / 2, s * 0.08, s * 0.6], '#e8f0ff');
+    poly(
+      g,
+      [s * 0.7, s * 0.4, s * 0.92, s / 2, s * 0.7, s * 0.6],
+      '#ffffff',
+      'rgba(40,50,80,0.8)',
+      1,
+    );
+  },
+};
+
+/** Sunfire thrown by a Mad Pythia: a golden blaze with a white heart. */
+const sunBolt: SpriteSpec = {
+  size: 26,
+  paint(g, s) {
+    glow(g, s / 2, s / 2, s / 2, 0xffc84a, 0.7);
+    poly(g, [s * 0.04, s / 2, s * 0.44, s * 0.32, s * 0.44, s * 0.68], 'rgba(255,200,80,0.6)');
+    star(g, s * 0.6, s / 2, s * 0.22, 8, '#ffd860', 'rgba(120,70,0,0.8)', 0.6);
+    circle(g, s * 0.6, s / 2, s * 0.08, '#fffbe0');
+  },
+};
+
+/** An ember flung by a Kabeiros: a red-hot spark trailing smoke. */
+const emberShot: SpriteSpec = {
+  size: 26,
+  paint(g, s) {
+    glow(g, s / 2, s / 2, s / 2, 0xff6a2a, 0.65);
+    poly(g, [s * 0.04, s / 2, s * 0.44, s * 0.36, s * 0.44, s * 0.64], 'rgba(90,70,60,0.55)');
+    circle(g, s * 0.6, s / 2, s * 0.17, '#ff7a2a', 'rgba(255,220,120,0.9)', 1.5);
+    circle(g, s * 0.62, s / 2, s * 0.07, '#ffe0a0');
+  },
+};
+
+/** One of Apollo's sun-rays: a long golden streak. */
+const sunRay: SpriteSpec = {
+  size: 32,
+  paint(g, s) {
+    glow(g, s * 0.6, s / 2, s * 0.4, 0xffd060, 0.6);
+    poly(g, [s * 0.04, s / 2, s * 0.6, s * 0.4, s * 0.94, s / 2, s * 0.6, s * 0.6], '#ffd860');
+    line(g, [s * 0.2, s / 2, s * 0.9, s / 2], '#fffbe0', 1.5);
+  },
+};
+
 export const SEASONAL: Readonly<Record<string, SpriteSpec>> = {
+  // Spring and summer.
+  oak_tree: crown('oak', 0x3e5a2e, 0x587a3a),
+  blossom_tree: crown('blossom', 0x6a8a52, 0xd8a8b8, { color: 0xffe0ea, count: 14, r: 0.03 }),
+  laurel_tree: crown('laurel', 0x3a5a2a, 0x5a7a3a, { color: 0xe8d870, count: 6, r: 0.02 }),
+  ferns,
+  wildflowers,
+  cinders,
+  painted_egg: paintedEgg,
+  silver_arrowhead: silverArrowhead,
+  laurel_leaf: laurelLeaf,
+  ember,
+  thorn_shot: thornShot,
+  moon_arrow: moonArrow,
+  sun_bolt: sunBolt,
+  ember_shot: emberShot,
+  sun_ray: sunRay,
   // The world.
   snowy_pine: snowyPine,
   myrtle_tree: crown('myrtle', 0x4a6e3e, 0x6a8e52, { color: 0xf4f0e8, count: 9, r: 0.025 }),

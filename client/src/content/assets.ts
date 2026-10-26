@@ -558,5 +558,86 @@ export const ASSETS: AssetManifest = {
       recolor: 0xe0d860,
       portrait: 0,
     },
+    // The spring and summer events (spec: seasonal-events).
+    // The Revels of Pan.
+    revelling_satyr: {
+      ...character('satyr', 1.06, 0.5, 0.71, 83, humanoid()),
+      recolor: 0xd8b080,
+    },
+    paniskos: { ...character('satyr', 0.85, 0.5, 0.71, 66, humanoid()), recolor: 0xe8c090 },
+    dryad: { ...character('naiad', 1, 0.51, 0.71, 74, humanoid()), recolor: 0x9ae080 },
+    silenus: { ...character('satyr', 1.6, 0.5, 0.71, 125, humanoid()), recolor: 0xb09070 },
+    pan: {
+      ...character('satyr', 2.4, 0.5, 0.71, 185, humanoid()),
+      recolor: 0xd8a070,
+      portrait: 25,
+    },
+    // The Hunt of Artemis.
+    curete_raider: { ...character('curete', 1, 0.5, 0.73, 77, humanoid()), recolor: 0xd8b898 },
+    hunting_hound: { ...character('orthrus', 0.85, 0.5, 0.71, 60, beast()), recolor: 0xc09a70 },
+    nymph_of_artemis: {
+      ...character('lampad', 1, 0.51, 0.71, 74, humanoid()),
+      recolor: 0xd8e8ff,
+    },
+    wild_centaur: {
+      ...character('centaur_archer', 0.97, 0.5, 0.68, 88, {
+        idle: run(0, 3, 4),
+        walk: run(4, 11, 10),
+        attack: run(12, 15, 10, false),
+        death: run(18, 23, 10, false),
+      }),
+      recolor: 0xa07a5a,
+    },
+    calydonian_boar: {
+      ...character('orthrus', 2.6, 0.5, 0.71, 180, beast(8)),
+      recolor: 0x7a5a48,
+      portrait: 0,
+    },
+    // Midsummer of Apollo.
+    python_spawn: {
+      ...character('swamp_serpent', 1.05, 0.5, 0.69, 52, beast()),
+      recolor: 0x9ab060,
+    },
+    sunbird: {
+      ...character('stymphalian_bird', 0.9, 0.52, 0.59, 70, {
+        idle: run(0, 7, 12),
+        walk: run(0, 7, 12),
+        death: run(8, 13, 10, false),
+      }),
+      recolor: 0xffe080,
+    },
+    mad_pythia: {
+      ...character('fallen_oracle', 1.04, 0.51, 0.71, 84, {
+        ...humanoid(),
+        attack: run(24, 27, 8, false),
+      }),
+      recolor: 0xffe8b0,
+    },
+    tripod_guardian: {
+      ...character('bronze_guardian', 1.4, 0.5, 0.73, 108, humanoid()),
+      recolor: 0xffd890,
+    },
+    python: {
+      ...character('swamp_serpent', 4, 0.5, 0.69, 200, beast(8)),
+      recolor: 0xa0b050,
+      portrait: 0,
+    },
+    // The Theft of Fire.
+    ash_shade: { ...character('shade', 1, 0.5, 0.73, 77, humanoid()), recolor: 0xffb890 },
+    cinder_harpy: { ...character('harpy', 0.92, 0.52, 0.7, 72, humanoid()), recolor: 0xff9060 },
+    kabeiros: { ...character('ally_smith', 1, 0.5, 0.73, 77, humanoid()), recolor: 0xffc090 },
+    forge_cyclops: {
+      ...character('cyclops', 1.06, 0.51, 0.62, 135, humanoid()),
+      recolor: 0xe09070,
+    },
+    caucasian_eagle: {
+      ...character('stymphalian_bird', 2.6, 0.52, 0.59, 200, {
+        idle: run(0, 7, 12),
+        walk: run(0, 7, 12),
+        death: run(8, 13, 10, false),
+      }),
+      recolor: 0xd8a060,
+      portrait: 0,
+    },
   },
 };
