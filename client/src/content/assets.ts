@@ -639,5 +639,76 @@ export const ASSETS: AssetManifest = {
       recolor: 0xd8a060,
       portrait: 0,
     },
+    // The late summer and autumn events (spec: seasonal-events).
+    // The Stars of Perseus.
+    gorgon_brood: {
+      ...character('swamp_serpent', 1.05, 0.5, 0.69, 52, beast()),
+      recolor: 0x8ad870,
+    },
+    stone_lamia: { ...character('lamia', 1, 0.5, 0.72, 70, humanoid()), recolor: 0xb0d8b8 },
+    graea: {
+      ...character('fallen_oracle', 1.04, 0.51, 0.71, 84, {
+        ...humanoid(),
+        attack: run(24, 27, 8, false),
+      }),
+      recolor: 0xd8d8d4,
+    },
+    petrified_hero: {
+      ...character('marble_sentinel', 1.46, 0.52, 0.71, 122, humanoid()),
+      recolor: 0xc8c8c0,
+    },
+    medusa: {
+      ...character('lamia', 2.4, 0.5, 0.72, 170, humanoid()),
+      recolor: 0x9ae0a0,
+      portrait: 25,
+    },
+    gorgon_sister: { ...character('lamia', 1.25, 0.5, 0.72, 88, humanoid()), recolor: 0x7ac890 },
+    // The Vintage of Dionysus.
+    tyrrhenian_pirate: {
+      ...character('drowned_sailor', 1, 0.5, 0.73, 77, humanoid()),
+      recolor: 0xb0a0c8,
+    },
+    panther_of_dionysus: {
+      ...character('orthrus', 0.9, 0.5, 0.71, 64, beast()),
+      recolor: 0xe0c070,
+    },
+    bacchant: { ...character('siren', 0.95, 0.52, 0.71, 74, humanoid()), recolor: 0xd090e0 },
+    drunken_centaur: {
+      ...character('centaur_archer', 0.97, 0.5, 0.68, 88, {
+        idle: run(0, 3, 4),
+        walk: run(4, 11, 10),
+        attack: run(12, 15, 10, false),
+        death: run(18, 23, 10, false),
+      }),
+      recolor: 0xb07aa0,
+    },
+    dionysus: {
+      ...character('hades', 2.3, 0.47, 0.72, 175, humanoid()),
+      recolor: 0xd8a0f0,
+      portrait: 26,
+    },
+    // The Hunger of Erysichthon.
+    famished_shade: { ...character('shade', 1, 0.5, 0.73, 77, humanoid()), recolor: 0xd8c890 },
+    famine_crow: {
+      ...character('stymphalian_bird', 0.85, 0.52, 0.59, 66, {
+        idle: run(0, 7, 12),
+        walk: run(0, 7, 12),
+        death: run(8, 13, 10, false),
+      }),
+      recolor: 0x6a6070,
+    },
+    priestess_of_demeter: {
+      ...character('snake_priestess', 1, 0.5, 0.72, 74, humanoid()),
+      recolor: 0xf0d080,
+    },
+    famished_giant: {
+      ...character('cyclops', 1.06, 0.51, 0.62, 135, humanoid()),
+      recolor: 0xb0a080,
+    },
+    erysichthon: {
+      ...character('ally_warrior', 2.5, 0.5, 0.73, 190, humanoid()),
+      recolor: 0xe0c898,
+      portrait: 25,
+    },
   },
 };

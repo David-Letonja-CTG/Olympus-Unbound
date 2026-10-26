@@ -725,7 +725,251 @@ const sunRay: SpriteSpec = {
   },
 };
 
+// ------------------------------------------------------------------------------------- late summer and autumn
+
+/** A vine on its trellis, from above: a post and crossbar, leaves and dark bunches of grapes. */
+const vineTrellis: SpriteSpec = {
+  size: 40,
+  paint(g, s) {
+    groundShadow(g, s, 0.34, 0.22);
+    line(g, [s * 0.18, s / 2, s * 0.82, s / 2], '#5a4030', 3);
+    for (const [x, y] of [
+      [0.28, 0.42],
+      [0.44, 0.56],
+      [0.6, 0.42],
+      [0.74, 0.56],
+      [0.36, 0.6],
+      [0.66, 0.36],
+    ])
+      volume(g, s * x, s * y, s * 0.11, s * 0.09, 0x4e7a2e, { outline: 1, rim: 0.2 });
+    for (const [x, y] of [
+      [0.4, 0.46],
+      [0.62, 0.56],
+    ]) {
+      for (let i = 0; i < 4; i++)
+        circle(
+          g,
+          s * x + (i % 2) * s * 0.04,
+          s * y + Math.floor(i / 2) * s * 0.04,
+          s * 0.03,
+          '#5a2a6a',
+        );
+    }
+  },
+};
+
+/** Grapes fallen in the earth. */
+const fallenGrapes: SpriteSpec = {
+  size: 18,
+  paint(g, s) {
+    for (const [x, y] of [
+      [0.3, 0.45],
+      [0.36, 0.52],
+      [0.62, 0.36],
+      [0.58, 0.68],
+      [0.66, 0.62],
+    ])
+      circle(g, s * x, s * y, s * 0.06, '#6a2a6a');
+  },
+};
+
+/** A felled oak's stump, its rings showing. */
+const treeStump: SpriteSpec = {
+  size: 40,
+  paint(g, s) {
+    groundShadow(g, s, 0.3, 0.22);
+    volume(g, s / 2, s / 2, s * 0.24, s * 0.22, 0x6a4a30, { outline: 2 });
+    circle(g, s / 2, s * 0.48, s * 0.17, '#b8946a');
+    for (const r of [0.12, 0.07]) {
+      g.beginPath();
+      g.arc(s / 2, s * 0.48, s * r, 0, Math.PI * 2);
+      g.strokeStyle = 'rgba(90,60,30,0.6)';
+      g.lineWidth = 1;
+      g.stroke();
+    }
+  },
+};
+
+/** A haystack: a rounded heap of gold straw, tied round the middle. */
+const haystack: SpriteSpec = {
+  size: 44,
+  paint(g, s) {
+    groundShadow(g, s, 0.34, 0.24);
+    volume(g, s / 2, s / 2, s * 0.3, s * 0.26, 0xc8a050, { outline: 2, contrast: 1.2 });
+    for (let i = 0; i < 6; i++) {
+      const a = -2.6 + i * 0.4;
+      line(
+        g,
+        [
+          s / 2 + Math.cos(a) * s * 0.1,
+          s / 2 + Math.sin(a) * s * 0.1,
+          s / 2 + Math.cos(a) * s * 0.26,
+          s / 2 + Math.sin(a) * s * 0.22,
+        ],
+        'rgba(240,210,120,0.7)',
+        1,
+      );
+    }
+    line(g, [s * 0.22, s * 0.54, s * 0.78, s * 0.54], '#7a5a28', 2);
+  },
+};
+
+/** Standing wheat: a few stalks with heavy ears. */
+const wheatTuft: SpriteSpec = {
+  size: 22,
+  paint(g, s) {
+    for (const [x, h] of [
+      [0.3, 0.7],
+      [0.44, 0.84],
+      [0.58, 0.76],
+      [0.7, 0.66],
+    ]) {
+      line(g, [s * x, s * 0.92, s * (x + 0.03), s * (0.92 - h)], '#b89848', 1.5);
+      ellipse(g, s * (x + 0.03), s * (0.92 - h), s * 0.035, s * 0.08, '#e0c060');
+    }
+  },
+};
+
+/** Russet and gold leaves on the ground. */
+const leafLitter: SpriteSpec = dabs(
+  ['#b8602a', '#d8902a', '#8a4020'],
+  [
+    [0.3, 0.42, 0.09, 0.05],
+    [0.62, 0.58, 0.08, 0.05],
+    [0.5, 0.26, 0.07, 0.04],
+    [0.4, 0.7, 0.07, 0.04],
+  ],
+);
+
+/** Perseus' currency: a meteor stone, still glowing from its fall. */
+const meteorStone: SpriteSpec = {
+  size: 20,
+  paint(g, s) {
+    glow(g, s / 2, s / 2, s / 2, 0x9affd0, 0.55);
+    poly(
+      g,
+      [
+        s * 0.28,
+        s * 0.4,
+        s * 0.46,
+        s * 0.24,
+        s * 0.7,
+        s * 0.32,
+        s * 0.74,
+        s * 0.6,
+        s * 0.52,
+        s * 0.76,
+        s * 0.3,
+        s * 0.64,
+      ],
+      '#4a5458',
+      'rgba(10,20,20,0.9)',
+      1.5,
+    );
+    line(g, [s * 0.38, s * 0.42, s * 0.5, s * 0.5, s * 0.62, s * 0.44], '#9affd0', 1.5);
+    circle(g, s * 0.5, s * 0.56, s * 0.05, '#e0fff0');
+  },
+};
+
+/** Dionysus' currency: a bunch of purple grapes on its stem. */
+const grapes: SpriteSpec = {
+  size: 20,
+  paint(g, s) {
+    glow(g, s / 2, s / 2, s / 2, 0xc080e0, 0.5);
+    for (const [x, y] of [
+      [0.4, 0.36],
+      [0.56, 0.36],
+      [0.32, 0.5],
+      [0.48, 0.5],
+      [0.64, 0.5],
+      [0.4, 0.64],
+      [0.56, 0.64],
+      [0.48, 0.78],
+    ])
+      circle(g, s * x, s * y, s * 0.09, '#7a3a9a', 'rgba(30,10,40,0.85)', 1);
+    line(g, [s * 0.48, s * 0.28, s * 0.56, s * 0.14], '#5a3a1a', 1.5);
+    ellipse(g, s * 0.64, s * 0.2, s * 0.1, s * 0.05, '#5a8a32');
+  },
+};
+
+/** Demeter's currency: a sheaf of wheat bound with a cord. */
+const wheatSheaf: SpriteSpec = {
+  size: 20,
+  paint(g, s) {
+    glow(g, s / 2, s / 2, s / 2, 0xffd880, 0.5);
+    for (const dx of [-0.12, -0.04, 0.04, 0.12]) {
+      line(g, [s * (0.5 + dx * 0.4), s * 0.84, s * (0.5 + dx), s * 0.3], '#c8a048', 1.5);
+      ellipse(g, s * (0.5 + dx), s * 0.24, s * 0.04, s * 0.1, '#f0c860', 'rgba(60,40,0,0.7)');
+    }
+    line(g, [s * 0.38, s * 0.6, s * 0.62, s * 0.6], '#8a4a20', 2);
+  },
+};
+
+/** A Graea's glare: their one grey eye, flung. */
+const greyEye: SpriteSpec = {
+  size: 26,
+  paint(g, s) {
+    glow(g, s / 2, s / 2, s / 2, 0xc8d8d0, 0.6);
+    poly(g, [s * 0.04, s / 2, s * 0.42, s * 0.38, s * 0.42, s * 0.62], 'rgba(200,210,205,0.5)');
+    ellipse(g, s * 0.6, s / 2, s * 0.22, s * 0.13, '#e8ece8', 'rgba(20,24,24,0.9)');
+    circle(g, s * 0.62, s / 2, s * 0.08, '#5a7a70');
+    circle(g, s * 0.62, s / 2, s * 0.035, '#0a0e0c');
+  },
+};
+
+/** A Bacchant's pinecone, thrown from a thyrsus. */
+const pineconeShot: SpriteSpec = {
+  size: 24,
+  paint(g, s) {
+    glow(g, s / 2, s / 2, s * 0.4, 0xc080e0, 0.45);
+    volume(g, s * 0.58, s / 2, s * 0.2, s * 0.13, 0x8a5a30, { outline: 1.2 });
+    for (const x of [0.48, 0.58, 0.68])
+      line(g, [s * x, s * 0.4, s * (x + 0.04), s * 0.6], '#5a3418', 1);
+    ellipse(g, s * 0.3, s / 2, s * 0.1, s * 0.05, '#6a9a3a');
+  },
+};
+
+/** A priestess' sickle, spinning point first. */
+const sickleShot: SpriteSpec = {
+  size: 26,
+  paint(g, s) {
+    glow(g, s / 2, s / 2, s * 0.42, 0xffd880, 0.5);
+    g.beginPath();
+    g.arc(s / 2, s / 2, s * 0.26, -1.2, 1.6);
+    g.strokeStyle = '#e8e4d8';
+    g.lineWidth = 3;
+    g.stroke();
+    line(g, [s * 0.36, s * 0.66, s * 0.26, s * 0.8], '#7a5a30', 3);
+  },
+};
+
+/** One of the Thyrsus' ivy-wound staves, pinecone first. */
+const thyrsusStaff: SpriteSpec = {
+  size: 34,
+  paint(g, s) {
+    glow(g, s * 0.7, s / 2, s * 0.3, 0x9ad060, 0.5);
+    line(g, [s * 0.12, s / 2, s * 0.72, s / 2], '#8a6a40', 3);
+    for (const x of [0.24, 0.38, 0.52]) ellipse(g, s * x, s * 0.46, s * 0.05, s * 0.03, '#5a9a3a');
+    volume(g, s * 0.8, s / 2, s * 0.1, s * 0.08, 0x8a5a30, { outline: 1 });
+  },
+};
+
 export const SEASONAL: Readonly<Record<string, SpriteSpec>> = {
+  // Late summer and autumn.
+  vine_trellis: vineTrellis,
+  fallen_grapes: fallenGrapes,
+  autumn_oak: crown('autumn_oak', 0xa85a2a, 0xd08a30),
+  tree_stump: treeStump,
+  haystack,
+  wheat_tuft: wheatTuft,
+  leaf_litter: leafLitter,
+  meteor_stone: meteorStone,
+  grapes,
+  wheat_sheaf: wheatSheaf,
+  grey_eye: greyEye,
+  pinecone_shot: pineconeShot,
+  sickle_shot: sickleShot,
+  thyrsus_staff: thyrsusStaff,
   // Spring and summer.
   oak_tree: crown('oak', 0x3e5a2e, 0x587a3a),
   blossom_tree: crown('blossom', 0x6a8a52, 0xd8a8b8, { color: 0xffe0ea, count: 14, r: 0.03 }),

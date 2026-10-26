@@ -671,6 +671,33 @@ const symbols: Record<string, Symbol> = {
     }
     line(g, [s * 0.22, s * 0.36, s * 0.78, s * 0.36], '#5a3a1a', 2);
   },
+  horn: (g, s, c) => {
+    // A curved horn spilling fruit from its mouth.
+    poly(
+      g,
+      [
+        s * 0.22,
+        s * 0.72,
+        s * 0.36,
+        s * 0.36,
+        s * 0.6,
+        s * 0.26,
+        s * 0.62,
+        s * 0.44,
+        s * 0.42,
+        s * 0.5,
+      ],
+      c,
+      '#5a3a14',
+      1.5,
+    );
+    for (const [x, y, f] of [
+      [0.66, 0.3, '#d8384a'],
+      [0.74, 0.4, '#f2c030'],
+      [0.66, 0.5, '#7a3a9a'],
+    ] as const)
+      circle(g, s * x, s * y, s * 0.07, f);
+  },
   lyre: (g, s, c) => {
     g.beginPath();
     g.moveTo(s * 0.3, s * 0.2);
@@ -792,6 +819,12 @@ const ICONS: Record<string, [string, 'square' | 'round' | 'diamond' | 'hex', num
   lyre_of_apollo: ['lyre', 'round', 0xffd060],
   stolen_fire: ['flame', 'square', 0xff8a3a],
   fennel_stalk: ['javelin', 'round', 0xffa050],
+  shield_of_perseus: ['shield', 'square', 0xc8e0d8],
+  winged_sandals: ['boot', 'round', 0xd8c890],
+  thyrsus: ['caduceus', 'square', 0x9ab850],
+  cup_of_dionysus: ['potion', 'round', 0xb06ad8],
+  sickle_of_demeter: ['scythe', 'square', 0xe0b050],
+  cornucopia: ['horn', 'round', 0xe0a040],
   // Instant blessings (spec: run-progression / instant blessings).
   blessing_hermes: ['caduceus', 'round', 0x7fe8d0],
   icon_gold: ['coin', 'round', 0xffd34d],

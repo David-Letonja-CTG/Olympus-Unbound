@@ -33,6 +33,9 @@ export type SoundCue =
   | 'moonbow'
   | 'sunray'
   | 'stolenfire'
+  | 'mirror'
+  | 'thyrsus'
+  | 'sickle'
   // Hits and kills.
   | 'hit'
   | 'hitLightning'
@@ -342,6 +345,32 @@ export const CUES: Record<SoundCue, Cue> = {
     voices: [
       n(1200, 3000, 0.18, 0.1, { filter: 'bandpass', drive: 0.4 }),
       o('sawtooth', 220, 110, 0.12, 0.04),
+    ],
+  },
+  // Shield of Perseus: a bright metallic flash and a ring.
+  mirror: {
+    bus: 'weapon',
+    gap: 120,
+    reverb: 0.3,
+    voices: [
+      n(6000, 2000, 0.15, 0.06),
+      note(1975, 0, 0.3, 0.04, 'sine'),
+      o('square', 300, 150, 0.1, 0.04),
+    ],
+  },
+  // Thyrsus: a woody rattle as the staves pass.
+  thyrsus: {
+    bus: 'weapon',
+    gap: 130,
+    voices: [n(700, 1500, 0.12, 0.06, { filter: 'bandpass' }), o('triangle', 240, 200, 0.08, 0.04)],
+  },
+  // Sickle of Demeter: a swift whistling reap.
+  sickle: {
+    bus: 'weapon',
+    gap: 90,
+    voices: [
+      n(2500, 5000, 0.16, 0.09, { filter: 'bandpass', attack: 0.04 }),
+      o('sine', 600, 300, 0.1, 0.03),
     ],
   },
   // ------------------------------------------------------------------------------------------- hits and kills

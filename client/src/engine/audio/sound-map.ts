@@ -27,6 +27,9 @@ export const ATTACK_SOUNDS: Record<string, SoundCue> = {
   moonbow_of_artemis: 'moonbow',
   rays_of_apollo: 'sunray',
   stolen_fire: 'stolenfire',
+  shield_of_perseus: 'mirror',
+  thyrsus: 'thyrsus',
+  sickle_of_demeter: 'sickle',
   // Companions (spec: merchant / companions) borrow the voices of their kind of attack.
   eagle_dive: 'strike',
   hound_bite: 'sword',
