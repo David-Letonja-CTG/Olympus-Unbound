@@ -1,71 +1,11 @@
-import type { BossAttack, BossDefinition } from '../engine';
+import type { BossDefinition } from '../engine';
+import { boulders, charge, devour, lash, slam, summon, sweep } from './events/shared';
 
 /**
  * Every realm's boss and its signature (spec: boss-encounter / signature mechanics): the Cyclops sweeps and rages,
  * Cerberus attacks with three heads, the Hydra's heads must be cut in order, Scylla's tentacles hold the strait, and
  * the Labyrinth's walls shift around Asterion.
  */
-
-const slam = (id: string, windup: number, radius: number, damage: number): BossAttack => ({
-  type: 'slam',
-  id,
-  windup,
-  radius,
-  damage,
-});
-const boulders = (
-  id: string,
-  windup: number,
-  radius: number,
-  damage: number,
-  count: number,
-  spread: number,
-): BossAttack => ({ type: 'boulder', id, windup, radius, damage, count, spread });
-const charge = (
-  id: string,
-  windup: number,
-  length: number,
-  width: number,
-  damage: number,
-  speed: number,
-): BossAttack => ({ type: 'charge', id, windup, length, width, damage, speed });
-const sweep = (
-  id: string,
-  windup: number,
-  radius: number,
-  arc: number,
-  damage: number,
-  count: number,
-  gap: number,
-): BossAttack => ({ type: 'sweep', id, windup, radius, arc, damage, count, gap });
-const lash = (
-  id: string,
-  windup: number,
-  length: number,
-  width: number,
-  damage: number,
-): BossAttack => ({
-  type: 'lash',
-  id,
-  windup,
-  length,
-  width,
-  damage,
-});
-const devour = (
-  id: string,
-  windup: number,
-  pullRadius: number,
-  pullSpeed: number,
-  radius: number,
-  damage: number,
-): BossAttack => ({ type: 'devour', id, windup, pullRadius, pullSpeed, radius, damage });
-const summon = (id: string, enemy: string, count: number): BossAttack => ({
-  type: 'summon',
-  id,
-  enemy,
-  count,
-});
 
 /** The Hydra's heads: cut in order (I, II, III; IV and V from her second phase), each grows back 14 s after it falls. */
 const hydraHead = (order: number, angle: number, fromPhase = 0) => ({

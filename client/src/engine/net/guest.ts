@@ -77,6 +77,9 @@ export class GuestDriver implements RunDriver {
   realm: RealmDefinition;
   arena: ArenaData;
   readonly shared = true;
+  get eventId(): string | undefined {
+    return this.run.eventId;
+  }
   private collision: WorldCollision;
   private footing: Footing;
   /** Realms cleared, as far as this guest has followed the host (spec: endless-run). */

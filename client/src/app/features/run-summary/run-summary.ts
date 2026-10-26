@@ -147,7 +147,7 @@ const TITLES = { defeat: 'You have fallen', abandoned: 'Run abandoned' } as cons
           }
           @if (v.rewards.tokens > 0) {
             <p class="tokens" data-testid="summary-tokens">
-              <app-item-icon sprite="honey_cake" [size]="18" />
+              <app-item-icon [sprite]="currencySprite(v.result.eventId)" [size]="18" />
               +{{ v.rewards.tokens }} {{ currencyOf(v.result.eventId) }} for the event shop
               (Progression)
             </p>
@@ -343,6 +343,9 @@ export class RunSummary {
   protected currencyOf(eventId: string | undefined): string {
     const event = eventId ? this.index.events.get(eventId) : undefined;
     return event?.currency.name.toLowerCase() ?? '';
+  }
+  protected currencySprite(eventId: string | undefined): string {
+    return (eventId && this.index.events.get(eventId)?.currency.sprite) || 'token';
   }
   private readonly setup = inject(RunSetup);
   private readonly router = inject(Router);

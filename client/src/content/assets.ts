@@ -124,6 +124,13 @@ const humanoid = (deathFrom = 18, deathTo = 23) => ({
   death: run(deathFrom, deathTo, 10, false),
 });
 
+/** The beasts' layout (wolf, serpent, crab): idle 0–3, walk 4–11, a fall 12–17. */
+const beast = (fps = 10) => ({
+  idle: run(0, 3, 4),
+  walk: run(4, 11, fps),
+  death: run(12, 17, 10, false),
+});
+
 /** Recorded sound effects (CC0): the sound player layers them into the game's cues (spec: hud / sound feedback). */
 const KENNEY_IMPACT = {
   name: 'CC0-1.0',
@@ -489,6 +496,67 @@ export const ASSETS: AssetManifest = {
       ...character('marble_sentinel', 2.9, 0.52, 0.71, 240, humanoid()),
       recolor: 0xd8a84a,
       portrait: 25,
+    },
+    // The winter events (spec: seasonal-events): the cast recoloured and rescaled for each realm (D15).
+    // The Longest Night.
+    oneiros: { ...character('shade', 1, 0.5, 0.73, 77, humanoid()), recolor: 0xa8b8ff },
+    nightmare: { ...character('fury', 0.95, 0.52, 0.71, 74, humanoid()), recolor: 0x9a9aff },
+    star_bearer: { ...character('lampad', 1, 0.51, 0.71, 74, humanoid()), recolor: 0xb8d0ff },
+    wolf_of_night: { ...character('orthrus', 1, 0.5, 0.71, 70, beast()), recolor: 0x6070b0 },
+    // Night herself: the winged siren in violet, her wings silvered like starlight.
+    nyx: {
+      ...character('siren', 2.3, 0.52, 0.71, 170, humanoid()),
+      recolor: 0x8c84ff,
+      portrait: 26,
+    },
+    hypnos: { ...character('siren', 1.05, 0.52, 0.71, 80, humanoid()), recolor: 0xc8d0ff },
+    thanatos: { ...character('fury', 1.05, 0.52, 0.71, 80, humanoid()), recolor: 0x8a8a9a },
+    // The Winds of Boreas.
+    frozen_warrior: { ...character('curete', 1, 0.5, 0.73, 77, humanoid()), recolor: 0xb8dcff },
+    snow_harpy: { ...character('harpy', 0.92, 0.52, 0.7, 72, humanoid()), recolor: 0xe8f4ff },
+    hyperborean_archer: {
+      ...character('centaur_archer', 0.85, 0.5, 0.68, 77, {
+        idle: run(0, 3, 4),
+        walk: run(4, 11, 10),
+        attack: run(12, 15, 10, false),
+        death: run(18, 23, 10, false),
+      }),
+      recolor: 0xc8e4ff,
+    },
+    frost_gigas: { ...character('cyclops', 1.06, 0.51, 0.62, 135, humanoid()), recolor: 0xb0d4ff },
+    boreas: {
+      ...character('zeus', 2.3, 0.47, 0.72, 175, humanoid()),
+      recolor: 0xd0ecff,
+      portrait: 26,
+    },
+    // The Festival of Eros.
+    lovestruck_satyr: {
+      ...character('satyr', 1.06, 0.5, 0.71, 83, humanoid()),
+      recolor: 0xffc0d8,
+    },
+    erote: { ...character('siren', 0.8, 0.52, 0.71, 64, humanoid()), recolor: 0xffe0d0 },
+    siren_of_paphos: { ...character('siren', 0.95, 0.52, 0.71, 74, humanoid()), recolor: 0xff9ac0 },
+    phobos: { ...character('flare_minotaur', 0.92, 0.52, 0.7, 92, humanoid()), recolor: 0xc8505e },
+    eros: {
+      ...character('siren', 2.2, 0.52, 0.71, 165, humanoid()),
+      recolor: 0xffd8e4,
+      portrait: 26,
+    },
+    // The Golden Apples.
+    golden_serpent: {
+      ...character('swamp_serpent', 1.05, 0.5, 0.69, 52, beast()),
+      recolor: 0xf0e070,
+    },
+    hesperian_harpy: { ...character('harpy', 0.92, 0.52, 0.7, 72, humanoid()), recolor: 0xffd870 },
+    hesperid: { ...character('naiad', 1, 0.51, 0.71, 74, humanoid()), recolor: 0xc0f090 },
+    garden_colossus: {
+      ...character('marble_sentinel', 1.46, 0.52, 0.71, 122, humanoid()),
+      recolor: 0xd8d098,
+    },
+    ladon: {
+      ...character('hydra', 1.75, 0.51, 0.66, 124, beast(8)),
+      recolor: 0xe0d860,
+      portrait: 0,
     },
   },
 };

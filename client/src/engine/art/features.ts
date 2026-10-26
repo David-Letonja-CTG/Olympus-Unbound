@@ -139,4 +139,7 @@ export const FEATURES: Record<string, SpriteSpec> = {
   healing_spring: spring(0x2a6a7a, 0xa8a292, 0x8affe0),
   marsh_spring: spring(0x2a5a4a, 0x6e7a5e, 0xb0ff8a),
   brazier_cold: coldBrazier(0x4a3e34),
+  // The seasonal events: a steaming spring in the snow, and Aphrodite's rose-tinted pool.
+  hot_spring: spring(0x3a7a9a, 0x9aa4b4, 0xc8f0ff),
+  rose_pool: spring(0x6a7aa0, 0xe0c8c4, 0xffb8d0),
 };

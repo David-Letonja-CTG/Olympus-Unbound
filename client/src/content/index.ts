@@ -7,15 +7,7 @@ import { TWISTS } from './daily';
 import { INTRO } from './cutscenes/intro';
 import { BOSSES } from './bosses';
 import { ENEMIES } from './enemies';
-import {
-  CROSSROADS_OF_HECATE,
-  EVENT_REWARDS,
-  EVENTS,
-  HECATE,
-  HECATE_ENEMIES,
-  HECATE_RELICS,
-  HECATE_WEAPONS,
-} from './events';
+import { EVENT_PACKS } from './events';
 import { GODS } from './gods';
 import { ARMOUR, ASCENSIONS, FUSIONS, INSTANTS, RELICS, SKILLS, SYNERGIES } from './items';
 import { REALMS } from './realms';
@@ -127,28 +119,32 @@ export const PERMANENT_UPGRADES: readonly PermanentUpgradeDefinition[] = [
   },
 ];
 
+/** Seasonal events are merged into the lists: event realms last (spec: seasonal-events). */
+const fromEvents = <T>(pick: (p: (typeof EVENT_PACKS)[number]) => readonly T[]): T[] =>
+  EVENT_PACKS.flatMap(pick);
+
 /** All game content (D4). Validated by `content.spec.ts`. */
 export const CONTENT: GameContent = {
   gods: GODS,
-  weapons: [...WEAPONS, ...HECATE_WEAPONS],
+  weapons: [...WEAPONS, ...fromEvents((p) => p.weapons)],
   armour: ARMOUR,
-  relics: [...RELICS, ...HECATE_RELICS],
+  relics: [...RELICS, ...fromEvents((p) => p.relics)],
   skills: SKILLS,
   synergies: SYNERGIES,
   instants: INSTANTS,
   fusions: FUSIONS,
   ascensions: ASCENSIONS,
   evolutions: EVOLUTIONS,
-  enemies: [...ENEMIES, ...HECATE_ENEMIES],
-  bosses: [...BOSSES, HECATE],
-  realms: [...REALMS, CROSSROADS_OF_HECATE],
-  events: EVENTS,
-  eventRewards: EVENT_REWARDS,
+  enemies: [...ENEMIES, ...fromEvents((p) => p.enemies)],
+  bosses: [...BOSSES, ...fromEvents((p) => [p.boss])],
+  realms: [...REALMS, ...fromEvents((p) => [p.realm])],
+  events: EVENT_PACKS.map((p) => p.event),
+  eventRewards: fromEvents((p) => p.rewards),
   permanentUpgrades: PERMANENT_UPGRADES,
   balance: BALANCE,
   assets: ASSETS,
   cutscenes: [INTRO],
-  achievements: ACHIEVEMENTS,
+  achievements: [...ACHIEVEMENTS, ...fromEvents((p) => p.achievements)],
   dailyQuests: DAILY_QUESTS,
   wares: WARES,
   companions: COMPANIONS,

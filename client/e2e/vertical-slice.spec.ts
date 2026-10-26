@@ -199,6 +199,26 @@ test('the Night of Hecate: the menu button leads to a run at her crossroads (spe
   await expect.poll(async () => (await inspect(page))?.time ?? 0).toBeGreaterThan(0.5);
 });
 
+test('the Longest Night: the menu button leads to a run in the Starlit Wood (spec: seasonal-events)', async ({
+  page,
+}) => {
+  await page.addInitScript(() =>
+    localStorage.setItem('olympus-unbound/event-override', 'on:longest_night'),
+  );
+  await openAsReturningPlayer(page);
+  await expect(page.getByTestId('menu-event')).toContainText('The Longest Night');
+  await page.getByTestId('menu-event').click();
+  await page.getByTestId('god-zeus').click();
+  await page.getByRole('button', { name: 'Continue' }).click();
+  await expect(page.getByTestId('realm-starlit_wood')).toBeVisible();
+  await expect(page.getByTestId('realm-crossroads_of_hecate')).toHaveCount(0);
+  await fillSeed(page, '12');
+  await page.getByTestId('begin').click();
+  await expect(page.getByTestId('run-loading')).toHaveCount(0, { timeout: 120_000 });
+  await expect(page.getByTestId('hud-realm')).toContainText('The Starlit Wood');
+  await expect.poll(async () => (await inspect(page))?.time ?? 0).toBeGreaterThan(0.5);
+});
+
 test('permanent upgrades are bought with gold and kept', async ({ page }) => {
   await page.goto('/');
   await page.evaluate(() =>

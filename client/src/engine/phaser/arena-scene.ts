@@ -126,7 +126,15 @@ export class ArenaScene extends Phaser.Scene {
     }
     const realm = driver.realm;
     const arena = driver.arena;
-    this.view = new WorldView(this, this.resolver, arena, realm.map, this.ground.canvas);
+    const event = driver.eventId ? driver.index.events.get(driver.eventId) : undefined;
+    this.view = new WorldView(
+      this,
+      this.resolver,
+      arena,
+      realm.map,
+      this.ground.canvas,
+      event?.currency.sprite,
+    );
     this.effects = new Effects(this);
     this.minimap = new Minimap(this, arena, this.ground.canvas);
     // Three or four players at one screen have a plaque in every corner; the map moves below the top-right one.

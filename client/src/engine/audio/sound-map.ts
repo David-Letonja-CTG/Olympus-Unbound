@@ -19,6 +19,10 @@ export const ATTACK_SOUNDS: Record<string, SoundCue> = {
   gorgons_gaze: 'gaze',
   // Event weapons (spec: seasonal-events / event items).
   hecates_torches: 'torches',
+  stars_of_nyx: 'stars',
+  breath_of_boreas: 'gust',
+  arrows_of_eros: 'heartstring',
+  apple_of_discord: 'apple',
   // Companions (spec: merchant / companions) borrow the voices of their kind of attack.
   eagle_dive: 'strike',
   hound_bite: 'sword',

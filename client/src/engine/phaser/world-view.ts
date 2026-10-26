@@ -154,6 +154,8 @@ export class WorldView {
     arena: ArenaData,
     config: MapGenConfig,
     ground: HTMLCanvasElement,
+    /** The run's event currency picture (spec: seasonal-events / event currency). */
+    private readonly tokenSprite = 'token',
   ) {
     this.drawArena(arena, config, ground);
     const pool = (texture = '__DEFAULT') => new SpritePool(scene, texture);
@@ -394,7 +396,14 @@ export class WorldView {
     }
 
     for (const pk of state.pickups) {
-      const key = pk.kind === 'xp' ? (pk.value >= 5 ? 'xp_large' : 'xp_small') : pk.kind;
+      const key =
+        pk.kind === 'xp'
+          ? pk.value >= 5
+            ? 'xp_large'
+            : 'xp_small'
+          : pk.kind === 'token'
+            ? this.tokenSprite
+            : pk.kind;
       const bob = pk.kind === 'chest' || pk.kind === 'heal' ? Math.sin(time / 250 + pk.id) * 3 : 0;
       const sprite = p.pickup.get(pk.id);
       applySprite(sprite, this.resolver.resolve(key), 1, false);

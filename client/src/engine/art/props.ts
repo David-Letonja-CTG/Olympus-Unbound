@@ -155,6 +155,39 @@ function gourd(skin: number, glowColor: number): SpriteSpec {
   };
 }
 
+/** A wrapped offering for the solstice: a cloth-bound box tied with a ribbon (`cloth`, `ribbon`). */
+function gift(cloth: number, ribbon: number): SpriteSpec {
+  return {
+    size: 64,
+    paint(g, s) {
+      shadow(g, s, 0.3);
+      slab(
+        g,
+        [s * 0.26, s * 0.44, s * 0.66, s * 0.44, s * 0.66, s * 0.78, s * 0.26, s * 0.78],
+        cloth,
+        { outline: 2 },
+      );
+      poly(
+        g,
+        [s * 0.26, s * 0.44, s * 0.36, s * 0.34, s * 0.76, s * 0.34, s * 0.66, s * 0.44],
+        hex(shade(cloth, 1.3)),
+        'rgba(8,6,10,0.85)',
+      );
+      poly(
+        g,
+        [s * 0.66, s * 0.44, s * 0.76, s * 0.34, s * 0.76, s * 0.68, s * 0.66, s * 0.78],
+        hex(shade(cloth, 0.6)),
+        'rgba(8,6,10,0.85)',
+      );
+      // The ribbon across the front and the top, and its bow.
+      line(g, [s * 0.46, s * 0.44, s * 0.46, s * 0.78], hex(ribbon), 3);
+      line(g, [s * 0.31, s * 0.39, s * 0.71, s * 0.39], hex(ribbon), 3);
+      volume(g, s * 0.44, s * 0.33, s * 0.06, s * 0.04, ribbon, { outline: 1, rim: 0.3 });
+      volume(g, s * 0.56, s * 0.33, s * 0.06, s * 0.04, ribbon, { outline: 1, rim: 0.3 });
+    },
+  };
+}
+
 export const PROPS: Record<string, SpriteSpec> = {
   prop_amphora: amphora(0xb0623a, 0x2a1a14),
   prop_amphora_pale: amphora(0xc8a77a, 0x6a3a22),
@@ -163,4 +196,9 @@ export const PROPS: Record<string, SpriteSpec> = {
   prop_crate: crate(0x8a6238),
   prop_urn_bronze: urn(0x8a6a3a, 0xd0a050),
   prop_gourd: gourd(0xd0782a, 0xffd36a),
+  // The seasonal events (spec: seasonal-events).
+  prop_gift: gift(0xa8303a, 0xe8c050),
+  prop_urn_frost: urn(0x8aa4c4, 0xe0f0ff),
+  prop_amphora_rose: amphora(0xd8968a, 0x8a2a3a),
+  prop_amphora_gold: amphora(0xc8a04a, 0x5a3a14),
 };
