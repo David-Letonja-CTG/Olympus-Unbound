@@ -173,7 +173,8 @@ A run's `party` lists 1–4 seats (god, name, the player's own permanent upgrade
 | Boss defeated | `realm.rewards.bossGold` added to the run's gold; a gate opens where the boss fell |
 | Gate | radius 70; travels after a living god has stood in it for 2 s in a row, or 60 s after opening |
 | Travel | pickups gathered (quietly), enemies/projectiles/hazards cleared, fallen gods (not left) raised at 50%, party placed on the plaza, new director |
-| Depth `d` (realms cleared) | enemy health ×3^d, damage ×1.5^d, spawn rate and enemies alive ×(1 + 0.25·d), boss health ×2.4^d, boss attack damage ×1.5^d (`balance.endless`) |
+| Depth `d` (realms cleared) | enemy health ×3.5^d, damage ×1.65^d, spawn rate ×(1 + 0.35·d), enemies alive ×(1 + 0.3·d), boss health ×2.8^d, boss attack damage ×1.65^d (`balance.endless`); then ×`rules.realmGrowth`^d on all four healths and damages |
+| Difficulty dial (D23) | the server's `/api/difficulty`, read when the main menu opens and cached; `withDial` multiplies the run's `rules.enemies` health, damage and spawn rate and its `rules.realmGrowth`, for runs started here and a room host's |
 | Head start | spawn phases are read at realm time + min(180, 120·d) s; events, the boss time, the merchant and per-minute scaling keep realm time |
 
 ## Rooms — `engine/net/` (D16)

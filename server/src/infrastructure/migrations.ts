@@ -28,4 +28,14 @@ export const MIGRATIONS: readonly { readonly id: string; readonly sql: string }[
       create index scores_board on scores (board, board_date, score desc) where not hidden;
     `,
   },
+  {
+    id: '002-settings',
+    sql: `
+      create table settings (
+        key text primary key,
+        value jsonb not null,
+        updated_at timestamptz not null default now()
+      );
+    `,
+  },
 ];

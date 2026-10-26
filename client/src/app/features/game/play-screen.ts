@@ -28,6 +28,7 @@ import {
 } from '../../../engine';
 import { debugEnabled, directorPanelEnabled } from '../../core/debug-mode';
 import { GAME_CONTENT, GAME_SESSION_FACTORY } from '../../core/game-content';
+import { Difficulty, withDial } from '../../core/difficulty';
 import { SeasonalEvents } from '../../core/seasonal-events';
 import { Progression } from '../../core/progression';
 import { RoomService } from '../../core/rooms/room-service';
@@ -322,6 +323,7 @@ declare global {
 export class PlayScreen {
   private readonly content = inject(GAME_CONTENT);
   private readonly events = inject(SeasonalEvents);
+  private readonly difficulty = inject(Difficulty);
   private readonly createSession = inject(GAME_SESSION_FACTORY);
   private readonly progression = inject(Progression);
   protected readonly setup = inject(RunSetup);
@@ -578,7 +580,10 @@ export class PlayScreen {
       const session = await this.createSession({
         parent: this.host().nativeElement,
         content: this.content,
-        run: this.room?.config ?? this.soloRun(godId ?? '', realmId ?? ''),
+        // A room's run carries its host's dial; a run here gets this game's (spec: difficulty-dial).
+        run:
+          this.room?.config ??
+          withDial(this.soloRun(godId ?? '', realmId ?? ''), this.difficulty.current()),
         settings: this.progression.settings(),
         debug,
         room: this.room?.seat,

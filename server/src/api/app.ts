@@ -1,6 +1,7 @@
 import cors from '@fastify/cors';
 import Fastify, { type FastifyInstance } from 'fastify';
 import type { StoredScore } from '../application/ports.js';
+import type { Difficulty } from '../application/difficulty.js';
 import type { Leaderboards } from '../application/leaderboards.js';
 import type { RateLimiter } from '../application/rate-limiter.js';
 import type { RoomRelay } from '../application/room-relay.js';
@@ -10,6 +11,8 @@ import { serveClient, type ClientFilesOptions } from './client-files.js';
 export interface AppOptions {
   readonly leaderboards: Leaderboards;
   readonly relay: RoomRelay;
+  /** The difficulty dial every game reads (spec: difficulty-dial). */
+  readonly difficulty: Difficulty;
   /** Runs sent per address per hour (spec: game-server / limits). */
   readonly scoreLimiter: RateLimiter;
   /** Origins allowed to call the API (the game's site); `'*'` for any (development). */
@@ -93,11 +96,23 @@ export async function buildApp(o: AppOptions): Promise<FastifyInstance> {
     return { entries: result.entries.map((e, i) => publicEntry(e, i + 1)) };
   });
 
+  // The difficulty dial: every game reads it before a run (spec: difficulty-dial).
+  app.get('/api/difficulty', async (_req, reply) => {
+    reply.header('Cache-Control', 'no-cache');
+    return o.difficulty.current();
+  });
+
   if (o.adminToken) {
     const token = o.adminToken;
     app.post<{ Params: { id: string } }>('/api/admin/scores/:id/hide', async (req, reply) => {
       if (req.headers.authorization !== `Bearer ${token}`) return reply.code(401).send();
       return reply.code((await o.leaderboards.hide(req.params.id)) ? 204 : 404).send();
+    });
+    app.post('/api/admin/difficulty', async (req, reply) => {
+      if (req.headers.authorization !== `Bearer ${token}`) return reply.code(401).send();
+      const result = await o.difficulty.set(req.body);
+      if ('refusal' in result) return reply.code(400).send({ code: result.refusal });
+      return result.dial;
     });
   }
 

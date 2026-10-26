@@ -55,10 +55,10 @@ export class GameServer {
     return this.request<T>(path, { method: 'GET' });
   }
 
-  post<T>(path: string, body: unknown): Promise<T> {
+  post<T>(path: string, body: unknown, headers: Record<string, string> = {}): Promise<T> {
     return this.request<T>(path, {
       method: 'POST',
-      headers: { 'content-type': 'application/json' },
+      headers: { 'content-type': 'application/json', ...headers },
       body: JSON.stringify(body),
     });
   }

@@ -139,6 +139,8 @@ export class RunState implements WorldFrame {
   readonly pace: number;
   /** A twist's enemy multipliers (spec: daily-trial / twists); 1 each in an ordinary run. */
   readonly enemyRules: { health: number; damage: number; speed: number; spawnRate: number };
+  /** The run's extra growth per realm cleared (spec: difficulty-dial); 1 in an ordinary run. */
+  readonly realmGrowth: number;
   /** Difficulty multipliers for the party's size (1 for a solo run). */
   readonly partyScale: {
     readonly enemyHealth: number;
@@ -238,6 +240,7 @@ export class RunState implements WorldFrame {
       speed: enemies?.speed ?? 1,
       spawnRate: enemies?.spawnRate ?? 1,
     };
+    this.realmGrowth = config.rules?.realmGrowth ?? 1;
     this.god = index.god(this.party[0].godId);
     // More players, more and tougher enemies (spec: co-op / difficulty per player).
     const others = this.party.length - 1;
@@ -381,13 +384,15 @@ export class RunState implements WorldFrame {
   } {
     const e = this.balance.endless;
     const d = this.depth;
+    // The difficulty dial's extra growth compounds on every realm's (spec: difficulty-dial).
+    const g = this.realmGrowth ** d;
     return {
-      enemyHealth: e.enemyHealthGrowth ** d,
-      enemyDamage: e.enemyDamageGrowth ** d,
+      enemyHealth: e.enemyHealthGrowth ** d * g,
+      enemyDamage: e.enemyDamageGrowth ** d * g,
       spawnRate: 1 + e.spawnRatePerRealm * d,
       maxAlive: 1 + e.maxAlivePerRealm * d,
-      bossHealth: e.bossHealthGrowth ** d,
-      bossDamage: e.bossDamageGrowth ** d,
+      bossHealth: e.bossHealthGrowth ** d * g,
+      bossDamage: e.bossDamageGrowth ** d * g,
     };
   }
 

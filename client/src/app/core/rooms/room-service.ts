@@ -1,6 +1,7 @@
 import { computed, inject, Injectable, signal } from '@angular/core';
 import { Modifier, PartySeat, PeerLink, RoomSeat, RunConfig, roomVersion } from '../../../engine';
 import { GAME_CONTENT } from '../game-content';
+import { Difficulty, withDial } from '../difficulty';
 import { SeasonalEvents } from '../seasonal-events';
 import { Progression } from '../progression';
 import { randomSeed } from '../run-setup';
@@ -90,6 +91,7 @@ export class RoomService {
   private readonly loadNetwork = inject(ROOM_NETWORK);
   private readonly content = inject(GAME_CONTENT);
   private readonly events = inject(SeasonalEvents);
+  private readonly difficulty = inject(Difficulty);
   private readonly progression = inject(Progression);
   private readonly version = roomVersion(this.content);
   /** Rooms need the game server (D21); a build without one does not offer them (spec: game-server). */
@@ -309,16 +311,20 @@ export class RoomService {
     this.listing?.publish(undefined);
     this.run.set({
       code,
-      config: {
-        runId,
-        godId: party[0].godId,
-        realmId,
-        seed,
-        eventId,
-        unlocked,
-        modifiers: party[0].modifiers,
-        party,
-      },
+      // The host's dial: the host's simulation is the run (D16, spec: difficulty-dial).
+      config: withDial(
+        {
+          runId,
+          godId: party[0].godId,
+          realmId,
+          seed,
+          eventId,
+          unlocked,
+          modifiers: party[0].modifiers,
+          party,
+        },
+        this.difficulty.current(),
+      ),
       seat: { role: 'host', guests: links },
       members: ordered,
       localSeat: 0,

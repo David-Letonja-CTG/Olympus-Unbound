@@ -2,9 +2,11 @@ import { mkdirSync, mkdtempSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { afterAll, describe, expect, it } from 'vitest';
+import { Difficulty } from '../application/difficulty.js';
 import { Leaderboards } from '../application/leaderboards.js';
 import { RateLimiter } from '../application/rate-limiter.js';
 import { RoomRelay } from '../application/room-relay.js';
+import { MemoryDifficultyStore } from '../infrastructure/memory-difficulty-store.js';
 import { MemoryScoreStore } from '../infrastructure/memory-score-store.js';
 import { FakeClock } from '../testing/fakes.js';
 import { buildApp } from './app.js';
@@ -25,6 +27,7 @@ async function app() {
   const clock = new FakeClock();
   return buildApp({
     leaderboards: new Leaderboards(new MemoryScoreStore(clock), clock),
+    difficulty: new Difficulty(new MemoryDifficultyStore()),
     relay: new RoomRelay(clock),
     scoreLimiter: new RateLimiter(30, 3_600_000, clock),
     allowedOrigins: '*',

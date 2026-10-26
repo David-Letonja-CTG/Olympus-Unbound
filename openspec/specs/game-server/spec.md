@@ -6,7 +6,7 @@ The game's own server (D21): what it serves (rooms, open rooms, world boards), w
 ## Requirements
 
 ### Requirement: The game server
-The game SHALL have a server of its own for what players share: rooms (spec: rooms), open rooms (spec: matchmaking) and the world boards (spec: world-leaderboards). It SHALL run no rules of a run, keep no saves and need no accounts.
+The game SHALL have a server of its own for what players share: rooms (spec: rooms), open rooms (spec: matchmaking) the world boards (spec: world-leaderboards) and the difficulty dial (spec: difficulty-dial). It SHALL run no rules of a run, keep no saves and need no accounts; the dial is numbers the games apply, not a rule the server runs.
 
 - **Address:** the server SHALL also serve the game itself, at the same address, and the game SHALL reach the server at its own address. A build without a server (the release zip) SHALL not show co-op's online features or the world boards as if they worked.
 - **The game's pages:** a deep link SHALL load the game; a shared address (challenge, co-op invite, Daily Trial) SHALL answer with a page of its own, found, so chat apps show its preview; a missing file SHALL be not found.
@@ -28,7 +28,7 @@ The game SHALL have a server of its own for what players share: rooms (spec: roo
 - **THEN** the server refuses it
 
 ### Requirement: What the server keeps
-The server SHALL store only the world board entries: a chosen name and a run's figures. It SHALL NOT store addresses or anything that identifies a device. Rooms and their listings SHALL live only in memory while they are open.
+The server SHALL store only the world board entries (a chosen name and a run's figures) and the difficulty dial. It SHALL NOT store addresses or anything that identifies a device. Rooms and their listings SHALL live only in memory while they are open.
 
 #### Scenario: A room closes
 - **WHEN** the host of a room leaves

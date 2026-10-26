@@ -10,6 +10,14 @@ import { FormsModule } from '@angular/forms';
 import { RouterLink } from '@angular/router';
 import { BalanceReport, BalanceRow, GameContent } from '../../../engine';
 import { SeasonalEvents } from '../../core/seasonal-events';
+import {
+  DEFAULT_DIAL,
+  Difficulty,
+  DIAL_LIMITS,
+  DifficultyDial,
+  parseDial,
+} from '../../core/difficulty';
+import { GameServer, ServerError } from '../../core/game-server';
 import { adminUnlocked, unlockAdmin } from '../../core/admin-mode';
 import { GAME_CONTENT } from '../../core/game-content';
 import { Progression } from '../../core/progression';
@@ -218,6 +226,59 @@ const CHART_RUNS = 40;
             </button>
           </div>
           <p class="hint" data-testid="event-now">Now: {{ events.active()?.name ?? 'no event' }}</p>
+        </section>
+
+        <!-- The difficulty dial on the game server: every player's next run (spec: difficulty-dial). -->
+        <section
+          class="panel wide"
+          aria-labelledby="difficulty-title"
+          data-testid="admin-difficulty"
+        >
+          <h2 id="difficulty-title">Difficulty for every player</h2>
+          <p class="hint">
+            Multipliers every player's game applies to the runs it starts, read from the game server
+            whenever the main menu opens. 1 is the game as released. Realm growth adds that much
+            again for every realm cleared: 1.2 makes the third realm 1.44 times tougher on top.
+          </p>
+          @if (!server.configured) {
+            <p class="hint">This build has no game server, so the dial cannot be set from here.</p>
+          } @else {
+            <div class="controls">
+              @for (f of dialFields; track f.key) {
+                <label
+                  >{{ f.label }}
+                  <input
+                    type="number"
+                    step="0.05"
+                    [min]="f.min"
+                    [max]="f.max"
+                    [(ngModel)]="dial[f.key]"
+                    [attr.data-testid]="'dial-' + f.key"
+                /></label>
+              }
+            </div>
+            <div class="controls">
+              <label
+                >Server admin token
+                <input
+                  class="token"
+                  type="password"
+                  autocomplete="off"
+                  [(ngModel)]="token"
+                  data-testid="dial-token"
+              /></label>
+              <button
+                class="btn btn-primary"
+                [disabled]="saving() || !token"
+                (click)="saveDial()"
+                data-testid="dial-save"
+              >
+                Save for everyone
+              </button>
+              <button class="btn" (click)="resetDial()" data-testid="dial-reset">Back to 1</button>
+            </div>
+            <p class="hint" role="status" data-testid="dial-status">{{ dialStatus() }}</p>
+          }
         </section>
 
         <section class="panel wide balance" aria-labelledby="balance-title">
@@ -443,6 +504,9 @@ const CHART_RUNS = 40;
     input {
       width: 4.5em;
     }
+    input.token {
+      width: 14em;
+    }
     .progress {
       height: 8px;
       background: rgba(0, 0, 0, 0.5);
@@ -474,6 +538,62 @@ export class AdminScreen {
   protected readonly unlocked = signal(adminUnlocked());
   protected readonly wrong = signal(false);
   protected password = '';
+
+  // The difficulty dial (spec: difficulty-dial).
+  protected readonly server = inject(GameServer);
+  private readonly difficulty = inject(Difficulty);
+  protected readonly dialFields = (
+    [
+      ['enemyHealth', 'Enemy health ×'],
+      ['enemyDamage', 'Enemy damage ×'],
+      ['spawnRate', 'Spawn rate ×'],
+      ['realmGrowth', 'Realm growth ×'],
+    ] as const
+  ).map(([key, label]) => ({ key, label, min: DIAL_LIMITS[key][0], max: DIAL_LIMITS[key][1] }));
+  protected dial: Record<keyof DifficultyDial, number> = { ...this.difficulty.current() };
+  protected token = '';
+  protected readonly saving = signal(false);
+  protected readonly dialStatus = signal('');
+
+  protected async loadDial(): Promise<void> {
+    await this.difficulty.refresh();
+    this.dial = { ...this.difficulty.current() };
+    this.dialStatus.set(`Now: ${this.describe(this.difficulty.current())}`);
+  }
+
+  protected resetDial(): void {
+    this.dial = { ...DEFAULT_DIAL };
+  }
+
+  protected async saveDial(): Promise<void> {
+    const dial = parseDial(
+      Object.fromEntries(Object.entries(this.dial).map(([k, v]) => [k, Number(v)])),
+    );
+    if (!dial) {
+      this.dialStatus.set('Every value must be a number within its limits.');
+      return;
+    }
+    this.saving.set(true);
+    try {
+      const saved = await this.difficulty.save(dial, this.token);
+      this.dial = { ...saved };
+      this.dialStatus.set(`Saved for everyone: ${this.describe(saved)}`);
+    } catch (e) {
+      this.dialStatus.set(
+        e instanceof ServerError && e.status === 401
+          ? 'The server refused the token.'
+          : e instanceof ServerError && e.status === 404
+            ? 'The server has no admin token set, so the dial cannot be changed.'
+            : 'Could not reach the game server. Try again.',
+      );
+    } finally {
+      this.saving.set(false);
+    }
+  }
+
+  private describe(d: DifficultyDial): string {
+    return `health ×${d.enemyHealth}, damage ×${d.enemyDamage}, spawns ×${d.spawnRate}, realm growth ×${d.realmGrowth}`;
+  }
 
   protected eventForced(id: string): boolean {
     const o = this.events.override();
@@ -526,6 +646,7 @@ export class AdminScreen {
 
   constructor() {
     inject(DestroyRef).onDestroy(() => this.stop());
+    void this.loadDial();
   }
 
   protected toggle(godId: string): void {

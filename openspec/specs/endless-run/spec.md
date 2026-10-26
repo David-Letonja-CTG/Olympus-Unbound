@@ -45,6 +45,7 @@ Every realm cleared SHALL make the following realms harder:
 - The spawn rate and the number of enemies alive at once SHALL rise by a configured fraction per realm cleared.
 - The growth of enemy health per realm SHALL be at least the most any realm's own per-minute growth reaches, so a new realm's first enemies are never weaker than the last enemies of the realm before.
 - Every realm after the first SHALL start its spawn phases a configured number of seconds in per realm cleared, up to a configured maximum. Its timed events, boss time and merchant arrivals SHALL keep their own times.
+- The difficulty dial's realm growth SHALL compound on top (spec: difficulty-dial).
 
 The entity caps SHALL still apply.
 

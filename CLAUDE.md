@@ -16,7 +16,7 @@ Read the relevant doc before working on a feature.
 
 1. **The game runs in the browser; the server only shares** (D1, D16, D21).
    - The game is a static build: saves, progression and every rule of a run stay in the browser, with no accounts and no cloud saves.
-   - The game server (`server/`) relays room messages unread, lists public rooms and keeps world boards. It never runs game rules.
+   - The game server (`server/`) relays room messages unread, lists public rooms, keeps world boards and hands out the difficulty dial's numbers (D23). It never runs game rules.
    - The host's simulation is the authority in rooms.
    - Everything but co-op and the world boards works without the server.
 2. **Layer boundaries** (D2, D3) — lint-enforced:

@@ -141,6 +141,33 @@ describe('endless runs (spec: endless-run)', () => {
     expect(third / first).toBeCloseTo(s.state.balance.endless.enemyDamageGrowth ** 2);
   });
 
+  it('adds the difficulty dial’s growth on top, compounding, and leaves the first realm alone (spec: difficulty-dial)', () => {
+    const run = (realmGrowth?: number) =>
+      new RunSimulation(
+        {
+          runId: 'dial',
+          godId: 'zeus',
+          realmId: 'mount_olympus',
+          seed: 3,
+          modifiers: [],
+          rules: { realmGrowth },
+        },
+        twoRealms(),
+      );
+    const plain = run();
+    const dialled = run(1.5);
+    const def = plain.state.index.enemy('satyr');
+    const health = (s: RunSimulation) => s.state.spawnEnemy(def, 100, 100)?.maxHealth ?? 0;
+    const damage = (s: RunSimulation) => s.state.spawnEnemy(def, 100, 100)?.damage ?? 0;
+    expect(health(dialled)).toBeCloseTo(health(plain));
+    for (const s of [plain, dialled]) {
+      s.debug({ type: 'travel' });
+      s.debug({ type: 'travel' });
+    }
+    expect(health(dialled) / health(plain)).toBeCloseTo(1.5 ** 2);
+    expect(damage(dialled) / damage(plain)).toBeCloseTo(1.5 ** 2);
+  });
+
   it('never starts a realm weaker than the last one ended', () => {
     const s = sim();
     const def = s.state.index.enemy('satyr');
