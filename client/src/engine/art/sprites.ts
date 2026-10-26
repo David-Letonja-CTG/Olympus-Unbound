@@ -4,6 +4,7 @@ import { LANDMARKS } from './landmarks';
 import { PROPS } from './props';
 import { FEATURES } from './features';
 import { CREATURES } from './creatures';
+import { SEASONAL } from './seasonal';
 import { WORLD } from './world';
 
 /**
@@ -217,8 +218,8 @@ const projectiles: Record<string, SpriteSpec> = {
       circle(g, s / 2, s / 2, s * 0.18, '#ffe680');
     },
   },
-  // An event's currency on the ground: a round honey cake with a glaze and a warm glow (spec: seasonal-events).
-  token: {
+  // Hecate's currency on the ground: a round honey cake with a glaze and a warm glow (spec: seasonal-events).
+  honey_cake: {
     size: 20,
     paint(g, s) {
       glow(g, s / 2, s / 2, s / 2, 0xffb040, 0.55);
@@ -653,6 +654,21 @@ const symbols: Record<string, Symbol> = {
     circle(g, s / 2, s / 2, s * 0.28, c, '#a07800', 2);
     circle(g, s / 2, s / 2, s * 0.14, '#ffe680');
   },
+  star: (g, s, c) => {
+    const pts: number[] = [];
+    for (let i = 0; i < 10; i++) {
+      const a = -Math.PI / 2 + (i * Math.PI) / 5;
+      const d = s * (i % 2 ? 0.14 : 0.34);
+      pts.push(s / 2 + Math.cos(a) * d, s * 0.52 + Math.sin(a) * d);
+    }
+    poly(g, pts, c, '#fff', 1);
+  },
+  apple: (g, s, c) => {
+    circle(g, s / 2, s * 0.56, s * 0.26, c, 'rgba(8,6,10,0.7)', 1.5);
+    line(g, [s / 2, s * 0.32, s * 0.55, s * 0.2], '#5a3a1a', 2.5);
+    ellipse(g, s * 0.64, s * 0.24, s * 0.1, s * 0.05, '#6a9a3a');
+    circle(g, s * 0.42, s * 0.48, s * 0.06, 'rgba(255,255,230,0.8)');
+  },
   potion: (g, s, c) => {
     poly(
       g,
@@ -737,10 +753,17 @@ const ICONS: Record<string, [string, 'square' | 'round' | 'diamond' | 'hex', num
   ascend_fortune: ['coin', 'round', 0xffd34d],
   ambrosia: ['potion', 'round', 0xff7a9a],
   // The event shop (spec: seasonal-events / event shop).
-  honey_cake: ['coin', 'round', 0xf2b84a],
   // The Night of Hecate's items (spec: seasonal-events / event items).
   hecates_torches: ['flame', 'square', 0xff8a2a],
   key_of_hecate: ['gates', 'round', 0xc8a0ff],
+  stars_of_nyx: ['star', 'square', 0xb0c0ff],
+  veil_of_nyx: ['star', 'round', 0x8a8aff],
+  breath_of_boreas: ['storm', 'square', 0xd0f0ff],
+  cloak_of_boreas: ['wing', 'round', 0xb0e0ff],
+  arrows_of_eros: ['bow', 'square', 0xff7aa8],
+  girdle_of_aphrodite: ['heart', 'round', 0xff9ab8],
+  apple_of_discord: ['apple', 'square', 0xffd34d],
+  burden_of_atlas: ['orb', 'round', 0xd8c070],
   // Instant blessings (spec: run-progression / instant blessings).
   blessing_hermes: ['caduceus', 'round', 0x7fe8d0],
   icon_gold: ['coin', 'round', 0xffd34d],
@@ -958,6 +981,7 @@ export const SPRITES: Readonly<Record<string, SpriteSpec>> = {
   ...PROPS,
   ...FEATURES,
   ...CREATURES,
+  ...SEASONAL,
   ...icons,
   ...crests,
 };

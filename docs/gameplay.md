@@ -288,7 +288,7 @@ Lord of the Titans, Devourer of His Children: a towering king in dark gold armou
 
 ## Seasonal events
 
-Some weeks of the year belong to an event. While one is on, the main menu shows its button with the days left, its realm leads the realm lists (also for co-op rooms), and its items may turn up in **every** run. Event realms stand outside the chain: a run that starts in one goes on to Mount Olympus. Events follow your device's calendar; the Daily Trial never visits an event realm.
+Events come round with the holidays of the year, each for two or three weeks. While one is on, the main menu shows its button with the days left, its realm leads the realm lists (also for co-op rooms), and its items may turn up in **every** run. Event realms stand outside the chain: a run that starts in one goes on to Mount Olympus. Events follow your device's calendar; the Daily Trial never visits an event realm.
 
 ### The Night of Hecate (October 24 – November 7)
 
@@ -307,6 +307,70 @@ The dead walk the crossroads, and Hecate holds the keys. **The Crossroads of Hec
 **Honey cakes**, the offering that calms Cerberus, drop only during the Night of Hecate: from some kills, 3 from every elite and 15 from Hecate. The run summary counts them, and the **event shop** under the Blessings on the Progression screen spends them on rewards kept for good: *Hecate's Blessing* (+5% XP, 40), *Keykeeper* (the Key of Hecate in every run, all year, 60), *Torchbearer* (Hecate's Torches in every run, all year, 80) and *Ward of the Crossroads* (+1 armour, 120). Runs that start at the crossroads have their own table in the Hall of Glory.
 
 **Event items** (only while the event is on): **Hecate's Torches** (a fire weapon: torches circle you and set the dead alight) and the **Key of Hecate** (relic: +20% fire and shadow damage, +10% XP). **Achievements:** *Queen of the Crossroads* (defeat Hecate at her crossroads) and *Walker of the Night* (survive 10 minutes from them); they wait for the event each year.
+
+### The Longest Night (December 15 – January 5)
+
+Over the solstice, Christmas and the New Year, Nyx spreads her veil. **The Starlit Wood** is a snowbound pine wood under falling snow, hung with lamps, with frozen ponds that slide underfoot and wrapped offerings to break open. Her cave opens in a snowy hill.
+
+| From | Host |
+|---|---|
+| 00:00 | **Oneiroi**: dreams that drift toward you in hundreds |
+| 00:40 | **Nightmares**: quick, winged terrors |
+| 01:30 | **Star-Bearers**: they keep their distance and throw star-fire |
+| 02:30 | **Wolves of Night**: they stop, then spring |
+| 07:00 | **Nyx** (spawning slows) |
+
+**Nyx**, Night, Mother of Sleep and Death (14,000 health). Her twin sons guard her: while **Hypnos** or **Thanatos** lives she takes only a third of the damage. Sleep slows every god near him; Death lashes out. A fallen son returns after 20 seconds. Stars fall on circles under you, cones of night sweep before her, and the Oneiroi answer her call. Below half health "**Nyx draws her veil over the world!**": rings of stone rise round her with four ways out, and her nightmares join her.
+
+Currency: **star shards**. Shop: *Starlight* (+5% area, 40), *Veilkeeper* (the Veil of Nyx in every run, 60), *Stargazer* (the Stars of Nyx in every run, 80). Items: **Stars of Nyx** (shadow: cold stars circle you and slow what they touch) and the **Veil of Nyx** (relic: +20% shadow damage, +8% speed). Achievements: *Mother of Night* (defeat Nyx) and *Bringer of Dawn* (survive 10 minutes from the Starlit Wood).
+
+### The Winds of Boreas (January 10 – 31)
+
+The North Wind comes down from Thrace. **The Peaks of Thrace** are bare peaks in a blizzard: frozen lakes slide underfoot, hot springs heal, and Boreas' ice throne stands between pillars of ice.
+
+| From | Host |
+|---|---|
+| 00:00 | **Frozen Warriors** |
+| 00:40 | **Snow Harpies**: quick |
+| 01:30 | **Hyperborean Archers**: centaurs who shoot ice from afar |
+| 02:30 | **Frost Gigantes**: slow, and nothing pushes them back |
+| 07:00 | **Boreas** (spawning slows) |
+
+**Boreas**, the North Wind (13,000 health) charges on the gale along the line he marks; a charge into a wall stops and dazes him for 2 seconds. Hail falls on circles under you and cones of biting wind sweep before him. Below half health "**Winter closes in!**": rings of stone with five ways out, and he charges twice as often.
+
+Currency: **hailstones**. Shop: *The North Wind* (+4% speed, 40), *Windcloak* (the Cloak of the North Wind in every run, 60), *Galecaller* (the Breath of Boreas in every run, 80). Items: **Breath of Boreas** (gusts that pierce the horde and slow) and the **Cloak of the North Wind** (relic: +12% speed, +1 armour). Achievements: *Winter's End* and *Frost-Bound*.
+
+### The Festival of Eros (February 7 – 21)
+
+Over Valentine's Day, Eros looses his arrows over his mother's garden. **The Garden of Aphrodite** is a rose terrace by the sea at Paphos, with rose petals on the wind, myrtle groves, pools that slow and heal, and her great shell in the foam.
+
+| From | Host |
+|---|---|
+| 00:00 | **Lovestruck Satyrs** |
+| 00:40 | **Erotes**: small, winged and quick |
+| 01:30 | **Sirens of Paphos**: they throw hearts from afar |
+| 02:30 | **Phobos**: fear himself; he stops, then charges |
+| 07:00 | **Eros** (spawning slows) |
+
+**Eros**, the Winged Archer (13,500 health). His **golden** and **leaden arrows** hover at his side and lash out: while either flies he takes only a quarter of the damage, and a broken arrow returns after 16 seconds. Break both and he is **exposed** for 6 seconds, taking 1.8 times the damage. Arrows rain on circles and hearts sweep in cones. Below half health "**Love turns to hate!**": he flies at you along the line he marks, and calls Phobos.
+
+Currency: **roses**. Shop: *Aphrodite's Favour* (+10 health, 40), *Girdlebearer* (60), *Archer of Love* (80). Items: **Arrows of Eros** (an arrow leaps from foe to foe and may leave them smitten, standing still) and the **Girdle of Aphrodite** (relic: +20 health, +0.5 health per second). Achievements: *Heartbreaker* and *Devoted*.
+
+### The Golden Apples (March 10 – 24)
+
+Over St Patrick's Day and the spring equinox, green and gold: spring wakes **the Garden of the Hesperides** at the western edge of the world, an orchard of golden apple trees where Atlas kneels under the sphere of the sky.
+
+| From | Host |
+|---|---|
+| 00:00 | **Golden Serpents**: Ladon's brood, in hundreds |
+| 00:40 | **Hesperian Harpies**: quick |
+| 01:30 | **Hesperides**: nymphs who throw apples from afar |
+| 02:30 | **Garden Colossi**: slow, and nothing pushes them back |
+| 07:00 | **Ladon** (spawning slows) |
+
+**Ladon**, the Hundred-Headed (15,000 health) stays coiled near his tree in the middle of his arena. Three of his heads strike on their own rhythm along the lines they mark; they cannot be hurt, so strike Ladon. His tail sweeps in cones, golden venom falls on circles and his brood answers his call. Below half health "**Ladon uncoils!**": two more heads strike, the ground round him shakes and the Colossi come.
+
+Currency: **golden apples**. Shop: *Gift of the Hesperides* (+8% gold, 40), *Skybearer* (60), *Eris' Due* (80). Items: **Apple of Discord** (golden apples fall on the foes around you and burst) and the **Burden of Atlas** (relic: +1 armour, +15% gold). Achievements: *The Eleventh Labour* and *Evergreen*.
 
 ## Building a run
 

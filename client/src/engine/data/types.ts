@@ -252,10 +252,11 @@ export interface EventDefinition {
   readonly accent: number;
   /**
    * Its currency, dropped only in its runs (spec: seasonal-events / event currency): by `chance` per kill, and
-   * `elite` and `boss` tokens for those.
+   * `elite` and `boss` tokens for those. `sprite` is its picture, on the ground and in the menus.
    */
   readonly currency: {
     readonly name: string;
+    readonly sprite: string;
     readonly chance: number;
     readonly elite: number;
     readonly boss: number;
@@ -539,7 +540,7 @@ export interface ObstacleKind {
  */
 export interface Ambience {
   readonly weather?: {
-    readonly kind: 'leaves' | 'ash' | 'fireflies' | 'spray' | 'dust';
+    readonly kind: 'leaves' | 'ash' | 'fireflies' | 'spray' | 'dust' | 'snow';
     /** A sprite for each particle (leaves); otherwise a soft spark in `color`. */
     readonly sprite?: string;
     readonly rate: number;

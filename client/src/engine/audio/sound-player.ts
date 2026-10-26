@@ -25,6 +25,10 @@ export type SoundCue =
   | 'tidal'
   | 'gaze'
   | 'torches'
+  | 'stars'
+  | 'gust'
+  | 'heartstring'
+  | 'apple'
   // Hits and kills.
   | 'hit'
   | 'hitLightning'
@@ -268,6 +272,37 @@ export const CUES: Record<SoundCue, Cue> = {
     bus: 'weapon',
     gap: 120,
     voices: [n(900, 2400, 0.16, 0.05, { filter: 'bandpass' }), o('sine', 180, 120, 0.12, 0.03)],
+  },
+  // Stars of Nyx: a faint, cold chime as they pass.
+  stars: {
+    bus: 'weapon',
+    gap: 140,
+    voices: [note(1760, 0, 0.18, 0.04, 'sine'), note(2637, 0.03, 0.14, 0.025, 'sine')],
+  },
+  // Breath of Boreas: a rising whoosh of wind.
+  gust: {
+    bus: 'weapon',
+    gap: 90,
+    voices: [
+      n(400, 1800, 0.35, 0.12, { filter: 'bandpass', attack: 0.08 }),
+      n(2500, 900, 0.3, 0.05, { delay: 0.1 }),
+    ],
+  },
+  // Arrows of Eros: a bowstring plucked, then a bright little ring.
+  heartstring: {
+    bus: 'weapon',
+    gap: 80,
+    voices: [
+      o('triangle', 320, 180, 0.12, 0.1),
+      note(1320, 0.04, 0.2, 0.04, 'sine'),
+      n(3000, 1500, 0.08, 0.05),
+    ],
+  },
+  // Apple of Discord: a soft thud as an apple lands, and a crisp burst.
+  apple: {
+    bus: 'weapon',
+    gap: 70,
+    voices: [o('sine', 160, 70, 0.18, 0.18), n(1800, 500, 0.14, 0.09, { delay: 0.02 })],
   },
   // ------------------------------------------------------------------------------------------- hits and kills
   hit: {

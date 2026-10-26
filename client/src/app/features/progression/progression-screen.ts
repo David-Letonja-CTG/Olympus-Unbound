@@ -107,7 +107,7 @@ interface CodexGroup {
               <h3>
                 {{ shop.event.name }}
                 <span class="tokens" [attr.data-testid]="'event-tokens-' + shop.event.id">
-                  <app-item-icon sprite="honey_cake" [size]="16" />
+                  <app-item-icon [sprite]="shop.event.currency.sprite" [size]="16" />
                   {{ progression.tokens(shop.event.id) }}
                   {{ shop.event.currency.name.toLowerCase() }}
                 </span>
@@ -130,7 +130,7 @@ interface CodexGroup {
                         (click)="progression.buyReward(r)"
                         [attr.data-testid]="'buy-' + r.id"
                       >
-                        <app-item-icon sprite="honey_cake" [size]="16" />
+                        <app-item-icon [sprite]="shop.event.currency.sprite" [size]="16" />
                         <span>{{ r.cost }}</span>
                       </button>
                     }

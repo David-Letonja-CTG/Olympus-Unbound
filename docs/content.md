@@ -8,6 +8,7 @@ All game content is typed TypeScript in `client/src/content/` (decision D4). The
 | `weapons.ts` | weapons (behavior, element, base stats, per-level deltas, effects) |
 | `items.ts` | armour, relics, skills, synergies, fusions, ascensions, instant blessings |
 | `enemies.ts` | enemies and bosses |
+| `events/` | seasonal events: one pack per event (realm, host, boss, items, shop, achievements) |
 | `realms.ts` | realms: map generation, spawn timeline, events, scaling, elites, boss, rewards |
 | `assets.ts` | external art manifest: files with licences, sprite key → frame/animation (D12) |
 | `cutscenes/intro.ts` | the intro scene: actors, cues and captions (D14) |
@@ -134,15 +135,19 @@ No top level; offered only when fewer than three other upgrades remain (weight 1
 
 ### Seasonal events
 
-`content/events.ts` keeps each event in one place: its `EventDefinition` (id, name, tagline, `window` `MM-DD`, accent colour), its realm (`event` set: outside the chain), its host and boss, and its weapons and relics (`event` set: offered only in its runs). `content/index.ts` merges them into the lists, event realms last. Event achievements use `goal.realm`. Validation checks the dates, the event ids and that a realm outside events remains.
+`content/events/` keeps each event in one file exporting an `EventPack`: its `EventDefinition` (id, name, tagline, `window` `MM-DD`, accent colour, `currency` with its picture `sprite`), its realm (`event` set: outside the chain), its host and boss, its weapons and relics (`event` set: offered only in its runs), its shop rewards and its achievements (`goal.realm`). `content/events/index.ts` lists the packs in calendar order; `content/index.ts` merges them into the lists, event realms last. `content/events/shared.ts` has the boss attack builders, the event realm `MAP_FRAME`, `hostRealm` (the eight-phase timeline, hordes and elites from four monster ids: fodder, quick, ranged, heavy; the boss at 7 minutes), `eventShop` (a blessing at 40, the relic at 60, the weapon at 80) and `eventAchievements` (clear the realm, 400 gold; last 10 minutes from it, 250). Validation checks the dates, the event ids and that a realm outside events remains; a test checks that no two windows overlap.
 
 | Event | Window | Realm | Host | Boss | Items |
 |---|---|---|---|---|---|
+| `longest_night` | 12-15 – 01-05 | `starlit_wood` | `oneiros` (shade), `nightmare` (fury), `star_bearer` (lampad, ranged), `wolf_of_night` (orthrus, charger) | `nyx` (siren ×2.3, 0x8c84ff): guard 0.35 while `hypnos` (slowing zone 150, no damage) or `thanatos` (1,700 health, regrow 20 s) lives | `stars_of_nyx` (orbit, shadow, slow), `veil_of_nyx` |
+| `winds_of_boreas` | 01-10 – 01-31 | `peaks_of_thrace` | `frozen_warrior` (curete), `snow_harpy` (harpy), `hyperborean_archer` (centaur, ranged), `frost_gigas` (cyclops, heavy) | `boreas` (Zeus ×2.3, 0xd0ecff): charges, `chargeStun` 2 | `breath_of_boreas` (projectile, physical, pierce, slow), `cloak_of_boreas` |
+| `festival_of_eros` | 02-07 – 02-21 | `garden_of_aphrodite` | `lovestruck_satyr` (satyr), `erote` (siren ×0.8), `siren_of_paphos` (siren, ranged), `phobos` (minotaur, charger) | `eros` (siren ×2.2, 0xffd8e4): guard 0.25 while `golden_arrow` or `leaden_arrow` (1,500, regrow 16 s) lives; exposed 6 s ×1.8 | `arrows_of_eros` (chain, physical, stun), `girdle_of_aphrodite` |
+| `apples_of_hesperides` | 03-10 – 03-24 | `garden_of_hesperides` | `golden_serpent` (serpent), `hesperian_harpy` (harpy), `hesperid` (naiad, ranged), `garden_colossus` (sentinel, heavy) | `ladon` (hydra ×1.75, 0xe0d860): `anchored` 170, five attack-only heads (two from phase 2) | `apple_of_discord` (strike, physical), `burden_of_atlas` |
 | `night_of_hecate` | 10-24 – 11-07 | `crossroads_of_hecate` | `restless_dead` (shade, 0xa8ffc8), `empusa` (lamia, 0xff8ad0), `lampad_of_hecate` (lampad, 0xffb060, ranged), `hound_of_hecate` (orthrus, 0x7a9a8a, charger) | `hecate` (snake priestess ×2.3, 0xd0c0ff): guard 0.35 while any of three torch parts (1,600 health, regrow 18 s) lives | `hecates_torches` (orbit, fire, burn), `key_of_hecate` |
 
-Currency and shop: `night_of_hecate` drops honey cakes (2% of kills, 3 per elite, 15 from the boss). `EVENT_REWARDS`: `hecates_blessing` (+5% XP, 40), `keykeeper` (unlocks `key_of_hecate`, 60), `torchbearer` (unlocks `hecates_torches`, 80), `ward_of_the_crossroads` (+1 armour, 120).
+Currencies (2% of kills, 3 per elite, 15 from the boss): star shards, hailstones, roses, golden apples, honey cakes. Shops: `starlight` (+5% area), `north_wind` (+4% speed), `aphrodites_favour` (+10 health), `hesperides_gift` (+8% gold), each 40, then each event's relic (60) and weapon (80); Hecate's: `hecates_blessing` (+5% XP, 40), `keykeeper` (60), `torchbearer` (80), `ward_of_the_crossroads` (+1 armour, 120). Lamps in the snow realms shine at about half strength, since the snow throws light back.
 
-**New event:** an `EventDefinition` (with its `currency`) and its rewards, and its realm, host, boss and items in `content/events.ts` (recoloured sheets and code-drawn props, D15), merged in `content/index.ts`; achievements with `goal.realm`; sounds for new weapons in `ATTACK_SOUNDS`.
+**New event:** a pack in `content/events/` (recoloured sheets in `assets.ts`, code-drawn trees, props, pickups and missiles in `engine/art/seasonal.ts`, a landmark in `engine/art/landmarks.ts`, D15) listed in `content/events/index.ts`, a window that overlaps no other, and a sound for its weapon in `ATTACK_SOUNDS`.
 
 ### Instant blessings
 

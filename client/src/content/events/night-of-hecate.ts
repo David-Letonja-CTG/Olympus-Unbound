@@ -6,28 +6,25 @@ import type {
   RealmDefinition,
   RelicDefinition,
   WeaponDefinition,
-} from '../engine';
+} from '../../engine';
+import type { EventPack } from './shared';
 
 /**
- * Seasonal events (spec: seasonal-events): each brings a realm outside the chain, its host, its boss and its items,
- * only while it is on. The cast reuses the rendered sheets, recoloured (D15, as for Mount Othrys).
+ * The Night of Hecate (Halloween, spec: seasonal-events): each event brings a realm outside the chain, its host,
+ * its boss and its items, only while it is on. The cast reuses the rendered sheets, recoloured (D15, as for Mount
+ * Othrys).
  */
-export const EVENTS: readonly EventDefinition[] = [
-  {
-    id: 'night_of_hecate',
-    name: 'The Night of Hecate',
-    tagline: 'The dead walk the crossroads. Hecate holds the keys.',
-    window: { from: '10-24', to: '11-07' },
-    accent: 0xff8a2a,
-    // Honey cakes: the offering that calms Cerberus at the gates of the dead.
-    currency: { name: 'Honey cakes', chance: 0.02, elite: 3, boss: 15 },
-  },
-];
+const NIGHT_OF_HECATE: EventDefinition = {
+  id: 'night_of_hecate',
+  name: 'The Night of Hecate',
+  tagline: 'The dead walk the crossroads. Hecate holds the keys.',
+  window: { from: '10-24', to: '11-07' },
+  accent: 0xff8a2a,
+  // Honey cakes: the offering that calms Cerberus at the gates of the dead.
+  currency: { name: 'Honey cakes', sprite: 'honey_cake', chance: 0.02, elite: 3, boss: 15 },
+};
 
-// ---------------------------------------------------------------------------------------------------------------
-// The Night of Hecate (Halloween)
-
-export const HECATE_ENEMIES: readonly EnemyDefinition[] = [
+const HECATE_ENEMIES: readonly EnemyDefinition[] = [
   {
     id: 'restless_dead',
     name: 'Restless Dead',
@@ -101,7 +98,7 @@ export const HECATE_ENEMIES: readonly EnemyDefinition[] = [
  * Hecate, goddess of the crossroads, of witchcraft and of ghosts (spec: seasonal-events / Hecate). Her three torches,
  * carried by her Lampades, guard her: while one burns she takes a third of the damage. Put them out; they relight.
  */
-export const HECATE: BossDefinition = {
+const HECATE: BossDefinition = {
   id: 'hecate',
   name: 'Hecate',
   title: 'Queen of the Crossroads, Keeper of the Keys',
@@ -189,7 +186,7 @@ export const HECATE: BossDefinition = {
 };
 
 /** The Crossroads of Hecate: a moonlit graveyard where three roads meet, lit by carved gourd lanterns. */
-export const CROSSROADS_OF_HECATE: RealmDefinition = {
+const CROSSROADS_OF_HECATE: RealmDefinition = {
   id: 'crossroads_of_hecate',
   name: 'Crossroads of Hecate',
   event: 'night_of_hecate',
@@ -448,7 +445,7 @@ export const CROSSROADS_OF_HECATE: RealmDefinition = {
 };
 
 /** Offered only on the Night of Hecate (spec: seasonal-events / event items). */
-export const HECATE_WEAPONS: readonly WeaponDefinition[] = [
+const HECATE_WEAPONS: readonly WeaponDefinition[] = [
   {
     id: 'hecates_torches',
     name: 'Hecate’s Torches',
@@ -483,7 +480,7 @@ export const HECATE_WEAPONS: readonly WeaponDefinition[] = [
   },
 ];
 
-export const HECATE_RELICS: readonly RelicDefinition[] = [
+const HECATE_RELICS: readonly RelicDefinition[] = [
   {
     id: 'key_of_hecate',
     name: 'Key of Hecate',
@@ -499,7 +496,7 @@ export const HECATE_RELICS: readonly RelicDefinition[] = [
 ];
 
 /** What honey cakes buy (spec: seasonal-events / event shop): kept for good, whenever bought. */
-export const EVENT_REWARDS: readonly EventRewardDefinition[] = [
+const HECATE_REWARDS: readonly EventRewardDefinition[] = [
   {
     id: 'hecates_blessing',
     event: 'night_of_hecate',
@@ -537,3 +534,32 @@ export const EVENT_REWARDS: readonly EventRewardDefinition[] = [
     sprite: 'honey_cake',
   },
 ];
+
+export const HECATE_PACK: EventPack = {
+  event: NIGHT_OF_HECATE,
+  realm: CROSSROADS_OF_HECATE,
+  boss: HECATE,
+  enemies: HECATE_ENEMIES,
+  weapons: HECATE_WEAPONS,
+  relics: HECATE_RELICS,
+  rewards: HECATE_REWARDS,
+  // Its achievements (spec: seasonal-events / event achievements) wait for the event each year.
+  achievements: [
+    {
+      id: 'queen_of_crossroads',
+      name: 'Queen of the Crossroads',
+      description: 'Defeat Hecate at her crossroads.',
+      goal: { measure: 'realmsCleared', target: 1, over: 'run', realm: 'crossroads_of_hecate' },
+      gold: 400,
+      sprite: 'key_of_hecate',
+    },
+    {
+      id: 'night_walker',
+      name: 'Walker of the Night',
+      description: 'Survive 10 minutes from the Crossroads of Hecate.',
+      goal: { measure: 'timeSeconds', target: 600, over: 'run', realm: 'crossroads_of_hecate' },
+      gold: 250,
+      sprite: 'hecates_torches',
+    },
+  ],
+};

@@ -384,3 +384,68 @@ describe('Kronos devours (spec: boss-encounter / devour)', () => {
     expect(boss.x - p.x).toBeGreaterThan(300);
   });
 });
+
+describe('the winter events’ bosses (spec: seasonal-events / the winter events)', () => {
+  it('Nyx: her sons guard her, and Sleep slows without hurting', () => {
+    const { sim, boss, p } = withBoss('nyx');
+    run(sim, 0.1);
+    expect(parts(sim)).toHaveLength(2);
+    expect(damageTakenMultiplier(boss)).toBeCloseTo(0.35);
+    expect(sim.state.zones).toHaveLength(1);
+    boss.boss!.attackTimer = 99;
+    for (const part of boss.boss!.parts.values()) part.timer = 99;
+    const zone = sim.state.zones[0];
+    // Inside his reach but clear of his body, walking away from him.
+    p.x = p.px = zone.x - 110;
+    p.y = p.py = zone.y;
+    p.invulnerable = 0;
+    const before = p.health;
+    const x = p.x;
+    run(sim, 0.12, { moveX: -1, moveY: 0, ability: false });
+    expect(x - p.x).toBeLessThan(p.stats.moveSpeed * 0.12 * 0.8);
+    p.x = p.px = zone.x - 110;
+    run(sim, 1);
+    expect(p.health).toBe(before);
+    for (const t of parts(sim)) t.health = 0;
+    for (const t of parts(sim)) hitEnemy(sim.state, t, source(p.id), t.x, t.y);
+    run(sim, 0.1);
+    expect(damageTakenMultiplier(boss)).toBe(1);
+    expect(sim.state.zones).toHaveLength(0);
+  });
+
+  it('Boreas: a charge into a wall stops and dazes him', () => {
+    const { sim, boss } = withBoss('boreas');
+    sim.state.godMode = true;
+    sim.state.walls.push({ id: 999, x: boss.x - 60, y: boss.y, radius: 24, age: 1, left: 30 });
+    sim.state.collision.setDynamic(sim.state.walls);
+    boss.boss!.dash = { dx: -1, dy: 0, time: 1, speed: 900, damage: 10, hit: false };
+    run(sim, 0.2);
+    expect(boss.boss!.dash).toBeUndefined();
+    expect(boss.dazed).toBeGreaterThan(1.5);
+  });
+
+  it('Eros: his arrows guard him, and with both broken he is exposed', () => {
+    const { sim, boss, p } = withBoss('eros');
+    run(sim, 0.1);
+    expect(parts(sim)).toHaveLength(2);
+    expect(damageTakenMultiplier(boss)).toBeCloseTo(0.25);
+    for (const t of parts(sim)) t.health = 0;
+    for (const t of parts(sim)) hitEnemy(sim.state, t, source(p.id), t.x, t.y);
+    run(sim, 0.1);
+    expect(damageTakenMultiplier(boss)).toBeCloseTo(1.8);
+  });
+
+  it('Ladon: stays coiled near the middle, his heads striking but never hurt', () => {
+    const { sim, boss } = withBoss('ladon');
+    sim.state.godMode = true;
+    run(sim, 0.1);
+    // Three heads strike from the start; none is a monster a god could hurt.
+    expect([...boss.boss!.parts.values()].filter((h) => h.active)).toHaveLength(3);
+    expect(parts(sim)).toHaveLength(0);
+    const c = sim.state.arena.bossArena;
+    const p = sim.state.players[0];
+    p.x = p.px = c.x + 1200;
+    run(sim, 6);
+    expect(Math.hypot(boss.x - c.x, boss.y - c.y)).toBeLessThanOrEqual(171);
+  });
+});

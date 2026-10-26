@@ -49,6 +49,8 @@ export interface DriverSnapshot {
 export interface RunDriver {
   readonly index: ContentIndex;
   readonly realm: RealmDefinition;
+  /** The seasonal event the run carries (spec: seasonal-events / event runs and items). */
+  readonly eventId: string | undefined;
   readonly arena: ArenaData;
   readonly world: WorldFrame;
   /** Interpolation between every entity's previous and current position. */
@@ -112,6 +114,9 @@ export class LocalDriver implements RunDriver {
   }
   get realm(): RealmDefinition {
     return this.sim.state.realm;
+  }
+  get eventId(): string | undefined {
+    return this.sim.state.config.eventId;
   }
   get arena(): ArenaData {
     return this.sim.arena;

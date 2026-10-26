@@ -19,9 +19,37 @@ describe('seasonal events (spec: seasonal-events)', () => {
   });
 
   it('puts the Night of Hecate on at Halloween, and ends it on November 7', () => {
+    const hecate = CONTENT.events.find((e) => e.id === 'night_of_hecate')!;
     expect(eventOn(CONTENT, new Date(2026, 9, 31))?.id).toBe('night_of_hecate');
     expect(eventOn(CONTENT, new Date(2026, 6, 1))).toBeUndefined();
-    expect(eventEnds(CONTENT.events[0], new Date(2026, 9, 31)).getDate()).toBe(7);
+    expect(eventEnds(hecate, new Date(2026, 9, 31)).getDate()).toBe(7);
+  });
+
+  it('puts the winter events on over their holidays (spec: seasonal-events / the winter events)', () => {
+    const on = (month: number, day: number) => eventOn(CONTENT, new Date(2026, month - 1, day))?.id;
+    expect(on(12, 25)).toBe('longest_night');
+    expect(on(12, 31)).toBe('longest_night');
+    expect(on(1, 1)).toBe('longest_night');
+    expect(on(1, 20)).toBe('winds_of_boreas');
+    expect(on(2, 14)).toBe('festival_of_eros');
+    expect(on(3, 17)).toBe('apples_of_hesperides');
+    expect(on(3, 25)).toBeUndefined();
+  });
+
+  it('never runs two events on the same day', () => {
+    for (let day = 0; day < 366; day++) {
+      const date = new Date(2028, 0, 1 + day);
+      const on = CONTENT.events.filter((e) => inWindow(e.window, date)).map((e) => e.id);
+      expect(on.length, `${date.toDateString()}: ${on.join(', ')}`).toBeLessThanOrEqual(1);
+    }
+  });
+
+  it('gives every event its own realm, currency picture and shop', () => {
+    for (const event of CONTENT.events) {
+      expect(CONTENT.realms.filter((r) => r.event === event.id).length, event.id).toBe(1);
+      expect(event.currency.sprite, event.id).toBeTruthy();
+      expect(CONTENT.eventRewards.filter((r) => r.event === event.id).length).toBeGreaterThan(2);
+    }
   });
 
   it('obeys the admin switch, and offers the event realm first only while on', () => {

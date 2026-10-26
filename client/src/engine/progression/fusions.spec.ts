@@ -190,6 +190,19 @@ describe('event items (spec: seasonal-events / event items)', () => {
     expect(eventOffers('night_of_hecate')).toContain('hecates_torches');
     expect(eventOffers('night_of_hecate')).toContain('key_of_hecate');
   });
+
+  it('offers every event’s items only in its own runs', () => {
+    const outside = eventOffers();
+    for (const event of CONTENT.events) {
+      const items = [...CONTENT.weapons, ...CONTENT.relics].filter((i) => i.event === event.id);
+      expect(items.length, event.id).toBeGreaterThan(0);
+      const inside = eventOffers(event.id);
+      for (const item of items) {
+        expect(outside, item.id).not.toContain(item.id);
+        expect(inside, item.id).toContain(item.id);
+      }
+    }
+  });
 });
 
 describe('event currency (spec: seasonal-events / event currency)', () => {

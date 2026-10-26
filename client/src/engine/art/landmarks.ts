@@ -337,7 +337,237 @@ const hekataion: SpriteSpec = {
   },
 };
 
+/** The Starlit Wood: the cave of Nyx, a dark mouth in a snowy hill, stars hanging over it and frost at its lip. */
+const caveOfNyx: SpriteSpec = {
+  size: 270,
+  paint(g, s) {
+    shadow(g, s, 0.4, 0.22, 0.7);
+    // The hill: grey rock under snow, the cave mouth black and deep.
+    slab(
+      g,
+      [
+        s * 0.12,
+        s * 0.74,
+        s * 0.22,
+        s * 0.38,
+        s * 0.44,
+        s * 0.22,
+        s * 0.7,
+        s * 0.26,
+        s * 0.88,
+        s * 0.5,
+        s * 0.86,
+        s * 0.76,
+      ],
+      0x5a6274,
+      { outline: 3, contrast: 1.2 },
+    );
+    for (const [x, y, rx, ry] of [
+      [0.36, 0.3, 0.14, 0.06],
+      [0.62, 0.3, 0.12, 0.05],
+      [0.2, 0.48, 0.07, 0.04],
+      [0.8, 0.52, 0.06, 0.04],
+    ])
+      ellipse(g, s * x, s * y, s * rx, s * ry, 'rgba(236,242,255,0.92)');
+    ellipse(g, s * 0.5, s * 0.6, s * 0.17, s * 0.14, '#05060c', 'rgba(8,6,10,0.9)');
+    glow(g, s * 0.5, s * 0.6, s * 0.14, 0x4a5aa8, 0.5);
+    // Icicles on the lip, and her stars in the dark above.
+    for (let i = 0; i < 6; i++) {
+      const x = s * (0.37 + i * 0.052);
+      poly(
+        g,
+        [x - s * 0.012, s * 0.48, x, s * (0.53 + (i % 2) * 0.03), x + s * 0.012, s * 0.48],
+        '#d8ecff',
+      );
+    }
+    for (const [x, y, r] of [
+      [0.5, 0.08, 0.03],
+      [0.3, 0.14, 0.02],
+      [0.7, 0.12, 0.022],
+      [0.42, 0.04, 0.015],
+      [0.6, 0.02, 0.016],
+    ]) {
+      glow(g, s * x, s * y, s * r * 3, 0xb0c8ff, 0.8);
+      circle(g, s * x, s * y, s * r * 0.5, '#ffffff');
+    }
+    // Lamps left for her at the threshold.
+    for (const x of [0.34, 0.66]) {
+      glow(g, s * x, s * 0.76, s * 0.05, 0xffc860, 0.9);
+      circle(g, s * x, s * 0.76, s * 0.015, '#fff0b0');
+    }
+  },
+};
+
+/** The Peaks of Thrace: the ice throne of Boreas between two pillars of ice, a wind-carved crest at its back. */
+const iceThrone: SpriteSpec = {
+  size: 270,
+  paint(g, s) {
+    shadow(g, s, 0.38, 0.2, 0.74);
+    slab(
+      g,
+      [s * 0.24, s * 0.68, s * 0.76, s * 0.68, s * 0.8, s * 0.8, s * 0.2, s * 0.8],
+      0x8aa4c4,
+      {
+        outline: 2.5,
+      },
+    );
+    // The crest: shards of ice fanned out like a frozen gust.
+    for (let i = 0; i < 7; i++) {
+      const a = -Math.PI / 2 + (i - 3) * 0.32;
+      const tip = [s * 0.5 + Math.cos(a) * s * 0.4, s * 0.5 + Math.sin(a) * s * 0.4];
+      poly(
+        g,
+        [s * 0.46, s * 0.5, tip[0], tip[1], s * 0.54, s * 0.5],
+        i % 2 ? '#a8d0f0' : '#d0ecff',
+        'rgba(20,30,50,0.8)',
+        1.5,
+      );
+    }
+    // The seat and its arms.
+    slab(
+      g,
+      [s * 0.36, s * 0.42, s * 0.64, s * 0.42, s * 0.66, s * 0.68, s * 0.34, s * 0.68],
+      0xb8d8f0,
+      {
+        outline: 2.5,
+        contrast: 1.3,
+      },
+    );
+    slab(
+      g,
+      [s * 0.4, s * 0.52, s * 0.6, s * 0.52, s * 0.6, s * 0.62, s * 0.4, s * 0.62],
+      0x7a9ac0,
+      {
+        outline: 1.5,
+      },
+    );
+    // The pillars, each crowned with a frozen flame of pale light.
+    for (const x of [0.2, 0.8]) {
+      volume(g, s * x, s * 0.52, s * 0.06, s * 0.2, 0xc0e0f8, { contrast: 1.4 });
+      glow(g, s * x, s * 0.3, s * 0.08, 0xa8e0ff, 0.9);
+      poly(g, [s * (x - 0.03), s * 0.34, s * x, s * 0.22, s * (x + 0.03), s * 0.34], '#e8f8ff');
+    }
+    for (let i = 0; i < 5; i++)
+      line(
+        g,
+        [s * (0.38 + i * 0.06), s * 0.7, s * (0.4 + i * 0.06), s * 0.76],
+        'rgba(255,255,255,0.5)',
+        1,
+      );
+  },
+};
+
+/** The Garden of Aphrodite: the great scallop shell she rose in, half sunk in sea foam, a ring of roses round it. */
+const shellOfAphrodite: SpriteSpec = {
+  size: 270,
+  paint(g, s) {
+    shadow(g, s, 0.4, 0.22, 0.72);
+    // Foam round the base.
+    for (let i = 0; i < 14; i++) {
+      const a = (i / 14) * Math.PI * 2;
+      circle(
+        g,
+        s * 0.5 + Math.cos(a) * s * 0.34,
+        s * 0.66 + Math.sin(a) * s * 0.12,
+        s * 0.05,
+        'rgba(236,244,248,0.85)',
+      );
+    }
+    ellipse(g, s * 0.5, s * 0.66, s * 0.32, s * 0.1, '#6a9ab0', 'rgba(8,6,10,0.7)');
+    // The shell: ribs fanning from the hinge.
+    const hinge = [s * 0.5, s * 0.68];
+    for (let i = 0; i < 9; i++) {
+      const a0 = Math.PI + (i / 9) * Math.PI;
+      const a1 = Math.PI + ((i + 1) / 9) * Math.PI;
+      poly(
+        g,
+        [
+          hinge[0],
+          hinge[1],
+          hinge[0] + Math.cos(a0) * s * 0.34,
+          hinge[1] + Math.sin(a0) * s * 0.44,
+          hinge[0] + Math.cos((a0 + a1) / 2) * s * 0.37,
+          hinge[1] + Math.sin((a0 + a1) / 2) * s * 0.48,
+          hinge[0] + Math.cos(a1) * s * 0.34,
+          hinge[1] + Math.sin(a1) * s * 0.44,
+        ],
+        i % 2 ? '#f0d8cc' : '#e4c4b8',
+        'rgba(60,30,30,0.75)',
+        1.5,
+      );
+    }
+    volume(g, hinge[0], hinge[1], s * 0.06, s * 0.04, 0xd8b0a4, { outline: 1.5 });
+    glow(g, s * 0.5, s * 0.42, s * 0.2, 0xffd0e0, 0.4);
+    // Roses at the foot.
+    for (const [x, y] of [
+      [0.24, 0.8],
+      [0.36, 0.84],
+      [0.64, 0.84],
+      [0.76, 0.8],
+    ]) {
+      circle(g, s * x, s * y, s * 0.025, '#c8283e', 'rgba(60,10,20,0.8)', 1);
+      ellipse(g, s * (x + 0.02), s * (y + 0.02), s * 0.02, s * 0.01, '#3a6a2e');
+    }
+  },
+};
+
+/** The Garden of the Hesperides: Atlas on one knee, the sphere of the sky on his shoulders, its stars engraved. */
+const atlasHoldingSky: SpriteSpec = {
+  size: 290,
+  paint(g, s) {
+    shadow(g, s, 0.42, 0.22, 0.72);
+    slab(
+      g,
+      [s * 0.26, s * 0.72, s * 0.74, s * 0.72, s * 0.78, s * 0.84, s * 0.22, s * 0.84],
+      0x8a8270,
+      {
+        outline: 2.5,
+      },
+    );
+    // The kneeling Titan: a bent leg, the torso, both arms raised to the sphere.
+    volume(g, s * 0.4, s * 0.68, s * 0.1, s * 0.06, 0xa89878);
+    volume(g, s * 0.58, s * 0.66, s * 0.07, s * 0.08, 0xa08e70);
+    volume(g, s * 0.5, s * 0.56, s * 0.12, s * 0.13, 0xb4a484, { contrast: 1.3 });
+    line(g, [s * 0.4, s * 0.52, s * 0.34, s * 0.36], '#7a6a52', 12);
+    line(g, [s * 0.4, s * 0.52, s * 0.34, s * 0.36], '#b0a080', 8);
+    line(g, [s * 0.6, s * 0.52, s * 0.66, s * 0.36], '#7a6a52', 12);
+    line(g, [s * 0.6, s * 0.52, s * 0.66, s * 0.36], '#b0a080', 8);
+    volume(g, s * 0.5, s * 0.43, s * 0.05, s * 0.05, 0xb8a888);
+    // The sphere of the sky: a bronze globe with its circles and stars.
+    volume(g, s * 0.5, s * 0.24, s * 0.2, s * 0.18, 0x6a7a8a, { contrast: 1.4, outline: 3 });
+    g.beginPath();
+    g.ellipse(s * 0.5, s * 0.24, s * 0.2, s * 0.06, -0.3, 0, Math.PI * 2);
+    g.strokeStyle = '#d8b860';
+    g.lineWidth = 2;
+    g.stroke();
+    g.beginPath();
+    g.ellipse(s * 0.5, s * 0.24, s * 0.07, s * 0.18, 0.2, 0, Math.PI * 2);
+    g.stroke();
+    for (const [x, y] of [
+      [0.42, 0.16],
+      [0.56, 0.14],
+      [0.6, 0.28],
+      [0.38, 0.3],
+      [0.5, 0.33],
+    ]) {
+      glow(g, s * x, s * y, s * 0.025, 0xffe08a, 0.9);
+      circle(g, s * x, s * y, s * 0.008, '#fff4c0');
+    }
+    // Golden apples left at his feet.
+    for (const [x, y] of [
+      [0.32, 0.78],
+      [0.4, 0.8],
+      [0.66, 0.78],
+    ])
+      circle(g, s * x, s * y, s * 0.022, '#f2c030', 'rgba(60,40,0,0.8)', 1);
+  },
+};
+
 export const LANDMARKS: Readonly<Record<string, SpriteSpec>> = {
+  cave_of_nyx: caveOfNyx,
+  ice_throne: iceThrone,
+  shell_of_aphrodite: shellOfAphrodite,
+  atlas_holding_sky: atlasHoldingSky,
   fallen_colossus: fallenColossus,
   gates_of_hades: gatesOfHades,
   sunken_temple: sunkenTemple,

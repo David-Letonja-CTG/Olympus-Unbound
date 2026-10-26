@@ -56,6 +56,16 @@ function weatherConfig(w: Weather): Phaser.Types.GameObjects.Particles.ParticleE
         alpha: { start: 0.6, end: 0 },
         tint: w.color,
       };
+    // Flakes that drift down slowly and sway on the wind (spec: seasonal-events / the winter events).
+    case 'snow':
+      return {
+        lifespan: { min: 5000, max: 8000 },
+        speedX: drift,
+        speedY: { min: 28, max: 56 },
+        scale: { min: 0.1, max: 0.22 },
+        alpha: { start: 0.95, end: 0 },
+        tint: w.color,
+      };
     case 'dust':
       return {
         lifespan: { min: 4000, max: 7000 },
