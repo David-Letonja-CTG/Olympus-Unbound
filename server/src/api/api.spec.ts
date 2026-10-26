@@ -1,9 +1,11 @@
 import type { AddressInfo } from 'node:net';
 import { afterEach, describe, expect, it } from 'vitest';
 import WebSocket from 'ws';
+import { Difficulty } from '../application/difficulty.js';
 import { Leaderboards } from '../application/leaderboards.js';
 import { RateLimiter } from '../application/rate-limiter.js';
 import { CLOSE, RoomRelay } from '../application/room-relay.js';
+import { MemoryDifficultyStore } from '../infrastructure/memory-difficulty-store.js';
 import { MemoryScoreStore } from '../infrastructure/memory-score-store.js';
 import { FakeClock } from '../testing/fakes.js';
 import { buildApp, type AppOptions } from './app.js';
@@ -20,6 +22,7 @@ async function server(changes: Partial<AppOptions> = {}) {
   const relay = new RoomRelay(clock);
   const app = await buildApp({
     leaderboards: new Leaderboards(new MemoryScoreStore(clock), clock),
+    difficulty: new Difficulty(new MemoryDifficultyStore()),
     relay,
     scoreLimiter: new RateLimiter(30, 3_600_000, clock),
     allowedOrigins: '*',
@@ -110,6 +113,30 @@ describe('HTTP API (D21)', () => {
     expect((await app.inject({ method: 'POST', url: '/api/admin/scores/1/hide' })).statusCode).toBe(
       404,
     );
+  });
+
+  it('hands out the difficulty dial, and lets only the admin set it (spec: difficulty-dial)', async () => {
+    const { app } = await server({ adminToken: 'secret-token' });
+    const dial = { enemyHealth: 1, enemyDamage: 1, spawnRate: 1, realmGrowth: 1 };
+    expect((await app.inject('/api/difficulty')).json()).toEqual(dial);
+    const harder = { enemyHealth: 1.5, enemyDamage: 1.25, spawnRate: 1.2, realmGrowth: 1.3 };
+    const url = '/api/admin/difficulty';
+    expect((await app.inject({ method: 'POST', url, payload: harder })).statusCode).toBe(401);
+    const auth = { authorization: 'Bearer secret-token' };
+    const set = await app.inject({ method: 'POST', url, payload: harder, headers: auth });
+    expect(set.json()).toEqual(harder);
+    expect((await app.inject('/api/difficulty')).json()).toEqual(harder);
+    const tooHard = { ...harder, enemyHealth: 50 };
+    const refused = await app.inject({ method: 'POST', url, payload: tooHard, headers: auth });
+    expect(refused.statusCode).toBe(400);
+    expect((await app.inject('/api/difficulty')).json()).toEqual(harder);
+  });
+
+  it('has no dial setting without an admin token', async () => {
+    const { app } = await server();
+    const payload = { enemyHealth: 2, enemyDamage: 2, spawnRate: 2, realmGrowth: 2 };
+    const res = await app.inject({ method: 'POST', url: '/api/admin/difficulty', payload });
+    expect(res.statusCode).toBe(404);
   });
 
   it('allows the game site only, when origins are set', async () => {

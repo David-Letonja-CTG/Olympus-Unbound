@@ -1,3 +1,4 @@
+import { Difficulty } from '../../core/difficulty';
 import { signal } from '@angular/core';
 import { TestBed } from '@angular/core/testing';
 import { provideRouter, Router } from '@angular/router';
@@ -183,6 +184,21 @@ describe('PlayScreen', () => {
       modifiers: [],
     });
     expect(session.options?.debug).toBe(false);
+  });
+
+  it('starts the run with the difficulty dial (spec: difficulty-dial)', async () => {
+    const { session } = await setup(undefined, () =>
+      TestBed.inject(Difficulty).current.set({
+        enemyHealth: 1.5,
+        enemyDamage: 1,
+        spawnRate: 1.2,
+        realmGrowth: 1.3,
+      }),
+    );
+    expect(session.options?.run.rules).toMatchObject({
+      enemies: { health: 1.5, damage: 1, spawnRate: 1.2 },
+      realmGrowth: 1.3,
+    });
   });
 
   it("plays today's Daily Trial solo, by its twist (spec: daily-trial)", async () => {

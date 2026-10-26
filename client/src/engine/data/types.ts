@@ -987,6 +987,11 @@ export interface RunRules {
     readonly speed?: number;
     readonly spawnRate?: number;
   };
+  /**
+   * Extra growth per realm cleared on enemy and boss health and damage, compounding on top of
+   * `balance.endless` (spec: difficulty-dial); 1 adds none.
+   */
+  readonly realmGrowth?: number;
   /** The Director of Chaos starts encounters (default true); off for debugging and regression runs. */
   readonly director?: boolean;
 }

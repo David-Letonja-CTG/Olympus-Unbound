@@ -6,6 +6,12 @@
       "runtimeExecutable": "npm",
       "runtimeArgs": ["--prefix", "client", "start", "--", "--port", "4300"],
       "port": 4300
+    },
+    {
+      "name": "server",
+      "runtimeExecutable": "C:/Program Files/Git/bin/bash.exe",
+      "runtimeArgs": ["-c", "cd server && PORT=4330 ADMIN_TOKEN=local-test-token npm run serve"],
+      "port": 4330
     }
   ]
 }

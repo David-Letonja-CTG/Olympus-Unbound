@@ -35,6 +35,7 @@ check "the same run counts once" bash -c "curl -fsS -H 'content-type: applicatio
 check "the solo board lists it" bash -c "curl -fsS '$base/api/leaderboards/solo?limit=50' | grep -q 'Smoke Test'"
 check "an impossible run is refused" bash -c "[ \"\$(curl -s -o /dev/null -w '%{http_code}' -H 'content-type: application/json' -d '{\"board\":\"solo\"}' '$base/api/scores')\" = 400 ]"
 check "/api/rooms answers" bash -c "curl -fsS '$base/api/rooms?version=smoke' | grep -q '\"rooms\"'"
+check "/api/difficulty hands out the dial" bash -c "curl -fsS '$base/api/difficulty' | grep -q '\"realmGrowth\"'"
 check "/ serves the game" bash -c "curl -fsS '$base/' | grep -q '<app-root'"
 check "/play (deep link) serves the game" bash -c "curl -fsS '$base/play' | grep -q '<app-root'"
 check "a challenge link has its own page" bash -c "curl -fsS '$base/challenge?g=zeus' | grep -q '<app-root'"

@@ -39,7 +39,7 @@ describe.skipIf(!url)('PostgreSQL world boards (spec: world-leaderboards)', () =
   beforeAll(async () => {
     const admin = new pg.Client({ connectionString: url });
     await admin.connect();
-    await admin.query('drop table if exists scores, schema_migrations');
+    await admin.query('drop table if exists scores, settings, schema_migrations');
     await admin.end();
     store = await PostgresScoreStore.connect(url as string);
   });
@@ -74,5 +74,13 @@ describe.skipIf(!url)('PostgreSQL world boards (spec: world-leaderboards)', () =
     expect(await store.top({ board: 'daily', date: '2026-10-22', limit: 10 })).toEqual([]);
     expect(await store.hide('999999')).toBe(false);
     expect(await store.hide('not-an-id')).toBe(false);
+  });
+
+  it('keeps the difficulty dial, set again over the last (spec: difficulty-dial)', async () => {
+    expect(await store.getDifficulty()).toBeUndefined();
+    const dial = { enemyHealth: 1.5, enemyDamage: 1.25, spawnRate: 1, realmGrowth: 1.2 };
+    await store.setDifficulty(dial);
+    await store.setDifficulty({ ...dial, spawnRate: 1.4 });
+    expect(await store.getDifficulty()).toEqual({ ...dial, spawnRate: 1.4 });
   });
 });

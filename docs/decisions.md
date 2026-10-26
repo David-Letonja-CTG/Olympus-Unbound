@@ -189,3 +189,18 @@ The owner asked for a deterministic game master that makes runs reactive (`add-d
 - **Content:** encounters and boons are data over five reusable behaviors (D4); the lifecycle, eligibility and endings are the Director's alone.
 
 *Alternatives considered:* dynamic difficulty that scales enemy health or damage with performance (rejected: it punishes good play and hides the rules); a scripting language for events (rejected: five behaviors cover the specified encounters, and data with typed behaviors is checked by the compiler); a director on the server (rejected by D1/D21: the server runs no rules).
+
+## D23 — The difficulty dial: numbers from the server, rules in the browser (Accepted, 2026-10-26)
+
+The owner (2026-10-26) found later realms too easy and asked for a difficulty setting on the admin page that applies to **every player, live**. They chose this knowing it makes the server hand out game numbers, which D1 and D21 had kept out.
+
+- **The server:** keeps four multipliers (enemy health, enemy damage, spawn rate, extra growth per realm) and hands them to anyone. Only the admin token changes them.
+- **The games:** read the dial when the main menu opens and apply it to every run a solo player or room host starts. Every rule still runs in the browser (D1), and a room plays its host's dial (D16).
+- **Offline or without a server:** the last dial read is used, and without one the defaults (all 1). A run keeps the dial it started with, and replays stay deterministic (D5).
+
+*Alternatives considered:*
+- **A switch for this browser only, like the event switch:** rejected by the owner, who wants to tune for everyone without a release.
+- **Releases only:** every change would wait for a deploy.
+- **Dynamic difficulty from how a party plays:** rejected by D22.
+
+D1's "what it never does" stays true for rules and saves; D21's "what it does" gains the dial.

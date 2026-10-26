@@ -1,6 +1,7 @@
 import pg from 'pg';
 import type { Board, ScoreEntry } from '../domain/score.js';
-import type { BoardQuery, ScoreStore, StoredScore } from '../application/ports.js';
+import type { DifficultyDial } from '../domain/difficulty.js';
+import type { BoardQuery, DifficultyStore, ScoreStore, StoredScore } from '../application/ports.js';
 import { MIGRATIONS } from './migrations.js';
 
 interface ScoreRow {
@@ -22,8 +23,8 @@ interface ScoreRow {
   ended_at: Date;
 }
 
-/** World board entries in PostgreSQL (D21). */
-export class PostgresScoreStore implements ScoreStore {
+/** World board entries in PostgreSQL (D21), and the difficulty dial in the same database (D23). */
+export class PostgresScoreStore implements ScoreStore, DifficultyStore {
   private constructor(private readonly pool: pg.Pool) {}
 
   /** Connects and applies the migrations not applied yet. */
@@ -78,6 +79,21 @@ export class PostgresScoreStore implements ScoreStore {
     if (!/^\d{1,18}$/.test(id)) return false;
     const result = await this.pool.query('update scores set hidden = true where id = $1', [id]);
     return result.rowCount === 1;
+  }
+
+  async getDifficulty(): Promise<DifficultyDial | undefined> {
+    const result = await this.pool.query<{ value: DifficultyDial }>(
+      "select value from settings where key = 'difficulty'",
+    );
+    return result.rows[0]?.value;
+  }
+
+  async setDifficulty(dial: DifficultyDial): Promise<void> {
+    await this.pool.query(
+      `insert into settings (key, value) values ('difficulty', $1)
+       on conflict (key) do update set value = excluded.value, updated_at = now()`,
+      [JSON.stringify(dial)],
+    );
   }
 
   async ping(): Promise<void> {

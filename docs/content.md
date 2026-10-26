@@ -217,19 +217,21 @@ Same autopilot probe: Poseidon first ended runs earlier than Zeus (two at 02:11)
 
 Autopilot probe (6 seeds; adding her spear to the pool changes everyone's first offers, so gods are compared within one probe): Athena first ended runs earlier than Zeus (mean 173 s vs 217 s), so she gained 10 health (125 → 135) and her spear 4 damage (22 → 26); now mean 185 s, median ≈187 s against Zeus's median ≈172 s.
 
-## Balance notes (2026-10-23, endless runs)
+## Balance notes (2026-10-26, endless runs)
 
 `balance.endless`, per realm cleared (health and damage compound):
 
 | Factor | Value |
 |---|---|
-| Enemy health | ×3 |
-| Enemy damage | ×1.5 |
-| Spawn rate | +25% |
-| Enemies alive at once | +25% |
-| Boss health | ×2.4 |
-| Boss attack damage | ×1.5 |
+| Enemy health | ×3.5 (was ×3) |
+| Enemy damage | ×1.65 (was ×1.5) |
+| Spawn rate | +35% (was +25%) |
+| Enemies alive at once | +30% (was +25%) |
+| Boss health | ×2.8 (was ×2.4) |
+| Boss attack damage | ×1.65 (was ×1.5) |
 | Spawn timeline head start | 120 s, at most 180 s |
+
+Raised on 2026-10-26: the owner let a quick event run play itself after 10 minutes with a full build. On top of these, the **difficulty dial** (D23, admin page) multiplies enemy health, damage and spawn rate for every player, and its realm growth compounds once more per realm cleared.
 
 The owner found realm 2 far too easy. With the old +60% a fresh realm-2 enemy had less health than the last of realm 1 (its own ×1.84 growth). The headless bot (god mode) took 3000–4000 damage a minute at the end of realm 1 and 0–150 in realm 2. With these values it takes 30–1000 in realm 2 and 150–6500 in realm 3. Health growth must stay ≥ every realm's `scaling.max` (content validation).
 

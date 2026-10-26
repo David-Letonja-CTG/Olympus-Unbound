@@ -106,7 +106,7 @@ Nothing about the host stack is in this repository: the workflow reads it from G
 | `DEPLOY_SSH_KEY` | `production` secret | this repository's own deploy key, authorized for that user |
 | `DEPLOY_KNOWN_HOSTS` | `production` secret | the VM's SSH host keys (`ssh-keyscan`) |
 | `POSTGRES_PASSWORD` | `production` secret | the `olympus` role's password (12+ letters and digits). `install.sh` sets it on every deploy |
-| `ADMIN_TOKEN` | `production` secret | hides world board entries |
+| `ADMIN_TOKEN` | `production` secret | hides world board entries and sets the difficulty dial (the admin page asks for it) |
 
 `ALLOWED_ORIGINS` is set by the workflow to `https://<SERVER_ADDRESS>`: only the game's own site may call the server from a browser. Clients that are no browser send no origin and are let in.
 
@@ -142,6 +142,7 @@ Already done for this repository (2026-10-22); repeat it only for a fork or a ne
 
 - **Logs:** `ssh <deploy user>@<vm> 'cd ~/olympus && docker compose logs --tail 200 olympus-api'`
 - **Hide an entry:** `curl -X POST -H "Authorization: Bearer $ADMIN_TOKEN" https://olympus.138-2-144-201.sslip.io/api/admin/scores/<id>/hide`. The id is in `/api/leaderboards/<board>`.
+- **The difficulty dial** (D23): the admin page's *Difficulty for every player* saves it with `ADMIN_TOKEN`. A secret cannot be read back, so to use it, set one you know: `gh secret set ADMIN_TOKEN --env production --repo $repo` (type it), then redeploy (publish a release, or *Actions → Deploy → Run workflow*). From a shell: `curl -X POST -H "Authorization: Bearer $ADMIN_TOKEN" -H 'content-type: application/json' -d '{"enemyHealth":1.2,"enemyDamage":1.1,"spawnRate":1,"realmGrowth":1.15}' https://olympus.138-2-144-201.sslip.io/api/admin/difficulty`.
 - **Backups:** the host's daily backup dumps `olympus` with the other databases.
 - **Restore a backup:** `docker exec -i <project>-db-1 pg_restore -U <superuser> -d olympus --clean --if-exists < olympus-<time>.dump`
 - **Locally,** without a database: `cd server && npm run serve`. Or run the VM's setup against a stand-in host stack, as CI does:

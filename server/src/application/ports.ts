@@ -1,3 +1,4 @@
+import type { DifficultyDial } from '../domain/difficulty.js';
 import type { Board, ScoreEntry } from '../domain/score.js';
 
 /** Time, injected so rules are tested without waiting. */
@@ -29,4 +30,11 @@ export interface ScoreStore {
   top(query: BoardQuery): Promise<StoredScore[]>;
   /** Hides an entry from every board; false when there is none with that id. */
   hide(id: string): Promise<boolean>;
+}
+
+/** Where the difficulty dial is kept (spec: difficulty-dial); PostgreSQL in production. */
+export interface DifficultyStore {
+  /** The dial last set, or none yet. */
+  getDifficulty(): Promise<DifficultyDial | undefined>;
+  setDifficulty(dial: DifficultyDial): Promise<void>;
 }

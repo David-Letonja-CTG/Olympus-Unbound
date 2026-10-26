@@ -1,7 +1,9 @@
+import { Difficulty } from '../application/difficulty.js';
 import { Leaderboards } from '../application/leaderboards.js';
-import { systemClock, type ScoreStore } from '../application/ports.js';
+import { systemClock, type DifficultyStore, type ScoreStore } from '../application/ports.js';
 import { RateLimiter } from '../application/rate-limiter.js';
 import { RoomRelay } from '../application/room-relay.js';
+import { MemoryDifficultyStore } from '../infrastructure/memory-difficulty-store.js';
 import { MemoryScoreStore } from '../infrastructure/memory-score-store.js';
 import { PostgresScoreStore } from '../infrastructure/postgres-score-store.js';
 import { buildApp } from './app.js';
@@ -24,24 +26,28 @@ async function main(): Promise<void> {
   const trustProxy = env['TRUST_PROXY'] === '1';
 
   let store: ScoreStore;
+  let dials: DifficultyStore;
   let health: (() => Promise<void>) | undefined;
   let closeStore = async () => {};
   if (env['DATABASE_URL']) {
     const pg = await PostgresScoreStore.connect(env['DATABASE_URL']);
     store = pg;
+    dials = pg;
     health = () => pg.ping();
     closeStore = () => pg.close();
   } else {
     console.warn(
-      'No DATABASE_URL: world boards are kept in memory and lost when the server stops.',
+      'No DATABASE_URL: world boards and the difficulty dial are kept in memory and lost when the server stops.',
     );
     store = new MemoryScoreStore(systemClock);
+    dials = new MemoryDifficultyStore();
   }
 
   const relay = new RoomRelay(systemClock);
   const app = await buildApp({
     leaderboards: new Leaderboards(store, systemClock),
     relay,
+    difficulty: new Difficulty(dials),
     scoreLimiter: new RateLimiter(Number(env['SCORES_PER_HOUR'] ?? 30), 3_600_000, systemClock),
     allowedOrigins: origins.length ? origins : '*',
     adminToken: env['ADMIN_TOKEN'] || undefined,

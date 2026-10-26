@@ -44,15 +44,16 @@ export const BALANCE: BalanceConfig = {
     bossHealthPerPlayer: 0.9,
   },
   // Every realm cleared (spec: endless-run / difficulty by depth); tuned with autopilot runs (docs/content.md).
-  // Enemies ×3 health and ×1.5 damage, bosses ×2.4 and ×1.5, compounding; +25% spawns and
-  // room; the spawn timeline starts 120 s further in (at most 180 s). The owner found realm 2 far too easy (2026-10-23).
+  // Enemies ×3.5 health and ×1.65 damage, bosses ×2.8 and ×1.65, compounding; +35% spawns and
+  // +30% room; the spawn timeline starts 120 s further in (at most 180 s). The owner found realm 2 far too easy
+  // (2026-10-23), then later realms too easy with full builds (2026-10-26); the difficulty dial adds more on top.
   endless: {
-    enemyHealthGrowth: 3,
-    enemyDamageGrowth: 1.5,
-    bossHealthGrowth: 2.4,
-    bossDamageGrowth: 1.5,
-    spawnRatePerRealm: 0.25,
-    maxAlivePerRealm: 0.25,
+    enemyHealthGrowth: 3.5,
+    enemyDamageGrowth: 1.65,
+    bossHealthGrowth: 2.8,
+    bossDamageGrowth: 1.65,
+    spawnRatePerRealm: 0.35,
+    maxAlivePerRealm: 0.3,
     headStartPerRealm: 120,
     maxHeadStart: 180,
   },

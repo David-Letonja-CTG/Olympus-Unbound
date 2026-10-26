@@ -10,6 +10,7 @@ import { nextGoal } from '../../core/next-goal';
 import { Progression } from '../../core/progression';
 import { RunSetup } from '../../core/run-setup';
 import { SeasonalEvents } from '../../core/seasonal-events';
+import { Difficulty } from '../../core/difficulty';
 import { ItemIcon } from '../../shared/item-icon';
 
 @Component({
@@ -390,6 +391,11 @@ export class MainMenu {
   protected readonly events = inject(SeasonalEvents);
   private readonly setup = inject(RunSetup);
   private readonly router = inject(Router);
+
+  constructor() {
+    // The difficulty dial every run starts with, fresh from the game server (spec: difficulty-dial).
+    void inject(Difficulty).refresh();
+  }
 
   protected readonly daysText = computed(() => {
     const days = this.events.daysLeft();
