@@ -29,6 +29,10 @@ export type SoundCue =
   | 'gust'
   | 'heartstring'
   | 'apple'
+  | 'pipes'
+  | 'moonbow'
+  | 'sunray'
+  | 'stolenfire'
   // Hits and kills.
   | 'hit'
   | 'hitLightning'
@@ -303,6 +307,42 @@ export const CUES: Record<SoundCue, Cue> = {
     bus: 'weapon',
     gap: 70,
     voices: [o('sine', 160, 70, 0.18, 0.18), n(1800, 500, 0.14, 0.09, { delay: 0.02 })],
+  },
+  // Pipes of Pan: a shrill run of reed notes.
+  pipes: {
+    bus: 'weapon',
+    gap: 90,
+    voices: [
+      note(880, 0, 0.1, 0.05, 'square'),
+      note(1175, 0.06, 0.1, 0.045, 'square'),
+      note(1480, 0.12, 0.14, 0.04, 'square'),
+      n(3000, 2000, 0.2, 0.03, { filter: 'bandpass' }),
+    ],
+  },
+  // Moonbow of Artemis: a taut silver twang and the hiss of the arrow.
+  moonbow: {
+    bus: 'weapon',
+    gap: 70,
+    voices: [o('triangle', 520, 260, 0.1, 0.1), n(5000, 2500, 0.12, 0.05, { delay: 0.02 })],
+  },
+  // Rays of Apollo: a bright shimmering chord.
+  sunray: {
+    bus: 'weapon',
+    gap: 90,
+    voices: [
+      note(1046, 0, 0.18, 0.035, 'sine'),
+      note(1318, 0, 0.18, 0.03, 'sine'),
+      note(1568, 0.02, 0.2, 0.03, 'sine'),
+    ],
+  },
+  // Stolen Fire: a crackling leap of flame.
+  stolenfire: {
+    bus: 'weapon',
+    gap: 90,
+    voices: [
+      n(1200, 3000, 0.18, 0.1, { filter: 'bandpass', drive: 0.4 }),
+      o('sawtooth', 220, 110, 0.12, 0.04),
+    ],
   },
   // ------------------------------------------------------------------------------------------- hits and kills
   hit: {

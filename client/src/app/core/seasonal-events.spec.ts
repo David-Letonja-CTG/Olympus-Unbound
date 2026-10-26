@@ -21,7 +21,7 @@ describe('seasonal events (spec: seasonal-events)', () => {
   it('puts the Night of Hecate on at Halloween, and ends it on November 7', () => {
     const hecate = CONTENT.events.find((e) => e.id === 'night_of_hecate')!;
     expect(eventOn(CONTENT, new Date(2026, 9, 31))?.id).toBe('night_of_hecate');
-    expect(eventOn(CONTENT, new Date(2026, 6, 1))).toBeUndefined();
+    expect(eventOn(CONTENT, new Date(2026, 6, 20))).toBeUndefined();
     expect(eventEnds(hecate, new Date(2026, 9, 31)).getDate()).toBe(7);
   });
 
@@ -34,6 +34,15 @@ describe('seasonal events (spec: seasonal-events)', () => {
     expect(on(2, 14)).toBe('festival_of_eros');
     expect(on(3, 17)).toBe('apples_of_hesperides');
     expect(on(3, 25)).toBeUndefined();
+  });
+
+  it('puts the spring and summer events on over their holidays (spec: seasonal-events)', () => {
+    const on = (month: number, day: number) => eventOn(CONTENT, new Date(2026, month - 1, day))?.id;
+    expect(on(4, 1)).toBe('revels_of_pan');
+    expect(on(5, 1)).toBe('hunt_of_artemis');
+    expect(on(6, 21)).toBe('midsummer_of_apollo');
+    expect(on(7, 4)).toBe('theft_of_fire');
+    expect(on(7, 15)).toBeUndefined();
   });
 
   it('never runs two events on the same day', () => {

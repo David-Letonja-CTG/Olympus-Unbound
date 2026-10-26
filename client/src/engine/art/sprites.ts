@@ -663,6 +663,26 @@ const symbols: Record<string, Symbol> = {
     }
     poly(g, pts, c, '#fff', 1);
   },
+  pipes: (g, s, c) => {
+    // Seven reeds of falling length, bound with a cord.
+    for (let i = 0; i < 7; i++) {
+      const x = s * (0.25 + i * 0.085);
+      line(g, [x, s * 0.24, x, s * (0.78 - i * 0.05)], c, 2.6);
+    }
+    line(g, [s * 0.22, s * 0.36, s * 0.78, s * 0.36], '#5a3a1a', 2);
+  },
+  lyre: (g, s, c) => {
+    g.beginPath();
+    g.moveTo(s * 0.3, s * 0.2);
+    g.quadraticCurveTo(s * 0.22, s * 0.6, s * 0.4, s * 0.78);
+    g.lineTo(s * 0.6, s * 0.78);
+    g.quadraticCurveTo(s * 0.78, s * 0.6, s * 0.7, s * 0.2);
+    g.strokeStyle = c;
+    g.lineWidth = 3.5;
+    g.stroke();
+    line(g, [s * 0.3, s * 0.3, s * 0.7, s * 0.3], c, 3);
+    for (const x of [0.43, 0.5, 0.57]) line(g, [s * x, s * 0.3, s * x, s * 0.76], '#f4ecd0', 1);
+  },
   apple: (g, s, c) => {
     circle(g, s / 2, s * 0.56, s * 0.26, c, 'rgba(8,6,10,0.7)', 1.5);
     line(g, [s / 2, s * 0.32, s * 0.55, s * 0.2], '#5a3a1a', 2.5);
@@ -764,6 +784,14 @@ const ICONS: Record<string, [string, 'square' | 'round' | 'diamond' | 'hex', num
   girdle_of_aphrodite: ['heart', 'round', 0xff9ab8],
   apple_of_discord: ['apple', 'square', 0xffd34d],
   burden_of_atlas: ['orb', 'round', 0xd8c070],
+  pipes_of_pan: ['pipes', 'square', 0xc8a060],
+  reeds_of_syrinx: ['pipes', 'round', 0x9ab860],
+  moonbow_of_artemis: ['bow', 'square', 0xd8e4ff],
+  hide_of_the_boar: ['shield', 'round', 0x9a7a5a],
+  rays_of_apollo: ['burst', 'square', 0xffc84a],
+  lyre_of_apollo: ['lyre', 'round', 0xffd060],
+  stolen_fire: ['flame', 'square', 0xff8a3a],
+  fennel_stalk: ['javelin', 'round', 0xffa050],
   // Instant blessings (spec: run-progression / instant blessings).
   blessing_hermes: ['caduceus', 'round', 0x7fe8d0],
   icon_gold: ['coin', 'round', 0xffd34d],

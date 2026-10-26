@@ -563,7 +563,211 @@ const atlasHoldingSky: SpriteSpec = {
   },
 };
 
+/** The Woods of Arcadia: a herm of Pan on a mossy rock, horned and grinning, his pipes and offerings at its foot. */
+const shrineOfPan: SpriteSpec = {
+  size: 250,
+  paint(g, s) {
+    shadow(g, s, 0.38, 0.2, 0.72);
+    slab(
+      g,
+      [
+        s * 0.16,
+        s * 0.78,
+        s * 0.22,
+        s * 0.56,
+        s * 0.42,
+        s * 0.48,
+        s * 0.66,
+        s * 0.5,
+        s * 0.84,
+        s * 0.62,
+        s * 0.82,
+        s * 0.8,
+      ],
+      0x6a6a5a,
+      { outline: 3 },
+    );
+    for (const [x, y, r] of [
+      [0.28, 0.6, 0.06],
+      [0.72, 0.62, 0.05],
+      [0.5, 0.52, 0.05],
+    ])
+      circle(g, s * x, s * y, s * r, 'rgba(70,110,50,0.75)');
+    // The herm: a square pillar with Pan's bearded head and horns.
+    slab(
+      g,
+      [s * 0.43, s * 0.62, s * 0.57, s * 0.62, s * 0.56, s * 0.3, s * 0.44, s * 0.3],
+      0xb0a890,
+      {
+        outline: 2.5,
+      },
+    );
+    volume(g, s * 0.5, s * 0.24, s * 0.08, s * 0.08, 0xbcb49a, { contrast: 1.3 });
+    for (const side of [-1, 1])
+      line(
+        g,
+        [
+          s * (0.5 + side * 0.05),
+          s * 0.18,
+          s * (0.5 + side * 0.11),
+          s * 0.1,
+          s * (0.5 + side * 0.09),
+          s * 0.04,
+        ],
+        '#7a6a4a',
+        4,
+      );
+    poly(g, [s * 0.46, s * 0.28, s * 0.54, s * 0.28, s * 0.5, s * 0.36], '#8a8068');
+    // His pipes leaning on the pillar, and painted eggs and a garland left for him.
+    for (let i = 0; i < 6; i++)
+      line(
+        g,
+        [s * (0.6 + i * 0.022), s * 0.5, s * (0.6 + i * 0.022), s * (0.66 - i * 0.012)],
+        '#c8a060',
+        3,
+      );
+    for (const [x, c] of [
+      [0.36, '#d8384a'],
+      [0.42, '#4a8ad8'],
+      [0.62, '#f2d040'],
+    ] as const)
+      ellipse(g, s * x, s * 0.68, s * 0.022, s * 0.03, c, 'rgba(8,6,10,0.7)');
+    glow(g, s * 0.5, s * 0.66, s * 0.08, 0xffc070, 0.7);
+  },
+};
+
+/** The Forest of Calydon: Artemis' shrine, an altar crowned with a stag's antlers under a crescent moon. */
+const stagShrine: SpriteSpec = {
+  size: 250,
+  paint(g, s) {
+    shadow(g, s, 0.36, 0.2, 0.72);
+    slab(
+      g,
+      [s * 0.28, s * 0.66, s * 0.72, s * 0.66, s * 0.76, s * 0.8, s * 0.24, s * 0.8],
+      0x9a9ea8,
+      {
+        outline: 2.5,
+      },
+    );
+    slab(
+      g,
+      [s * 0.36, s * 0.46, s * 0.64, s * 0.46, s * 0.66, s * 0.66, s * 0.34, s * 0.66],
+      0xb8bcc8,
+      {
+        outline: 2.5,
+        contrast: 1.3,
+      },
+    );
+    // The antlers, branching up from the altar's top.
+    for (const side of [-1, 1]) {
+      const x = (f: number) => s * (0.5 + side * f);
+      line(g, [x(0.04), s * 0.46, x(0.14), s * 0.26, x(0.2), s * 0.1], '#d8c8a8', 5);
+      line(g, [x(0.1), s * 0.34, x(0.22), s * 0.3], '#d8c8a8', 4);
+      line(g, [x(0.15), s * 0.22, x(0.26), s * 0.16], '#d8c8a8', 3.5);
+    }
+    // The crescent moon above, and her bow laid on the altar.
+    glow(g, s * 0.5, s * 0.14, s * 0.1, 0xd8e8ff, 0.9);
+    circle(g, s * 0.5, s * 0.14, s * 0.06, '#eef4ff');
+    circle(g, s * 0.53, s * 0.12, s * 0.055, '#1a1e2a');
+    g.beginPath();
+    g.arc(s * 0.5, s * 0.66, s * 0.12, Math.PI * 1.15, Math.PI * 1.85);
+    g.strokeStyle = '#e0e4ec';
+    g.lineWidth = 3;
+    g.stroke();
+  },
+};
+
+/** The Slopes of Delphi: the golden tripod over the oracle's chasm, vapour rising, a laurel wreath on its rim. */
+const delphicTripod: SpriteSpec = {
+  size: 260,
+  paint(g, s) {
+    shadow(g, s, 0.38, 0.2, 0.74);
+    // The chasm in the rock.
+    ellipse(g, s * 0.5, s * 0.66, s * 0.3, s * 0.14, '#3a3428', 'rgba(8,6,10,0.85)');
+    ellipse(g, s * 0.5, s * 0.66, s * 0.2, s * 0.08, '#0c0a08');
+    glow(g, s * 0.5, s * 0.6, s * 0.2, 0xe8e0c0, 0.35);
+    // Three legs and the bowl.
+    for (const x of [0.32, 0.5, 0.68])
+      line(g, [s * x, s * 0.76, s * 0.5 + (s * x - s * 0.5) * 0.4, s * 0.4], '#a8803a', 5);
+    volume(g, s * 0.5, s * 0.38, s * 0.16, s * 0.07, 0xd8b050, { contrast: 1.4, outline: 2.5 });
+    ellipse(g, s * 0.5, s * 0.35, s * 0.12, s * 0.04, '#5a4018');
+    // Vapour from the chasm, and the laurel on the rim.
+    for (const [x, y, r] of [
+      [0.46, 0.26, 0.05],
+      [0.54, 0.2, 0.06],
+      [0.48, 0.13, 0.05],
+    ])
+      circle(g, s * x, s * y, s * r, 'rgba(232,226,210,0.4)');
+    for (let i = 0; i < 9; i++) {
+      const a = Math.PI + (i / 8) * Math.PI;
+      ellipse(
+        g,
+        s * 0.5 + Math.cos(a) * s * 0.15,
+        s * 0.38 + Math.sin(a) * s * 0.06,
+        s * 0.025,
+        s * 0.012,
+        '#5a8a32',
+      );
+    }
+  },
+};
+
+/** The Peaks of the Caucasus: Prometheus chained to his rock, a torch still burning in his reach. */
+const chainedTitan: SpriteSpec = {
+  size: 280,
+  paint(g, s) {
+    shadow(g, s, 0.42, 0.22, 0.72);
+    slab(
+      g,
+      [
+        s * 0.12,
+        s * 0.8,
+        s * 0.2,
+        s * 0.36,
+        s * 0.42,
+        s * 0.22,
+        s * 0.68,
+        s * 0.24,
+        s * 0.88,
+        s * 0.44,
+        s * 0.86,
+        s * 0.8,
+      ],
+      0x4a4440,
+      { outline: 3, contrast: 1.3 },
+    );
+    // The Titan, arms spread on the rock.
+    line(g, [s * 0.5, s * 0.46, s * 0.3, s * 0.36], '#6a5040', 12);
+    line(g, [s * 0.5, s * 0.46, s * 0.3, s * 0.36], '#b08a6a', 8);
+    line(g, [s * 0.5, s * 0.46, s * 0.7, s * 0.36], '#6a5040', 12);
+    line(g, [s * 0.5, s * 0.46, s * 0.7, s * 0.36], '#b08a6a', 8);
+    volume(g, s * 0.5, s * 0.52, s * 0.08, s * 0.12, 0xb8927a, { contrast: 1.3 });
+    volume(g, s * 0.5, s * 0.38, s * 0.05, s * 0.05, 0xc09a80);
+    // Chains to the rock at both wrists.
+    for (const x of [0.24, 0.76]) {
+      for (let i = 0; i < 4; i++)
+        circle(
+          g,
+          s * (x + (x < 0.5 ? -0.02 : 0.02) * i),
+          s * (0.34 - 0.02 * i),
+          s * 0.014,
+          'rgba(0,0,0,0)',
+          '#8a8a92',
+          2,
+        );
+    }
+    // The stolen fire, burning at his feet.
+    line(g, [s * 0.62, s * 0.74, s * 0.66, s * 0.62], '#5a3a22', 4);
+    glow(g, s * 0.66, s * 0.58, s * 0.1, 0xff8a2a, 0.95);
+    poly(g, [s * 0.63, s * 0.62, s * 0.66, s * 0.52, s * 0.69, s * 0.62], '#ffc060');
+  },
+};
+
 export const LANDMARKS: Readonly<Record<string, SpriteSpec>> = {
+  shrine_of_pan: shrineOfPan,
+  stag_shrine: stagShrine,
+  delphic_tripod: delphicTripod,
+  chained_titan: chainedTitan,
   cave_of_nyx: caveOfNyx,
   ice_throne: iceThrone,
   shell_of_aphrodite: shellOfAphrodite,

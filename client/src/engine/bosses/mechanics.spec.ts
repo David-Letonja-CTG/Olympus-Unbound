@@ -449,3 +449,52 @@ describe('the winter events’ bosses (spec: seasonal-events / the winter events
     expect(Math.hypot(boss.x - c.x, boss.y - c.y)).toBeLessThanOrEqual(171);
   });
 });
+
+describe('the spring and summer events’ bosses (spec: seasonal-events / the spring and summer events)', () => {
+  it('Pan: four echoes strike from round the arena and cannot be hurt', () => {
+    const { sim, boss } = withBoss('pan');
+    run(sim, 0.1);
+    expect([...boss.boss!.parts.values()].filter((e) => e.active)).toHaveLength(4);
+    expect(parts(sim)).toHaveLength(0);
+  });
+
+  it('the Calydonian Boar: a charge into a wall dazes it for 3 seconds', () => {
+    const { sim, boss } = withBoss('calydonian_boar');
+    sim.state.godMode = true;
+    sim.state.walls.push({ id: 999, x: boss.x - 70, y: boss.y, radius: 24, age: 1, left: 30 });
+    sim.state.collision.setDynamic(sim.state.walls);
+    boss.boss!.dash = { dx: -1, dy: 0, time: 1, speed: 940, damage: 10, hit: false };
+    run(sim, 0.2);
+    expect(boss.boss!.dash).toBeUndefined();
+    expect(boss.dazed).toBeGreaterThan(2.5);
+  });
+
+  it('Python: its coils draw a god toward its maw', () => {
+    const { sim, boss, p } = withBoss('python');
+    sim.state.godMode = true;
+    boss.boss!.attackIndex = 0;
+    boss.boss!.attackTimer = 0;
+    p.x = p.px = boss.x - 280;
+    p.y = p.py = boss.y;
+    sim.step(STEP, [NO_INPUT]);
+    expect(boss.boss!.current?.type).toBe('devour');
+    run(sim, 0.8);
+    expect(boss.x - p.x).toBeLessThan(280 - 80);
+  });
+
+  it('the Caucasian Eagle: three stolen fires guard it and burn the gods near them', () => {
+    const { sim, boss, p } = withBoss('caucasian_eagle');
+    run(sim, 0.1);
+    expect(parts(sim)).toHaveLength(3);
+    expect(damageTakenMultiplier(boss)).toBeCloseTo(0.4);
+    expect(sim.state.zones).toHaveLength(3);
+    boss.boss!.attackTimer = 99;
+    const zone = sim.state.zones[0];
+    p.x = p.px = zone.x + 60;
+    p.y = p.py = zone.y;
+    p.invulnerable = 0;
+    const before = p.health;
+    run(sim, 1.5);
+    expect(p.health).toBeLessThan(before);
+  });
+});
