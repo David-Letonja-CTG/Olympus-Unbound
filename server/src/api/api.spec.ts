@@ -132,6 +132,24 @@ describe('HTTP API (D21)', () => {
     expect((await app.inject('/api/difficulty')).json()).toEqual(harder);
   });
 
+  it('checks the admin page’s password against the token, a limited number of times (spec: run-statistics / admin mode)', async () => {
+    const clock = new FakeClock();
+    const { app } = await server({
+      adminToken: 'secret-token',
+      adminLimiter: new RateLimiter(3, 3_600_000, clock),
+    });
+    const check = (token: string) =>
+      app.inject({
+        method: 'POST',
+        url: '/api/admin/check',
+        headers: { authorization: `Bearer ${token}` },
+      });
+    expect((await check('secret-token')).statusCode).toBe(204);
+    expect((await check('not-the-token')).statusCode).toBe(401);
+    expect((await check('secret-tokeN')).statusCode).toBe(401);
+    expect((await check('secret-token')).statusCode).toBe(429);
+  });
+
   it('has no dial setting without an admin token', async () => {
     const { app } = await server();
     const payload = { enemyHealth: 2, enemyDamage: 2, spawnRate: 2, realmGrowth: 2 };

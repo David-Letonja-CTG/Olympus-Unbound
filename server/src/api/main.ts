@@ -51,6 +51,8 @@ async function main(): Promise<void> {
     scoreLimiter: new RateLimiter(Number(env['SCORES_PER_HOUR'] ?? 30), 3_600_000, systemClock),
     allowedOrigins: origins.length ? origins : '*',
     adminToken: env['ADMIN_TOKEN'] || undefined,
+    // Guessing the admin password: 60 tries an hour per address.
+    adminLimiter: new RateLimiter(60, 3_600_000, systemClock),
     trustProxy,
     health,
     logger: true,

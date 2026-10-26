@@ -114,11 +114,24 @@ test('admin mode shows statistics and plays a balance report', async ({ page }) 
   await expect(page.getByTestId('admin-totals')).toHaveCount(0);
   await page.getByTestId('admin-password').fill('not the password');
   await page.getByTestId('admin-unlock').click();
-  await expect(page.getByTestId('admin-wrong')).toBeVisible();
-  // The real password is not in the repository: stand in for a successful unlock of this tab's session.
-  await page.evaluate(() => sessionStorage.setItem('olympus-unbound/admin', '1'));
+  await expect(page.getByTestId('admin-wrong')).toHaveText('Wrong password.');
+  // The test server's admin password (playwright.config.ts): the one password unlocks the page and sets the dial.
+  await page.getByTestId('admin-password').fill('e2e-admin-token');
+  await page.getByTestId('admin-unlock').click();
+  await expect(page.getByTestId('admin-empty')).toBeVisible();
   await page.reload();
   await expect(page.getByTestId('admin-empty')).toBeVisible();
+  await page.getByTestId('dial-realmGrowth').fill('1.25');
+  await page.getByTestId('dial-save').click();
+  await expect(page.getByTestId('dial-status')).toContainText('Saved for everyone');
+  expect(
+    await (await page.request.get('http://localhost:4330/api/difficulty')).json(),
+  ).toMatchObject({
+    realmGrowth: 1.25,
+  });
+  await page.getByTestId('dial-reset').click();
+  await page.getByTestId('dial-save').click();
+  await expect(page.getByTestId('dial-status')).toContainText('realm growth ×1');
   for (const god of ['hades', 'poseidon', 'athena'])
     await page.getByTestId(`balance-god-${god}`).click();
   await page.getByTestId('balance-runs').fill('1');

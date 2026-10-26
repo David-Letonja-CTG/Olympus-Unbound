@@ -1,5 +1,6 @@
 import cors from '@fastify/cors';
-import Fastify, { type FastifyInstance } from 'fastify';
+import { timingSafeEqual } from 'node:crypto';
+import Fastify, { type FastifyInstance, type FastifyReply, type FastifyRequest } from 'fastify';
 import type { StoredScore } from '../application/ports.js';
 import type { Difficulty } from '../application/difficulty.js';
 import type { Leaderboards } from '../application/leaderboards.js';
@@ -17,8 +18,13 @@ export interface AppOptions {
   readonly scoreLimiter: RateLimiter;
   /** Origins allowed to call the API (the game's site); `'*'` for any (development). */
   readonly allowedOrigins: readonly string[] | '*';
-  /** Hides entries (spec: world-leaderboards / fair scores); no admin route without it. */
+  /**
+   * The admin's one password: hides entries (spec: world-leaderboards / fair scores), sets the difficulty dial and
+   * unlocks the admin page (spec: run-statistics / admin mode); no admin route without it.
+   */
   readonly adminToken?: string;
+  /** Admin attempts per address (spec: game-server / limits); none: unlimited (tests). */
+  readonly adminLimiter?: RateLimiter;
   /** Behind Caddy: the client's address comes from `X-Forwarded-For`. */
   readonly trustProxy?: boolean;
   /** Checks what the server depends on (the database) for `/health`. */
@@ -103,13 +109,32 @@ export async function buildApp(o: AppOptions): Promise<FastifyInstance> {
   });
 
   if (o.adminToken) {
-    const token = o.adminToken;
+    const expected = Buffer.from(`Bearer ${o.adminToken}`);
+    const limiter = o.adminLimiter;
+    /** The admin's token, compared in constant time; every attempt counts toward the address's limit. */
+    const admin = (req: FastifyRequest, reply: FastifyReply): boolean => {
+      if (limiter && !limiter.take(req.ip)) {
+        void reply.code(429).send({ code: 'too-many' });
+        return false;
+      }
+      const given = Buffer.from(req.headers.authorization ?? '');
+      if (given.length !== expected.length || !timingSafeEqual(given, expected)) {
+        void reply.code(401).send();
+        return false;
+      }
+      return true;
+    };
+    // The admin page's one password (spec: run-statistics / admin mode): is this the token?
+    app.post('/api/admin/check', async (req, reply) => {
+      if (!admin(req, reply)) return reply;
+      return reply.code(204).send();
+    });
     app.post<{ Params: { id: string } }>('/api/admin/scores/:id/hide', async (req, reply) => {
-      if (req.headers.authorization !== `Bearer ${token}`) return reply.code(401).send();
+      if (!admin(req, reply)) return reply;
       return reply.code((await o.leaderboards.hide(req.params.id)) ? 204 : 404).send();
     });
     app.post('/api/admin/difficulty', async (req, reply) => {
-      if (req.headers.authorization !== `Bearer ${token}`) return reply.code(401).send();
+      if (!admin(req, reply)) return reply;
       const result = await o.difficulty.set(req.body);
       if ('refusal' in result) return reply.code(400).send({ code: result.refusal });
       return result.dial;
