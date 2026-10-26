@@ -3,6 +3,7 @@ import {
   Component,
   computed,
   input,
+  output,
   ViewEncapsulation,
 } from '@angular/core';
 import {
@@ -143,6 +144,18 @@ export type HudLayout = 'frieze' | 'duo' | 'corners';
       <!-- By touch, the Power button shows the cooldown under the thumb (spec: phone-play / phone HUD). -->
       @if (!touch()) {
         <app-ability-slot class="solo-ability" [ability]="h.ability" [key]="keys.ability" />
+        <!-- The build panel by mouse; on a phone the play screen has its own button (spec: hud / the build panel). -->
+        <button
+          type="button"
+          class="solo-build"
+          data-testid="hud-build"
+          title="Your build: weapons, upgrades, fusions (Tab)"
+          aria-label="Your build (Tab)"
+          (click)="build.emit()"
+        >
+          <span aria-hidden="true">⬡</span>
+          <span class="key">Tab</span>
+        </button>
       }
       <div
         class="solo-stamina"
@@ -192,6 +205,8 @@ export class Hud {
   /** Every local player's controls, for the key labels. */
   readonly controls = input<readonly ControlScheme[]>();
   readonly announcements = input<readonly Announcement[]>([]);
+  /** The build button was clicked. */
+  readonly build = output<void>();
   /** Played by touch: the play screen's pause button sits in the top-left corner (spec: phone-play). */
   protected readonly touch = computed(() => this.controls()?.[0] === 'touch');
 

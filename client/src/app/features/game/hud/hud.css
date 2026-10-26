@@ -442,6 +442,13 @@ app-hud {
     bottom: 24px;
   }
 
+  /* Above the ability: the build panel by mouse (spec: hud / the build panel); its look is in hud-pieces.css. */
+  .solo-build {
+    position: absolute;
+    right: 192px;
+    bottom: 104px;
+  }
+
   .solo-stamina {
     position: absolute;
     right: 10px;
@@ -556,6 +563,12 @@ app-hud {
       right: 112px;
       bottom: 14px;
       zoom: 0.75;
+    }
+
+    .solo-build {
+      right: 118px;
+      bottom: 74px;
+      zoom: 0.8;
     }
 
     .surge {

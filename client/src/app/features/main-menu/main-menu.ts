@@ -80,7 +80,7 @@ import { ItemIcon } from '../../shared/item-icon';
       </p>
       <p class="hint keys-hint">
         WASD / arrows or gamepad to move · Shift to sprint · E to dash · Space to unleash your
-        ability · Esc to pause
+        ability · Tab for your build · Esc to pause
       </p>
       <!-- Installing and updating the game (spec: installable-app); never shown during a run. -->
       <div class="notices">

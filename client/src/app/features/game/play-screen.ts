@@ -102,6 +102,7 @@ declare global {
         [locals]="locals()"
         [controls]="controls"
         [announcements]="announcements()"
+        (build)="toggleBuild()"
       />
       @if (touch() && !paused() && !ended() && !choice()) {
         <button
