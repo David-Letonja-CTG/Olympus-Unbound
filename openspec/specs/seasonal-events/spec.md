@@ -1,7 +1,7 @@
 # seasonal-events Specification
 
 ## Purpose
-TBD - created by archiving change add-night-of-hecate. Update Purpose after archive.
+Timed events through the year: each runs on its dates (or by the admin switch), changes the realms with its own theme, and pays an event currency spent in its shop on lasting rewards such as skins.
 
 ## Requirements
 

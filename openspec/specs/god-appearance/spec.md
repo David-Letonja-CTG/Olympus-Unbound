@@ -1,7 +1,7 @@
 # god-appearance Specification
 
 ## Purpose
-TBD - created by archiving change dressed-gods. Update Purpose after archive.
+How a god looks in play: smooth animation with in-between frames and body language, the armour, weapon, evolutions and relics they carry drawn on the figure, and the skins and crowns a player earns.
 
 ## Requirements
 

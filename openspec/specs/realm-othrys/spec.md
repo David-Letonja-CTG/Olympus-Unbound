@@ -1,7 +1,7 @@
 # realm-othrys Specification
 
 ## Purpose
-TBD - created by archiving change add-mount-othrys. Update Purpose after archive.
+Mount Othrys, the Titans' realm at the end of the chain, with its own monsters and Kronos as its boss.
 
 ## Requirements
 
