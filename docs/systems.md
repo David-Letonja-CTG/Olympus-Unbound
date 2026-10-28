@@ -163,6 +163,10 @@ A run's `party` lists 1–4 seats (god, name, the player's own permanent upgrade
 - A boss part's `zone` with `dps` 0 only slows (Hypnos).
 - **Currency** (`EventDefinition.currency`): in a run with `eventId`, every kill drops a `token` pickup (drawn as `currency.sprite`: the driver hands the run's `eventId` to the view) by `chance` on the loot stream, elites `elite`, the boss `boss`; tokens are magnetic and add to `RunState.tokens` (`RunResult.tokens`). `applyRunResult` adds them to `save.eventTokens[eventId]` once. **Shop** (`eventRewards`): `modifiers` rewards join `permanentModifiers`; `unlock` rewards put their item in `RunConfig.unlocked` (a room uses its host's), so it may be offered in any run. **Event table:** `tableOf(r, content)` sends runs that started in an event realm to `highScores.event` (save v11); world boards count them by mode.
 
+## Looks — `engine/sim/look.ts`, `content/skins.ts` (spec: god-appearance)
+
+`playerLook(loadout)` derives what a god wears, never stored in the run. Armour look 1 at the armour's level 1, look 2 from level 2 and look 3 at its last level, tinted by that armour's colour. The held weapon is the highest-level weapon, and the first taken wins a tie. It glows when evolved. Up to `MAX_MOTES` (6) relic motes appear, one per relic. Skins are recolours of the god's body sheet, `skinnedSprite(sprite, skin)` → `<sprite>@<skin>`, unlocked by an achievement or bought as an event reward (`effect: skin`, 100 of the event's currency, one per event). Gear layers are not recoloured, so armour keeps its own colour on a skin. Crowns are drawn at the body sheet's per-frame head anchors (`content/heads.ts`). Skin and crown ride in `RunConfig`/`PartySeat`; snapshots (format 11) carry each player's look, skin and crown.
+
 ## Endless runs — `engine/sim/realms.ts`, `run-simulation.ts`
 
 | Rule | Value |
@@ -250,6 +254,8 @@ Deterministic from `(map config, seed)`: terrain bands from two-octave value noi
 Migrations: v0 (unversioned) → v1 renames nothing; v1 → v2 adds `introSeen: false`; a missing or invalid `quality` takes the detected default (`detectQuality`: software renderer → Low, ≥ 8 cores → High, else Medium).
 
 To change the save format: bump `SAVE_VERSION`, add `MIGRATIONS[oldVersion]`, extend `parseSave`, add tests for the old shape.
+
+**v12** (spec: meta-progression / save format version 12) adds `skins` (god → skin id, only a god's own known skins are kept) and `crowns` (god → `laurel` | `gold`); v11 → v12 adds them empty. `applyRunResult` crowns the run's god once per run ID from `RunResult.bossesDefeated`: `gold` when Kronos fell, else `laurel` for any boss, and a gold crown is never lowered.
 
 **v6** adds `settings.musicVolume` (default 0.5). **v5** adds `highScores.allies` and `bots` in score entries and run records (0 for older ones). **v4** (spec: meta-progression / save format version 4) adds `history` (last 100 `RunRecord`s), `highScores { solo, coop }` (10 each, best first), `achievements` (id → ISO date), `achievementProgress` (added-up goals), `achievementGods` (every-god goals) and `daily { date, progress, done }`; v3 → v4 adds them empty. Records are validated entry by entry (`save-records.ts`).
 
