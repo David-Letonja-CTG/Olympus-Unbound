@@ -1,7 +1,7 @@
 # difficulty-dial Specification
 
 ## Purpose
-TBD - created by archiving change add-difficulty-dial. Update Purpose after archive.
+One difficulty for every player, set by the admin on the game server and handed out with the world boards, scaling enemy health, damage, spawn rate and realm growth (D23).
 
 ## Requirements
 
