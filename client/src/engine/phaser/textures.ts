@@ -31,7 +31,7 @@ export function registerTextures(
   const add = (key: string, canvas: HTMLCanvasElement) => {
     if (!textures.exists(key)) textures.addCanvas(key, canvas);
   };
-  registerCodeDrawn(scene, [
+  registerCodeDrawn(scene, content.assets, [
     ...content.enemies.map((e) => e.visual),
     ...content.bosses.map((b) => b.visual),
     ...content.gods.map((g) => g.visual),

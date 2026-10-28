@@ -1,4 +1,5 @@
-import { AssetManifest, manifestPaths, walkRate } from './assets';
+import { CONTENT } from '../testing/content';
+import { AssetManifest, codeDrawnKey, manifestPaths, walkRate } from './assets';
 import { validateManifest } from './content-index';
 
 const licence = {
@@ -77,5 +78,20 @@ describe('walk rate', () => {
     expect(walkRate(0.8, 80, 1, 1)).toBe(0.2);
     expect(walkRate(0.8, undefined, 1, 100)).toBe(1);
     expect(walkRate(0.8, 80, 1, undefined)).toBe(1);
+  });
+});
+
+describe('code-drawn fallbacks', () => {
+  // spec: asset-pipeline / character sheets load with the run: a sheet loaded later must find its key free.
+  it('keep apart from the sheet a sprite is named after', () => {
+    const fileIds = new Set(CONTENT.assets.files.map((f) => f.id));
+    const sheetNamed = CONTENT.enemies.map((e) => e.visual.sprite).filter((k) => fileIds.has(k));
+    expect(sheetNamed).toContain('satyr');
+    for (const key of sheetNamed)
+      expect(fileIds.has(codeDrawnKey(CONTENT.assets, key))).toBe(false);
+  });
+
+  it('keep the sprite key when no sheet has that name', () => {
+    expect(codeDrawnKey(CONTENT.assets, 'crown_laurel')).toBe('crown_laurel');
   });
 });
