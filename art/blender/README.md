@@ -27,8 +27,19 @@ BLENDER=/path/to/blender FLARE_SOURCES=/path/to/sources node art/blender/render-
 BLENDER=/path/to/blender FLARE_SOURCES=/path/to/sources node art/blender/render-all.mjs zeus harpy # some
 ```
 
-Each character takes 1–3 minutes on a GPU. Then run `npm run assets:check` in `client/` and look at the result in
+Each character takes 2–6 minutes on a GPU. Then run `npm run assets:check` in `client/` and look at the result in
 a run (`?debug`, see `docs/content.md`).
+
+**In-between frames.** After every source frame the renderer adds a pose halfway to the next one: it blends the
+evaluated bone and object transforms, so it works the same for Flare's keyed actions and the creatures' baked
+constant-step poses. Source frame f lands at sheet frame 2f, and `run()` in `client/src/content/assets.ts` takes
+source frames and doubles them. A loop's last in-between leads back to its first frame: the loops are
+`LOOPS = [(1, 4), (5, 12)]` (idle, walk) unless a character script names its own (the Stymphalian bird has one
+flapping cycle, `[(1, 8)]`). `INBETWEEN=0` renders the source frames only.
+
+**Head anchors.** `anchors.json` (copied to `art/blender/anchors/<name>.json`) holds the top of the head per
+sheet frame, 0–1 from the frame's top left. It comes from the `HEAD` bone (default `Head`), and is `null` for
+models without one.
 
 ## Files
 

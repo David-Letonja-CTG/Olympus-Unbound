@@ -5,7 +5,7 @@ import { crusherReach } from '../sim/features';
 import { STEP } from '../sim/run-state';
 import { FramePlayer, WorldFrame } from '../sim/world-frame';
 import { WalkHold } from './walk-hold';
-import { applySprite, SpriteResolver } from './assets';
+import { applySprite, ResolvedSprite, SpriteResolver } from './assets';
 import { ATMOSPHERE_DEPTH, LightMap, QualityProfile } from './atmosphere';
 import { DETAIL_TEXTURE, SHADOW_TEXTURE, shade } from './textures';
 
@@ -21,6 +21,15 @@ const MERCHANT_ID = -1;
 /** Shifting walls are the Labyrinth's wall blocks; seconds they take to rise or sink. */
 const WALL_SPRITE = 'labyrinth_wall';
 const WALL_RISE = 0.3;
+
+/** The god's body language (spec: player-control / the god's body language): dash lean, its easing per frame,
+ * and the push of a blow in px at its start (`hurtFlash` starts at HURT_FLASH, combat/damage.ts). */
+const DASH_LEAN = 0.18;
+const LEAN_EASE = 0.25;
+const KNOCKBACK = 5;
+const HURT_FLASH = 0.25;
+/** Embers a boss in its last phase sheds at once. */
+const FINAL_EMBERS = 8;
 
 export const DEPTH = {
   ground: -40000,
@@ -130,9 +139,15 @@ export class WorldView {
     | 'pickup'
     | 'companion'
     | 'npc'
-    | 'wall',
+    | 'wall'
+    | 'glow'
+    | 'ember',
     SpritePool
   >;
+  /** Per god: the ability casts last seen and when the swing they started ends (spec: player-control / the god's body language). */
+  private readonly swings = new Map<number, { casts: number; until: number }>();
+  /** The dash lean, eased in and out, per god. */
+  private readonly leans = new Map<number, number>();
   private readonly staticLights: StaticLight[] = [];
   /** One static sprite per breakable prop, hidden once broken (spec: arena-generation / breakable props). */
   private readonly props: Phaser.GameObjects.Sprite[] = [];
@@ -172,7 +187,91 @@ export class WorldView {
       companion: pool(),
       npc: pool(),
       wall: pool(),
+      glow: pool(),
+      ember: pool('spark'),
     };
+  }
+
+  /**
+   * Whether the god is in the swing its ability started: a new cast (re)starts it from its first frame, and it
+   * lasts one play of the sheet's attack (spec: player-control / the god's body language).
+   */
+  private swing(
+    pl: FramePlayer,
+    r: ResolvedSprite,
+    sprite: Phaser.GameObjects.Sprite,
+    time: number,
+  ): boolean {
+    const seen = this.swings.get(pl.id);
+    const attack = r.animations.attack;
+    if (!seen) {
+      this.swings.set(pl.id, { casts: pl.casts, until: 0 });
+      return false;
+    }
+    if (seen.casts !== pl.casts) {
+      seen.casts = pl.casts;
+      if (attack) {
+        const anim = sprite.scene.anims.get(attack);
+        seen.until = time + (anim ? anim.duration : 0);
+        if (sprite.anims.currentAnim?.key === attack) sprite.anims.restart();
+      }
+    }
+    return attack !== undefined && time < seen.until;
+  }
+
+  /** Eases a god's lean towards `target` (radians). */
+  private lean(id: number, target: number): number {
+    const lean = (this.leans.get(id) ?? 0) * (1 - LEAN_EASE) + target * LEAN_EASE;
+    this.leans.set(id, lean);
+    return lean;
+  }
+
+  /**
+   * A boss in its last phase (spec: boss-encounter / the final phase shows): its figure glows through in embers as
+   * if cracked, its eyes burn and it sheds embers. Drawn over the figure, under the telegraphs' layer.
+   */
+  private finalPhase(
+    id: number,
+    sprite: Phaser.GameObjects.Sprite,
+    x: number,
+    y: number,
+    radius: number,
+    time: number,
+    lights: LightMap,
+  ): void {
+    const p = this.pools;
+    const pulse = 0.35 + 0.2 * Math.sin(time / 140 + id);
+    p.glow
+      .get(id)
+      .setTexture(sprite.texture.key, sprite.frame.name)
+      .setOrigin(sprite.originX, sprite.originY)
+      .setScale(sprite.scaleX, sprite.scaleY)
+      .setFlipX(sprite.flipX)
+      .setRotation(sprite.rotation)
+      .setPosition(sprite.x, sprite.y)
+      .setDepth(sprite.depth + 0.5)
+      .setTint(0xff5a1e)
+      .setTintMode(Phaser.TintModes.MULTIPLY)
+      .setBlendMode(Phaser.BlendModes.ADD)
+      .setAlpha(pulse);
+    // The eyes: a hot light at the top of the figure.
+    const top = sprite.y - sprite.displayHeight * sprite.originY * 0.62;
+    lights.add(sprite.x, top, 90, 0xff6a2a, 0.9, 3);
+    for (let i = 0; i < FINAL_EMBERS; i++) {
+      const life = (((time / 1400 + i / FINAL_EMBERS + (id % 7) * 0.13) % 1) + 1) % 1;
+      const angle = i * 2.4 + id;
+      p.ember
+        .get(id * FINAL_EMBERS + i)
+        .setPosition(
+          x + Math.cos(angle) * radius * (0.4 + life * 0.5),
+          y - radius * 0.6 - life * radius * 1.8,
+        )
+        .setDepth(sprite.depth + 1)
+        .setScale(0.35 * (1 - life))
+        .setTint(life < 0.5 ? 0xffb050 : 0xff5a1e)
+        .setBlendMode(Phaser.BlendModes.ADD)
+        .setAlpha(1 - life);
+    }
   }
 
   setQuality(profile: QualityProfile): void {
@@ -243,12 +342,23 @@ export class WorldView {
       const r = this.resolver.resolve(pl.god.visual.sprite);
       const sprite = p.player.get(pl.id);
       const speed = Math.hypot(pl.x - pl.px, pl.y - pl.py) / state.span;
-      applySprite(sprite, r, 1.15, pl.facingX < 0, moving ? 'walk' : 'idle', speed);
+      const swinging = this.swing(pl, r, sprite, time);
+      applySprite(
+        sprite,
+        r,
+        1.15,
+        pl.facingX < 0,
+        swinging ? 'attack' : moving ? 'walk' : 'idle',
+        speed,
+      );
       const bob = r.codeDrawn && moving ? Math.sin(time / 70) * 1.5 : 0;
+      // Drawing only: a lean into the dash and a push away from the last blow; the god's position is the rules'.
+      const lean = this.lean(pl.id, pl.dashTime > 0 ? pl.facingX * DASH_LEAN : 0);
+      const push = (pl.hurtFlash / HURT_FLASH) * KNOCKBACK;
       sprite
-        .setPosition(x, y - 6 + bob)
+        .setPosition(x + pl.hurtX * push, y - 6 + bob + pl.hurtY * push)
         .setDepth(DEPTH.player)
-        .setRotation(r.codeDrawn && moving ? pl.facingX * 0.05 : 0);
+        .setRotation((r.codeDrawn && moving ? pl.facingX * 0.05 : 0) + lean);
       sprite.setAlpha(pl.invulnerable > 0.4 && Math.floor(time / 80) % 2 === 0 ? 0.45 : 1);
       if (pl.hurtFlash > 0) sprite.setTint(0xff5555).setTintMode(multiply);
       else sprite.clearTint();
@@ -371,6 +481,7 @@ export class WorldView {
         );
       }
       if (s.burn > 0) lights.add(x, y, 70, 0xff8a3d, 0.45, 1);
+      if (e.boss?.final && !e.dead) this.finalPhase(e.id, sprite, x, y, e.radius, time, lights);
     }
 
     for (const pr of state.projectiles) {

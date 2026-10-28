@@ -90,14 +90,32 @@ function flareSheet(
   };
 }
 
-/** Frames `from`..`to` (inclusive) of a packed sheet. */
+/**
+ * Source frames `from`..`to` (inclusive) of a packed sheet. Every source frame is followed by an in-between in the
+ * sheet (art/blender/flare_render.py), so source frame f is sheet frame 2f: a loop takes the in-between after its
+ * last frame (back to its first), a one-shot ends on its last frame, and both play at twice `fps` so their timing
+ * is the source's (spec: asset-pipeline / character art).
+ */
 function run(from: number, to: number, fps: number, repeat = true): SpriteAnimation {
+  const last = 2 * to + (repeat ? 1 : 0);
+  return {
+    frames: Array.from({ length: last - 2 * from + 1 }, (_, i) => 2 * from + i),
+    fps: fps * 2,
+    ...(repeat ? {} : { repeat: false }),
+  };
+}
+
+/** Frames `from`..`to` of a sheet without in-betweens: Flare's own drawn packs (flareSheet). */
+function drawn(from: number, to: number, fps: number, repeat = true): SpriteAnimation {
   return {
     frames: Array.from({ length: to - from + 1 }, (_, i) => from + i),
     fps,
     ...(repeat ? {} : { repeat: false }),
   };
 }
+
+/** A source frame's index in a sheet with in-betweens (see `run`). */
+const still = (frame: number) => 2 * frame;
 
 /**
  * A character from a packed sheet. `scale` sizes the figure to the entity's gameplay radius (about 3.4 radii
@@ -116,12 +134,15 @@ function character(
   return { file, frame: 0, scale, originX, originY, faces: 'right', stride, animations };
 }
 
-/** Flare's humanoid layout: stance 0–3, run 4–11, swing 12–15, block 16–17, hit and die 18–23, cast, shoot. */
-const humanoid = (deathFrom = 18, deathTo = 23) => ({
-  idle: run(0, 3, 4),
-  walk: run(4, 11, 10),
-  attack: run(12, 15, 10, false),
-  death: run(deathFrom, deathTo, 10, false),
+/**
+ * Flare's humanoid layout: stance 0–3, run 4–11, swing 12–15, block 16–17, hit and die 18–23, cast, shoot.
+ * `frames` is `drawn` for Flare's own drawn packs, which have no in-betweens.
+ */
+const humanoid = (deathFrom = 18, deathTo = 23, frames = run) => ({
+  idle: frames(0, 3, 4),
+  walk: frames(4, 11, 10),
+  attack: frames(12, 15, 10, false),
+  death: frames(deathFrom, deathTo, 10, false),
 });
 
 /** The beasts' layout (wolf, serpent, crab): idle 0–3, walk 4–11, a fall 12–17. */
@@ -374,13 +395,13 @@ export const ASSETS: AssetManifest = {
   ],
   sprites: {
     // His portrait raises the storm sceptre (the cast frames).
-    zeus: { ...character('zeus', 1, 0.47, 0.72, 77, humanoid()), portrait: 26 },
+    zeus: { ...character('zeus', 1, 0.47, 0.72, 77, humanoid()), portrait: still(26) },
     // His portrait raises the bident (the cast frames).
-    hades: { ...character('hades', 1, 0.47, 0.72, 77, humanoid()), portrait: 26 },
+    hades: { ...character('hades', 1, 0.47, 0.72, 77, humanoid()), portrait: still(26) },
     // His portrait raises the trident (the cast frames).
-    poseidon: { ...character('poseidon', 1, 0.47, 0.72, 77, humanoid()), portrait: 26 },
+    poseidon: { ...character('poseidon', 1, 0.47, 0.72, 77, humanoid()), portrait: still(26) },
     // Her portrait raises the spear (the cast frames).
-    athena: { ...character('athena', 0.95, 0.5, 0.71, 74, humanoid()), portrait: 26 },
+    athena: { ...character('athena', 0.95, 0.5, 0.71, 74, humanoid()), portrait: still(26) },
     satyr: character('satyr', 1.06, 0.5, 0.71, 83, humanoid()),
     harpy: character('harpy', 0.92, 0.52, 0.7, 72, humanoid()),
     // Flies at body height: one wingbeat for idle and flight.
@@ -389,20 +410,20 @@ export const ASSETS: AssetManifest = {
       walk: run(0, 7, 12),
       death: run(8, 13, 10, false),
     }),
-    corrupted_hoplite: character('flare_skeleton', 1.1, 0.53, 0.71, 78, humanoid(22, 27)),
+    corrupted_hoplite: character('flare_skeleton', 1.1, 0.53, 0.71, 78, humanoid(22, 27, drawn)),
     centaur_archer: character('centaur_archer', 0.82, 0.5, 0.68, 74, {
       idle: run(0, 3, 4),
       walk: run(4, 11, 10),
       attack: run(12, 15, 10, false),
       death: run(18, 23, 10, false),
     }),
-    minotaur: character('flare_minotaur', 1, 0.52, 0.7, 100, humanoid()),
+    minotaur: character('flare_minotaur', 1, 0.52, 0.7, 100, humanoid(18, 23, drawn)),
     fallen_oracle: character('fallen_oracle', 1.04, 0.51, 0.71, 84, {
       ...humanoid(),
       attack: run(24, 27, 8, false),
     }),
     marble_sentinel: character('marble_sentinel', 1.73, 0.52, 0.71, 145, humanoid()),
-    cyclops: { ...character('cyclops', 1.6, 0.51, 0.62, 200, humanoid()), portrait: 25 },
+    cyclops: { ...character('cyclops', 1.6, 0.51, 0.62, 200, humanoid()), portrait: still(25) },
     // The intro's fallen defenders.
     ally_warrior: character('ally_warrior', 1, 0.5, 0.73, 77, humanoid()),
     ally_maiden: character('ally_maiden', 1, 0.5, 0.73, 77, humanoid()),
@@ -423,7 +444,7 @@ export const ASSETS: AssetManifest = {
         walk: run(4, 11, 10),
         death: run(12, 17, 10, false),
       }),
-      portrait: 0,
+      portrait: still(0),
     },
     // The Lernaean Marsh.
     swamp_serpent: character('swamp_serpent', 1, 0.5, 0.69, 50, {
@@ -444,18 +465,18 @@ export const ASSETS: AssetManifest = {
         walk: run(4, 11, 8),
         death: run(12, 17, 10, false),
       }),
-      portrait: 0,
+      portrait: still(0),
     },
     // The Aegean Shore.
     siren: character('siren', 0.95, 0.52, 0.71, 74, humanoid()),
     triton: character('triton', 1.05, 0.5, 0.72, 80, humanoid()),
     drowned_sailor: character('drowned_sailor', 1, 0.5, 0.73, 77, humanoid()),
-    scylla: { ...character('scylla', 1.6, 0.5, 0.74, 150, humanoid()), portrait: 26 },
+    scylla: { ...character('scylla', 1.6, 0.5, 0.74, 150, humanoid()), portrait: still(26) },
     // The Labyrinth of Crete.
     curete: character('curete', 1, 0.5, 0.73, 77, humanoid()),
     bronze_guardian: character('bronze_guardian', 1.3, 0.5, 0.73, 100, humanoid()),
     snake_priestess: character('snake_priestess', 1, 0.5, 0.72, 74, humanoid()),
-    asterion: { ...character('asterion', 1.7, 0.51, 0.62, 210, humanoid()), portrait: 25 },
+    asterion: { ...character('asterion', 1.7, 0.51, 0.62, 210, humanoid()), portrait: still(25) },
     // The Night of Hecate (spec: seasonal-events): the cast recoloured for the crossroads.
     restless_dead: { ...character('shade', 1, 0.5, 0.73, 77, humanoid()), recolor: 0xa8ffc8 },
     empusa: { ...character('lamia', 1, 0.5, 0.72, 70, humanoid()), recolor: 0xff8ad0 },
@@ -471,7 +492,7 @@ export const ASSETS: AssetManifest = {
     hecate: {
       ...character('snake_priestess', 2.3, 0.5, 0.72, 160, humanoid()),
       recolor: 0xd0c0ff,
-      portrait: 25,
+      portrait: still(25),
     },
     hecate_torch_bearer: {
       ...character('lampad', 0.85, 0.51, 0.71, 70, humanoid()),
@@ -495,7 +516,7 @@ export const ASSETS: AssetManifest = {
     kronos: {
       ...character('marble_sentinel', 2.9, 0.52, 0.71, 240, humanoid()),
       recolor: 0xd8a84a,
-      portrait: 25,
+      portrait: still(25),
     },
     // The winter events (spec: seasonal-events): the cast recoloured and rescaled for each realm (D15).
     // The Longest Night.
@@ -507,7 +528,7 @@ export const ASSETS: AssetManifest = {
     nyx: {
       ...character('siren', 2.3, 0.52, 0.71, 170, humanoid()),
       recolor: 0x8c84ff,
-      portrait: 26,
+      portrait: still(26),
     },
     hypnos: { ...character('siren', 1.05, 0.52, 0.71, 80, humanoid()), recolor: 0xc8d0ff },
     thanatos: { ...character('fury', 1.05, 0.52, 0.71, 80, humanoid()), recolor: 0x8a8a9a },
@@ -527,7 +548,7 @@ export const ASSETS: AssetManifest = {
     boreas: {
       ...character('zeus', 2.3, 0.47, 0.72, 175, humanoid()),
       recolor: 0xd0ecff,
-      portrait: 26,
+      portrait: still(26),
     },
     // The Festival of Eros.
     lovestruck_satyr: {
@@ -536,11 +557,14 @@ export const ASSETS: AssetManifest = {
     },
     erote: { ...character('siren', 0.8, 0.52, 0.71, 64, humanoid()), recolor: 0xffe0d0 },
     siren_of_paphos: { ...character('siren', 0.95, 0.52, 0.71, 74, humanoid()), recolor: 0xff9ac0 },
-    phobos: { ...character('flare_minotaur', 0.92, 0.52, 0.7, 92, humanoid()), recolor: 0xc8505e },
+    phobos: {
+      ...character('flare_minotaur', 0.92, 0.52, 0.7, 92, humanoid(18, 23, drawn)),
+      recolor: 0xc8505e,
+    },
     eros: {
       ...character('siren', 2.2, 0.52, 0.71, 165, humanoid()),
       recolor: 0xffd8e4,
-      portrait: 26,
+      portrait: still(26),
     },
     // The Golden Apples.
     golden_serpent: {
@@ -556,7 +580,7 @@ export const ASSETS: AssetManifest = {
     ladon: {
       ...character('hydra', 1.75, 0.51, 0.66, 124, beast(8)),
       recolor: 0xe0d860,
-      portrait: 0,
+      portrait: still(0),
     },
     // The spring and summer events (spec: seasonal-events).
     // The Revels of Pan.
@@ -570,7 +594,7 @@ export const ASSETS: AssetManifest = {
     pan: {
       ...character('satyr', 2.4, 0.5, 0.71, 185, humanoid()),
       recolor: 0xd8a070,
-      portrait: 25,
+      portrait: still(25),
     },
     // The Hunt of Artemis.
     curete_raider: { ...character('curete', 1, 0.5, 0.73, 77, humanoid()), recolor: 0xd8b898 },
@@ -591,7 +615,7 @@ export const ASSETS: AssetManifest = {
     calydonian_boar: {
       ...character('orthrus', 2.6, 0.5, 0.71, 180, beast(8)),
       recolor: 0x7a5a48,
-      portrait: 0,
+      portrait: still(0),
     },
     // Midsummer of Apollo.
     python_spawn: {
@@ -620,7 +644,7 @@ export const ASSETS: AssetManifest = {
     python: {
       ...character('swamp_serpent', 4, 0.5, 0.69, 200, beast(8)),
       recolor: 0xa0b050,
-      portrait: 0,
+      portrait: still(0),
     },
     // The Theft of Fire.
     ash_shade: { ...character('shade', 1, 0.5, 0.73, 77, humanoid()), recolor: 0xffb890 },
@@ -637,7 +661,7 @@ export const ASSETS: AssetManifest = {
         death: run(8, 13, 10, false),
       }),
       recolor: 0xd8a060,
-      portrait: 0,
+      portrait: still(0),
     },
     // The late summer and autumn events (spec: seasonal-events).
     // The Stars of Perseus.
@@ -660,7 +684,7 @@ export const ASSETS: AssetManifest = {
     medusa: {
       ...character('lamia', 2.4, 0.5, 0.72, 170, humanoid()),
       recolor: 0x9ae0a0,
-      portrait: 25,
+      portrait: still(25),
     },
     gorgon_sister: { ...character('lamia', 1.25, 0.5, 0.72, 88, humanoid()), recolor: 0x7ac890 },
     // The Vintage of Dionysus.
@@ -685,7 +709,7 @@ export const ASSETS: AssetManifest = {
     dionysus: {
       ...character('hades', 2.3, 0.47, 0.72, 175, humanoid()),
       recolor: 0xd8a0f0,
-      portrait: 26,
+      portrait: still(26),
     },
     // The Hunger of Erysichthon.
     famished_shade: { ...character('shade', 1, 0.5, 0.73, 77, humanoid()), recolor: 0xd8c890 },
@@ -708,7 +732,7 @@ export const ASSETS: AssetManifest = {
     erysichthon: {
       ...character('ally_warrior', 2.5, 0.5, 0.73, 190, humanoid()),
       recolor: 0xe0c898,
-      portrait: 25,
+      portrait: still(25),
     },
   },
 };

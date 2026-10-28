@@ -9,6 +9,7 @@ from mathutils import Vector
 from flare_lib import *
 
 FRAMES = '1-14'
+LOOPS = [(1, 8)]  # one flapping cycle serves as idle and walk
 for name in ('HumanMale', 'MaleHead1', 'MaleArm'):
     ob = D.objects.get(name)
     if ob:

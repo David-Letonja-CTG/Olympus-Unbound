@@ -25,7 +25,10 @@ export function useAbility(state: RunState, player: Player): boolean {
   if (!player.alive || player.abilityTimer > 0) return false;
   const ability = player.ability;
   const fired = WEAPON_BEHAVIORS[ability.def.behavior].fire({ state, player, weapon: ability });
-  if (fired) player.abilityTimer = ability.stats.cooldown;
+  if (fired) {
+    player.abilityTimer = ability.stats.cooldown;
+    player.casts = (player.casts + 1) & 255;
+  }
   return fired;
 }
 
@@ -126,7 +129,7 @@ export function updateHostileProjectiles(state: RunState, dt: number): void {
       if (!player.alive) continue;
       const reach = player.radius + p.radius;
       if ((player.x - p.x) ** 2 + (player.y - p.y) ** 2 <= reach * reach) {
-        damagePlayer(state, player, p.damage);
+        damagePlayer(state, player, p.damage, p.x, p.y);
         p.dead = true;
         break;
       }

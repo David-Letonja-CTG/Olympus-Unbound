@@ -192,7 +192,7 @@ function collectZones(state: RunState, rt: BossRuntime, dt: number): void {
       if ((p.x - z.x) ** 2 + (p.y - z.y) ** 2 > (z.radius + p.radius) ** 2) continue;
       // A zone without damage only slows (Hypnos, spec: seasonal-events / the longest night).
       if (tick && z.dps > 0)
-        damagePlayer(state, p, z.dps * ZONE_TICK * state.depthScale().bossDamage);
+        damagePlayer(state, p, z.dps * ZONE_TICK * state.depthScale().bossDamage, z.x, z.y);
       break;
     }
   }
