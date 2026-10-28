@@ -1,6 +1,11 @@
 import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@angular/core';
 import { RouterLink } from '@angular/router';
-import { GameContent, PermanentUpgradeDefinition } from '../../../engine';
+import {
+  GameContent,
+  PermanentUpgradeDefinition,
+  SkinDefinition,
+  skinnedSprite,
+} from '../../../engine';
 import { GAME_CONTENT } from '../../core/game-content';
 import { Progression } from '../../core/progression';
 import { SeasonalEvents } from '../../core/seasonal-events';
@@ -16,7 +21,21 @@ interface CodexItem {
   readonly tier?: string;
   /** A god's four looks, bare to fully armoured (spec: god-appearance / previews). */
   readonly looks?: readonly (readonly IconLayer[])[];
+  /** A god's skins, the default first; locked ones say how to get them (spec: god-appearance / skins). */
+  readonly skins?: readonly CodexSkin[];
 }
+
+interface CodexSkin {
+  readonly id: string;
+  readonly name: string;
+  readonly sprite: string;
+  readonly unlocked: boolean;
+  /** Its name, and how to unlock it while locked. */
+  readonly label: string;
+}
+
+/** What each armour look is, bare to the armour's last level. */
+const LOOK_NAMES = ['No armour', 'Armour level 1', 'Armour level 2', 'Armour at its last level'];
 
 interface CodexGroup {
   readonly title: string;
@@ -189,11 +208,35 @@ interface CodexGroup {
               @if (selected(); as item) {
                 @if (item.known) {
                   @if (item.looks) {
-                    <span class="looks" data-testid="codex-looks">
-                      @for (layers of item.looks; track $index) {
-                        <app-item-icon [sprite]="item.sprite" [layers]="layers" [size]="56" />
+                    <div class="looks">
+                      <span class="looks-label">Armour as it levels</span>
+                      <span class="looks-row" data-testid="codex-looks">
+                        @for (layers of item.looks; track $index) {
+                          <app-item-icon
+                            [sprite]="item.sprite"
+                            [layers]="layers"
+                            [size]="44"
+                            [label]="lookNames[$index]"
+                            [attr.title]="lookNames[$index]"
+                          />
+                        }
+                      </span>
+                      @if (item.skins) {
+                        <span class="looks-label">Skins</span>
+                        <span class="looks-row" data-testid="codex-skins">
+                          @for (skin of item.skins; track skin.id) {
+                            <app-item-icon
+                              [class.locked]="!skin.unlocked"
+                              [sprite]="skin.sprite"
+                              [size]="44"
+                              [label]="skin.label"
+                              [attr.title]="skin.label"
+                              [attr.data-testid]="'codex-skin-' + skin.id"
+                            />
+                          }
+                        </span>
                       }
-                    </span>
+                    </div>
                   } @else {
                     <app-item-icon [sprite]="item.sprite" [size]="56" />
                   }
@@ -387,8 +430,21 @@ interface CodexGroup {
       justify-content: center;
     }
     .looks {
-      display: inline-flex;
+      display: flex;
+      flex-direction: column;
       gap: 2px;
+    }
+    .looks-label {
+      font-size: 0.75rem;
+      color: var(--muted, #a89a7a);
+    }
+    .looks-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 2px;
+    }
+    .looks-row .locked {
+      filter: grayscale(1) brightness(0.45);
     }
     .codex-head {
       display: flex;
@@ -456,6 +512,14 @@ interface CodexGroup {
       padding: 10px 12px;
       border-top: 1px solid var(--line);
     }
+    /* Wraps instead of overflowing: a god's looks and skins beside a long description. */
+    .detail {
+      flex-wrap: wrap;
+    }
+    .detail > div {
+      flex: 1 1 180px;
+      min-width: 0;
+    }
     .detail p {
       margin: 4px 0 0;
     }
@@ -495,6 +559,16 @@ export class ProgressionScreen {
   );
   protected readonly tab = signal(0);
   private readonly events = inject(SeasonalEvents);
+  protected readonly lookNames = LOOK_NAMES;
+
+  /** How a locked skin is earned: its achievement, or the event whose shop sells it. */
+  private howToUnlock(skin: SkinDefinition): string {
+    const unlock = skin.unlock;
+    if ('achievement' in unlock)
+      return `earn ${this.content.achievements.find((a) => a.id === unlock.achievement)?.name ?? unlock.achievement}`;
+    const event = this.content.eventRewards.find((r) => r.id === unlock.eventReward)?.event;
+    return `buy it in the shop of ${this.content.events.find((e) => e.id === event)?.name ?? 'its event'}`;
+  }
 
   /** The event shops to show: the event on now, and any whose currency or rewards the player holds. */
   protected readonly shops = computed(() => {
@@ -552,6 +626,27 @@ export class ProgressionScreen {
               look ? [{ sprite: `armour_${g.figure?.body}_${look}`, tint: g.visual.color }] : [],
             )
           : undefined,
+        skins: [
+          {
+            id: 'default',
+            name: 'Default',
+            sprite: g.visual.sprite,
+            unlocked: true,
+            label: 'Default',
+          },
+          ...this.content.skins
+            .filter((k) => k.god === g.id)
+            .map((k) => {
+              const unlocked = this.progression.hasSkin(k);
+              return {
+                id: k.id,
+                name: k.name,
+                sprite: skinnedSprite(g.visual.sprite, k.id),
+                unlocked,
+                label: unlocked ? k.name : `${k.name} (locked: ${this.howToUnlock(k)})`,
+              };
+            }),
+        ],
       })),
       found: this.content.gods.length,
     };

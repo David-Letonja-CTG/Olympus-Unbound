@@ -257,6 +257,14 @@ describe('progression screen', () => {
     h.detectChanges();
     expect(q(h, '[data-testid=codex-detail]')?.textContent).toContain('Hades');
     expect(q(h, '[data-testid=codex-looks]')?.querySelectorAll('app-item-icon')).toHaveLength(4);
+    // The skins beside them, the default first; a fresh save has the others locked.
+    const skins = q(h, '[data-testid=codex-skins]')?.querySelectorAll('app-item-icon') ?? [];
+    expect(skins.length).toBe(5);
+    expect(skins[0].classList.contains('locked')).toBe(false);
+    expect([...skins].slice(1).every((s) => s.classList.contains('locked'))).toBe(true);
+    expect(q(h, '[data-testid=codex-skin-hades_shroud]')?.getAttribute('title')).toContain(
+      'shop of The Night of Hecate',
+    );
   });
 });
 
