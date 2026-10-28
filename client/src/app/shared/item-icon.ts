@@ -11,6 +11,12 @@ import {
 import { AssetManifest, recolorCanvas, spriteDataUrl } from '../../engine';
 import { GAME_CONTENT } from '../core/game-content';
 
+/** A layer of a portrait: another sheet's same frame, multiplied by `tint`. */
+export interface IconLayer {
+  readonly sprite: string;
+  readonly tint?: number;
+}
+
 /**
  * An item, god or enemy picture. Characters with a sprite sheet in the asset manifest (D12, D15) show a portrait
  * cut from their first frame; everything else, and any sheet still loading or failing, uses the engine's
@@ -48,10 +54,14 @@ export class ItemIcon {
   readonly sprite = input.required<string>();
   readonly size = input(40);
   readonly label = input('');
+  /** Gear layers drawn over the figure on the same frame, each tinted (spec: god-appearance / previews). */
+  readonly layers = input<readonly IconLayer[]>([]);
   private readonly assets = inject(GAME_CONTENT).assets;
   protected readonly url = computed(() => {
     const px = Math.round(this.size() * 2);
-    return portrait(this.assets, this.sprite(), px)() ?? spriteDataUrl(this.sprite(), px);
+    return (
+      portrait(this.assets, this.sprite(), px, this.layers())() ?? spriteDataUrl(this.sprite(), px)
+    );
   });
 }
 
@@ -79,11 +89,20 @@ const portraits = new Map<string, WritableSignal<string | undefined>>();
  * The first frame of a character's sheet, trimmed to the figure (its soft drop shadow left out) and fitted into a
  * `px` square with the feet at the bottom. Undefined until the sheet has loaded, and for non-sheet sprites.
  */
-function portrait(manifest: AssetManifest, key: string, px: number): Signal<string | undefined> {
+function portrait(
+  manifest: AssetManifest,
+  key: string,
+  px: number,
+  layers: readonly IconLayer[] = [],
+): Signal<string | undefined> {
   const asset = manifest.sprites[key];
   const file = asset && manifest.files.find((f) => f.id === asset.file);
   if (!asset || file?.type !== 'spritesheet' || !file.frameWidth || !file.frameHeight) return NONE;
-  const id = `${key}@${px}`;
+  const id = `${key}@${px}${layers.map((l) => `+${l.sprite}~${l.tint ?? ''}`).join('')}`;
+  const layerUrls = layers.map((l) => {
+    const sheet = manifest.sprites[l.sprite];
+    return { ...l, url: manifest.files.find((f) => f.id === sheet?.file)?.url };
+  });
   let result = portraits.get(id);
   if (result) return result;
   result = signal<string | undefined>(undefined);
@@ -91,7 +110,7 @@ function portrait(manifest: AssetManifest, key: string, px: number): Signal<stri
   const [fw, fh] = [file.frameWidth, file.frameHeight];
   const frame = Number(asset.portrait ?? asset.frame ?? 0);
   const image = new Image();
-  image.onload = () => {
+  image.onload = async () => {
     const canvas = document.createElement('canvas');
     canvas.width = fw;
     canvas.height = fh;
@@ -112,6 +131,29 @@ function portrait(manifest: AssetManifest, key: string, px: number): Signal<stri
     // A recoloured sheet's portrait wears its colour too (spec: asset-pipeline / recoloured sheets).
     const figure =
       asset.recolor === undefined ? canvas : recolorCanvas(canvas, fw, fh, asset.recolor);
+    // Gear layers on the same frame (a layer that fails to load is left out).
+    const fg = figure.getContext('2d');
+    for (const layer of layerUrls) {
+      const sheet = layer.url ? await loadImage(layer.url).catch(() => undefined) : undefined;
+      if (!sheet || !fg) continue;
+      const cut = document.createElement('canvas');
+      cut.width = fw;
+      cut.height = fh;
+      cut
+        .getContext('2d')
+        ?.drawImage(
+          sheet,
+          (frame % columns) * fw,
+          Math.floor(frame / columns) * fh,
+          fw,
+          fh,
+          0,
+          0,
+          fw,
+          fh,
+        );
+      fg.drawImage(layer.tint === undefined ? cut : recolorCanvas(cut, fw, fh, layer.tint), 0, 0);
+    }
     const { data } = g.getImageData(0, 0, fw, fh);
     let [left, top, right, bottom] = [fw, fh, -1, -1];
     for (let y = 0; y < fh; y++)
@@ -151,6 +193,15 @@ function portrait(manifest: AssetManifest, key: string, px: number): Signal<stri
   };
   image.src = file.url;
   return result;
+}
+
+function loadImage(url: string): Promise<HTMLImageElement> {
+  return new Promise((resolve, reject) => {
+    const image = new Image();
+    image.onload = () => resolve(image);
+    image.onerror = reject;
+    image.src = url;
+  });
 }
 
 export function formatTime(seconds: number): string {

@@ -51,6 +51,20 @@ models without one.
 | `measure_grip.py`                         | Measures how a weapon sits in the hand in its own file (the numbers in `flare_lib.py`)                                                                                                             |
 | `zeus.py` and the other character scripts | One character each; the header says what it is and which source it starts from                                                                                                                     |
 | `render-all.mjs`                          | Renders and packs every character                                                                                                                                                                  |
+| `gear.py`, `armour_layer.py`, `weapon_layer.py` | The gods' gear as layers (see below)                                                                                                                                                          |
+
+## The gods' gear (layers)
+
+In runs a god is drawn from three sheets on the same frame (spec: god-appearance):
+
+- **Body:** `<god>_body`, the god's own script with `EMPTY_HANDED=1`.
+- **Armour look:** `armour_<hero|heroine>_<1-3>`, rendered once per body type and in neutral grey. The game multiplies it by the worn armour's colour, so a new armour needs no rendering.
+- **Held weapon:** `weapon_<hero|heroine>_<weapon>`, rendered on Flare's own layer file for that kind of weapon (staff, longsword, longbow, wand, rod), where the weapon is already in the hand.
+
+In each layer the figure is a holdout without a shadow, so the layer covers only what the god does not.
+
+- **A new weapon:** a branch in `gear.weapon()`, an entry in `WEAPON_KINDS` (`render-all.mjs`), and its id in `GEAR_WEAPONS` (`client/src/content/assets.ts`). That means two renders.
+- **A new god on the hero or heroine:** its script ends with `if EMPTY_HANDED: drop_held(<weapon>)`, and its content names `figure: { sprite: '<god>_body', body }`.
 
 ## Frame layouts (packed sheets)
 

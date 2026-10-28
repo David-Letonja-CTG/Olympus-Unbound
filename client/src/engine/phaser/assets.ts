@@ -1,7 +1,7 @@
 import Phaser from 'phaser';
 import { recolorCanvas } from '../art/canvas';
 import { paintSprite, SPRITES } from '../art/sprites';
-import { AnimationName, AssetManifest, SpriteAsset, walkRate } from '../data/assets';
+import { AnimationName, AssetFile, AssetManifest, SpriteAsset, walkRate } from '../data/assets';
 
 /** Code-drawn sprites are painted at twice their display size and shown at half scale, for crisp edges. */
 export const ART_SCALE = 0.5;
@@ -31,23 +31,15 @@ export function queueAssets(
   scene: Phaser.Scene,
   manifest: AssetManifest,
   onProgress: (p: number) => void,
+  wanted: (file: AssetFile) => boolean = () => true,
 ): Set<string> {
   const failed = new Set<string>();
   const load = scene.load;
   // A restarted scene (a new realm) keeps its loader: drop the previous run of listeners.
   load.off(Phaser.Loader.Events.PROGRESS);
   load.off(Phaser.Loader.Events.FILE_LOAD_ERROR);
-  for (const file of manifest.files) {
-    if (scene.textures.exists(file.id)) continue;
-    if (file.type === 'image') load.image(file.id, file.url);
-    else if (file.type === 'atlas' && file.data) load.atlas(file.id, file.url, file.data);
-    else if (file.type === 'spritesheet') {
-      load.spritesheet(file.id, file.url, {
-        frameWidth: file.frameWidth ?? 0,
-        frameHeight: file.frameHeight ?? 0,
-      });
-    }
-  }
+  for (const file of manifest.files)
+    if (!scene.textures.exists(file.id) && wanted(file)) queueFile(load, file);
   load.on(Phaser.Loader.Events.PROGRESS, onProgress);
   load.on(Phaser.Loader.Events.FILE_LOAD_ERROR, (file: Phaser.Loader.File) => {
     if (failed.has(file.key)) return;
@@ -57,6 +49,17 @@ export function queueAssets(
     );
   });
   return failed;
+}
+
+function queueFile(load: Phaser.Loader.LoaderPlugin, file: AssetFile): void {
+  if (file.type === 'image') load.image(file.id, file.url);
+  else if (file.type === 'atlas' && file.data) load.atlas(file.id, file.url, file.data);
+  else if (file.type === 'spritesheet') {
+    load.spritesheet(file.id, file.url, {
+      frameWidth: file.frameWidth ?? 0,
+      frameHeight: file.frameHeight ?? 0,
+    });
+  }
 }
 
 /** Registers a code-drawn texture for every sprite key the game may ask for (the fallbacks). */
@@ -87,10 +90,29 @@ export class SpriteResolver {
     let resolved = this.cache.get(key);
     if (!resolved) {
       const asset = this.manifest.sprites[key];
+      // A sheet the run did not load up front: load it now and draw in code until it is in (runFiles).
+      if (asset && !this.failed.has(asset.file) && !this.scene.textures.exists(asset.file)) {
+        this.request(asset.file);
+        return this.codeDrawn(key);
+      }
       resolved = asset && this.usable(asset) ? this.fromAsset(key, asset) : this.codeDrawn(key);
       this.cache.set(key, resolved);
     }
     return resolved;
+  }
+
+  private readonly requested = new Set<string>();
+
+  private request(id: string): void {
+    if (this.requested.has(id)) return;
+    this.requested.add(id);
+    const file = this.manifest.files.find((f) => f.id === id);
+    if (!file) return;
+    const load = this.scene.load;
+    // The run is on: no loading progress to report any more.
+    load.off(Phaser.Loader.Events.PROGRESS);
+    queueFile(load, file);
+    if (!load.isLoading()) load.start();
   }
 
   private usable(asset: SpriteAsset): boolean {

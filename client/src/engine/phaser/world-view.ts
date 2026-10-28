@@ -3,7 +3,9 @@ import { ArenaData, ArenaFeature } from '../maps/generate-arena';
 import { Element, FeatureRule, LightSource, MapGenConfig } from '../data/types';
 import { crusherReach } from '../sim/features';
 import { STEP } from '../sim/run-state';
+import { MAX_MOTES, playerLook } from '../sim/look';
 import { FramePlayer, WorldFrame } from '../sim/world-frame';
+import { AnimationName } from '../data/assets';
 import { WalkHold } from './walk-hold';
 import { applySprite, ResolvedSprite, SpriteResolver } from './assets';
 import { ATMOSPHERE_DEPTH, LightMap, QualityProfile } from './atmosphere';
@@ -28,6 +30,9 @@ const DASH_LEAN = 0.18;
 const LEAN_EASE = 0.25;
 const KNOCKBACK = 5;
 const HURT_FLASH = 0.25;
+/** Frames in an evolved weapon's trail, and how long the column of light of a better look lasts (ms). */
+const TRAIL = 2;
+const COLUMN_MS = 800;
 /** Embers a boss in its last phase sheds at once. */
 const FINAL_EMBERS = 8;
 
@@ -141,11 +146,24 @@ export class WorldView {
     | 'npc'
     | 'wall'
     | 'glow'
-    | 'ember',
+    | 'ember'
+    | 'armour'
+    | 'weapon'
+    | 'weaponGlow'
+    | 'trail'
+    | 'mote'
+    | 'column',
     SpritePool
   >;
   /** Per god: the ability casts last seen and when the swing they started ends (spec: player-control / the god's body language). */
-  private readonly swings = new Map<number, { casts: number; until: number }>();
+  private readonly swings = new Map<
+    number,
+    { casts: number; until: number; pose: AnimationName }
+  >();
+  /** Per god: the look last drawn, when its column of light rose, and the weapon's last frames (its trail). */
+  private readonly looks = new Map<number, number>();
+  private readonly columns = new Map<number, number>();
+  private readonly trails = new Map<number, string[]>();
   /** The dash lean, eased in and out, per god. */
   private readonly leans = new Map<number, number>();
   private readonly staticLights: StaticLight[] = [];
@@ -189,6 +207,12 @@ export class WorldView {
       wall: pool(),
       glow: pool(),
       ember: pool('spark'),
+      armour: pool(),
+      weapon: pool(),
+      weaponGlow: pool(),
+      trail: pool(),
+      mote: pool('spark'),
+      column: pool('soft'),
     };
   }
 
@@ -201,22 +225,143 @@ export class WorldView {
     r: ResolvedSprite,
     sprite: Phaser.GameObjects.Sprite,
     time: number,
-  ): boolean {
+  ): AnimationName | undefined {
     const seen = this.swings.get(pl.id);
-    const attack = r.animations.attack;
     if (!seen) {
-      this.swings.set(pl.id, { casts: pl.casts, until: 0 });
-      return false;
+      this.swings.set(pl.id, { casts: pl.casts, until: 0, pose: 'attack' });
+      return undefined;
     }
     if (seen.casts !== pl.casts) {
       seen.casts = pl.casts;
-      if (attack) {
-        const anim = sprite.scene.anims.get(attack);
-        seen.until = time + (anim ? anim.duration : 0);
-        if (sprite.anims.currentAnim?.key === attack) sprite.anims.restart();
+      this.pose(seen, 'attack', r, sprite, time);
+    }
+    return time < seen.until ? seen.pose : undefined;
+  }
+
+  /** Starts a one-shot pose (the swing, the cast) from its first frame, when the sheet has it. */
+  private pose(
+    seen: { until: number; pose: AnimationName },
+    pose: AnimationName,
+    r: ResolvedSprite,
+    sprite: Phaser.GameObjects.Sprite,
+    time: number,
+  ): void {
+    const key = r.animations[pose];
+    if (!key) return;
+    const anim = sprite.scene.anims.get(key);
+    seen.until = time + (anim ? anim.duration : 0);
+    seen.pose = pose;
+    if (sprite.anims.currentAnim?.key === key) sprite.anims.restart();
+  }
+
+  /**
+   * The god's gear over its empty-handed figure (spec: god-appearance): the armour look tinted in the armour's
+   * colour, the strongest weapon (glowing and trailing once evolved), relic motes, and a column of light with the
+   * cast pose when the look rises. Layers take the figure's frame, so they move with it on every frame.
+   */
+  private gear(
+    pl: FramePlayer,
+    body: string,
+    r: ResolvedSprite,
+    sprite: Phaser.GameObjects.Sprite,
+    swinging: boolean,
+    time: number,
+    lights: LightMap,
+  ): void {
+    const g = pl.gear ?? (pl.loadout ? playerLook(pl.loadout) : undefined);
+    if (!g) return;
+    const p = this.pools;
+    const seen = this.looks.get(pl.id);
+    if (seen !== undefined && g.look > seen) {
+      this.columns.set(pl.id, time);
+      const swing = this.swings.get(pl.id);
+      if (swing) this.pose(swing, 'cast', r, sprite, time);
+    }
+    this.looks.set(pl.id, g.look);
+    if (g.look > 0)
+      this.layer(p.armour.get(pl.id), `armour_${body}_${g.look}`, sprite, 0.1)
+        ?.setTint(g.armourColor ?? 0xffffff)
+        .setTintMode(Phaser.TintModes.MULTIPLY);
+    const trail = this.trails.get(pl.id) ?? [];
+    this.trails.set(pl.id, trail);
+    if (g.weapon) {
+      const key = `weapon_${body}_${g.weapon}`;
+      const weapon = this.layer(p.weapon.get(pl.id), key, sprite, 0.2);
+      const glow = g.evolutionColor;
+      if (weapon && glow !== undefined) {
+        const pulse = 0.45 + 0.2 * Math.sin(time / 160 + pl.id);
+        this.layer(p.weaponGlow.get(pl.id), key, sprite, 0.3)
+          ?.setTint(glow)
+          .setTintMode(Phaser.TintModes.MULTIPLY)
+          .setBlendMode(Phaser.BlendModes.ADD)
+          .setAlpha(pulse);
+        // A short trail of the last frames while the god swings.
+        if (swinging)
+          trail.forEach((frame, k) =>
+            this.layer(p.trail.get(pl.id * TRAIL + k), key, sprite, 0.15)
+              ?.setFrame(frame)
+              .setTint(glow)
+              .setTintMode(Phaser.TintModes.MULTIPLY)
+              .setBlendMode(Phaser.BlendModes.ADD)
+              .setAlpha(0.2 + 0.15 * k),
+          );
+        lights.add(sprite.x, sprite.y - 20, 70, glow, 0.4, 2);
       }
     }
-    return attack !== undefined && time < seen.until;
+    trail.push(String(sprite.frame.name));
+    if (trail.length > TRAIL) trail.shift();
+    // Relic motes on a flat orbit, behind the god on its far side.
+    const n = g.relicColors.length;
+    for (let i = 0; i < n; i++) {
+      const a = time / 700 + (i * Math.PI * 2) / n + pl.id;
+      p.mote
+        .get(pl.id * MAX_MOTES + i)
+        .setPosition(sprite.x + Math.cos(a) * 20, sprite.y - 16 + Math.sin(a) * 7)
+        .setDepth(DEPTH.player + (Math.sin(a) > 0 ? 1 : -1))
+        .setScale(0.22)
+        .setTint(g.relicColors[i])
+        .setBlendMode(Phaser.BlendModes.ADD)
+        .setAlpha(0.9);
+    }
+    const since = time - (this.columns.get(pl.id) ?? -Infinity);
+    if (since < COLUMN_MS) {
+      const t = since / COLUMN_MS;
+      p.column
+        .get(pl.id)
+        .setPosition(sprite.x, sprite.y - 30)
+        .setDepth(DEPTH.player + 2)
+        .setScale(0.5 * (1 - t * 0.5), 3)
+        .setTint(0xffe9a8)
+        .setBlendMode(Phaser.BlendModes.ADD)
+        .setAlpha(1 - t);
+      lights.add(sprite.x, sprite.y, 200, 0xffe9a8, 1 - t, 4);
+    }
+  }
+
+  /** A gear layer drawn over `sprite` on its frame, or nothing while its sheet is not loaded. */
+  private layer(
+    target: Phaser.GameObjects.Sprite,
+    key: string,
+    sprite: Phaser.GameObjects.Sprite,
+    above: number,
+  ): Phaser.GameObjects.Sprite | undefined {
+    const r = this.resolver.resolve(key);
+    if (r.codeDrawn) {
+      target.setVisible(false);
+      return undefined;
+    }
+    return target
+      .setVisible(true)
+      .setTexture(r.texture, sprite.frame.name)
+      .setOrigin(sprite.originX, sprite.originY)
+      .setScale(sprite.scaleX, sprite.scaleY)
+      .setFlipX(sprite.flipX)
+      .setRotation(sprite.rotation)
+      .setPosition(sprite.x, sprite.y)
+      .setDepth(sprite.depth + above)
+      .setAlpha(sprite.alpha)
+      .clearTint()
+      .setBlendMode(Phaser.BlendModes.NORMAL);
   }
 
   /** Eases a god's lean towards `target` (radians). */
@@ -339,18 +484,14 @@ export class WorldView {
       const x = lerp(pl.px, pl.x, alpha);
       const y = lerp(pl.py, pl.y, alpha);
       const moving = pl.moving;
-      const r = this.resolver.resolve(pl.god.visual.sprite);
+      // The empty-handed figure with its gear once its sheet is in, else the god's armed sheet.
+      const figure = pl.god.figure;
+      const bare = figure && this.resolver.resolve(figure.sprite);
+      const r = bare && !bare.codeDrawn ? bare : this.resolver.resolve(pl.god.visual.sprite);
       const sprite = p.player.get(pl.id);
       const speed = Math.hypot(pl.x - pl.px, pl.y - pl.py) / state.span;
-      const swinging = this.swing(pl, r, sprite, time);
-      applySprite(
-        sprite,
-        r,
-        1.15,
-        pl.facingX < 0,
-        swinging ? 'attack' : moving ? 'walk' : 'idle',
-        speed,
-      );
+      const pose = this.swing(pl, r, sprite, time);
+      applySprite(sprite, r, 1.15, pl.facingX < 0, pose ?? (moving ? 'walk' : 'idle'), speed);
       const bob = r.codeDrawn && moving ? Math.sin(time / 70) * 1.5 : 0;
       // Drawing only: a lean into the dash and a push away from the last blow; the god's position is the rules'.
       const lean = this.lean(pl.id, pl.dashTime > 0 ? pl.facingX * DASH_LEAN : 0);
@@ -362,6 +503,8 @@ export class WorldView {
       sprite.setAlpha(pl.invulnerable > 0.4 && Math.floor(time / 80) % 2 === 0 ? 0.45 : 1);
       if (pl.hurtFlash > 0) sprite.setTint(0xff5555).setTintMode(multiply);
       else sprite.clearTint();
+      if (figure && r === bare)
+        this.gear(pl, figure.body, r, sprite, pose === 'attack', time, lights);
       p.ring
         .get(pl.id)
         .setPosition(x, y + 6)

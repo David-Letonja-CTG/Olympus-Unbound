@@ -5,7 +5,7 @@ Every player in a room SHALL see every god's look, held weapon, evolution glow, 
 
 #### Scenario: Guest sees the host's armour
 - **WHEN** the host's `zeus` wears `aegis_of_olympus` at its last level
-- **THEN** the guest sees Zeus in look 3, edged in gold
+- **THEN** the guest sees Zeus in look 3, the armour in the aegis's gold
 
 #### Scenario: The host sees a guest's skin
 - **WHEN** a guest plays `hades` in the `hades_shroud` skin with the laurel

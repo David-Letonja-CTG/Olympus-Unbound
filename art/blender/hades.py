@@ -44,3 +44,6 @@ with rest_pose():
 for ob in (beard, *crown):
     attach(ob, 'Head')
 fork_head(bident, 'BidentGlow', iron, prongs=2)  # the soul-fire gem glows between the prongs
+
+if EMPTY_HANDED:
+    drop_held(bident)

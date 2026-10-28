@@ -1,4 +1,5 @@
 import { bossAsEnemy } from '../bosses/boss';
+import { PlayerLook, playerLook } from '../sim/look';
 import { ContentIndex } from '../data/content-index';
 import { SNAPSHOT_FORMAT } from './protocol';
 import { Element, ELEMENTS, EnemyDefinition, GodDefinition } from '../data/types';
@@ -87,6 +88,10 @@ export interface SnapCompanion extends FrameCompanion {
   py: number;
 }
 
+/** No colour or no name in a look (colours are 24-bit, the name table has under 255 entries). */
+const NO_COLOR = 0xffffffff;
+const NO_NAME = 255;
+
 const FLAG = {
   alive: 1,
   moving: 2,
@@ -133,6 +138,9 @@ export function encodeSnapshot(state: RunState, phase: RunPhase, waiting = false
   };
   // Names first: the table precedes the entities.
   for (const p of state.players) name(p.god.id);
+  // Each god's look (spec: co-op / seeing each other's gear): derived here, drawn by the guest.
+  const looks = state.players.map((p) => playerLook(p.loadout));
+  for (const g of looks) if (g.weapon) name(g.weapon);
   for (const e of state.enemies) name(e.def.id);
   for (const p of state.projectiles) name(p.sprite);
   for (const h of state.hostileProjectiles) name(h.sprite);
@@ -169,7 +177,7 @@ export function encodeSnapshot(state: RunState, phase: RunPhase, waiting = false
 
   const staminaMax = state.balance.stamina.max;
   w.u16(state.players.length);
-  for (const p of state.players) {
+  for (const [i, p] of state.players.entries()) {
     w.u32(p.id);
     w.pos(p.x);
     w.pos(p.y);
@@ -187,6 +195,13 @@ export function encodeSnapshot(state: RunState, phase: RunPhase, waiting = false
     w.i8(Math.round(p.hurtX * 127));
     w.i8(Math.round(p.hurtY * 127));
     w.u8(p.casts);
+    const g = looks[i];
+    w.u8(g.look);
+    w.u32(g.armourColor ?? NO_COLOR);
+    w.u8(g.weapon === undefined ? NO_NAME : name(g.weapon));
+    w.u32(g.evolutionColor ?? NO_COLOR);
+    w.u8(g.relicColors.length);
+    for (const c of g.relicColors) w.u32(c);
     w.u8(timer(p.invulnerable));
     w.u8(Math.round(Math.max(0, Math.min(1, p.revive)) * 255));
     w.u8(Math.round(Math.max(0, Math.min(1, p.stamina / staminaMax)) * 255));
@@ -314,6 +329,23 @@ export function encodeSnapshot(state: RunState, phase: RunPhase, waiting = false
   return w.finish();
 }
 
+/** A god's look as written by encodeSnapshot. */
+function readLook(r: Reader, names: readonly string[]): PlayerLook {
+  const look = r.u8();
+  const armour = r.u32();
+  const weapon = r.u8();
+  const evolution = r.u32();
+  const relicColors: number[] = [];
+  for (let n = r.u8(); n > 0; n--) relicColors.push(r.u32());
+  return {
+    look,
+    armourColor: armour === NO_COLOR ? undefined : armour,
+    weapon: weapon === NO_NAME ? undefined : names[weapon],
+    evolutionColor: evolution === NO_COLOR ? undefined : evolution,
+    relicColors,
+  };
+}
+
 /** Decodes a snapshot; enemy and god IDs are resolved against the same content as the host's. */
 export function decodeSnapshot(buffer: ArrayBuffer, index: ContentIndex): Snapshot {
   const r = new Reader(buffer);
@@ -364,6 +396,7 @@ export function decodeSnapshot(buffer: ArrayBuffer, index: ContentIndex): Snapsh
       hurtX: r.i8() / 127,
       hurtY: r.i8() / 127,
       casts: r.u8(),
+      gear: readLook(r, names),
       // Only whether the god is dashing reaches a guest, for the lean the view draws.
       dashTime: (flags & FLAG.dashing) !== 0 ? 1 : 0,
       invulnerable: r.u8() / TIMER,

@@ -109,6 +109,12 @@ export interface GodDefinition {
   /** Elements this god favours; offers of matching items are weighted up. */
   readonly affinities: readonly Element[];
   readonly visual: Visual;
+  /**
+   * The figure drawn in runs (spec: god-appearance): an empty-handed sheet, and the body (`hero`, `heroine`) whose
+   * armour and weapon layers fit it (sprites `armour_<body>_<look>`, `weapon_<body>_<weapon>`). Without it the god
+   * is drawn from `visual` alone.
+   */
+  readonly figure?: { readonly sprite: string; readonly body: string };
 }
 
 // ---------------------------------------------------------------------------------------------------------------

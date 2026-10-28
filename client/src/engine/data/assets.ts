@@ -58,7 +58,7 @@ export interface AssetFile {
   readonly licence: AssetLicence;
 }
 
-export type AnimationName = 'idle' | 'walk' | 'attack' | 'death';
+export type AnimationName = 'idle' | 'walk' | 'attack' | 'cast' | 'death';
 
 export interface SpriteAnimation {
   /** Frame names (atlas) or indices (sprite sheet). */

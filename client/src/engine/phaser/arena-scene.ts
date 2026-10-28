@@ -7,6 +7,7 @@ import { ControlScheme, GameEvent, GameSettings } from '../session';
 import { RunDriver } from '../net/driver';
 import { SHARED_MARGIN, SHARED_ZOOM_OUT } from '../sim/shared-screen';
 import { HudSnapshot, SimEvent } from '../sim/types';
+import { runFiles } from '../data/run-files';
 import { queueAssets, SpriteResolver } from './assets';
 import { Atmosphere, LightMap, QUALITY, viewAround } from './atmosphere';
 import { Ambience } from './ambience';
@@ -73,8 +74,12 @@ export class ArenaScene extends Phaser.Scene {
   preload(): void {
     // External art first (spec: asset-pipeline / loading with progress); failures fall back to code-drawn art.
     const content = this.host.driver.index.content;
-    this.failedAssets = queueAssets(this, content.assets, (progress) =>
-      this.host.emit({ type: 'loadProgress', progress, stage: 'art' }),
+    const gods = this.host.driver.world.players.map((p) => p.god);
+    this.failedAssets = queueAssets(
+      this,
+      content.assets,
+      (progress) => this.host.emit({ type: 'loadProgress', progress, stage: 'art' }),
+      runFiles(content, this.host.driver.realm, gods),
     );
   }
 

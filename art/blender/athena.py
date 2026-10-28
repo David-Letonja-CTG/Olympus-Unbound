@@ -35,3 +35,6 @@ with rest_pose():
 for ob in (helm, plume):
     attach(ob, 'Head')
 fork_head(spear, 'SpearSocket', D.materials['SpearSocket'], prongs=1, spread=0.03, length=0.16)
+
+if EMPTY_HANDED:
+    drop_held(spear)

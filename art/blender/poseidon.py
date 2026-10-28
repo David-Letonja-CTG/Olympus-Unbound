@@ -47,3 +47,6 @@ with rest_pose():
 for ob in (beard, *crown):
     attach(ob, 'Head')
 fork_head(trident, 'SeaCrystal', D.materials['TridentGold'], prongs=3, spread=0.07, length=0.15)
+
+if EMPTY_HANDED:
+    drop_held(trident)

@@ -4,7 +4,7 @@ import { GameContent, PermanentUpgradeDefinition } from '../../../engine';
 import { GAME_CONTENT } from '../../core/game-content';
 import { Progression } from '../../core/progression';
 import { SeasonalEvents } from '../../core/seasonal-events';
-import { formatTime, ItemIcon } from '../../shared/item-icon';
+import { formatTime, IconLayer, ItemIcon } from '../../shared/item-icon';
 
 interface CodexItem {
   readonly id: string;
@@ -14,6 +14,8 @@ interface CodexItem {
   readonly known: boolean;
   /** A fusion's tier (spec: meta-progression / codex and statistics). */
   readonly tier?: string;
+  /** A god's four looks, bare to fully armoured (spec: god-appearance / previews). */
+  readonly looks?: readonly (readonly IconLayer[])[];
 }
 
 interface CodexGroup {
@@ -186,7 +188,15 @@ interface CodexGroup {
             <div class="detail" aria-live="polite" data-testid="codex-detail">
               @if (selected(); as item) {
                 @if (item.known) {
-                  <app-item-icon [sprite]="item.sprite" [size]="56" />
+                  @if (item.looks) {
+                    <span class="looks" data-testid="codex-looks">
+                      @for (layers of item.looks; track $index) {
+                        <app-item-icon [sprite]="item.sprite" [layers]="layers" [size]="56" />
+                      }
+                    </span>
+                  } @else {
+                    <app-item-icon [sprite]="item.sprite" [size]="56" />
+                  }
                   <div>
                     <strong>{{ item.name }}</strong>
                     @if (item.tier) {
@@ -376,6 +386,10 @@ interface CodexGroup {
       min-width: 86px;
       justify-content: center;
     }
+    .looks {
+      display: inline-flex;
+      gap: 2px;
+    }
     .codex-head {
       display: flex;
       align-items: center;
@@ -524,11 +538,29 @@ export class ProgressionScreen {
       }));
       return { title, items: list, found: list.filter((i) => i.known).length };
     };
+    // The gods are always known; their entry shows the four looks in the god's colour.
+    const gods: CodexGroup = {
+      title: 'Gods',
+      items: this.content.gods.map((g) => ({
+        id: g.id,
+        name: g.name,
+        description: g.description,
+        sprite: g.figure?.sprite ?? g.visual.sprite,
+        known: true,
+        looks: g.figure
+          ? [0, 1, 2, 3].map((look) =>
+              look ? [{ sprite: `armour_${g.figure?.body}_${look}`, tint: g.visual.color }] : [],
+            )
+          : undefined,
+      })),
+      found: this.content.gods.length,
+    };
     return [
       group('Weapons', this.content.weapons, d.weapons),
       group('Armour', this.content.armour, d.armour),
       group('Relics', this.content.relics, d.relics),
       group('Fusions', this.content.fusions, d.fusions),
+      gods,
     ];
   });
   protected readonly group = computed(() => this.codex()[this.tab()]);

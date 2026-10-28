@@ -1,7 +1,7 @@
 ## MODIFIED Requirements
 
 ### Requirement: Character art
-Every character the player sees (gods, enemies, bosses and cutscene actors) SHALL be drawn from an external sprite sheet with at least idle, walk and death animations, and all character sheets SHALL share one art source and render setup so the cast has one look. Every animation frame SHALL exist in its sheet, and the licence check SHALL fail otherwise. Sheets SHALL hold an in-between frame between each pair of the source animation's frames, and the animations SHALL play at twice the frame rate so their timing is unchanged. God sheets SHALL be rendered empty-handed, one sheet per look, with the weapons as separate layer sheets rendered on the same frames, and with the head's position recorded for every frame.
+Every character the player sees (gods, enemies, bosses and cutscene actors) SHALL be drawn from an external sprite sheet with at least idle, walk and death animations, and all character sheets SHALL share one art source and render setup so the cast has one look. Every animation frame SHALL exist in its sheet, and the licence check SHALL fail otherwise. Sheets SHALL hold an in-between frame between each pair of the source animation's frames, and the animations SHALL play at twice the frame rate so their timing is unchanged. A god's run figure SHALL be rendered empty-handed, with its armour looks and every weapon as separate layer sheets on the same frames for its body type, and the head's position SHALL be recorded for every frame.
 
 #### Scenario: Every character is animated
 - **WHEN** the content's gods, enemies, bosses and cutscene actors are checked against the manifest
@@ -20,8 +20,8 @@ Every character the player sees (gods, enemies, bosses and cutscene actors) SHAL
 - **THEN** `npm run assets:check` fails and names the layer
 
 #### Scenario: Missing look
-- **WHEN** a god has no sheet for one of its four looks
-- **THEN** `npm run assets:check` fails and names the god and the look
+- **WHEN** a god's body type has no layer sheet for one of the armour looks 1–3 or for one of the weapons
+- **THEN** `npm run assets:check` fails and names the missing layer
 
 ## ADDED Requirements
 

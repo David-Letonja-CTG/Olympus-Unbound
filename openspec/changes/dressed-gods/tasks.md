@@ -16,13 +16,13 @@
 
 ## 3. PR 2: gear on the god
 
-- [ ] 3.1 `flare_lib.py` gear kit (cuirass, helm crest, shoulder plates, cape, gilding); god scripts take `LOOK` and render empty-handed
-- [ ] 3.2 Trim layers for looks 1–3 (white, body as holdout); weapon layers per base body for the 10 weapons; render and pack
-- [ ] 3.3 Content: base body per god; look, trim and weapon sprite keys; credits and licence entries; the assets check fails on layers out of step and missing looks (unit tests)
-- [ ] 3.4 Engine `playerLook()` with unit tests: look thresholds, strongest weapon and ties, evolution, 7 relics → 6 colours, no armour, no weapon
-- [ ] 3.5 World view: three layers on one frame, trim tinted by armour colour, evolution glow and trail, relic motes, the column of light when the look rises (only on a rise)
-- [ ] 3.6 Snapshot: armour id and level, held weapon, evolution, relic ids; bump the protocol version; round-trip tests
-- [ ] 3.7 Run-loading loads the looks for the run's gods; fallback to a lower loaded look; the codex shows the four looks (component test)
+- [x] 3.1 Gear kit (`gear.py`: flared shoulder plates, crested helm, cuirass and strips, cape; ten weapons); god scripts render empty-handed with `EMPTY_HANDED`
+- [x] 3.2 Armour layers for looks 1–3 and weapon layers for the 10 weapons, per base body; render and pack
+- [x] 3.3 Content: base body per god; look, trim and weapon sprite keys; credits and licence entries; the assets check fails on layers out of step and missing looks (unit tests)
+- [x] 3.4 Engine `playerLook()` with unit tests: look thresholds, strongest weapon and ties, evolution, 7 relics → 6 colours, no armour, no weapon
+- [x] 3.5 World view: three layers on one frame, armour tinted by its colour, evolution glow and trail, relic motes, the column of light when the look rises (only on a rise)
+- [x] 3.6 Snapshot: each god's derived look (format 10); round-trip test
+- [x] 3.7 A run loads its gods' gear and its realm's monsters up front, the rest on first use; the codex's Gods tab shows the four looks
 - [ ] 3.8 Playtest at Low and High: readability above the light map (D13), the layers on every frame, both facings, co-op with two browsers
 - [ ] 3.9 Validate (group 5), PR, release notes
 

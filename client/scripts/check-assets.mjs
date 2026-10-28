@@ -83,6 +83,27 @@ for (const [key, sprite] of Object.entries(ASSETS.sprites)) {
     );
 }
 
+// The gods' gear (spec: asset-pipeline / character art): every body type has armour looks 1-3 and every weapon,
+// and the layers have the frames of the run figures they are drawn over.
+const gear = Object.keys(ASSETS.sprites)
+  .map((key) => /^(armour|weapon)_(hero|heroine)_(.+)$/.exec(key))
+  .filter(Boolean);
+const bodies = new Set(gear.map((m) => m[2]));
+const weapons = new Set(gear.filter((m) => m[1] === 'weapon').map((m) => m[3]));
+for (const body of bodies)
+  for (const layer of [
+    ...['1', '2', '3'].map((look) => `armour_${body}_${look}`),
+    ...[...weapons].map((weapon) => `weapon_${body}_${weapon}`),
+  ])
+    if (!ASSETS.sprites[layer]) errors.push(`${layer}: missing gear layer.`);
+const figures = Object.keys(ASSETS.sprites).filter((key) => key.endsWith('_body'));
+const figureFrames = frameCounts.get(ASSETS.sprites[figures[0]]?.file);
+for (const key of [...figures, ...gear.map((m) => m[0])]) {
+  const count = frameCounts.get(ASSETS.sprites[key].file);
+  if (count !== undefined && figureFrames !== undefined && count !== figureFrames)
+    errors.push(`${key}: ${count} frames, out of step with the run figures (${figureFrames}).`);
+}
+
 if (errors.length) {
   console.error(`Asset check failed:\n  ${errors.join('\n  ')}`);
   process.exit(1);
