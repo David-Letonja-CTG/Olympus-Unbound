@@ -6,12 +6,12 @@
 
 - [x] 2.1 `flare_render.py`: in-betweens blended from neighbouring poses; loops blend back to their first frame (`LOOPS`); one-shots use `2n − 1` frames
 - [x] 2.2 Export head anchors per frame into `art/blender/anchors/`
-- [ ] 2.3 Re-render the whole cast with `render-all.mjs`, then check every sheet and the loop seams in `/dev/art`
+- [x] 2.3 Re-render the whole cast with `render-all.mjs`, then check every sheet and the loop seams in `/dev/art`
 - [x] 2.4 `assets.ts`: doubled ranges and fps through `run()`, portraits through `still()`
 - [x] 2.5 Simulation: `hurtX/hurtY` from the blow's source, the `casts` counter, the boss's `final` flag; all in the snapshot (unit tests)
 - [x] 2.6 World view: the swing on the ability, dash lean, walk start, knockback offset
 - [x] 2.7 Boss last phase: glowing cracks, eyes at the anchor, embers; single-phase bosses under 25%
-- [ ] 2.8 Measure phone frame time and texture memory (`scripts/perf/phone.mjs`) against main; apply the Low fallback if needed
+- [x] 2.8 Measure phone frame time and texture memory (`scripts/perf/phone.mjs`) against main; apply the Low fallback if needed
 - [ ] 2.9 Validate (group 5), PR, release notes
 
 ## 3. PR 2: gear on the god
