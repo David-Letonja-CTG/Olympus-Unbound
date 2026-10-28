@@ -263,7 +263,7 @@ describe('progression screen', () => {
     expect(skins[0].classList.contains('locked')).toBe(false);
     expect([...skins].slice(1).every((s) => s.classList.contains('locked'))).toBe(true);
     expect(q(h, '[data-testid=codex-skin-hades_shroud]')?.getAttribute('title')).toContain(
-      'Night of Hecate shop',
+      'shop of The Night of Hecate',
     );
   });
 });

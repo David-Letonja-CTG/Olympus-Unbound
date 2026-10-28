@@ -567,7 +567,7 @@ export class ProgressionScreen {
     if ('achievement' in unlock)
       return `earn ${this.content.achievements.find((a) => a.id === unlock.achievement)?.name ?? unlock.achievement}`;
     const event = this.content.eventRewards.find((r) => r.id === unlock.eventReward)?.event;
-    return `buy it in the ${this.content.events.find((e) => e.id === event)?.name ?? 'event'} shop`;
+    return `buy it in the shop of ${this.content.events.find((e) => e.id === event)?.name ?? 'its event'}`;
   }
 
   /** The event shops to show: the event on now, and any whose currency or rewards the player holds. */
