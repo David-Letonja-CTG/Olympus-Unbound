@@ -130,3 +130,12 @@ export function manifestPaths(manifest: AssetManifest): string[] {
   }
   return paths;
 }
+
+/**
+ * The texture key of a sprite's code-drawn art. A sprite named like a sheet (`satyr`) keeps its fallback under
+ * another key: under the sheet's own key the fallback would pass for the loaded sheet, and a sheet loaded later
+ * (runFiles) could never take its place.
+ */
+export function codeDrawnKey(manifest: AssetManifest, key: string): string {
+  return manifest.files.some((f) => f.id === key) ? `${key}~code` : key;
+}

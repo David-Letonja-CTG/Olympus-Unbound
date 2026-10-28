@@ -1,7 +1,14 @@
 import Phaser from 'phaser';
 import { recolorCanvas } from '../art/canvas';
 import { paintSprite, SPRITES } from '../art/sprites';
-import { AnimationName, AssetFile, AssetManifest, SpriteAsset, walkRate } from '../data/assets';
+import {
+  AnimationName,
+  AssetFile,
+  AssetManifest,
+  codeDrawnKey,
+  SpriteAsset,
+  walkRate,
+} from '../data/assets';
 
 /** Code-drawn sprites are painted at twice their display size and shown at half scale, for crisp edges. */
 export const ART_SCALE = 0.5;
@@ -67,12 +74,14 @@ function queueFile(load: Phaser.Loader.LoaderPlugin, file: AssetFile): void {
 /** Registers a code-drawn texture for every sprite key the game may ask for (the fallbacks). */
 export function registerCodeDrawn(
   scene: Phaser.Scene,
+  manifest: AssetManifest,
   keys: Iterable<{ sprite: string; color: number }>,
 ): void {
   const add = (key: string, color: number) => {
-    if (scene.textures.exists(key)) return;
+    const texture = codeDrawnKey(manifest, key);
+    if (scene.textures.exists(texture)) return;
     const size = (SPRITES[key]?.size ?? 32) / ART_SCALE;
-    scene.textures.addCanvas(key, paintSprite(key, color, size));
+    scene.textures.addCanvas(texture, paintSprite(key, color, size));
   };
   for (const key of Object.keys(SPRITES)) add(key, 0xcccccc);
   for (const { sprite, color } of keys) add(sprite, color);
@@ -183,7 +192,7 @@ export class SpriteResolver {
 
   private codeDrawn(key: string): ResolvedSprite {
     return {
-      texture: key,
+      texture: codeDrawnKey(this.manifest, key),
       scale: ART_SCALE,
       originX: 0.5,
       originY: 0.5,
