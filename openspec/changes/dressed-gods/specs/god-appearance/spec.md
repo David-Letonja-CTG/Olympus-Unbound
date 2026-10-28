@@ -1,7 +1,7 @@
 ## ADDED Requirements
 
 ### Requirement: Armour looks
-Every playable god SHALL have four looks: bare (look 0) and three armoured looks (1–3), each with a clearly different outline at play size (for example, a cuirass, then a helm and shoulder plates, then gilded plate with a cape). In a run, a god's look SHALL follow the armour it wears: look 0 without armour, look 1 at armour level 1, look 2 from level 2, and look 3 at the armour's last level. The look SHALL be edged in the worn armour's colour. The look SHALL change nothing in the rules: not the hitbox, the stats, or what enemies target.
+Every playable god SHALL have four looks: bare (look 0) and three armoured looks (1–3), each with a clearly different outline at play size (for example, a cuirass, then a helm and shoulder plates, then gilded plate with a cape). In a run, a god's look SHALL follow the armour it wears: look 0 without armour, look 1 at armour level 1, look 2 from level 2, and look 3 at the armour's last level. The armour of the look SHALL be drawn in the worn armour's colour. The look SHALL change nothing in the rules: not the hitbox, the stats, or what enemies target.
 
 #### Scenario: Bare start
 - **WHEN** a run starts as `zeus` without armour
@@ -9,11 +9,11 @@ Every playable god SHALL have four looks: bare (look 0) and three armoured looks
 
 #### Scenario: Building the aegis
 - **WHEN** Zeus takes `aegis_of_olympus` and raises it to level 2, then to its last level, 3
-- **THEN** he is drawn in look 1, then look 2, then look 3, edged in the aegis's gold
+- **THEN** he is drawn in look 1, then look 2, then look 3, the armour in the aegis's gold
 
 #### Scenario: Another armour
 - **WHEN** `hades` wears `underworld_armour` at level 1
-- **THEN** he is drawn in his own look 1, edged in that armour's colour, not Zeus's look
+- **THEN** he is drawn in look 1, the armour in that armour's colour
 
 #### Scenario: Look does not touch the rules
 - **WHEN** the same seed is played twice, once with the looks drawn and once headless

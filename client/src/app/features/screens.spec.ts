@@ -248,6 +248,16 @@ describe('progression screen', () => {
     );
     expect(q(h, '[data-testid=codex-apotheosis]')?.getAttribute('data-known')).toBe('false');
   });
+
+  it('shows each god’s four looks (spec: god-appearance / previews)', async () => {
+    const h = await open('/progression', { version: 10 });
+    q<HTMLButtonElement>(h, '[data-testid=codex-tab-gods]')?.click();
+    h.detectChanges();
+    q<HTMLButtonElement>(h, '[data-testid=codex-hades]')?.click();
+    h.detectChanges();
+    expect(q(h, '[data-testid=codex-detail]')?.textContent).toContain('Hades');
+    expect(q(h, '[data-testid=codex-looks]')?.querySelectorAll('app-item-icon')).toHaveLength(4);
+  });
 });
 
 describe('settings screen', () => {

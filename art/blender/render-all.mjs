@@ -21,8 +21,21 @@ if (!sources || !blender) {
 }
 const HERO = "isometric_hero_heroine_blend/isometric_hero_blender";
 const HEROINE = "isometric_hero_heroine_blend/isometric_heroine_blender";
+/** Each weapon's Flare layer file: the weapon is already in the hand of a hidden figure there (gear.py). */
+const WEAPON_KINDS = {
+  thunder_spear: "staff",
+  divine_bow: "longbow",
+  trident: "staff",
+  lightning_orb: "wand",
+  war_hammer: "staff",
+  flaming_sword: "longsword",
+  thunderbolt: "rod",
+  soul_scythe: "staff",
+  bident: "staff",
+  spear_of_athena: "staff",
+};
 
-/** name -> [source .blend, character script, frame size in the packed sheet] */
+/** name -> [source .blend, character script, frame size in the packed sheet, extra environment] */
 const CHARACTERS = {
   zeus: [`${HERO}/clothes.blend`, "zeus.py", 128],
   hades: [`${HERO}/steel_armor.blend`, "hades.py", 128],
@@ -60,11 +73,36 @@ const CHARACTERS = {
   bronze_guardian: [`${HERO}/steel_armor.blend`, "bronze_guardian.py", 128],
   snake_priestess: [`${HEROINE}/clothes.blend`, "snake_priestess.py", 128],
   asterion: ["Troll.blend", "asterion.py", 256],
+  // The gods' gear (spec: god-appearance): empty-handed bodies, then armour looks and held weapons as layers
+  // drawn over every god of that body on the same frame (gear.py).
+  ...Object.fromEntries(
+    [
+      ["zeus", `${HERO}/clothes.blend`],
+      ["hades", `${HERO}/steel_armor.blend`],
+      ["poseidon", `${HERO}/clothes.blend`],
+      ["athena", `${HEROINE}/steel_armor.blend`],
+    ].map(([god, blend]) => [`${god}_body`, [blend, `${god}.py`, 128, { EMPTY_HANDED: "1" }]]),
+  ),
+  ...Object.fromEntries(
+    [
+      ["hero", HERO],
+      ["heroine", HEROINE],
+    ].flatMap(([body, dir]) => [
+      ...[1, 2, 3].map((look) => [
+        `armour_${body}_${look}`,
+        [`${dir}/clothes.blend`, "armour_layer.py", 128, { LOOK: String(look) }],
+      ]),
+      ...Object.entries(WEAPON_KINDS).map(([weapon, kind]) => [
+        `weapon_${body}_${weapon}`,
+        [`${dir}/${kind}.blend`, "weapon_layer.py", 128, { WEAPON: weapon }],
+      ]),
+    ]),
+  ),
 };
 
 mkdirSync(out, { recursive: true });
 const wanted = process.argv.slice(2);
-for (const [name, [blend, script, frame]] of Object.entries(CHARACTERS)) {
+for (const [name, [blend, script, frame, extra]] of Object.entries(CHARACTERS)) {
   if (wanted.length && !wanted.includes(name)) continue;
   const frames = join(tmpdir(), "olympus-render", name);
   rmSync(frames, { recursive: true, force: true });
@@ -82,7 +120,7 @@ for (const [name, [blend, script, frame]] of Object.entries(CHARACTERS)) {
     ],
     {
       stdio: ["ignore", "ignore", "inherit"],
-      env: { ...process.env, FLARE_SOURCES: sources },
+      env: { ...process.env, FLARE_SOURCES: sources, ...extra },
     },
   );
   const files = readdirSync(frames)

@@ -218,8 +218,55 @@ const SOUNDS: AssetFile[] = [
   ...['thunder_clap', 'thunder_roll'].map((name) => sound('thunder', name, 'wav', RAIN_THUNDER)),
 ];
 
+/** The gods' gear (spec: god-appearance, art/blender/gear.py): bodies, armour looks and held weapons. */
+const GEAR_BODIES = ['hero', 'heroine'] as const;
+const GEAR_WEAPONS = [
+  'thunder_spear',
+  'divine_bow',
+  'trident',
+  'lightning_orb',
+  'war_hammer',
+  'flaming_sword',
+  'thunderbolt',
+  'soul_scythe',
+  'bident',
+  'spear_of_athena',
+] as const;
+const GEAR_FILES: AssetFile[] = [
+  ...(['zeus', 'hades', 'poseidon', 'athena'] as const).map((god) =>
+    rendered(
+      `${god}_body`,
+      128,
+      HERO_MODEL,
+      `${god}'s figure without the weapon in hand, for runs`,
+    ),
+  ),
+  ...GEAR_BODIES.flatMap((body) => [
+    ...[1, 2, 3].map((look) =>
+      rendered(
+        `armour_${body}_${look}`,
+        128,
+        HERO_MODEL,
+        `Armour look ${look} on the ${body}: modelled plates, helm and cape in grey, tinted by the game`,
+      ),
+    ),
+    ...GEAR_WEAPONS.map((weapon) =>
+      rendered(
+        `weapon_${body}_${weapon}`,
+        128,
+        HERO_MODEL,
+        `${weapon} in the ${body}'s hand: a Flare weapon recoloured and reshaped`,
+      ),
+    ),
+  ]),
+];
+
+/** A god's run figure and gear layers: Flare's humanoid layout with the cast (the pose of a better look). */
+const godFigure = () => ({ ...humanoid(), cast: run(24, 27, 10, false) });
+
 export const ASSETS: AssetManifest = {
   files: [
+    ...GEAR_FILES,
     rendered(
       'zeus',
       128,
@@ -396,6 +443,17 @@ export const ASSETS: AssetManifest = {
   sprites: {
     // His portrait raises the storm sceptre (the cast frames).
     zeus: { ...character('zeus', 1, 0.47, 0.72, 77, humanoid()), portrait: still(26) },
+    // Run figures: empty-handed, with layers drawn on the same frames (spec: god-appearance).
+    zeus_body: character('zeus_body', 1, 0.47, 0.72, 77, godFigure()),
+    hades_body: character('hades_body', 1, 0.47, 0.72, 77, godFigure()),
+    poseidon_body: character('poseidon_body', 1, 0.47, 0.72, 77, godFigure()),
+    athena_body: character('athena_body', 0.95, 0.5, 0.71, 74, godFigure()),
+    ...Object.fromEntries(
+      GEAR_FILES.filter((f) => !f.id.endsWith('_body')).map((f) => [
+        f.id,
+        character(f.id, f.id.includes('heroine') ? 0.95 : 1, 0.5, 0.71, 77, godFigure()),
+      ]),
+    ),
     // His portrait raises the bident (the cast frames).
     hades: { ...character('hades', 1, 0.47, 0.72, 77, humanoid()), portrait: still(26) },
     // His portrait raises the trident (the cast frames).

@@ -45,6 +45,7 @@ export const GODS: readonly GodDefinition[] = [
       ],
     },
     affinities: ['lightning'],
+    figure: { sprite: 'zeus_body', body: 'hero' },
     visual: { sprite: 'zeus', color: 0xffe066 },
   },
   {
@@ -93,6 +94,7 @@ export const GODS: readonly GodDefinition[] = [
       ],
     },
     affinities: ['shadow', 'fire'],
+    figure: { sprite: 'hades_body', body: 'hero' },
     visual: { sprite: 'hades', color: 0x7fe0c8 },
   },
   {
@@ -138,6 +140,7 @@ export const GODS: readonly GodDefinition[] = [
       ],
     },
     affinities: ['physical', 'lightning'],
+    figure: { sprite: 'poseidon_body', body: 'hero' },
     visual: { sprite: 'poseidon', color: 0x5fc6c0 },
   },
   {
@@ -182,6 +185,7 @@ export const GODS: readonly GodDefinition[] = [
       ],
     },
     affinities: ['physical', 'lightning'],
+    figure: { sprite: 'athena_body', body: 'heroine' },
     visual: { sprite: 'athena', color: 0xe8c070 },
   },
 ];

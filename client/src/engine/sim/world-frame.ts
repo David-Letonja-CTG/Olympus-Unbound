@@ -1,10 +1,12 @@
-import { CompanionDefinition, Element, EnemyDefinition } from '../data/types';
+import { CompanionDefinition, Element, EnemyDefinition, GodDefinition } from '../data/types';
+import { PlayerLook } from './look';
 import {
   ChaosSite,
   Companion,
   Enemy,
   Hazard,
   HostileProjectile,
+  Loadout,
   Pickup,
   Player,
   Projectile,
@@ -72,7 +74,12 @@ export type FramePlayer = Readonly<
     | 'revive'
     | 'left'
   >
-> & { readonly god: { readonly visual: { readonly sprite: string } } };
+> & {
+  readonly god: Pick<GodDefinition, 'visual' | 'figure'>;
+  /** A room guest's: the host's god's look from the snapshot. The host's view derives it from `loadout`. */
+  readonly gear?: PlayerLook;
+  readonly loadout?: Pick<Loadout, 'weapons' | 'armour' | 'relics'>;
+};
 
 export type FrameEnemy = Readonly<
   Pick<

@@ -8,6 +8,8 @@ from mathutils import Matrix
 
 D = bpy.data
 SOURCES = os.environ.get('FLARE_SOURCES', '')  # folder holding the downloaded source files (see README)
+# A god's body sheet for runs: the weapon in the hand is its own layer there (gear.py, spec: god-appearance).
+EMPTY_HANDED = os.environ.get('EMPTY_HANDED') == '1'
 
 
 def source(*parts):
@@ -214,6 +216,12 @@ def held(blend, name, bone, hand_space, arm=None):
     ob = append(blend, name)
     grip(ob, bone, hand_space, arm)
     return ob
+
+
+def drop_held(ob):
+    """Removes a held weapon and any prongs fork_head gave it (for EMPTY_HANDED)."""
+    for o in [ob] + [o for o in D.objects if o.name.startswith(('Prong.', 'ProngBar'))]:
+        D.objects.remove(o)
 
 
 def corrupt_eyes(head, prefix='Black'):

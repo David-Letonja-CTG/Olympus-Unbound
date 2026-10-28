@@ -31,3 +31,6 @@ with rest_pose():
                  major_radius=1.0, minor_radius=0.12, major_segments=24, minor_segments=6)
 attach(beard, 'Head')
 attach(laurel, 'Head')
+
+if EMPTY_HANDED:
+    drop_held(sceptre)
