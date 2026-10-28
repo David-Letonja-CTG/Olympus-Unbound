@@ -189,14 +189,26 @@ export function heal(state: RunState, player: Player, amount: number): void {
 
 /**
  * Damages a player: damage minus armour (at least 1), brief invulnerability, then death or revival
- * (spec: combat / player damage and death).
+ * (spec: combat / player damage and death). `fromX`/`fromY` is where the blow came from, for the knockback the view
+ * draws; without it the god is pushed back against its facing.
  */
-export function damagePlayer(state: RunState, player: Player, damage: number): void {
+export function damagePlayer(
+  state: RunState,
+  player: Player,
+  damage: number,
+  fromX?: number,
+  fromY?: number,
+): void {
   if (!player.alive || player.invulnerable > 0 || state.godMode) return;
   const amount = Math.max(1, damage - player.stats.armor);
   player.health -= amount;
   state.damageTaken += amount;
   player.hurtFlash = 0.25;
+  const dx = fromX === undefined ? -player.facingX : player.x - fromX;
+  const dy = fromY === undefined ? 0 : player.y - fromY;
+  const length = Math.hypot(dx, dy) || 1;
+  player.hurtX = dx / length;
+  player.hurtY = dy / length;
   player.invulnerable = state.balance.player.invulnerableAfterHit;
   state.emit({ type: 'playerHurt', playerId: player.id, amount, x: player.x, y: player.y });
   if (player.health > 0) return;

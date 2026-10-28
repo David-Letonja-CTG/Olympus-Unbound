@@ -25,7 +25,7 @@ Darkness is a light map multiplied over the world; anything that must be read in
 - **Silhouettes first**: every creature must read at 32 px by outline alone. Dark outline (`rgba(8,6,10,.85)`), a thin cold rim light on the lit edge.
 - **Materials**: weathered marble, oxidised bronze, dark iron, bone, worn cloth, matted fur. Avoid clean, saturated plastic colours.
 - **Scale**: swarm < common < tank < elite (×1.5) < boss. Bosses own the screen.
-- **Motion** (code-drawn): a small bob and lean while moving; packs supply idle/walk/attack/death animations.
+- **Motion** (code-drawn): a small bob and lean while moving; packs supply idle/walk/attack/death animations. Rendered sheets carry an in-between pose after every source frame, played at twice the rate (`art/blender/README.md`). The god swings when the ability fires, leans into a dash and is pushed back a few pixels by a blow (drawing only). A boss in its last phase glows through in embers, its eyes burn and it sheds embers.
 
 ## UI
 

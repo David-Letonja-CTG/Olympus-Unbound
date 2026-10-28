@@ -3,7 +3,7 @@
 //
 //   BLENDER=<blender.exe> FLARE_SOURCES=<folder> node art/blender/render-all.mjs [name ...]
 import { execFileSync } from "node:child_process";
-import { mkdirSync, readdirSync, rmSync } from "node:fs";
+import { copyFileSync, mkdirSync, readdirSync, rmSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { dirname, join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
@@ -106,4 +106,7 @@ for (const [name, [blend, script, frame]] of Object.entries(CHARACTERS)) {
       cwd: client,
     },
   );
+  // The top of the head per frame, for crowns and a boss's glowing eyes (spec: asset-pipeline / character art).
+  mkdirSync(join(here, "anchors"), { recursive: true });
+  copyFileSync(join(frames, "anchors.json"), join(here, "anchors", `${name}.json`));
 }

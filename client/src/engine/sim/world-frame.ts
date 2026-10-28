@@ -64,6 +64,10 @@ export type FramePlayer = Readonly<
     | 'facingX'
     | 'moving'
     | 'hurtFlash'
+    | 'hurtX'
+    | 'hurtY'
+    | 'casts'
+    | 'dashTime'
     | 'invulnerable'
     | 'revive'
     | 'left'
@@ -97,7 +101,11 @@ export type FrameEnemy = Readonly<
 > & {
   readonly def: Pick<EnemyDefinition, 'radius' | 'visual' | 'behavior'>;
   /** Present for the boss: whether it rages, and the seconds it is still exposed. */
-  readonly boss?: { readonly enraged?: boolean; readonly exposed?: number };
+  readonly boss?: {
+    readonly enraged?: boolean;
+    readonly exposed?: number;
+    readonly final?: boolean;
+  };
   readonly status: Readonly<Pick<StatusState, 'stun' | 'burn' | 'shock' | 'slow'>>;
 };
 

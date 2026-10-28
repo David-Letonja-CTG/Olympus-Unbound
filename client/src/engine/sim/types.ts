@@ -87,6 +87,11 @@ export interface Player {
   /** Seconds of invulnerability left. */
   invulnerable: number;
   hurtFlash: number;
+  /** Unit vector from the last hit towards the god, for the knockback the view draws (spec: player-control / the god's body language). */
+  hurtX: number;
+  hurtY: number;
+  /** Times the ability has fired, wrapping at 256: a change tells the view to swing. */
+  casts: number;
   alive: boolean;
   /** Left a room's run (spec: rooms / leaving); never revived. */
   left?: boolean;
@@ -194,6 +199,8 @@ export interface BossRuntime {
   enraged: boolean;
   /** Seconds left of exposure (every damageable part down). */
   exposed: number;
+  /** In its last phase, or under a quarter of its health with a single phase (spec: boss-encounter / the final phase shows). */
+  final: boolean;
   /** Each part's state, by part id. */
   readonly parts: Map<string, PartState>;
 }

@@ -36,6 +36,7 @@ export function spawnBoss(state: RunState): Enemy | undefined {
     windup: 0,
     enraged: !!def.phases[0]?.enraged,
     exposed: 0,
+    final: false,
     parts: new Map(),
   };
   const { x, y } = state.arena.bossArena;
@@ -56,6 +57,9 @@ export function pauseOf(boss: BossRuntime, base = boss.def.attackPause): number 
   return base * (boss.def.phases[boss.phase]?.pauseMultiplier ?? 1);
 }
 
+/** A single-phase boss shows its last-phase look under this share of its health. */
+const FINAL_BELOW = 0.25;
+
 export function updateBoss(state: RunState, enemy: Enemy, target: Player, dt: number): void {
   const boss = enemy.boss as BossRuntime;
   const def = boss.def;
@@ -68,6 +72,8 @@ export function updateBoss(state: RunState, enemy: Enemy, target: Player, dt: nu
     boss.enraged = !!def.phases[boss.phase].enraged;
     state.emit({ type: 'announcement', text: def.phases[boss.phase].announcement, kind: 'boss' });
   }
+  boss.final =
+    def.phases.length > 1 ? boss.phase === def.phases.length - 1 : fraction < FINAL_BELOW;
   const phase = def.phases[boss.phase];
   updateParts(state, enemy, target, dt);
 

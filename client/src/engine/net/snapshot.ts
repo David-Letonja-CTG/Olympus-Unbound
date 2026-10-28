@@ -111,6 +111,7 @@ const FLAG = {
   orbit: 1,
   // A player who left the room.
   gone: 4,
+  dashing: 8,
 } as const;
 
 const HEADER = { waiting: 1, gate: 2, merchant: 4 } as const;
@@ -175,9 +176,17 @@ export function encodeSnapshot(state: RunState, phase: RunPhase, waiting = false
     w.u8(name(p.god.id));
     w.u16(Math.round(p.radius * RADIUS));
     w.f32(p.stats.moveSpeed);
-    w.u8((p.alive ? FLAG.alive : 0) | (p.moving ? FLAG.moving : 0) | (p.left ? FLAG.gone : 0));
+    w.u8(
+      (p.alive ? FLAG.alive : 0) |
+        (p.moving ? FLAG.moving : 0) |
+        (p.left ? FLAG.gone : 0) |
+        (p.dashTime > 0 ? FLAG.dashing : 0),
+    );
     w.i8(Math.round(p.facingX * 127));
     w.u8(timer(p.hurtFlash));
+    w.i8(Math.round(p.hurtX * 127));
+    w.i8(Math.round(p.hurtY * 127));
+    w.u8(p.casts);
     w.u8(timer(p.invulnerable));
     w.u8(Math.round(Math.max(0, Math.min(1, p.revive)) * 255));
     w.u8(Math.round(Math.max(0, Math.min(1, p.stamina / staminaMax)) * 255));
@@ -209,6 +218,7 @@ export function encodeSnapshot(state: RunState, phase: RunPhase, waiting = false
         ((e.boss?.exposed ?? 0) > 0 ? FLAG.exposed : 0) |
         (e.champion ? FLAG.champion : 0),
     );
+    if (e.boss) w.u8(e.boss.final ? 1 : 0);
     w.u8(Math.round(Math.max(0, Math.min(1, e.health / e.maxHealth)) * 255));
     w.i8(Math.round(e.dirX * 127));
     w.i8(Math.round(e.dirY * 127));
@@ -351,6 +361,11 @@ export function decodeSnapshot(buffer: ArrayBuffer, index: ContentIndex): Snapsh
       left: (flags & FLAG.gone) !== 0 || undefined,
       facingX: r.i8() / 127,
       hurtFlash: r.u8() / TIMER,
+      hurtX: r.i8() / 127,
+      hurtY: r.i8() / 127,
+      casts: r.u8(),
+      // Only whether the god is dashing reaches a guest, for the lean the view draws.
+      dashTime: (flags & FLAG.dashing) !== 0 ? 1 : 0,
       invulnerable: r.u8() / TIMER,
       revive: r.u8() / 255,
       stamina: (r.u8() / 255) * index.content.balance.stamina.max,
@@ -385,7 +400,11 @@ export function decodeSnapshot(buffer: ArrayBuffer, index: ContentIndex): Snapsh
       dead: on(FLAG.dead) === 1,
       elite: on(FLAG.elite) === 1,
       boss: on(FLAG.boss)
-        ? { enraged: on(FLAG.enraged) === 1, exposed: on(FLAG.exposed) ? 1 : 0 }
+        ? {
+            enraged: on(FLAG.enraged) === 1,
+            exposed: on(FLAG.exposed) ? 1 : 0,
+            final: r.u8() === 1,
+          }
         : undefined,
       guarded: on(FLAG.guarded) === 1 || undefined,
       dazed: on(FLAG.dazed) ? 1 : undefined,

@@ -95,7 +95,7 @@ export function updateEnemies(state: RunState, dt: number): void {
       if (!player.alive) continue;
       const reach = enemy.radius + player.radius;
       if ((enemy.x - player.x) ** 2 + (enemy.y - player.y) ** 2 <= reach * reach) {
-        damagePlayer(state, player, enemy.damage);
+        damagePlayer(state, player, enemy.damage, enemy.x, enemy.y);
         enemy.attackTimer = state.balance.enemyAttackInterval;
         break;
       }
