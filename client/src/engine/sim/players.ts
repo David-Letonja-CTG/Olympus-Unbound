@@ -18,6 +18,8 @@ export function createPlayer(state: RunState, slot: number, x: number, y: number
     god,
     name: seat.name,
     bot: seat.bot?.skill,
+    skin: seat.skin,
+    crown: seat.crown,
     x,
     y,
     px: x,

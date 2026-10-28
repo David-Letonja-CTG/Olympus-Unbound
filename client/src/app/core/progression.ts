@@ -7,13 +7,14 @@ import {
   PermanentUpgradeDefinition,
   QuestDefinition,
   RunResult,
+  SkinDefinition,
 } from '../../engine';
 import { GAME_CONTENT } from './game-content';
 import { DailyTrial, dailyTrialFor } from './daily-trial';
 import { dailyOf, localDate, questsFor } from './save/glory';
 import { TrialBest } from './save/save-records';
 import { applyRunResult, RunRewards } from './save/rewards';
-import { cleanName, permanentModifiers, SaveData } from './save/save-data';
+import { cleanName, Crown, permanentModifiers, SaveData } from './save/save-data';
 import { SaveStore } from './save/save-store';
 
 /** Today's Daily Trial and how the player has done in it (spec: daily-trial). */
@@ -113,6 +114,37 @@ export class Progression {
   updateSettings(changes: Partial<GameSettings>): void {
     const save = this.state();
     this.commit({ ...save, settings: { ...save.settings, ...changes } });
+  }
+
+  /** Whether a skin can be worn (spec: god-appearance / skins): its achievement earned or its reward bought. */
+  hasSkin(skin: SkinDefinition): boolean {
+    const save = this.state();
+    return 'achievement' in skin.unlock
+      ? skin.unlock.achievement in save.achievements
+      : save.eventRewards.includes(skin.unlock.eventReward);
+  }
+
+  /** The skin a god wears, if one of its unlocked skins is chosen. */
+  skinOf(godId: string): string | undefined {
+    const id = this.state().skins[godId];
+    const skin = this.content.skins.find((s) => s.id === id);
+    return skin && this.hasSkin(skin) ? skin.id : undefined;
+  }
+
+  /** Chooses a god's skin; `undefined` is the default. Locked skins are not chosen. */
+  chooseSkin(godId: string, skinId: string | undefined): void {
+    const skin = this.content.skins.find((s) => s.id === skinId && s.god === godId);
+    if (skinId && (!skin || !this.hasSkin(skin))) return;
+    const save = this.state();
+    const skins = { ...save.skins };
+    if (skinId) skins[godId] = skinId;
+    else delete skins[godId];
+    this.commit({ ...save, skins });
+  }
+
+  /** The skin and crown a god wears into a run (spec: god-appearance). */
+  lookOf(godId: string): { skin?: string; crown?: Crown } {
+    return { skin: this.skinOf(godId), crown: this.state().crowns[godId] };
   }
 
   setPlayerName(name: string): void {

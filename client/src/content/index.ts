@@ -11,6 +11,7 @@ import { EVENT_PACKS } from './events';
 import { GODS } from './gods';
 import { ARMOUR, ASCENSIONS, FUSIONS, INSTANTS, RELICS, SKILLS, SYNERGIES } from './items';
 import { REALMS } from './realms';
+import { SKIN_REWARDS, SKINS, withSkins } from './skins';
 import { EVOLUTIONS, WEAPONS } from './weapons';
 
 export const BALANCE: BalanceConfig = {
@@ -140,10 +141,11 @@ export const CONTENT: GameContent = {
   bosses: [...BOSSES, ...fromEvents((p) => [p.boss])],
   realms: [...REALMS, ...fromEvents((p) => [p.realm])],
   events: EVENT_PACKS.map((p) => p.event),
-  eventRewards: fromEvents((p) => p.rewards),
+  eventRewards: [...fromEvents((p) => p.rewards), ...SKIN_REWARDS],
   permanentUpgrades: PERMANENT_UPGRADES,
   balance: BALANCE,
-  assets: ASSETS,
+  assets: withSkins(ASSETS, GODS, SKINS),
+  skins: SKINS,
   cutscenes: [INTRO],
   achievements: [...ACHIEVEMENTS, ...fromEvents((p) => p.achievements)],
   dailyQuests: DAILY_QUESTS,

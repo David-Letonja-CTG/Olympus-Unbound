@@ -403,6 +403,7 @@ export class RunSimulation {
       kills: state.kills,
       gold: Math.floor(state.gold),
       realmsCleared,
+      bossesDefeated: [...state.defeatedBosses],
       realmReached: state.realm.id,
       players: state.party.length,
       bots: state.party.filter((s) => s.bot).length,

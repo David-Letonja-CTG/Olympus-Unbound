@@ -133,6 +133,17 @@ A bronze **frieze** runs along the bottom, Diablo-like: your health is the **orb
 
 **Minimap** (top right, above the gold and kills): the whole realm with its walls and the boss arena; monsters as red dots (elites larger and gold), the boss as a large red mark once it wakes, the open gate as a pale ring, the merchant as a gold diamond, every god in their own colour (yours largest, with a white rim; fallen gods as hollow rings), and the outline of what the screen shows.
 
+## What the god wears
+
+Your build shows on your god, to you and to everyone in the room:
+- **Armour:** the shoulders grow flared plates at level 1. From level 2 the god wears a crested helm, a cuirass and a skirt of strips. At the armour's last level a long cape follows. All of it is in the armour's colour, and a column of light marks each step up.
+- **Weapon:** the god holds its strongest weapon. Once that weapon has evolved, it glows and trails light when the god swings.
+- **Relics:** each one circles the god as a small mote, up to six.
+- **Crowns:** beat a boss with a god and it wears a laurel in every run; beat Kronos and the laurel becomes gold.
+- **Skins:** each god has a skin unlocked by its own achievement (Storm Lord, Lord of the Dead, Earth-Shaker, Grey-Eyed). Every event's shop also sells a skin for 100 of its currency, three for each god (Hades's Shroud of Hecate on the Night of Hecate, Zeus's Frostbound on the Winds of Boreas, and so on). Choose one on god selection.
+
+None of this changes the rules. The codex's Gods tab shows each god's four armour looks.
+
 ## Zeus, King of the Sky
 
 Health 120, speed 210, critical chance 13% (with his passive). Starts with **Thunder Spear**. Ability **Wrath of Olympus** (25 s): lightning strikes up to 8 nearby foes, stunning and shocking them. Passive **Thunderborn**: +10% lightning damage, +5% critical chance. Lightning items are offered more often.

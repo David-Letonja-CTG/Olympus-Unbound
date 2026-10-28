@@ -1,5 +1,10 @@
 import { Loadout } from './types';
 
+/** A god's sprite in a skin: `<sprite>@<skin>`, its sheet recoloured (content/skins.ts, spec: god-appearance / skins). */
+export function skinnedSprite(sprite: string, skin: string | undefined): string {
+  return skin ? `${sprite}@${skin}` : sprite;
+}
+
 /** Relic motes circling a god, at most (spec: god-appearance / relic motes). */
 export const MAX_MOTES = 6;
 

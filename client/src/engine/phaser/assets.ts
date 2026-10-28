@@ -21,6 +21,8 @@ export interface ResolvedSprite {
   /** Ground covered per walk cycle and the cycle's length at its own frame rate (pack sprites with a stride). */
   readonly stride?: number;
   readonly walkCycle?: number;
+  /** Top of the head per frame (a god's figure, for its crown). */
+  readonly heads?: SpriteAsset['heads'];
 }
 
 /**
@@ -172,6 +174,7 @@ export class SpriteResolver {
       animations,
       codeDrawn: false,
       stride: asset.stride,
+      heads: asset.heads,
       walkCycle: asset.animations?.walk
         ? asset.animations.walk.frames.length / asset.animations.walk.fps
         : undefined,

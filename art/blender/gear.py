@@ -78,7 +78,8 @@ def armour(look):
             # A long cape from the shoulders to the calves, swept back.
             cape = add('cube', 'Cape', leather, neck.lerp(hip, 0.75) + Vector((0, 0.2, -0.2)),
                        (0.26, 0.014, 0.62), (0.2, 0, 0))
-            parts.append((cape, 'Back'))
+            # On the hips, which turn far less in a swing than the back: the cape stays behind the god.
+            parts.append((cape, 'Hip'))
             clasp = add('uv_sphere', 'CapeClasp', steel, neck + Vector((0, -0.09, -0.1)), (0.035, 0.025, 0.035),
                         segments=8, ring_count=6, radius=1)
             parts.append((clasp, 'Back'))

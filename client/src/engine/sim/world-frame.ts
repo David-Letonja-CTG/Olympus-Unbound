@@ -70,6 +70,8 @@ export type FramePlayer = Readonly<
     | 'hurtY'
     | 'casts'
     | 'dashTime'
+    | 'skin'
+    | 'crown'
     | 'invulnerable'
     | 'revive'
     | 'left'

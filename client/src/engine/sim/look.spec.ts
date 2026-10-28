@@ -4,6 +4,7 @@ import { runFiles } from '../data/run-files';
 import { CONTENT } from '../testing/content';
 import { quietSim } from '../testing/fixtures';
 import { playerLook } from './look';
+import { RunSimulation } from './run-simulation';
 import { Loadout, WeaponInstance } from './types';
 
 const armour = (id: string, level: number) => ({
@@ -81,5 +82,46 @@ describe('the sheets a run loads up front', () => {
     expect(wanted(file('weapon_heroine_bident'))).toBe(false);
     expect(wanted(file('cyclops'))).toBe(true);
     expect(wanted(file('hydra'))).toBe(false);
+  });
+});
+
+describe('a player’s skin and crown (spec: co-op / seeing each other’s gear)', () => {
+  it('reach a guest through the snapshot', () => {
+    const sim = new RunSimulation(
+      {
+        runId: 'skin',
+        godId: 'hades',
+        realmId: 'mount_olympus',
+        seed: 1,
+        modifiers: [],
+        skin: 'hades_shroud',
+        crown: 'laurel',
+      },
+      CONTENT,
+    );
+    const snap = decodeSnapshot(encodeSnapshot(sim.state, sim.phase), new ContentIndex(CONTENT));
+    expect(snap.players[0].skin).toBe('hades_shroud');
+    expect(snap.players[0].crown).toBe('laurel');
+  });
+});
+
+describe('a skinned figure (spec: god-appearance / skins, boss trophies)', () => {
+  it('keeps the head positions its crown sits on', () => {
+    const base = CONTENT.assets.sprites['hades_body'];
+    const skinned = CONTENT.assets.sprites['hades_body@hades_shroud'];
+    expect(base.heads).toHaveLength(64);
+    expect(skinned.heads).toEqual(base.heads);
+    expect(skinned.recolor).toBe(CONTENT.skins.find((s) => s.id === 'hades_shroud')?.recolor);
+  });
+});
+
+describe('skins in event shops (spec: seasonal-events / skins in event shops)', () => {
+  it('sells one skin in every event’s shop, three for each god', () => {
+    for (const event of CONTENT.events)
+      expect(
+        CONTENT.eventRewards.filter((r) => r.event === event.id && r.effect.type === 'skin'),
+      ).toHaveLength(1);
+    const sold = CONTENT.skins.filter((s) => 'eventReward' in s.unlock);
+    for (const god of CONTENT.gods) expect(sold.filter((s) => s.god === god.id)).toHaveLength(3);
   });
 });

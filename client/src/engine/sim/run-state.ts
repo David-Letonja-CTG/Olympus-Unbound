@@ -33,6 +33,7 @@ import {
   SimEvent,
   Wall,
   Zone,
+  Crown,
 } from './types';
 
 /** What a run is started with. */
@@ -43,6 +44,9 @@ export interface PartySeat {
   readonly modifiers: readonly Modifier[];
   /** A god played by the machine, and how well (spec: bot-allies). */
   readonly bot?: { readonly skill: BotSkill };
+  /** The player's skin and crown for this god (spec: god-appearance); drawing only, the rules never read them. */
+  readonly skin?: string;
+  readonly crown?: Crown;
 }
 
 export interface RunConfig {
@@ -71,6 +75,9 @@ export interface RunConfig {
   readonly eventId?: string;
   /** Event weapons and relics bought in the event shop: offered in every run (spec: seasonal-events / event shop). */
   readonly unlocked?: readonly string[];
+  /** A solo run's skin and crown for `godId` (spec: god-appearance). */
+  readonly skin?: string;
+  readonly crown?: Crown;
 }
 
 /** A run's kind, echoed in its result: a quick run, a Daily Trial, or a challenge from a link. */
@@ -83,7 +90,15 @@ export type RunVariant =
 export function partyOf(config: RunConfig): readonly PartySeat[] {
   return config.party?.length
     ? config.party
-    : [{ godId: config.godId, name: 'You', modifiers: config.modifiers }];
+    : [
+        {
+          godId: config.godId,
+          name: 'You',
+          modifiers: config.modifiers,
+          skin: config.skin,
+          crown: config.crown,
+        },
+      ];
 }
 
 export function emptyStatus() {
@@ -188,6 +203,8 @@ export class RunState implements WorldFrame {
   pendingLevels = 0;
   pendingChests = 0;
   bossDefeated = false;
+  /** Every boss felled in this run, in order (crowns, spec: god-appearance / boss trophies). */
+  readonly defeatedBosses: string[] = [];
   boss: Enemy | undefined;
   /** Half the visible world size; enemies spawn outside it. */
   view = { halfWidth: 720, halfHeight: 420 };

@@ -68,6 +68,9 @@ export interface Loadout {
   ascensions: Map<string, number>;
 }
 
+/** A god's boss trophy (spec: god-appearance / boss trophies): the laurel for any boss, gold for Kronos. */
+export type Crown = 'laurel' | 'gold';
+
 export interface Player {
   readonly id: number;
   readonly slot: number;
@@ -95,6 +98,9 @@ export interface Player {
   alive: boolean;
   /** Left a room's run (spec: rooms / leaving); never revived. */
   left?: boolean;
+  /** The player's skin and crown (spec: god-appearance); drawing only. */
+  readonly skin?: string;
+  readonly crown?: Crown;
   /** Played by the machine at this difficulty (spec: bot-allies). */
   readonly bot?: 'easy' | 'normal' | 'hard';
   /** A fallen god's revival progress, 0–1 (spec: co-op / reviving allies). */
@@ -478,6 +484,8 @@ export interface RunResult {
   readonly gold: number;
   /** Realms whose boss the party defeated (spec: endless-run). */
   readonly realmsCleared: number;
+  /** The bosses felled, by ID (crowns, spec: god-appearance / boss trophies). */
+  readonly bossesDefeated?: readonly string[];
   /** The realm the run ended in. */
   readonly realmReached: string;
   /** Gods in the party: 1 for a solo run (spec: glory / high scores). */

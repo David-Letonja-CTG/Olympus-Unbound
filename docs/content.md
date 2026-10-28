@@ -179,6 +179,12 @@ Offered at a level-up or chest like any upgrade, used at once, never kept, offer
 
 Boss: `cyclops` (two phases; `ground_slam`, `boulder_throw`, `rampage_charge`, `call_the_legion`).
 
+## Skins and gear
+
+- **A skin:** an entry in `content/skins.ts` with the god, a `recolor` and its unlock (an achievement or an event reward whose effect is `{ type: 'skin', skin }`). No rendering: the god's sheets are recoloured.
+- **An armour:** its `visual.color` tints the armour looks, so no rendering is needed.
+- **A weapon:** needs its layer on both bodies (`art/blender/README.md`, "The gods' gear").
+
 ## Assets and licences
 
 | Asset | Source | Licence |

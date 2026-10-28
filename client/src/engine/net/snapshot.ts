@@ -4,7 +4,7 @@ import { ContentIndex } from '../data/content-index';
 import { SNAPSHOT_FORMAT } from './protocol';
 import { Element, ELEMENTS, EnemyDefinition, GodDefinition } from '../data/types';
 import { RunState } from '../sim/run-state';
-import { PickupKind, RunPhase, SiteKind, Zone } from '../sim/types';
+import { Crown, PickupKind, RunPhase, SiteKind, Zone } from '../sim/types';
 import {
   FrameEnemy,
   FrameHazard,
@@ -141,6 +141,7 @@ export function encodeSnapshot(state: RunState, phase: RunPhase, waiting = false
   // Each god's look (spec: co-op / seeing each other's gear): derived here, drawn by the guest.
   const looks = state.players.map((p) => playerLook(p.loadout));
   for (const g of looks) if (g.weapon) name(g.weapon);
+  for (const p of state.players) if (p.skin) name(p.skin);
   for (const e of state.enemies) name(e.def.id);
   for (const p of state.projectiles) name(p.sprite);
   for (const h of state.hostileProjectiles) name(h.sprite);
@@ -202,6 +203,8 @@ export function encodeSnapshot(state: RunState, phase: RunPhase, waiting = false
     w.u32(g.evolutionColor ?? NO_COLOR);
     w.u8(g.relicColors.length);
     for (const c of g.relicColors) w.u32(c);
+    w.u8(p.skin ? name(p.skin) : NO_NAME);
+    w.u8(CROWNS.indexOf(p.crown));
     w.u8(timer(p.invulnerable));
     w.u8(Math.round(Math.max(0, Math.min(1, p.revive)) * 255));
     w.u8(Math.round(Math.max(0, Math.min(1, p.stamina / staminaMax)) * 255));
@@ -329,6 +332,15 @@ export function encodeSnapshot(state: RunState, phase: RunPhase, waiting = false
   return w.finish();
 }
 
+/** A player's skin and crown as written by encodeSnapshot (index −1: none). */
+const CROWNS: readonly (Crown | undefined)[] = [undefined, 'laurel', 'gold'];
+
+function readProfile(r: Reader, names: readonly string[]): { skin?: string; crown?: Crown } {
+  const skin = r.u8();
+  const crown = CROWNS[r.u8()];
+  return { skin: skin === NO_NAME ? undefined : names[skin], crown };
+}
+
 /** A god's look as written by encodeSnapshot. */
 function readLook(r: Reader, names: readonly string[]): PlayerLook {
   const look = r.u8();
@@ -397,6 +409,7 @@ export function decodeSnapshot(buffer: ArrayBuffer, index: ContentIndex): Snapsh
       hurtY: r.i8() / 127,
       casts: r.u8(),
       gear: readLook(r, names),
+      ...readProfile(r, names),
       // Only whether the god is dashing reaches a guest, for the lean the view draws.
       dashTime: (flags & FLAG.dashing) !== 0 ? 1 : 0,
       invulnerable: r.u8() / TIMER,

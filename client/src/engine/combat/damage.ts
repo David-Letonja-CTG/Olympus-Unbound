@@ -176,6 +176,7 @@ export function killEnemy(state: RunState, enemy: Enemy): void {
   }
   if (enemy.boss) {
     state.bossDefeated = true;
+    state.defeatedBosses.push(enemy.boss.def.id);
     state.emit({ type: 'announcement', text: `${enemy.boss.def.name} has fallen!`, kind: 'boss' });
   }
 }
