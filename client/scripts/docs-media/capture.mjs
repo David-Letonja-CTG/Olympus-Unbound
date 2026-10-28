@@ -11,6 +11,7 @@
 //   node scripts/docs-media/capture.mjs phone             # a run and god selection on a phone (touch, Low)
 //   node scripts/docs-media/capture.mjs build             # the build panel and Call of Hermes
 //   node scripts/docs-media/capture.mjs kronos evolution  # Kronos devouring, and an evolved weapon
+//   node scripts/docs-media/capture.mjs dressed           # skins, crowns and gear on the gods, and the codex looks
 import { chromium, devices } from '@playwright/test';
 import { writeFileSync } from 'node:fs';
 import { dirname, join } from 'node:path';
@@ -78,6 +79,13 @@ const SAVE = {
   stats: { runs: 23, victories: 9, kills: 18420, bestTimeSeconds: 2410 },
   settings: { quality: 'high' },
 };
+/** The same save with skins chosen and crowns won (spec: god-appearance / skins, crowns). */
+const DRESSED = {
+  ...SAVE,
+  eventRewards: ['hades_shroud'],
+  skins: { zeus: 'zeus_tempest', hades: 'hades_shroud' },
+  crowns: { zeus: 'gold', hades: 'laurel' },
+};
 const GOD_NAMES = { zeus: 'Zeus', hades: 'Hades', poseidon: 'Poseidon', athena: 'Athena' };
 
 /** Every realm in the chain, the god shown in it, and its name on the realm screen. */
@@ -90,11 +98,11 @@ const REALMS = [
   { id: 'mount_othrys', name: 'Mount Othrys', god: 'hades' },
 ];
 
-async function newPage(browser, viewport = VIEW) {
+async function newPage(browser, viewport = VIEW, save = SAVE) {
   const page = await browser.newPage({ viewport });
   await page.addInitScript(
     (save) => localStorage.setItem('olympus-unbound/save', JSON.stringify(save)),
-    SAVE,
+    save,
   );
   return page;
 }
@@ -115,8 +123,8 @@ async function pickUpgrades(page) {
  * Starts a run of `god` in `realm` (seed 4242), with more `players` at the same screen and bot `allies`, and waits
  * until its loading screen is gone.
  */
-async function startRun(browser, { god, realm, players = [], allies = [] }) {
-  const page = await newPage(browser);
+async function startRun(browser, { god, realm, players = [], allies = [], save = SAVE }) {
+  const page = await newPage(browser, VIEW, save);
   await page.goto(`${base}/?debug`);
   await page.getByRole('link', { name: 'Play' }).click();
   await page.getByTestId(`god-${god}`).click();
@@ -711,6 +719,43 @@ const scenes = {
     writeGif('evolution.gif', await record(page, decoder, 2400));
     await decoder.close();
     await page.close();
+  },
+
+  /**
+   * The gods dressed (dressed.jpg): Zeus in his storm skin with the gold crown and his gear, Hades in the Shroud of
+   * Hecate with a laurel, the skins on god selection and the codex's looks.
+   */
+  async dressed(browser) {
+    const stills = [];
+    // Close on the god: the middle fifth of the window, scaled up by the montage.
+    const near = { x: 500, y: 288, width: 280, height: 158 };
+    for (const [god, realm, caption] of [
+      ['zeus', REALMS[0], 'Zeus · Tempest skin, gold crown, his armour and weapon'],
+      ['hades', REALMS[1], 'Hades · Shroud of Hecate, laurel crown'],
+    ]) {
+      const page = await startRun(browser, { god, realm, save: DRESSED });
+      await send(page, { type: 'director', enabled: false });
+      await powerUp(page);
+      await powerUp(page);
+      await page.waitForTimeout(1500);
+      await pickUpgrades(page);
+      stills.push([caption, await page.screenshot({ type: 'png', clip: near })]);
+      await page.close();
+    }
+    const page = await newPage(browser, VIEW, DRESSED);
+    await page.goto(base);
+    await page.getByRole('link', { name: 'Play' }).click();
+    await page.getByTestId('god-hades').click();
+    await page.getByRole('group', { name: 'Skins' }).scrollIntoViewIfNeeded();
+    await page.waitForTimeout(800);
+    stills.push(['Skins and crowns on god selection', await page.screenshot({ type: 'png' })]);
+    await page.goto(`${base}/progression`);
+    await page.getByTestId('codex-tab-gods').click();
+    await page.getByTestId('codex-zeus').click();
+    await page.waitForTimeout(800);
+    stills.push(['The codex: every look of a god', await page.screenshot({ type: 'png' })]);
+    await page.close();
+    await montage(browser, 'dressed.jpg', stills, 2, 520);
   },
 
   /** In a run: a level-up choice, the gate after a boss, and the summary at the end. */
