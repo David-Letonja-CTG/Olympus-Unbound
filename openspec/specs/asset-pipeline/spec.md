@@ -38,7 +38,7 @@ Every external asset file SHALL have an entry recording its source, author and l
 - **THEN** the project check fails, naming the file
 
 ### Requirement: Character art
-Every character the player sees (gods, enemies, bosses and cutscene actors) SHALL be drawn from an external sprite sheet with at least idle, walk and death animations, and all character sheets SHALL share one art source and render setup so the cast has one look. Every animation frame SHALL exist in its sheet, and the licence check SHALL fail otherwise.
+Every character the player sees (gods, enemies, bosses and cutscene actors) SHALL be drawn from an external sprite sheet with at least idle, walk and death animations, and all character sheets SHALL share one art source and render setup so the cast has one look. Every animation frame SHALL exist in its sheet, and the licence check SHALL fail otherwise. Sheets SHALL hold an in-between frame between each pair of the source animation's frames, and the animations SHALL play at twice the frame rate so their timing is unchanged. A god's run figure SHALL be rendered empty-handed, with its armour looks and every weapon as separate layer sheets on the same frames for its body type, and the head's position SHALL be recorded for every frame.
 
 #### Scenario: Every character is animated
 - **WHEN** the content's gods, enemies, bosses and cutscene actors are checked against the manifest
@@ -47,6 +47,18 @@ Every character the player sees (gods, enemies, bosses and cutscene actors) SHAL
 #### Scenario: Frame outside the sheet
 - **WHEN** an animation refers to a frame beyond the end of its sprite sheet
 - **THEN** `npm run assets:check` fails and names the sprite and frames
+
+#### Scenario: In-between frames
+- **WHEN** the `cyclops` walk is played
+- **THEN** it has 16 frames at 20 fps and covers the same stride in the same time as before
+
+#### Scenario: A layer out of step
+- **WHEN** a weapon layer sheet has a different frame count from the god sheets it is drawn on
+- **THEN** `npm run assets:check` fails and names the layer
+
+#### Scenario: Missing look
+- **WHEN** a god's body type has no layer sheet for one of the armour looks 1–3 or for one of the weapons
+- **THEN** `npm run assets:check` fails and names the missing layer
 
 ### Requirement: Character portraits in menus
 Menus that picture a character (god selection, main menu, realm selection, codex) SHALL show the character's sheet art when it has a sheet, and the code-drawn picture while the sheet loads or if it fails.
@@ -75,3 +87,10 @@ A sprite in the asset manifest MAY name a `recolor`. The game SHALL then draw it
 #### Scenario: Kronos in gold
 - **WHEN** `kronos` is drawn
 - **THEN** the marble sentinel's sheet appears in dark gold at Kronos's scale, and a burning Kronos still shows the burn tint
+
+### Requirement: Character sheets load with the run
+The looks, skins and weapon layers of a god SHALL load when a run with that god starts (in a room, every player's god), not with the menus. While a look is still loading, the god SHALL be drawn in a look already loaded.
+
+#### Scenario: Run with Hades only
+- **WHEN** a solo run starts as `hades`
+- **THEN** the looks of the other gods are not loaded for that run
