@@ -753,7 +753,7 @@ const scenes = {
     await page.getByTestId('codex-tab-gods').click();
     await page.getByTestId('codex-zeus').click();
     await page.waitForTimeout(800);
-    stills.push(['The codex: every look of a god', await page.screenshot({ type: 'png' })]);
+    stills.push(['The codex: armour looks and skins, locked ones dimmed', await page.screenshot({ type: 'png' })]);
     await page.close();
     await montage(browser, 'dressed.jpg', stills, 2, 520);
   },
