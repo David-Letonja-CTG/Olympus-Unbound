@@ -25,6 +25,7 @@ import {
   ControlScheme,
   UiInput,
   UpgradeChoice,
+  skinnedSprite,
 } from '../../../engine';
 import { debugEnabled, directorPanelEnabled } from '../../core/debug-mode';
 import { GAME_CONTENT, GAME_SESSION_FACTORY } from '../../core/game-content';
@@ -391,6 +392,9 @@ export class PlayScreen {
   /** Everyone taking part: the local player, or a room's members in seat order (spec: run-loading / party). */
   protected readonly party = computed<readonly PartyMember[]>(() => {
     const godOf = (id: string) => this.content.gods.find((g) => g.id === id);
+    // Each god in its player's skin (spec: god-appearance / previews).
+    const look = (id: string, skin: string | undefined) =>
+      skinnedSprite(godOf(id)?.visual.sprite ?? id, skin);
     if (this.room) {
       const room = this.room;
       return room.members.map((m, seat) => {
@@ -398,7 +402,7 @@ export class PlayScreen {
         return {
           name: m.name,
           godName: god?.name ?? m.godId,
-          sprite: god?.visual.sprite ?? m.godId,
+          sprite: look(m.godId, m.looks?.skins[m.godId]),
           you: seat === room.localSeat,
           host: m.host,
         };
@@ -413,7 +417,7 @@ export class PlayScreen {
       return {
         name: `Player ${i + 2}`,
         godName: other?.name ?? p.godId,
-        sprite: other?.visual.sprite ?? p.godId,
+        sprite: look(p.godId, this.progression.skinOf(p.godId)),
       };
     });
     const allies = (solo ? [] : this.setup.allies()).map((a) => {
@@ -427,8 +431,17 @@ export class PlayScreen {
     });
     return [
       players.length
-        ? { name: 'Player 1', godName: god.name, sprite: god.visual.sprite }
-        : { name: 'You', godName: god.name, sprite: god.visual.sprite, you: allies.length > 0 },
+        ? {
+            name: 'Player 1',
+            godName: god.name,
+            sprite: look(god.id, this.progression.skinOf(god.id)),
+          }
+        : {
+            name: 'You',
+            godName: god.name,
+            sprite: look(god.id, this.progression.skinOf(god.id)),
+            you: allies.length > 0,
+          },
       ...players,
       ...allies,
     ];

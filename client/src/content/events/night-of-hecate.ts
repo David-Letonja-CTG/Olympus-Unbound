@@ -498,15 +498,6 @@ const HECATE_RELICS: readonly RelicDefinition[] = [
 /** What honey cakes buy (spec: seasonal-events / event shop): kept for good, whenever bought. */
 const HECATE_REWARDS: readonly EventRewardDefinition[] = [
   {
-    id: 'hades_shroud',
-    event: 'night_of_hecate',
-    name: 'Shroud of Hecate',
-    description: 'Hades in the violet shroud of the crossroads, for good: a skin.',
-    cost: 100,
-    effect: { type: 'skin', skin: 'hades_shroud' },
-    sprite: 'hades',
-  },
-  {
     id: 'hecates_blessing',
     event: 'night_of_hecate',
     name: 'Hecate’s Blessing',

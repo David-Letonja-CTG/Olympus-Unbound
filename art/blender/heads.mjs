@@ -2,6 +2,7 @@
 // content, for the crowns (spec: god-appearance / boss trophies). Run by render-all.mjs; also on its own:
 //
 //   node art/blender/heads.mjs
+import { execSync } from "node:child_process";
 import { existsSync, readFileSync, writeFileSync } from "node:fs";
 import { dirname, join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
@@ -23,4 +24,6 @@ writeFileSync(
     `export const HEADS: Readonly<Record<string, readonly (readonly [number, number] | null)[]>> = {\n` +
     `${lines.join("\n")}\n};\n`,
 );
+// In the client's own format, so its check passes.
+execSync(`npx prettier --write "${out}"`, { cwd: resolve(here, "../../client"), stdio: "ignore" });
 console.log(`${out}: ${Object.keys(heads).length} figures`);

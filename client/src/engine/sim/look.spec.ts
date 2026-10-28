@@ -114,3 +114,14 @@ describe('a skinned figure (spec: god-appearance / skins, boss trophies)', () =>
     expect(skinned.recolor).toBe(CONTENT.skins.find((s) => s.id === 'hades_shroud')?.recolor);
   });
 });
+
+describe('skins in event shops (spec: seasonal-events / skins in event shops)', () => {
+  it('sells one skin in every event’s shop, three for each god', () => {
+    for (const event of CONTENT.events)
+      expect(
+        CONTENT.eventRewards.filter((r) => r.event === event.id && r.effect.type === 'skin'),
+      ).toHaveLength(1);
+    const sold = CONTENT.skins.filter((s) => 'eventReward' in s.unlock);
+    for (const god of CONTENT.gods) expect(sold.filter((s) => s.god === god.id)).toHaveLength(3);
+  });
+});

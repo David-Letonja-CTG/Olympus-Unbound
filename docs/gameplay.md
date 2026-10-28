@@ -140,7 +140,7 @@ Your build shows on your god, to you and to everyone in the room:
 - **Weapon:** the god holds its strongest weapon. Once that weapon has evolved, it glows and trails light when the god swings.
 - **Relics:** each one circles the god as a small mote, up to six.
 - **Crowns:** beat a boss with a god and it wears a laurel in every run; beat Kronos and the laurel becomes gold.
-- **Skins:** each god has a skin unlocked by its own achievement (Storm Lord, Lord of the Dead, Earth-Shaker, Grey-Eyed). Hades's Shroud of Hecate is sold in the Night of Hecate's shop. Choose one on god selection.
+- **Skins:** each god has a skin unlocked by its own achievement (Storm Lord, Lord of the Dead, Earth-Shaker, Grey-Eyed). Every event's shop also sells a skin for 100 of its currency, three for each god (Hades's Shroud of Hecate on the Night of Hecate, Zeus's Frostbound on the Winds of Boreas, and so on). Choose one on god selection.
 
 None of this changes the rules. The codex's Gods tab shows each god's four armour looks.
 
