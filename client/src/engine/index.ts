@@ -24,6 +24,7 @@ export type {
   Unsubscribe,
 } from './session';
 export { ContentIndex, validateContent } from './data/content-index';
+export { skinnedSprite } from './sim/look';
 export type * from './data/types';
 export { ELEMENTS } from './data/types';
 export {
@@ -58,6 +59,7 @@ export type {
   UpgradeChoice,
   UpgradeKind,
   UpgradeOffer,
+  Crown,
 } from './sim/types';
 export { spriteDataUrl, spriteKeys } from './art/sprites';
 export { recolorCanvas } from './art/canvas';

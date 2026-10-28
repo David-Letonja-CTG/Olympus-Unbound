@@ -130,7 +130,14 @@ describe('rooms (spec: rooms)', () => {
     expect(isValidCode(host.code() ?? '')).toBe(true);
     expect([...(host.code() ?? '')].every((c) => CODE_ALPHABET.includes(c))).toBe(true);
     expect(host.members()).toEqual([
-      { slot: 0, name: 'Hero', godId: 'zeus', ready: true, host: true },
+      {
+        slot: 0,
+        name: 'Hero',
+        godId: 'zeus',
+        ready: true,
+        host: true,
+        looks: { skins: {}, crowns: {} },
+      },
     ]);
   });
 

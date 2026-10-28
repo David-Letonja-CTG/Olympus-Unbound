@@ -272,6 +272,22 @@ export function validateContent(content: GameContent): string[] {
       if (!def?.event) errors.push(`${name} unlocks "${item}", which is not an event item.`);
     }
   }
+  // Skins (spec: god-appearance / skins): a known god, a known unlock, and every skin reward a known skin.
+  const achievementIds = new Set(content.achievements.map((a) => a.id));
+  const rewardIds = new Set(content.eventRewards.map((r) => r.id));
+  for (const skin of content.skins) {
+    if (!index.gods.has(skin.god))
+      errors.push(`Skin "${skin.id}" is for unknown god "${skin.god}".`);
+    if ('achievement' in skin.unlock && !achievementIds.has(skin.unlock.achievement))
+      errors.push(`Skin "${skin.id}" waits for unknown achievement "${skin.unlock.achievement}".`);
+    if ('eventReward' in skin.unlock && !rewardIds.has(skin.unlock.eventReward))
+      errors.push(`Skin "${skin.id}" waits for unknown event reward "${skin.unlock.eventReward}".`);
+  }
+  for (const reward of content.eventRewards) {
+    const effect = reward.effect;
+    if (effect.type === 'skin' && !content.skins.some((s) => s.id === effect.skin))
+      errors.push(`Event reward "${reward.id}" gives unknown skin.`);
+  }
   for (const a of content.achievements)
     if (a.goal.realm && !index.realms.has(a.goal.realm))
       errors.push(`Achievement "${a.id}" counts unknown realm "${a.goal.realm}".`);

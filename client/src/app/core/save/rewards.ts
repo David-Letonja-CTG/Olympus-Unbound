@@ -1,6 +1,6 @@
 import { GameContent, RunResult } from '../../../engine';
 import { applyGlory, GloryOutcome, NO_GLORY } from './glory';
-import { REMEMBERED_RUNS, SaveData } from './save-data';
+import { Crown, REMEMBERED_RUNS, SaveData } from './save-data';
 
 export interface DiscoveredItem {
   readonly kind: 'weapons' | 'armour' | 'relics' | 'fusions';
@@ -28,6 +28,9 @@ export interface RunRewards {
  * (`victories` keeps its save key: a victory of the 7-minute runs was one realm cleared), and the run's glory is
  * applied (spec: glory). Pure and idempotent per run ID; `now` is when the run ended.
  */
+/** The boss whose fall earns the gold crown. */
+const KRONOS = 'kronos';
+
 export function applyRunResult(
   save: SaveData,
   result: RunResult,
@@ -68,12 +71,24 @@ export function applyRunResult(
       ? { ...save.eventTokens, [result.eventId]: (save.eventTokens[result.eventId] ?? 0) + tokens }
       : save.eventTokens;
   const withGlory = applyGlory(save, result, content, now);
+  // A crown for the god played: the laurel for any boss, gold for Kronos, never lowered
+  // (spec: god-appearance / boss trophies).
+  const bosses = result.bossesDefeated ?? [];
+  const had = save.crowns[result.godId];
+  const crown: Crown | undefined =
+    bosses.includes(KRONOS) || had === 'gold'
+      ? 'gold'
+      : bosses.length || had
+        ? 'laurel'
+        : undefined;
+  const crowns = crown && crown !== had ? { ...save.crowns, [result.godId]: crown } : save.crowns;
   return {
     save: {
       ...withGlory.save,
       gold: withGlory.save.gold + runGold,
       discovered,
       eventTokens,
+      crowns,
       stats: {
         runs: save.stats.runs + 1,
         victories: save.stats.victories + result.realmsCleared,

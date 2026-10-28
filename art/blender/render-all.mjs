@@ -148,3 +148,6 @@ for (const [name, [blend, script, frame, extra]] of Object.entries(CHARACTERS)) 
   mkdirSync(join(here, "anchors"), { recursive: true });
   copyFileSync(join(frames, "anchors.json"), join(here, "anchors", `${name}.json`));
 }
+
+// The gods' heads, for their crowns (heads.mjs).
+execFileSync("node", [join(here, "heads.mjs")], { stdio: "inherit" });

@@ -269,6 +269,15 @@ export interface EventDefinition {
   };
 }
 
+/** A god's skin (spec: god-appearance / skins): its figure and portrait recoloured, unlocked by an achievement or an event shop reward. */
+export interface SkinDefinition {
+  readonly id: string;
+  readonly god: string;
+  readonly name: string;
+  readonly recolor: number;
+  readonly unlock: { readonly achievement: string } | { readonly eventReward: string };
+}
+
 /** What an event's shop sells for its currency (spec: seasonal-events / event shop). */
 export interface EventRewardDefinition {
   readonly id: string;
@@ -279,7 +288,9 @@ export interface EventRewardDefinition {
   readonly effect:
     | { readonly type: 'modifiers'; readonly modifiers: readonly Modifier[] }
     /** The event's weapon or relic may be offered in every run, all year. */
-    | { readonly type: 'unlock'; readonly item: string };
+    | { readonly type: 'unlock'; readonly item: string }
+    /** A skin for one god, for good (spec: seasonal-events / skins in event shops). */
+    | { readonly type: 'skin'; readonly skin: string };
   readonly sprite: string;
 }
 
@@ -953,6 +964,8 @@ export interface GameContent {
   /** Seasonal events and what belongs to them (spec: seasonal-events). */
   readonly events: readonly EventDefinition[];
   readonly eventRewards: readonly EventRewardDefinition[];
+  /** The gods' skins (spec: god-appearance / skins). */
+  readonly skins: readonly SkinDefinition[];
   /** One per weapon at most (spec: run-progression / weapon evolutions). */
   readonly evolutions: readonly EvolutionDefinition[];
   readonly enemies: readonly EnemyDefinition[];

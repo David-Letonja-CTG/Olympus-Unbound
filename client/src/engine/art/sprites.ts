@@ -219,6 +219,43 @@ const projectiles: Record<string, SpriteSpec> = {
     },
   },
   // Hecate's currency on the ground: a round honey cake with a glaze and a warm glow (spec: seasonal-events).
+  // Boss trophies worn on a god's head (spec: god-appearance / boss trophies), seen from the 3/4 view.
+  crown_laurel: {
+    size: 24,
+    paint(g, s) {
+      for (const side of [-1, 1])
+        for (let i = 0; i < 5; i++) {
+          const a = Math.PI * (0.55 + 0.09 * i);
+          const x = s / 2 + side * Math.cos(a) * -s * 0.36;
+          const y = s * 0.62 - Math.sin(a) * s * 0.18;
+          g.fillStyle = i % 2 ? '#c9b24a' : '#8fa83a';
+          g.beginPath();
+          g.ellipse(x, y, s * 0.09, s * 0.045, side * (0.6 - i * 0.18), 0, Math.PI * 2);
+          g.fill();
+        }
+    },
+  },
+  crown_gold: {
+    size: 24,
+    paint(g, s) {
+      glow(g, s / 2, s * 0.55, s / 2, 0xffd060, 0.45);
+      g.fillStyle = '#f2c84a';
+      g.strokeStyle = '#6a4a10';
+      g.lineWidth = 1;
+      g.beginPath();
+      g.moveTo(s * 0.18, s * 0.7);
+      for (let i = 0; i <= 4; i++) {
+        const x = s * (0.18 + 0.16 * i);
+        g.lineTo(x, i % 2 ? s * 0.42 : s * 0.28);
+        if (i < 4) g.lineTo(x + s * 0.08, s * 0.5);
+      }
+      g.lineTo(s * 0.82, s * 0.7);
+      g.closePath();
+      g.fill();
+      g.stroke();
+      circle(g, s / 2, s * 0.58, s * 0.05, '#ff6a6a');
+    },
+  },
   honey_cake: {
     size: 20,
     paint(g, s) {

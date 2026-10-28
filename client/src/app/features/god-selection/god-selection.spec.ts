@@ -1,5 +1,6 @@
 import { TestBed } from '@angular/core/testing';
 import { provideRouter } from '@angular/router';
+import { Progression } from '../../core/progression';
 import { RunSetup } from '../../core/run-setup';
 import { GodSelection } from './god-selection';
 
@@ -63,5 +64,28 @@ describe('God selection allies (spec: bot-allies / adding allies)', () => {
     click('player-1-remove');
     expect(setup.players().map((p) => p.godId)).toEqual(['hades']);
     expect(el.querySelector('[data-testid="add-player"]')).not.toBeNull();
+  });
+});
+
+describe('God selection skins (spec: god-appearance / skins)', () => {
+  it('shows a locked skin with what unlocks it, and wears an unlocked one', () => {
+    TestBed.configureTestingModule({ providers: [provideRouter([])] });
+    const progression = TestBed.inject(Progression);
+    const save = progression.save();
+    (progression as unknown as { commit(s: typeof save): void }).commit({
+      ...save,
+      eventRewards: ['hades_shroud'],
+    });
+    const fixture = TestBed.createComponent(GodSelection);
+    fixture.detectChanges();
+    const el = fixture.nativeElement as HTMLElement;
+    el.querySelector<HTMLButtonElement>('[data-testid="god-hades"]')?.click();
+    fixture.detectChanges();
+    const locked = el.querySelector('[data-testid="skin-hades_ash"]');
+    expect(locked?.tagName).toBe('SPAN');
+    expect(locked?.textContent).toContain('earn');
+    el.querySelector<HTMLButtonElement>('[data-testid="skin-hades_shroud"]')?.click();
+    fixture.detectChanges();
+    expect(progression.skinOf('hades')).toBe('hades_shroud');
   });
 });

@@ -3,7 +3,7 @@ import { ArenaData, ArenaFeature } from '../maps/generate-arena';
 import { Element, FeatureRule, LightSource, MapGenConfig } from '../data/types';
 import { crusherReach } from '../sim/features';
 import { STEP } from '../sim/run-state';
-import { MAX_MOTES, playerLook } from '../sim/look';
+import { MAX_MOTES, playerLook, skinnedSprite } from '../sim/look';
 import { FramePlayer, WorldFrame } from '../sim/world-frame';
 import { AnimationName } from '../data/assets';
 import { WalkHold } from './walk-hold';
@@ -32,6 +32,8 @@ const KNOCKBACK = 5;
 const HURT_FLASH = 0.25;
 /** Frames in an evolved weapon's trail, and how long the column of light of a better look lasts (ms). */
 const TRAIL = 2;
+/** A crown's width as a share of the figure's frame. */
+const CROWN_SIZE = 0.16;
 const COLUMN_MS = 800;
 /** Embers a boss in its last phase sheds at once. */
 const FINAL_EMBERS = 8;
@@ -152,7 +154,8 @@ export class WorldView {
     | 'weaponGlow'
     | 'trail'
     | 'mote'
-    | 'column',
+    | 'column'
+    | 'crown',
     SpritePool
   >;
   /** Per god: the ability casts last seen and when the swing they started ends (spec: player-control / the god's body language). */
@@ -213,6 +216,7 @@ export class WorldView {
       trail: pool(),
       mote: pool('spark'),
       column: pool('soft'),
+      crown: pool(),
     };
   }
 
@@ -336,6 +340,36 @@ export class WorldView {
         .setAlpha(1 - t);
       lights.add(sprite.x, sprite.y, 200, 0xffe9a8, 1 - t, 4);
     }
+  }
+
+  /** A god's sprite in a skin; a skin this game does not know is drawn as the default (spec: co-op). */
+  private skinned(sprite: string, skin: string | undefined): ResolvedSprite {
+    const r = this.resolver.resolve(skinnedSprite(sprite, skin));
+    return r.codeDrawn && skin ? this.resolver.resolve(sprite) : r;
+  }
+
+  /** The god's crown on the top of its head in this frame (spec: god-appearance / boss trophies). */
+  private crown(
+    id: number,
+    crown: string,
+    r: ResolvedSprite,
+    sprite: Phaser.GameObjects.Sprite,
+  ): void {
+    const head = r.heads?.[Number(sprite.frame.name)];
+    if (!head) return;
+    const w = sprite.displayWidth;
+    const h = sprite.displayHeight;
+    const hx = sprite.flipX ? 1 - head[0] : head[0];
+    const size = w * CROWN_SIZE;
+    this.pools.crown
+      .get(id)
+      .setTexture(`crown_${crown}`)
+      .setOrigin(0.5, 0.7)
+      .setDisplaySize(size, size)
+      .setFlipX(sprite.flipX)
+      .setPosition(sprite.x + (hx - sprite.originX) * w, sprite.y + (head[1] - sprite.originY) * h)
+      .setDepth(sprite.depth + 0.4)
+      .setAlpha(sprite.alpha);
   }
 
   /** A gear layer drawn over `sprite` on its frame, or nothing while its sheet is not loaded. */
@@ -486,8 +520,9 @@ export class WorldView {
       const moving = pl.moving;
       // The empty-handed figure with its gear once its sheet is in, else the god's armed sheet.
       const figure = pl.god.figure;
-      const bare = figure && this.resolver.resolve(figure.sprite);
-      const r = bare && !bare.codeDrawn ? bare : this.resolver.resolve(pl.god.visual.sprite);
+      // In the player's skin (spec: god-appearance / skins): the same sheet recoloured.
+      const bare = figure && this.skinned(figure.sprite, pl.skin);
+      const r = bare && !bare.codeDrawn ? bare : this.skinned(pl.god.visual.sprite, pl.skin);
       const sprite = p.player.get(pl.id);
       const speed = Math.hypot(pl.x - pl.px, pl.y - pl.py) / state.span;
       const pose = this.swing(pl, r, sprite, time);
@@ -505,6 +540,7 @@ export class WorldView {
       else sprite.clearTint();
       if (figure && r === bare)
         this.gear(pl, figure.body, r, sprite, pose === 'attack', time, lights);
+      if (pl.crown) this.crown(pl.id, pl.crown, r, sprite);
       p.ring
         .get(pl.id)
         .setPosition(x, y + 6)

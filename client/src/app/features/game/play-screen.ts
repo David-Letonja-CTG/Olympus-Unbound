@@ -546,6 +546,8 @@ export class PlayScreen {
       realmId,
       seed: this.setup.seed(),
       modifiers,
+      // The god's skin and crown from this save (spec: god-appearance).
+      ...this.progression.lookOf(godId),
       // The seasonal event on now: its items may be offered (spec: seasonal-events).
       eventId: this.events.active()?.id,
       unlocked: this.progression.unlockedItems(),
@@ -555,8 +557,18 @@ export class PlayScreen {
       party:
         allies.length || players.length
           ? [
-              { godId, name: players.length ? 'Player 1' : 'You', modifiers },
-              ...players.map((p, i) => ({ godId: p.godId, name: `Player ${i + 2}`, modifiers })),
+              {
+                godId,
+                name: players.length ? 'Player 1' : 'You',
+                modifiers,
+                ...this.progression.lookOf(godId),
+              },
+              ...players.map((p, i) => ({
+                godId: p.godId,
+                name: `Player ${i + 2}`,
+                modifiers,
+                ...this.progression.lookOf(p.godId),
+              })),
               ...allies.map((a) => ({
                 godId: a.godId,
                 name: this.content.gods.find((g) => g.id === a.godId)?.name ?? a.godId,

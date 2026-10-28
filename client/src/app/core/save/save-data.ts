@@ -1,3 +1,4 @@
+import type { Crown } from '../../../engine';
 import {
   DEFAULT_SETTINGS,
   GameContent,
@@ -24,7 +25,9 @@ import {
 } from './save-records';
 
 /** Current save format version (D8). Bump it and add a migration when the shape changes. */
-export const SAVE_VERSION = 11;
+export type { Crown };
+
+export const SAVE_VERSION = 12;
 /** Longest player name (spec: meta-progression / save format version 9; rooms use the same limit). */
 export const MAX_PLAYER_NAME = 16;
 /** How many processed run IDs are remembered to keep rewards idempotent. */
@@ -75,6 +78,10 @@ export interface SaveData {
   readonly eventTokens: Readonly<Record<string, number>>;
   /** Event shop rewards bought, kept for good. */
   readonly eventRewards: readonly string[];
+  /** The skin chosen for each god (spec: meta-progression / save format version 12); absent: the default. */
+  readonly skins: Readonly<Record<string, string>>;
+  /** Each god's crown, earned by the bosses beaten with it (spec: god-appearance / boss trophies). */
+  readonly crowns: Readonly<Record<string, Crown>>;
 }
 
 export function freshSave(quality: GraphicsQuality = DEFAULT_SETTINGS.quality): SaveData {
@@ -97,6 +104,8 @@ export function freshSave(quality: GraphicsQuality = DEFAULT_SETTINGS.quality): 
     playerName: '',
     eventTokens: {},
     eventRewards: [],
+    skins: {},
+    crowns: {},
   };
 }
 
@@ -141,6 +150,8 @@ const MIGRATIONS: Record<number, (save: Raw) => Raw> = {
   9: (save) => ({ ...save, version: 10 }),
   // v11 keeps the seasonal events' currency, rewards and table (spec: meta-progression / save format version 11), none yet.
   10: (save) => ({ ...save, version: 11 }),
+  // v12 keeps each god's skin and crown (spec: meta-progression / save format version 12): default skins, no crowns.
+  11: (save) => ({ ...save, version: 12 }),
 };
 
 /**
@@ -237,7 +248,27 @@ export function parseSave(
     playerName: cleanName(save['playerName']),
     eventTokens: parseNumbers(save['eventTokens'], new Set(content.events.map((e) => e.id))),
     eventRewards: ids(save['eventRewards'], new Set(content.eventRewards.map((r) => r.id))),
+    skins: parseSkins(save['skins'], content),
+    crowns: parseCrowns(save['crowns'], content),
   };
+}
+
+/** Each god's skin: known gods with one of their own skins only. */
+function parseSkins(v: unknown, content: GameContent): Record<string, string> {
+  const result: Record<string, string> = {};
+  if (!isObject(v)) return result;
+  for (const [god, skin] of Object.entries(v))
+    if (content.skins.some((s) => s.id === skin && s.god === god)) result[god] = skin as string;
+  return result;
+}
+
+function parseCrowns(v: unknown, content: GameContent): Record<string, Crown> {
+  const result: Record<string, Crown> = {};
+  if (!isObject(v)) return result;
+  for (const [god, crown] of Object.entries(v))
+    if (content.gods.some((g) => g.id === god) && (crown === 'laurel' || crown === 'gold'))
+      result[god] = crown;
+  return result;
 }
 
 /** A player name as kept: a trimmed string of at most 16 characters, else none. */

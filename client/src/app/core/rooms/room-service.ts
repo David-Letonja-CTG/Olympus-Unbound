@@ -1,5 +1,13 @@
 import { computed, inject, Injectable, signal } from '@angular/core';
-import { Modifier, PartySeat, PeerLink, RoomSeat, RunConfig, roomVersion } from '../../../engine';
+import {
+  Crown,
+  Modifier,
+  PartySeat,
+  PeerLink,
+  RoomSeat,
+  RunConfig,
+  roomVersion,
+} from '../../../engine';
 import { GAME_CONTENT } from '../game-content';
 import { Difficulty, withDial } from '../difficulty';
 import { SeasonalEvents } from '../seasonal-events';
@@ -22,6 +30,14 @@ export interface LobbyMember {
   readonly godId: string;
   readonly ready: boolean;
   readonly host: boolean;
+  /** The member's skins and crowns by god, from their save (spec: co-op / seeing each other's gear). */
+  readonly looks?: MemberLooks;
+}
+
+/** A player's chosen skins and earned crowns, by god. */
+export interface MemberLooks {
+  readonly skins: Readonly<Record<string, string>>;
+  readonly crowns: Readonly<Record<string, Crown>>;
 }
 
 /** A room's run, ready for the play screen. */
@@ -44,6 +60,7 @@ type GuestToHost =
       name: string;
       godId: string;
       modifiers: readonly Modifier[];
+      looks?: MemberLooks;
     }
   | { type: 'update'; name?: string; godId?: string; ready?: boolean };
 
@@ -61,7 +78,7 @@ type HostToGuest =
       eventId?: string;
       /** The host's event items bought for every run. */
       unlocked?: readonly string[];
-      party: readonly { godId: string; name: string }[];
+      party: readonly { godId: string; name: string; skin?: string; crown?: Crown }[];
     };
 
 const MESSAGES: Record<RefusalReason | RoomError['reason'] | 'closed' | 'timeout', string> = {
@@ -156,7 +173,9 @@ export class RoomService {
       this.role.set('host');
       this.code.set(code);
       this.localSlot.set(0);
-      this.members.set([{ slot: 0, name: this.name(), godId, ready: true, host: true }]);
+      this.members.set([
+        { slot: 0, name: this.name(), godId, ready: true, host: true, looks: this.looks() },
+      ]);
       this.status.set('lobby');
     } catch (e) {
       this.fail(generation, e);
@@ -242,6 +261,7 @@ export class RoomService {
         name: this.name(),
         godId,
         modifiers: this.progression.runModifiers(),
+        looks: this.looks(),
       });
     } catch (e) {
       this.fail(generation, e);
@@ -257,6 +277,31 @@ export class RoomService {
   rememberName(name: string): void {
     this.playerName.set(name.slice(0, MAX_NAME));
     this.progression.setPlayerName(name);
+  }
+
+  /** This player's skins and crowns, for the others in the room. */
+  private looks(): MemberLooks {
+    const gods = this.content.gods.map((g) => g.id);
+    const skins: Record<string, string> = {};
+    for (const god of gods) {
+      const skin = this.progression.skinOf(god);
+      if (skin) skins[god] = skin;
+    }
+    return { skins, crowns: this.progression.save().crowns };
+  }
+
+  /** A guest's looks as sent: only skins of their own god and known crowns (anything else: the default). */
+  private cleanLooks(v: unknown): MemberLooks {
+    const raw = (typeof v === 'object' && v ? v : {}) as Partial<
+      Record<keyof MemberLooks, unknown>
+    >;
+    const skins: Record<string, string> = {};
+    const crowns: Record<string, Crown> = {};
+    for (const [god, skin] of Object.entries((raw.skins as object) ?? {}))
+      if (this.content.skins.some((s) => s.id === skin && s.god === god)) skins[god] = skin;
+    for (const [god, crown] of Object.entries((raw.crowns as object) ?? {}))
+      if (crown === 'laurel' || crown === 'gold') crowns[god] = crown;
+    return { skins, crowns };
   }
 
   setGod(godId: string): void {
@@ -286,6 +331,8 @@ export class RoomService {
     const party: PartySeat[] = ordered.map((m) => ({
       godId: m.godId,
       name: m.name,
+      skin: m.looks?.skins[m.godId],
+      crown: m.looks?.crowns[m.godId],
       modifiers: m.host
         ? this.progression.runModifiers()
         : (this.guests.get(m.slot)?.modifiers ?? []),
@@ -303,7 +350,7 @@ export class RoomService {
         seed,
         eventId,
         unlocked,
-        party: party.map(({ godId, name }) => ({ godId, name })),
+        party: party.map(({ godId, name, skin, crown }) => ({ godId, name, skin, crown })),
       });
     });
     this.status.set('playing');
@@ -425,7 +472,14 @@ export class RoomService {
         this.guests.set(slot, { link, modifiers: Array.isArray(m.modifiers) ? m.modifiers : [] });
         this.members.update((list) => [
           ...list,
-          { slot, name: cleanName(m.name), godId, ready: false, host: false },
+          {
+            slot,
+            name: cleanName(m.name),
+            godId,
+            ready: false,
+            host: false,
+            looks: this.cleanLooks(m.looks),
+          },
         ]);
         this.send(link, { type: 'welcome', slot });
         this.broadcastLobby();

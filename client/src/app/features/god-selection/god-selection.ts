@@ -8,7 +8,9 @@ import {
   GameContent,
   GodDefinition,
   computeStats,
+  skinnedSprite,
 } from '../../../engine';
+import { Progression } from '../../core/progression';
 import { TouchScreen } from '../../core/touch-screen';
 import { GAME_CONTENT } from '../../core/game-content';
 import { ALLY_SKILLS, CONTROL_LABELS, RunSetup } from '../../core/run-setup';
@@ -41,7 +43,15 @@ const PASSIVE_ICON: Record<Element, string> = {
             [attr.data-testid]="'god-' + god.id"
             (click)="selected.set(god.id)"
           >
-            <app-item-icon [sprite]="god.visual.sprite" [size]="88" />
+            <app-item-icon [sprite]="cardSprite(god)" [size]="88" />
+            @if (crownOf(god.id); as crown) {
+              <app-item-icon
+                class="crown"
+                [sprite]="'crown_' + crown"
+                [size]="24"
+                [label]="crown === 'gold' ? 'Gold crown: Kronos beaten' : 'Laurel: a boss beaten'"
+              />
+            }
             <span class="name">{{ god.name }}</span>
             <span class="title">{{ god.title }}</span>
           </button>
@@ -76,6 +86,34 @@ const PASSIVE_ICON: Record<Element, string> = {
                 </div>
               </div>
             </div>
+            @if (d.skins.length) {
+              <div class="skins" role="group" aria-label="Skins">
+                <button
+                  class="skin"
+                  [attr.aria-pressed]="!d.skin"
+                  data-testid="skin-default"
+                  (click)="chooseSkin(d.god.id, undefined)"
+                >
+                  Default
+                </button>
+                @for (s of d.skins; track s.id) {
+                  @if (s.unlocked) {
+                    <button
+                      class="skin"
+                      [attr.aria-pressed]="d.skin === s.id"
+                      [attr.data-testid]="'skin-' + s.id"
+                      (click)="chooseSkin(d.god.id, s.id)"
+                    >
+                      {{ s.name }}
+                    </button>
+                  } @else {
+                    <span class="skin locked" [attr.data-testid]="'skin-' + s.id">
+                      {{ s.name }} · {{ s.how }}
+                    </span>
+                  }
+                }
+              </div>
+            }
             <dl class="stats">
               <div>
                 <dt>Health</dt>
@@ -309,6 +347,39 @@ const PASSIVE_ICON: Record<Element, string> = {
         padding: 10px 12px;
         gap: 2px;
       }
+      .god-card {
+        position: relative;
+      }
+      .god-card .crown {
+        position: absolute;
+        top: 6px;
+        right: 6px;
+      }
+      .skins {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 6px;
+        margin: 8px 0;
+      }
+      .skin {
+        font: inherit;
+        font-size: 0.85rem;
+        padding: 3px 10px;
+        border-radius: 6px;
+        border: 1px solid var(--line, #5a4a2a);
+        background: var(--panel-2);
+        color: inherit;
+      }
+      button.skin {
+        cursor: pointer;
+      }
+      .skin[aria-pressed='true'] {
+        border-color: var(--gold, #e8c070);
+        color: var(--gold, #e8c070);
+      }
+      .skin.locked {
+        opacity: 0.6;
+      }
       .god-card app-item-icon {
         zoom: 0.7;
       }
@@ -473,6 +544,7 @@ const PASSIVE_ICON: Record<Element, string> = {
 export class GodSelection {
   private readonly content: GameContent = inject(GAME_CONTENT);
   protected readonly setup = inject(RunSetup);
+  private readonly progression = inject(Progression);
   /** Several people on one phone is not offered (spec: phone-play / co-op on a phone). */
   protected readonly touchOnly = inject(TouchScreen).touchOnly();
   protected readonly allies = this.setup.allies;
@@ -496,12 +568,41 @@ export class GodSelection {
     const stats = computeStats(god.baseStats, god.passive.modifiers);
     return {
       god,
+      skin: this.progression.skinOf(god.id),
+      skins: this.content.skins
+        .filter((s) => s.god === god.id)
+        .map((s) => ({
+          id: s.id,
+          name: s.name,
+          unlocked: this.progression.hasSkin(s),
+          how:
+            'achievement' in s.unlock
+              ? `earn ${this.achievementName(s.unlock.achievement)}`
+              : `buy it in an event shop`,
+        })),
       weapon: this.index.weapon(god.startingWeapon),
       stats,
       crit: Math.round(stats.critChance * 100),
       passiveIcon: PASSIVE_ICON[god.affinities[0] ?? 'lightning'],
     };
   });
+
+  /** A god's portrait in its chosen skin (spec: god-appearance / previews). */
+  protected cardSprite(god: GodDefinition): string {
+    return skinnedSprite(god.visual.sprite, this.progression.skinOf(god.id));
+  }
+
+  protected crownOf(godId: string): string | undefined {
+    return this.progression.save().crowns[godId];
+  }
+
+  protected chooseSkin(godId: string, skinId: string | undefined): void {
+    this.progression.chooseSkin(godId, skinId);
+  }
+
+  private achievementName(id: string): string {
+    return this.content.achievements.find((a) => a.id === id)?.name ?? id;
+  }
 
   protected addAlly(godId: string): void {
     this.setup.addAlly(godId);

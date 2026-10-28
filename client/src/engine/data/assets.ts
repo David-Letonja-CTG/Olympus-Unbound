@@ -90,6 +90,8 @@ export interface SpriteAsset {
   readonly portrait?: string | number;
   /** The sheet multiplied by this colour (spec: asset-pipeline / recoloured sheets), e.g. Kronos in gold. */
   readonly recolor?: number;
+  /** Top of the head per frame, 0–1 from the frame's top left: where a god's crown sits (content/heads.ts). */
+  readonly heads?: readonly (readonly [number, number] | null)[];
 }
 
 export interface AssetManifest {

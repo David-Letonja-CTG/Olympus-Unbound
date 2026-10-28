@@ -385,3 +385,60 @@ describe('save format v11 (spec: meta-progression / save format version 11)', ()
     expect(progression.runModifiers()).toEqual([]);
   });
 });
+
+describe('save format v12 (spec: meta-progression / save format version 12)', () => {
+  it('migrates a version 11 save with default skins and no crowns', () => {
+    const save = parseSave(JSON.stringify({ version: 11, gold: 70 }), CONTENT);
+    expect(save.version).toBe(12);
+    expect(save.skins).toEqual({});
+    expect(save.crowns).toEqual({});
+    expect(save.gold).toBe(70);
+  });
+
+  it('drops skins that no longer exist or belong to another god, and unknown crowns', () => {
+    const save = parseSave(
+      JSON.stringify({
+        version: 12,
+        skins: { zeus: 'zeus_gone', hades: 'zeus_tempest', athena: 'athena_owl' },
+        crowns: { zeus: 'gold', nobody: 'laurel', hades: 'silver' },
+      }),
+      CONTENT,
+    );
+    expect(save.skins).toEqual({ athena: 'athena_owl' });
+    expect(save.crowns).toEqual({ zeus: 'gold' });
+  });
+
+  it('crowns the god played: the laurel for a boss, gold for Kronos, once per run and never lowered', () => {
+    const cyclops = result({ runId: 'a', godId: 'poseidon', bossesDefeated: ['cyclops'] });
+    const first = applyRunResult(freshSave(), cyclops, CONTENT, new Date());
+    expect(first.save.crowns).toEqual({ poseidon: 'laurel' });
+    const kronos = result({ runId: 'b', godId: 'poseidon', bossesDefeated: ['kronos'] });
+    const second = applyRunResult(first.save, kronos, CONTENT, new Date());
+    expect(second.save.crowns['poseidon']).toBe('gold');
+    expect(applyRunResult(second.save, kronos, CONTENT, new Date()).save).toBe(second.save);
+    const third = applyRunResult(second.save, { ...cyclops, runId: 'c' }, CONTENT, new Date());
+    expect(third.save.crowns['poseidon']).toBe('gold');
+    expect(third.save.crowns['athena']).toBeUndefined();
+  });
+});
+
+describe('skins (spec: god-appearance / skins)', () => {
+  it('can be worn once earned or bought, and locked ones are not chosen', () => {
+    TestBed.configureTestingModule({});
+    const progression = TestBed.inject(Progression);
+    progression.chooseSkin('zeus', 'zeus_tempest');
+    expect(progression.skinOf('zeus')).toBeUndefined();
+    const save = progression.save();
+    (progression as unknown as { commit(s: typeof save): void }).commit({
+      ...save,
+      achievements: { storm_lord: '2026-10-28' },
+      eventRewards: ['hades_shroud'],
+    });
+    progression.chooseSkin('zeus', 'zeus_tempest');
+    progression.chooseSkin('hades', 'hades_shroud');
+    expect(progression.lookOf('zeus').skin).toBe('zeus_tempest');
+    expect(progression.lookOf('hades').skin).toBe('hades_shroud');
+    progression.chooseSkin('zeus', undefined);
+    expect(progression.skinOf('zeus')).toBeUndefined();
+  });
+});
